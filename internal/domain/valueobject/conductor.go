@@ -60,6 +60,20 @@ type Conductor struct {
 	reactanciaPorKm       float64
 }
 
+func positivoF(v float64, campo string) error {
+	if v <= 0 {
+		return fmt.Errorf("%w: %s debe ser mayor que cero", ErrConductorInvalido, campo)
+	}
+	return nil
+}
+
+func positivoI(v int, campo string) error {
+	if v <= 0 {
+		return fmt.Errorf("%w: %s debe ser mayor que cero", ErrConductorInvalido, campo)
+	}
+	return nil
+}
+
 func NewConductor(p ConductorParams) (Conductor, error) {
 	if !calibresValidos[p.Calibre] {
 		return Conductor{}, fmt.Errorf("%w: calibre '%s' no válido según NOM", ErrConductorInvalido, p.Calibre)
@@ -70,29 +84,19 @@ func NewConductor(p ConductorParams) (Conductor, error) {
 	if p.TipoAislamiento == "" {
 		return Conductor{}, fmt.Errorf("%w: tipo de aislamiento vacío", ErrConductorInvalido)
 	}
-	if p.SeccionMM2 <= 0 {
-		return Conductor{}, fmt.Errorf("%w: sección debe ser mayor que cero", ErrConductorInvalido)
-	}
-	if p.AreaConAislamientoMM2 <= 0 {
-		return Conductor{}, fmt.Errorf("%w: área con aislamiento debe ser mayor que cero", ErrConductorInvalido)
-	}
-	if p.DiametroMM <= 0 {
-		return Conductor{}, fmt.Errorf("%w: diámetro debe ser mayor que cero", ErrConductorInvalido)
-	}
-	if p.NumeroHilos <= 0 {
-		return Conductor{}, fmt.Errorf("%w: número de hilos debe ser mayor que cero", ErrConductorInvalido)
-	}
-	if p.ResistenciaPVCPorKm <= 0 {
-		return Conductor{}, fmt.Errorf("%w: resistencia PVC debe ser mayor que cero", ErrConductorInvalido)
-	}
-	if p.ResistenciaAlPorKm <= 0 {
-		return Conductor{}, fmt.Errorf("%w: resistencia aluminio debe ser mayor que cero", ErrConductorInvalido)
-	}
-	if p.ResistenciaAceroPorKm <= 0 {
-		return Conductor{}, fmt.Errorf("%w: resistencia acero debe ser mayor que cero", ErrConductorInvalido)
-	}
-	if p.ReactanciaPorKm <= 0 {
-		return Conductor{}, fmt.Errorf("%w: reactancia debe ser mayor que cero", ErrConductorInvalido)
+	for _, check := range []error{
+		positivoF(p.SeccionMM2, "sección"),
+		positivoF(p.AreaConAislamientoMM2, "área con aislamiento"),
+		positivoF(p.DiametroMM, "diámetro"),
+		positivoI(p.NumeroHilos, "número de hilos"),
+		positivoF(p.ResistenciaPVCPorKm, "resistencia PVC"),
+		positivoF(p.ResistenciaAlPorKm, "resistencia aluminio"),
+		positivoF(p.ResistenciaAceroPorKm, "resistencia acero"),
+		positivoF(p.ReactanciaPorKm, "reactancia"),
+	} {
+		if check != nil {
+			return Conductor{}, check
+		}
 	}
 	return Conductor{
 		calibre:               p.Calibre,
