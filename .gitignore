@@ -1,0 +1,41 @@
+# Binarios
+/garfex-calculadora-filtros
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binarios
+*.test
+
+# Profiling
+*.prof
+
+# Variables de entorno
+.env
+.env.*
+!.env.example
+
+# Go workspace
+go.work.sum
+
+# Dependencias del vendor (no usamos vendor)
+/vendor/
+
+# Output de build
+/dist/
+/bin/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git worktrees
+.worktrees/
