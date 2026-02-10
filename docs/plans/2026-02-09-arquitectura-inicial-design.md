@@ -207,18 +207,28 @@ type CalculadorCorriente interface {
 }
 ```
 
+#### Entidad `ITM` _(Interruptor Termomagnético)_
+```go
+// ITM es una entidad validada. Para instalaciones trifásicas: Polos=3, Voltaje=equipo.Voltaje.
+type ITM struct {
+    Amperaje int  // corriente nominal del interruptor [A] — de BD campo "itm"
+    Polos    int  // número de polos (3 para trifásico)
+    Bornes   int  // terminales de conductor — de BD campo "bornes"
+    Voltaje  int  // voltaje nominal [V] — igual al voltaje del equipo
+}
+```
+
 #### Struct `Equipo` (base embebida)
 ```go
 type Equipo struct {
     Clave   string
     Tipo    TipoFiltro  // enum: ACTIVO, RECHAZO
     Voltaje int         // en Voltios
-    ITM     int         // interruptor termomagnético de fábrica
-    Bornes  int
+    ITM     ITM         // interruptor termomagnético (entidad propia)
 }
 ```
 
-#### `FiltroActivo` (implementa CalculadorCorriente)
+#### `FiltroActivo` (implementa CalculadorCorriente + CalculadorPotencia)
 ```go
 type FiltroActivo struct {
     Equipo              // embedded
@@ -227,18 +237,25 @@ type FiltroActivo struct {
 
 // Retorna amperaje directamente (no calcula)
 func (fa *FiltroActivo) CalcularCorrienteNominal() (valueobject.Corriente, error)
+// PF=1: kVA=I×V×√3/1000, kW=kVA, kVAR=0
+func (fa *FiltroActivo) PotenciaKVA() float64
+func (fa *FiltroActivo) PotenciaKW() float64
+func (fa *FiltroActivo) PotenciaKVAR() float64
 ```
 
-#### `FiltroRechazo` (implementa CalculadorCorriente)
+#### `FiltroRechazo` (implementa CalculadorCorriente + CalculadorPotencia)
 ```go
 type FiltroRechazo struct {
     Equipo              // embedded
     KVAR int            // qn/In de la BD
 }
 
-// Aplica fórmula: I = KVAR / (KV × √3)
-// donde KV = Voltaje / 1000
+// Aplica fórmula: I = KVAR / (KV × √3) donde KV = Voltaje / 1000
 func (fr *FiltroRechazo) CalcularCorrienteNominal() (valueobject.Corriente, error)
+// Puramente reactivo: kVAR=KVAR, kVA=KVAR, kW=0
+func (fr *FiltroRechazo) PotenciaKVA() float64
+func (fr *FiltroRechazo) PotenciaKW() float64
+func (fr *FiltroRechazo) PotenciaKVAR() float64
 ```
 
 #### `MemoriaCalculo`
@@ -248,6 +265,9 @@ type MemoriaCalculo struct {
     CorrienteNominal       valueobject.Corriente
     CorrienteAjustada      valueobject.Corriente
     FactoresAjuste         map[string]float64
+    PotenciaKVA            float64  // para display en reporte
+    PotenciaKW             float64
+    PotenciaKVAR           float64
     ConductorAlimentacion  valueobject.Conductor
     HilosPorFase           int
     ConductorTierra        valueobject.Conductor
@@ -281,12 +301,33 @@ type Tension struct {
 
 #### `Conductor`
 ```go
-type Conductor struct {
-    Calibre          string  // ej: "12 AWG", "1/0 AWG"
-    Material         string  // "Cu" o "Al"
-    TipoAislamiento  string  // "THHN", "THW", etc.
+// Constructor usa struct de parámetros (patrón idiomático Go para muchos campos)
+type ConductorParams struct {
+    Calibre               string   // ej: "12 AWG", "1/0 AWG", "500 MCM"
+    Material              string   // "Cu" o "Al"
+    TipoAislamiento       string   // "THHN", "THW", "XHHW", etc.
+    SeccionMM2            float64  // sección transversal sin aislamiento [mm²]
+    AreaConAislamientoMM2 float64  // área total con aislamiento, para canalización [mm²]
+    DiametroMM            float64  // diámetro exterior con aislamiento [mm]
+    NumeroHilos           int      // número de hilos del conductor
+    ResistenciaPVCPorKm   float64  // resistencia en tubería PVC [Ω/km]
+    ResistenciaAlPorKm    float64  // resistencia en tubería aluminio [Ω/km]
+    ResistenciaAceroPorKm float64  // resistencia en tubería acero [Ω/km]
+    ReactanciaPorKm       float64  // reactancia inductiva [Ω/km]
 }
-// Validación: calibres válidos NOM
+
+// Conductor es inmutable — campos no exportados + getters
+type Conductor struct { /* mismos campos, privados */ }
+
+func NewConductor(p ConductorParams) (Conductor, error)
+// Validaciones:
+//   - Calibre: mapa calibresValidos (NOM 310-15(b)(16))
+//     AWG: 18, 16, 14, 12, 10, 8, 6, 4, 2, 1/0, 2/0, 3/0, 4/0
+//     MCM: 250, 300, 350, 400, 500, 600, 700, 750, 800, 900, 1000, 1250, 1500, 1750, 2000
+//     NOTA: "3 AWG" y "1 AWG" NO son válidos (no están en tabla 310-15(b)(16))
+//   - Material: solo "Cu" o "Al"
+//   - Todos los campos numéricos: > 0
+// Fuente: NOM-001-SEDE-2012 Tabla 9 (resistencia/reactancia), Tabla 5/8 (área, diámetro, hilos)
 ```
 
 ### 5.3 Services

@@ -891,6 +891,16 @@ git commit -m "feat(domain): add FiltroRechazo entity with KVAR formula I=KVAR/(
 
 ---
 
+### Refactoring: ITM como entidad propia ✅ COMPLETADO (entre Task 7 y 8)
+
+**Commit:** `f7ec5a1`
+
+**Decisión:** `ITM` se extrajo como entidad validada con `Amperaje`, `Polos`, `Bornes`, `Voltaje`. En Fase 1, Polos=3 (trifásico), Voltaje=equipo.Voltaje. `Equipo.ITM int` y `Equipo.Bornes int` se reemplazaron por `Equipo.ITM ITM`. Los constructores `NewFiltroActivo/NewFiltroRechazo` ahora aceptan `itm ITM` en lugar de `itm, bornes int`.
+
+**Impacto en Task 11:** `SeleccionarConductorTierra` recibe `itm int` (el amperaje del ITM). Cambiar a `itm.Amperaje` al integrar con entidades. Los datos de test con `"3 AWG"` y `"1 AWG"` deben reemplazarse por `"4 AWG"` y `"2 AWG"` (no válidos en calibresValidos).
+
+---
+
 ### Task 8: Domain Structs — Canalizacion and MemoriaCalculo ✅ COMPLETADO
 
 **Commit:** `30c8274`
