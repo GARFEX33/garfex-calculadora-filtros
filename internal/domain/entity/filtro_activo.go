@@ -15,7 +15,7 @@ type FiltroActivo struct {
 	Amperaje int
 }
 
-func NewFiltroActivo(clave string, voltaje, amperaje, itm, bornes int) (*FiltroActivo, error) {
+func NewFiltroActivo(clave string, voltaje, amperaje int, itm ITM) (*FiltroActivo, error) {
 	if amperaje <= 0 {
 		return nil, fmt.Errorf("amperaje debe ser mayor que cero: %d", amperaje)
 	}
@@ -25,7 +25,6 @@ func NewFiltroActivo(clave string, voltaje, amperaje, itm, bornes int) (*FiltroA
 			Tipo:    TipoFiltroActivo,
 			Voltaje: voltaje,
 			ITM:     itm,
-			Bornes:  bornes,
 		},
 		Amperaje: amperaje,
 	}, nil

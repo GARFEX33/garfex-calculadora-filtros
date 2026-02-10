@@ -25,6 +25,5 @@ type Equipo struct {
 	Clave   string
 	Tipo    TipoFiltro
 	Voltaje int
-	ITM     int
-	Bornes  int
+	ITM     ITM
 }

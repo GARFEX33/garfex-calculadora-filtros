@@ -15,7 +15,7 @@ type FiltroRechazo struct {
 	KVAR int
 }
 
-func NewFiltroRechazo(clave string, voltaje, kvar, itm, bornes int) (*FiltroRechazo, error) {
+func NewFiltroRechazo(clave string, voltaje, kvar int, itm ITM) (*FiltroRechazo, error) {
 	if kvar <= 0 {
 		return nil, fmt.Errorf("KVAR debe ser mayor que cero: %d", kvar)
 	}
@@ -28,7 +28,6 @@ func NewFiltroRechazo(clave string, voltaje, kvar, itm, bornes int) (*FiltroRech
 			Tipo:    TipoFiltroRechazo,
 			Voltaje: voltaje,
 			ITM:     itm,
-			Bornes:  bornes,
 		},
 		KVAR: kvar,
 	}, nil
