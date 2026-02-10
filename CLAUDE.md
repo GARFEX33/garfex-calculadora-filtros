@@ -155,6 +155,19 @@ DB_PORT=5432
 
 ## Flujo de Trabajo
 
+### Actualización de Documentación (OBLIGATORIO al terminar cada tarea)
+
+Al completar cualquier tarea de implementación, **antes del commit final**, verificar si hubo cambios que divergen del plan original y actualizar:
+
+| Documento | Cuándo actualizar |
+|-----------|------------------|
+| `docs/plans/2026-02-10-domain-layer.md` | Cuando la implementación diverge del plan (API diferente, campos extra, decisiones tomadas) |
+| `docs/plans/2026-02-09-arquitectura-inicial-design.md` | Cuando cambia el diseño de una entidad, VO o servicio |
+| `CLAUDE.md` | Cuando cambia una convención de código o regla de negocio del proyecto |
+| `.claude/memory/MEMORY.md` | Cuando hay algo que debe persistir entre sesiones (decisiones, patrones, paths) |
+
+**Regla:** Si la implementación real diverge del plan → marcar la tarea como `✅ COMPLETADO` en el plan y documentar qué cambió y por qué, incluyendo el impacto en tareas futuras.
+
 ### Desarrollo Paso a Paso
 Este proyecto se desarrolla **incrementalmente**:
 1. **Fase 1 (actual):** 2 tipos de equipos (FA, FR), 6 servicios de cálculo, 2 tablas NOM
