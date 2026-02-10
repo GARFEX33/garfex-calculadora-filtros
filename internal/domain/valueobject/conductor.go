@@ -28,36 +28,95 @@ var calibresValidos = map[string]bool{
 	"1500 MCM": true, "1750 MCM": true, "2000 MCM": true,
 }
 
-// Conductor represents an electrical conductor with its physical properties. Immutable.
-type Conductor struct {
-	calibre         string
-	material        string
-	tipoAislamiento string
-	seccionMM2      float64
+// ConductorParams holds all physical and electrical properties of a conductor
+// needed for electrical memory calculations per NOM-001-SEDE-2012.
+type ConductorParams struct {
+	Calibre               string
+	Material              string
+	TipoAislamiento       string
+	SeccionMM2            float64 // sección transversal del conductor (sin aislamiento) [mm²]
+	AreaConAislamientoMM2 float64 // área total incluyendo aislamiento, para cálculo de canalización [mm²]
+	DiametroMM            float64 // diámetro exterior con aislamiento [mm]
+	NumeroHilos           int     // número de hilos del conductor
+	ResistenciaPVCPorKm   float64 // resistencia en tubería PVC [Ω/km]
+	ResistenciaAlPorKm    float64 // resistencia en tubería de aluminio [Ω/km]
+	ResistenciaAceroPorKm float64 // resistencia en tubería de acero [Ω/km]
+	ReactanciaPorKm       float64 // reactancia inductiva [Ω/km]
 }
 
-func NewConductor(calibre, material, tipoAislamiento string, seccionMM2 float64) (Conductor, error) {
-	if !calibresValidos[calibre] {
-		return Conductor{}, fmt.Errorf("%w: calibre '%s' no válido según NOM", ErrConductorInvalido, calibre)
+// Conductor represents an electrical conductor with its physical and electrical
+// properties per NOM-001-SEDE-2012. Immutable.
+type Conductor struct {
+	calibre               string
+	material              string
+	tipoAislamiento       string
+	seccionMM2            float64
+	areaConAislamientoMM2 float64
+	diametroMM            float64
+	numeroHilos           int
+	resistenciaPVCPorKm   float64
+	resistenciaAlPorKm    float64
+	resistenciaAceroPorKm float64
+	reactanciaPorKm       float64
+}
+
+func NewConductor(p ConductorParams) (Conductor, error) {
+	if !calibresValidos[p.Calibre] {
+		return Conductor{}, fmt.Errorf("%w: calibre '%s' no válido según NOM", ErrConductorInvalido, p.Calibre)
 	}
-	if !materialesValidos[material] {
-		return Conductor{}, fmt.Errorf("%w: material '%s' no válido (Cu o Al)", ErrConductorInvalido, material)
+	if !materialesValidos[p.Material] {
+		return Conductor{}, fmt.Errorf("%w: material '%s' no válido (Cu o Al)", ErrConductorInvalido, p.Material)
 	}
-	if tipoAislamiento == "" {
+	if p.TipoAislamiento == "" {
 		return Conductor{}, fmt.Errorf("%w: tipo de aislamiento vacío", ErrConductorInvalido)
 	}
-	if seccionMM2 <= 0 {
+	if p.SeccionMM2 <= 0 {
 		return Conductor{}, fmt.Errorf("%w: sección debe ser mayor que cero", ErrConductorInvalido)
 	}
+	if p.AreaConAislamientoMM2 <= 0 {
+		return Conductor{}, fmt.Errorf("%w: área con aislamiento debe ser mayor que cero", ErrConductorInvalido)
+	}
+	if p.DiametroMM <= 0 {
+		return Conductor{}, fmt.Errorf("%w: diámetro debe ser mayor que cero", ErrConductorInvalido)
+	}
+	if p.NumeroHilos <= 0 {
+		return Conductor{}, fmt.Errorf("%w: número de hilos debe ser mayor que cero", ErrConductorInvalido)
+	}
+	if p.ResistenciaPVCPorKm <= 0 {
+		return Conductor{}, fmt.Errorf("%w: resistencia PVC debe ser mayor que cero", ErrConductorInvalido)
+	}
+	if p.ResistenciaAlPorKm <= 0 {
+		return Conductor{}, fmt.Errorf("%w: resistencia aluminio debe ser mayor que cero", ErrConductorInvalido)
+	}
+	if p.ResistenciaAceroPorKm <= 0 {
+		return Conductor{}, fmt.Errorf("%w: resistencia acero debe ser mayor que cero", ErrConductorInvalido)
+	}
+	if p.ReactanciaPorKm <= 0 {
+		return Conductor{}, fmt.Errorf("%w: reactancia debe ser mayor que cero", ErrConductorInvalido)
+	}
 	return Conductor{
-		calibre:         calibre,
-		material:        material,
-		tipoAislamiento: tipoAislamiento,
-		seccionMM2:      seccionMM2,
+		calibre:               p.Calibre,
+		material:              p.Material,
+		tipoAislamiento:       p.TipoAislamiento,
+		seccionMM2:            p.SeccionMM2,
+		areaConAislamientoMM2: p.AreaConAislamientoMM2,
+		diametroMM:            p.DiametroMM,
+		numeroHilos:           p.NumeroHilos,
+		resistenciaPVCPorKm:   p.ResistenciaPVCPorKm,
+		resistenciaAlPorKm:    p.ResistenciaAlPorKm,
+		resistenciaAceroPorKm: p.ResistenciaAceroPorKm,
+		reactanciaPorKm:       p.ReactanciaPorKm,
 	}, nil
 }
 
-func (c Conductor) Calibre() string        { return c.calibre }
-func (c Conductor) Material() string        { return c.material }
-func (c Conductor) TipoAislamiento() string { return c.tipoAislamiento }
-func (c Conductor) SeccionMM2() float64     { return c.seccionMM2 }
+func (c Conductor) Calibre() string               { return c.calibre }
+func (c Conductor) Material() string               { return c.material }
+func (c Conductor) TipoAislamiento() string        { return c.tipoAislamiento }
+func (c Conductor) SeccionMM2() float64            { return c.seccionMM2 }
+func (c Conductor) AreaConAislamientoMM2() float64 { return c.areaConAislamientoMM2 }
+func (c Conductor) DiametroMM() float64            { return c.diametroMM }
+func (c Conductor) NumeroHilos() int               { return c.numeroHilos }
+func (c Conductor) ResistenciaPVCPorKm() float64   { return c.resistenciaPVCPorKm }
+func (c Conductor) ResistenciaAlPorKm() float64    { return c.resistenciaAlPorKm }
+func (c Conductor) ResistenciaAceroPorKm() float64 { return c.resistenciaAceroPorKm }
+func (c Conductor) ReactanciaPorKm() float64       { return c.reactanciaPorKm }

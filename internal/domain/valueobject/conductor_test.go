@@ -10,43 +10,105 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestNewConductor(t *testing.T) {
+// conductor12AWGCu returns a valid ConductorParams for 12 AWG Cu THHN
+// based on NOM-001-SEDE-2012 tables.
+func conductor12AWGCu() valueobject.ConductorParams {
+	return valueobject.ConductorParams{
+		Calibre:               "12 AWG",
+		Material:              "Cu",
+		TipoAislamiento:       "THHN",
+		SeccionMM2:            3.31,
+		AreaConAislamientoMM2: 11.68,
+		DiametroMM:            3.861,
+		NumeroHilos:           7,
+		ResistenciaPVCPorKm:   6.6,
+		ResistenciaAlPorKm:    6.6,
+		ResistenciaAceroPorKm: 6.6,
+		ReactanciaPorKm:       0.177,
+	}
+}
+
+func TestNewConductor_Valid(t *testing.T) {
+	c, err := valueobject.NewConductor(conductor12AWGCu())
+	require.NoError(t, err)
+
+	assert.Equal(t, "12 AWG", c.Calibre())
+	assert.Equal(t, "Cu", c.Material())
+	assert.Equal(t, "THHN", c.TipoAislamiento())
+	assert.Equal(t, 3.31, c.SeccionMM2())
+	assert.Equal(t, 11.68, c.AreaConAislamientoMM2())
+	assert.Equal(t, 3.861, c.DiametroMM())
+	assert.Equal(t, 7, c.NumeroHilos())
+	assert.Equal(t, 6.6, c.ResistenciaPVCPorKm())
+	assert.Equal(t, 6.6, c.ResistenciaAlPorKm())
+	assert.Equal(t, 6.6, c.ResistenciaAceroPorKm())
+	assert.Equal(t, 0.177, c.ReactanciaPorKm())
+}
+
+func TestNewConductor_CalibreInvalido(t *testing.T) {
 	tests := []struct {
-		name            string
-		calibre         string
-		material        string
-		tipoAislamiento string
-		seccionMM2      float64
-		wantErr         bool
+		name    string
+		calibre string
 	}{
-		{"valid Cu THHN 12AWG", "12 AWG", "Cu", "THHN", 3.31, false},
-		{"valid Al THW 4/0AWG", "4/0 AWG", "Al", "THW", 107.2, false},
-		{"valid Cu XHHW 500MCM", "500 MCM", "Cu", "XHHW", 253.4, false},
-		{"valid 18AWG smallest", "18 AWG", "Cu", "THHN", 0.82, false},
-		{"valid 2000MCM largest", "2000 MCM", "Cu", "XHHW", 1011.0, false},
-		{"empty calibre invalid", "", "Cu", "THHN", 3.31, true},
-		{"calibre not in NOM", "3 AWG", "Cu", "THHN", 26.67, true},
-		{"calibre without suffix", "12", "Cu", "THHN", 3.31, true},
-		{"invalid material", "12 AWG", "Fe", "THHN", 3.31, true},
-		{"empty material", "12 AWG", "", "THHN", 3.31, true},
-		{"empty aislamiento", "12 AWG", "Cu", "", 3.31, true},
-		{"zero seccion", "12 AWG", "Cu", "THHN", 0, true},
-		{"negative seccion", "12 AWG", "Cu", "THHN", -1, true},
+		{"empty", ""},
+		{"not in NOM", "3 AWG"},
+		{"without suffix", "12"},
+		{"wrong format", "12AWG"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := conductor12AWGCu()
+			p.Calibre = tt.calibre
+			_, err := valueobject.NewConductor(p)
+			assert.Error(t, err)
+			assert.True(t, errors.Is(err, valueobject.ErrConductorInvalido))
+		})
+	}
+}
+
+func TestNewConductor_MaterialInvalido(t *testing.T) {
+	p := conductor12AWGCu()
+	p.Material = "Fe"
+	_, err := valueobject.NewConductor(p)
+	assert.Error(t, err)
+	assert.True(t, errors.Is(err, valueobject.ErrConductorInvalido))
+}
+
+func TestNewConductor_CamposNumericos(t *testing.T) {
+	tests := []struct {
+		name    string
+		mutate  func(*valueobject.ConductorParams)
+	}{
+		{"empty aislamiento", func(p *valueobject.ConductorParams) { p.TipoAislamiento = "" }},
+		{"zero seccion", func(p *valueobject.ConductorParams) { p.SeccionMM2 = 0 }},
+		{"zero area aislamiento", func(p *valueobject.ConductorParams) { p.AreaConAislamientoMM2 = 0 }},
+		{"zero diametro", func(p *valueobject.ConductorParams) { p.DiametroMM = 0 }},
+		{"zero hilos", func(p *valueobject.ConductorParams) { p.NumeroHilos = 0 }},
+		{"zero res PVC", func(p *valueobject.ConductorParams) { p.ResistenciaPVCPorKm = 0 }},
+		{"zero res Al", func(p *valueobject.ConductorParams) { p.ResistenciaAlPorKm = 0 }},
+		{"zero res acero", func(p *valueobject.ConductorParams) { p.ResistenciaAceroPorKm = 0 }},
+		{"zero reactancia", func(p *valueobject.ConductorParams) { p.ReactanciaPorKm = 0 }},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c, err := valueobject.NewConductor(tt.calibre, tt.material, tt.tipoAislamiento, tt.seccionMM2)
-			if tt.wantErr {
-				assert.Error(t, err)
-				assert.True(t, errors.Is(err, valueobject.ErrConductorInvalido))
-				return
-			}
-			require.NoError(t, err)
-			assert.Equal(t, tt.calibre, c.Calibre())
-			assert.Equal(t, tt.material, c.Material())
-			assert.Equal(t, tt.tipoAislamiento, c.TipoAislamiento())
-			assert.Equal(t, tt.seccionMM2, c.SeccionMM2())
+			p := conductor12AWGCu()
+			tt.mutate(&p)
+			_, err := valueobject.NewConductor(p)
+			assert.Error(t, err)
+			assert.True(t, errors.Is(err, valueobject.ErrConductorInvalido))
 		})
 	}
+}
+
+func TestNewConductor_ExtremosCalibre(t *testing.T) {
+	base := conductor12AWGCu()
+
+	base.Calibre = "18 AWG"
+	_, err := valueobject.NewConductor(base)
+	assert.NoError(t, err)
+
+	base.Calibre = "2000 MCM"
+	_, err = valueobject.NewConductor(base)
+	assert.NoError(t, err)
 }
