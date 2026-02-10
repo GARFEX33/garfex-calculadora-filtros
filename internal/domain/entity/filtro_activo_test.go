@@ -43,3 +43,18 @@ func TestFiltroActivo_ImplementsCalculadorCorriente(t *testing.T) {
 	fa, _ := entity.NewFiltroActivo("FA-001", 480, 100, 125, 3)
 	var _ entity.CalculadorCorriente = fa
 }
+
+func TestFiltroActivo_ImplementsCalculadorPotencia(t *testing.T) {
+	fa, _ := entity.NewFiltroActivo("FA-001", 480, 100, 125, 3)
+	var _ entity.CalculadorPotencia = fa
+}
+
+func TestFiltroActivo_Potencias(t *testing.T) {
+	// 100 A @ 480 V → kVA = 100 × 480 × √3 / 1000 = 83.138...
+	fa, err := entity.NewFiltroActivo("FA-001", 480, 100, 125, 3)
+	require.NoError(t, err)
+
+	assert.InDelta(t, 83.138, fa.PotenciaKVA(), 0.01)
+	assert.InDelta(t, 83.138, fa.PotenciaKW(), 0.01)  // PF=1
+	assert.InDelta(t, 0.0, fa.PotenciaKVAR(), 0.001)  // PF=1
+}

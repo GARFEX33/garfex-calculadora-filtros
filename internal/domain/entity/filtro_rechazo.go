@@ -40,3 +40,18 @@ func (fr *FiltroRechazo) CalcularCorrienteNominal() (valueobject.Corriente, erro
 	corriente := float64(fr.KVAR) / denominador
 	return valueobject.NewCorriente(corriente)
 }
+
+// PotenciaKVAR returns reactive power directly from KVAR rating [kVAR].
+func (fr *FiltroRechazo) PotenciaKVAR() float64 {
+	return float64(fr.KVAR)
+}
+
+// PotenciaKVA returns apparent power. FiltroRechazo is purely reactive, so kVA = kVAR.
+func (fr *FiltroRechazo) PotenciaKVA() float64 {
+	return float64(fr.KVAR)
+}
+
+// PotenciaKW returns active power. FiltroRechazo is purely reactive, so kW = 0.
+func (fr *FiltroRechazo) PotenciaKW() float64 {
+	return 0
+}

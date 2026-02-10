@@ -84,3 +84,18 @@ func TestFiltroRechazo_ImplementsCalculadorCorriente(t *testing.T) {
 	fr, _ := entity.NewFiltroRechazo("FR-001", 480, 100, 125, 3)
 	var _ entity.CalculadorCorriente = fr
 }
+
+func TestFiltroRechazo_ImplementsCalculadorPotencia(t *testing.T) {
+	fr, _ := entity.NewFiltroRechazo("FR-001", 480, 100, 125, 3)
+	var _ entity.CalculadorPotencia = fr
+}
+
+func TestFiltroRechazo_Potencias(t *testing.T) {
+	// 100 kVAR purely reactive: kVAR=100, kVA=100, kW=0
+	fr, err := entity.NewFiltroRechazo("FR-001", 480, 100, 125, 3)
+	require.NoError(t, err)
+
+	assert.InDelta(t, 100.0, fr.PotenciaKVAR(), 0.001)
+	assert.InDelta(t, 100.0, fr.PotenciaKVA(), 0.001) // purely reactive
+	assert.InDelta(t, 0.0, fr.PotenciaKW(), 0.001)    // purely reactive
+}

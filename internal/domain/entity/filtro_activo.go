@@ -3,6 +3,7 @@ package entity
 
 import (
 	"fmt"
+	"math"
 
 	"github.com/garfex/calculadora-filtros/internal/domain/valueobject"
 )
@@ -32,4 +33,19 @@ func NewFiltroActivo(clave string, voltaje, amperaje, itm, bornes int) (*FiltroA
 
 func (fa *FiltroActivo) CalcularCorrienteNominal() (valueobject.Corriente, error) {
 	return valueobject.NewCorriente(float64(fa.Amperaje))
+}
+
+// PotenciaKVA returns apparent power: I × V × √3 / 1000 [kVA]
+func (fa *FiltroActivo) PotenciaKVA() float64 {
+	return float64(fa.Amperaje) * float64(fa.Voltaje) * math.Sqrt(3) / 1000.0
+}
+
+// PotenciaKW returns active power. FiltroActivo has PF=1, so kW = kVA.
+func (fa *FiltroActivo) PotenciaKW() float64 {
+	return fa.PotenciaKVA()
+}
+
+// PotenciaKVAR returns reactive power. FiltroActivo has PF=1, so kVAR = 0.
+func (fa *FiltroActivo) PotenciaKVAR() float64 {
+	return 0
 }
