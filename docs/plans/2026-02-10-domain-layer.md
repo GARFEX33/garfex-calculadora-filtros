@@ -1570,11 +1570,16 @@ git commit -m "feat(domain): add ground conductor selection from NOM table 250-1
 
 ---
 
-### Task 12: Service — CalcularCanalizacion
+### Task 12: Service — CalcularCanalizacion ✅ COMPLETADO
 
-**Files:**
-- Create: `internal/domain/service/calculo_canalizacion.go`
-- Test: `internal/domain/service/calculo_canalizacion_test.go`
+**Commits:** `69e816b` (incluye prerequisito `tipo_canalizacion.go`)
+
+**Files creados:**
+- `internal/domain/entity/tipo_canalizacion.go` — enum TipoCanalizacion (prerequisito)
+- `internal/domain/service/calculo_canalizacion.go`
+- `internal/domain/service/calculo_canalizacion_test.go`
+
+**Divergencias vs. plan:** Tests usan `"TUBERIA_CONDUIT"` (valor real del enum) en lugar de `"TUBERIA"` del plan original. `tipo_canalizacion.go` creado como prerequisito antes de implementar el servicio.
 
 **Design note:** Per NOM, conduit fill for 2+ conductors is 40% of the conduit's internal area. The service calculates total conductor area, applies the fill factor, and selects the smallest conduit that fits.
 
@@ -1755,7 +1760,15 @@ git commit -m "feat(domain): add conduit sizing service with NOM 40% fill factor
 
 ---
 
-### Task 13: Service — CalcularCaidaTension
+### Task 13: Service — CalcularCaidaTension ✅ COMPLETADO
+
+**Commit:** `bbffc2e`
+
+**Files creados:**
+- `internal/domain/service/calculo_caida_tension.go`
+- `internal/domain/service/calculo_caida_tension_test.go`
+
+**Divergencias vs. plan:** Tests adaptados a `NewConductor(ConductorParams{...})` (API actual). Renombrado `TestCalcularCaidaTension_InvalidMaterial` a `TestCalcularCaidaTension_ValidInputNoError` para reflejar lo que realmente prueba.
 
 **⚠️ Adaptación requerida:** El test usa `valueobject.NewConductor(calibre, material, "THHN", seccion)` (API viejo). Debe actualizarse a `valueobject.NewConductor(valueobject.ConductorParams{...})` con todos los campos requeridos. La fórmula usa `conductor.SeccionMM2()` (sección del conductor sin aislamiento), no `AreaConAislamientoMM2()`.
 
@@ -1983,7 +1996,13 @@ git commit -m "feat(domain): add voltage drop calculation service with NOM limit
 
 ---
 
-### Task 14: Final Verification
+### Task 14: Final Verification ✅ COMPLETADO
+
+**Resultados:**
+- `go test ./...` → PASS (entity: 95.8%, service: 93.5%, valueobject: 100.0%)
+- `go vet ./...` → No issues
+- `go build ./...` → No errors
+- Race detector: no disponible en Windows sin CGO (se ejecutará en CI/Linux)
 
 **Step 1: Run full test suite with race detector**
 
