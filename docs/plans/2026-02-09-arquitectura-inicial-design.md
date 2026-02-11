@@ -222,7 +222,7 @@ type ITM struct {
 ```go
 type Equipo struct {
     Clave   string
-    Tipo    TipoFiltro  // enum: ACTIVO, RECHAZO
+    Tipo    TipoEquipo  // enum: FILTRO_ACTIVO, FILTRO_RECHAZO
     Voltaje int         // en Voltios
     ITM     ITM         // interruptor termomagnético (entidad propia)
 }
@@ -382,9 +382,9 @@ func CalcularCaidaTension(conductor Conductor, corriente Corriente, distancia fl
 ```go
 type EquipoRepository interface {
     ObtenerPorClave(ctx context.Context, clave string) (*entity.Equipo, error)
-    ListarPorTipo(ctx context.Context, tipo entity.TipoFiltro) ([]*entity.Equipo, error)
+    ListarPorTipo(ctx context.Context, tipo entity.TipoEquipo) ([]*entity.Equipo, error)
     ListarTodos(ctx context.Context) ([]*entity.Equipo, error)
-    FiltrarPorRangoCapacidad(ctx context.Context, min, max int, tipo *entity.TipoFiltro) ([]*entity.Equipo, error)
+    FiltrarPorRangoCapacidad(ctx context.Context, min, max int, tipo *entity.TipoEquipo) ([]*entity.Equipo, error)
 }
 ```
 
@@ -407,7 +407,7 @@ type TablaNOMRepository interface {
 type EquipoInput struct {
     Modo        string      // "LISTADO" | "AMPERAJE" | "POTENCIA"
     ClaveEquipo *string
-    Tipo        *TipoFiltro
+    Tipo        *TipoEquipo
     Voltaje     *int
     Amperaje    *int
     Potencia    *int        // KVAR
