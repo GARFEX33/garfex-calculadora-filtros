@@ -421,23 +421,21 @@ Se agregaron campos de NOM-001-SEDE-2012: `AreaConAislamientoMM2`, `DiametroMM`,
 `NumeroHilos`, `ResistenciaPVCPorKm`, `ResistenciaAlPorKm`, `ResistenciaAceroPorKm`,
 `ReactanciaPorKm`.
 
-```go
-func NewConductor(p ConductorParams) (Conductor, error)
-```
-
-Validaciones implementadas:
-- `Calibre`: mapa `calibresValidos` con NOM 310-15(b)(16) — AWG 18→4/0, MCM 250→2000
-  - **"3 AWG" y "1 AWG" NO son válidos** (no están en tabla 310-15(b)(16))
-- `Material`: solo "Cu" o "Al"
-- Todos los campos numéricos: > 0
+**Validaciones implementadas (post-refactor de campos opcionales):**
+- Campos **requeridos** (validados en `NewConductor`):
+  - `Calibre`: mapa `calibresValidos` con NOM 310-15(b)(16) — AWG 18→4/0, MCM 250→2000
+  - `Material`: solo "Cu" o "Al"
+  - `SeccionMM2`: > 0
+- Campos **opcionales** (aceptados sin validación): `TipoAislamiento` (vacío para desnudos), `AreaConAislamientoMM2`, `DiametroMM`, `NumeroHilos`, resistencias, reactancia
+  - **Validación postponida:** Los campos opcionales se validan al punto de uso (ej: caída de tensión requiere sección, canalización requiere área con aislamiento)
 
 **Impacto en tareas 10–13:**
-- Task 10: `EntradaTablaConductor` debe incluir todos los campos de `ConductorParams`
-- Task 11: `tablaTierraTest` NO debe usar "3 AWG" ni "1 AWG"; sustituir con "4 AWG" / "2 AWG"
-- Task 12: Usar `AreaConAislamientoMM2()` (no `SeccionMM2()`) para cálculo de fill en canalización
+- Task 10: `EntradaTablaConductor` solo necesita `Calibre`, `Capacidad`, `SeccionMM2`, `Material`, `TipoAislamiento`
+- Task 11: Conductores de tierra son desnudos (`TipoAislamiento = ""`); datos de test usan "4 AWG" y "2 AWG" (válidos)
+- Task 12: Usar `AreaConAislamientoMM2()` (opcional) para cálculo de fill en canalización
 - Task 13: `CalcularCaidaTension` usa `SeccionMM2()` para la fórmula ρ (es la sección del conductor, no del aislamiento)
 
-**Commits:** `892aef4`, `49d897f`, `b992169`, `6569b23`
+**Commits:** `892aef4`, `49d897f`, `b992169`, `6569b23` (Task 4 original), `c6c15c8` (refactor de campos opcionales post-Task 11)
 
 ---
 
@@ -996,13 +994,19 @@ git commit -m "feat(domain): add Canalizacion and MemoriaCalculo result structs"
 
 ---
 
-### Task 9: Service — CalcularCorrienteNominal + AjustarCorriente
+### Task 9: Service — CalcularCorrienteNominal + AjustarCorriente ✅ COMPLETADO
 
-**Files:**
-- Create: `internal/domain/service/calculo_corriente_nominal.go`
-- Create: `internal/domain/service/ajuste_corriente.go`
-- Test: `internal/domain/service/calculo_corriente_nominal_test.go`
-- Test: `internal/domain/service/ajuste_corriente_test.go`
+**Commits:** `1aa2570`
+
+**Files creados:**
+- `internal/domain/service/calculo_corriente_nominal.go`
+- `internal/domain/service/ajuste_corriente.go`
+- `internal/domain/service/calculo_corriente_nominal_test.go`
+- `internal/domain/service/ajuste_corriente_test.go`
+
+**Divergencias vs. plan:** Tests adaptados para usar `ITM` como struct (patrón actual) en lugar de parámetros posicionales. Se agregaron tests para `Transformador` y `Carga` (no incluidos en plan original pero necesarios ahora que existen esos tipos).
+
+**Implementación resumen:**
 
 **Step 1: Write the failing test for CalcularCorrienteNominal**
 
@@ -1195,15 +1199,20 @@ git commit -m "feat(domain): add corriente nominal calculation and current adjus
 
 ---
 
-### Task 10: Service — SeleccionarConductorAlimentacion
+### Task 10: Service — SeleccionarConductorAlimentacion ✅ COMPLETADO
 
-**Files:**
-- Create: `internal/domain/service/calculo_conductor.go`
-- Test: `internal/domain/service/calculo_conductor_test.go`
+**Commit:** `b806152`
+
+**Files creados:**
+- `internal/domain/service/calculo_conductor.go`
+- `internal/domain/service/calculo_conductor_test.go`
 
 **Design note:** The service receives pre-resolved table data as `[]EntradaTablaConductor`. The application layer will query `TablaNOMRepository` and pass the results here. The entries must be sorted smallest-to-largest by calibre (as they appear in NOM tables).
 
-**⚠️ Adaptación requerida vs. plan original:** `NewConductor` ahora acepta `ConductorParams` struct (no params posicionales). `EntradaTablaConductor` debe incluir todos los campos de `ConductorParams` más `Capacidad`. En datos de test usar valores dummy (1.0) para campos que no afectan la lógica de selección.
+**Divergencias vs. plan original:**
+- `NewConductor` acepta `ConductorParams` struct (no params posicionales).
+- `EntradaTablaConductor` fue diseñada con campos simples: `Calibre`, `Capacidad`, `SeccionMM2`, `Material`, `TipoAislamiento` (refactorizado durante el refactoring de campos opcionales).
+- Los tests no usan valores dummy para campos innecesarios — se construyen `ConductorParams` solo con los campos que ImportanImportantemente, la selección solo depende de `Capacidad`.
 
 **Step 1: Write the failing test**
 
@@ -1368,17 +1377,19 @@ git commit -m "feat(domain): add conductor selection service with NOM table look
 
 ---
 
-### Task 11: Service — SeleccionarConductorTierra
+### Task 11: Service — SeleccionarConductorTierra ✅ COMPLETADO
 
-**Files:**
-- Create: `internal/domain/service/calculo_tierra.go`
-- Test: `internal/domain/service/calculo_tierra_test.go`
+**Commit:** `284a4eb`
+
+**Files creados:**
+- `internal/domain/service/calculo_tierra.go`
+- `internal/domain/service/calculo_tierra_test.go`
 
 **Design note:** Table 250-122 maps ITM ranges to ground conductor calibres. The service receives sorted entries where each row represents the maximum ITM for that conductor size.
 
-**⚠️ Adaptaciones requeridas vs. plan original:**
-1. El test usa `"3 AWG"` y `"1 AWG"` — **NO son calibres válidos** en `calibresValidos`. Sustituir en `tablaTierraTest`: `"3 AWG"→"4 AWG"`, `"1 AWG"→"2 AWG"` (y ajustar `expectedCalibre` en las aserciones correspondientes).
-2. `NewConductor` acepta `ConductorParams` struct. `EntradaTablaTierra` debe tener campos suficientes para construirlo, o la función retorna solo calibre/sección (ver decisión al implementar).
+**Divergencias vs. plan original:**
+1. El plan usaba `"3 AWG"` y `"1 AWG"` pero **NO son calibres válidos** en `calibresValidos` (no están en NOM 310-15(b)(16)). Se sustituyó con `"4 AWG"` y `"2 AWG"`.
+2. `NewConductor` acepta `ConductorParams` struct. `EntradaTablaTierra` usa `Calibre`, `SeccionMM2`, e `ITMHasta` — menos campos que la alimentación porque los conductores de tierra son desnudos (sin aislamiento requerido).
 
 **Step 1: Write the failing test**
 
@@ -1518,6 +1529,47 @@ git commit -m "feat(domain): add ground conductor selection from NOM table 250-1
 
 ---
 
+### Refactoring: Conductor VO — Campos Opcionales ✅ COMPLETADO (post-Task 11)
+
+**Commit:** `c6c15c8`
+
+**Decisión:** Se identificó que el modelo de Conductor no podía representar conductores desnudos (tierra, puesta a tierra) sin usar valores dummy para campos de aislamiento. Además, los test helpers estaban forzados a llenar campos innecesarios. Se refactorizó a un modelo de **validación en construcción mínima + validación al punto de uso**.
+
+**Cambios:**
+
+1. **Constructor más flexible:**
+   ```go
+   func NewConductor(p ConductorParams) (Conductor, error)
+   // Valida solo: Calibre (en map), Material (Cu|Al), SeccionMM2 > 0
+   // Acepta: TipoAislamiento vacío (para desnudos), todos los demás campos opcionales
+   ```
+
+2. **Campos opcionales sin validación:**
+   - `TipoAislamiento`: puede ser `""` (desnudo), `"THHN"`, `"THW"`, etc.
+   - `AreaConAislamientoMM2`, `DiametroMM`, `NumeroHilos`: solo usados si están presentes
+   - Resistencias y reactancia: no validadas en construcción
+
+3. **Validación postponida:**
+   - `CalcularCaidaTension`: requiere `SeccionMM2()` ✓ (siempre validado)
+   - `CalcularCanalizacion`: requiere `AreaConAislamientoMM2()` (si 0, no se usa canalización con aislamiento; ver adaptación Task 12)
+   - Tests de tierra usan conductores desnudos: `TipoAislamiento = ""`
+
+**Impacto en testes:**
+- `conductor_test.go`: Reemplazó 9 casos de error (validación de todos los campos) con 3 casos específicos:
+  - `TestNewConductor_SeccionCero`
+  - `TestNewConductor_SeccionNegativa`
+  - `TestNewConductor_Minimal` (solo 3 campos, sin aislamiento)
+- `calculo_conductor_test.go`: Simplificó `entradaConductor()` helper (sin valores dummy)
+- `calculo_tierra_test.go`: Simplificó `entradaTierra()` helper (solo 3 campos para desnudo)
+
+**Beneficios:**
+- Representación correcta de conductores desnudos sin hackeos
+- Tests más limpios (sin dummy values)
+- Validación enfocada en lo que importa en construcción
+- Extensible para futuros tipos de conductores
+
+---
+
 ### Task 12: Service — CalcularCanalizacion
 
 **Files:**
@@ -1525,6 +1577,13 @@ git commit -m "feat(domain): add ground conductor selection from NOM table 250-1
 - Test: `internal/domain/service/calculo_canalizacion_test.go`
 
 **Design note:** Per NOM, conduit fill for 2+ conductors is 40% of the conduit's internal area. The service calculates total conductor area, applies the fill factor, and selects the smallest conduit that fits.
+
+**⚠️ Nota de diseño — Nuevo diseño de canalizaciones (2026-02-11):**
+La firma del servicio usa `tipo string` en el plan original, pero el diseño validado usa `TipoCanalizacion` (enum). Al implementar, se debe pasar el tipo como `string` serializado del enum (ej: `"TUBERIA_CONDUIT"`), o adaptar la firma a `TipoCanalizacion`. El enum `TipoCanalizacion` debe crearse en `internal/domain/entity/tipo_canalizacion.go` **antes** de implementar este servicio.
+
+La tabla NOM correcta para cada canalización es responsabilidad de la capa application/infrastructure — el domain service solo recibe `[]EntradaTablaCanalizacion` ya resueltos (mismo patrón que `SeleccionarConductorAlimentacion`).
+
+Ver diseño completo: `docs/plans/2026-02-11-tablas-nom-canalizacion-design.md`
 
 **Step 1: Write the failing test**
 

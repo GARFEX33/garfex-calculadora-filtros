@@ -81,10 +81,17 @@ Lo que este sistema **no hará** en la fase actual:
 Ver documento de diseño completo: `docs/plans/2026-02-09-arquitectura-inicial-design.md`
 
 ### Tablas NOM (CSV)
-Las tablas de referencia de normativa NOM están en `data/tablas_nom/`:
-- `310-15-b-16.csv` - Conductores en tubería
-- `250-122.csv` - Conductores de tierra
-- (Más tablas se agregarán según se necesiten)
+Las tablas de referencia de normativa NOM están en `data/tablas_nom/`.
+
+**Tablas de ampacidad (selección de conductor de alimentación — dependen del tipo de canalización):**
+- `310-15-b-16.csv` - Tubería conduit (`TUBERIA_CONDUIT`) — 14 AWG a 2000 MCM, Cu/Al 60/75/90°C
+- `310-15-b-17.csv` - Charola cable espaciado (`CHAROLA_CABLE_ESPACIADO`) — 14 AWG a 2000 MCM, Cu/Al 60/75/90°C
+- `310-15-b-20.csv` - Charola triangular (`CHAROLA_CABLE_TRIANGULAR`) — 8 AWG a 1000 MCM, Cu/Al 75/90°C (sin columna 60°C)
+
+**Tabla de conductor de tierra:**
+- `250-122.csv` - Conductores de tierra (independiente del tipo de canalización)
+
+**Formato CSV universal:** `seccion_mm2,calibre,cu_60c,cu_75c,cu_90c,al_60c,al_75c,al_90c` — celdas vacías donde no aplica.
 
 ### Base de Datos (Supabase)
 
@@ -170,7 +177,7 @@ Al completar cualquier tarea de implementación, **antes del commit final**, ver
 
 ### Desarrollo Paso a Paso
 Este proyecto se desarrolla **incrementalmente**:
-1. **Fase 1 (actual):** 4 tipos de equipos (FA, FR, Transformador, Carga), 6 servicios de cálculo, 2 tablas NOM
+1. **Fase 1 (actual):** 4 tipos de equipos (FA, FR, Transformador, Carga), 6 servicios de cálculo, 3 tablas de ampacidad + 1 tabla de tierra NOM
 2. **Fase 2:** Más tipos de equipos, más tablas NOM
 3. **Fase 3:** Generación de PDF, frontend (repo separado)
 
@@ -187,10 +194,24 @@ Este proyecto se desarrolla **incrementalmente**:
 #### Pasos de Cálculo
 1. **Corriente Nominal:** Calcular In según tipo de equipo
 2. **Ajuste de Corriente:** Aplicar factores (temperatura, agrupamiento, etc.)
-3. **Conductor de Alimentación:** Seleccionar calibre de tabla NOM, considerar hilos por fase
-4. **Conductor de Tierra:** Usar ITM del equipo, tabla 250-122
-5. **Canalización:** Tubería o charola según área de conductores
-6. **Caída de Tensión:** Validar límites NOM (3% o 5%)
+3. **Selección de Canalización:** Elegir `TipoCanalizacion` (TUBERIA_CONDUIT / CHAROLA_CABLE_ESPACIADO / CHAROLA_CABLE_TRIANGULAR) — **determina qué tabla NOM usar**
+4. **Conductor de Alimentación:** Cargar tabla NOM según canalización → auto-seleccionar columna de temperatura (≤100A→60°C, >100A→75°C, override para 90°C) → seleccionar calibre
+5. **Conductor de Tierra:** Usar ITM del equipo, tabla 250-122 (independiente de la canalización)
+6. **Canalización:** Calcular dimensiones de tubería/charola según área de conductores (40% fill para tubería)
+7. **Caída de Tensión:** Validar límites NOM (3% o 5%)
+
+#### Selección de Temperatura (NOM)
+- Circuitos ≤ 100 A o calibres 14–1 AWG → columna **60°C**
+- Circuitos > 100 A o calibres > 1 AWG → columna **75°C**
+- **90°C:** solo con `temperatura_override: 90` explícito (muy raro — requiere todos los equipos certificados 90°C)
+- Tabla 310-15(b)(20) Charola triangular **no tiene columna 60°C** → fallback automático a 75°C
+
+#### TipoCanalizacion (enum de dominio)
+```go
+TUBERIA_CONDUIT         → tabla 310-15-b-16.csv
+CHAROLA_CABLE_ESPACIADO → tabla 310-15-b-17.csv
+CHAROLA_CABLE_TRIANGULAR→ tabla 310-15-b-20.csv
+```
 
 ## Convenciones de Código
 
