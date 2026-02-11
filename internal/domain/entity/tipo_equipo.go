@@ -11,6 +11,8 @@ type TipoEquipo string
 const (
 	TipoEquipoFiltroActivo  TipoEquipo = "FILTRO_ACTIVO"
 	TipoEquipoFiltroRechazo TipoEquipo = "FILTRO_RECHAZO"
+	TipoEquipoTransformador TipoEquipo = "TRANSFORMADOR"
+	TipoEquipoCarga         TipoEquipo = "CARGA"
 )
 
 // ParseTipoEquipo converts a string (e.g., from the database) to a TipoEquipo.
@@ -20,6 +22,10 @@ func ParseTipoEquipo(s string) (TipoEquipo, error) {
 		return TipoEquipoFiltroActivo, nil
 	case string(TipoEquipoFiltroRechazo):
 		return TipoEquipoFiltroRechazo, nil
+	case string(TipoEquipoTransformador):
+		return TipoEquipoTransformador, nil
+	case string(TipoEquipoCarga):
+		return TipoEquipoCarga, nil
 	default:
 		return "", fmt.Errorf("%w: '%s'", ErrTipoEquipoInvalido, s)
 	}

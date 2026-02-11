@@ -12,7 +12,7 @@ import (
 // its amperage rating directly (no formula needed).
 type FiltroActivo struct {
 	Equipo
-	Amperaje int
+	AmperajeNominal int
 }
 
 func NewFiltroActivo(clave string, voltaje, amperaje int, itm ITM) (*FiltroActivo, error) {
@@ -26,17 +26,17 @@ func NewFiltroActivo(clave string, voltaje, amperaje int, itm ITM) (*FiltroActiv
 			Voltaje: voltaje,
 			ITM:     itm,
 		},
-		Amperaje: amperaje,
+		AmperajeNominal: amperaje,
 	}, nil
 }
 
 func (fa *FiltroActivo) CalcularCorrienteNominal() (valueobject.Corriente, error) {
-	return valueobject.NewCorriente(float64(fa.Amperaje))
+	return valueobject.NewCorriente(float64(fa.AmperajeNominal))
 }
 
 // PotenciaKVA returns apparent power: I × V × √3 / 1000 [kVA]
 func (fa *FiltroActivo) PotenciaKVA() float64 {
-	return float64(fa.Amperaje) * float64(fa.Voltaje) * math.Sqrt(3) / 1000.0
+	return float64(fa.AmperajeNominal) * float64(fa.Voltaje) * math.Sqrt(3) / 1000.0
 }
 
 // PotenciaKW returns active power. FiltroActivo has PF=1, so kW = kVA.

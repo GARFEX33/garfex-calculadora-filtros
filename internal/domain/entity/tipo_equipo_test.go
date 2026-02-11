@@ -19,6 +19,8 @@ func TestParseTipoEquipo(t *testing.T) {
 	}{
 		{"FILTRO_ACTIVO valid", "FILTRO_ACTIVO", entity.TipoEquipoFiltroActivo, false},
 		{"FILTRO_RECHAZO valid", "FILTRO_RECHAZO", entity.TipoEquipoFiltroRechazo, false},
+		{"TRANSFORMADOR valid", "TRANSFORMADOR", entity.TipoEquipoTransformador, false},
+		{"CARGA valid", "CARGA", entity.TipoEquipoCarga, false},
 		{"lowercase invalid", "filtro_activo", entity.TipoEquipo(""), true},
 		{"empty invalid", "", entity.TipoEquipo(""), true},
 		{"old ACTIVO invalid", "ACTIVO", entity.TipoEquipo(""), true},
@@ -42,4 +44,6 @@ func TestParseTipoEquipo(t *testing.T) {
 func TestTipoEquipo_String(t *testing.T) {
 	assert.Equal(t, "FILTRO_ACTIVO", entity.TipoEquipoFiltroActivo.String())
 	assert.Equal(t, "FILTRO_RECHAZO", entity.TipoEquipoFiltroRechazo.String())
+	assert.Equal(t, "TRANSFORMADOR", entity.TipoEquipoTransformador.String())
+	assert.Equal(t, "CARGA", entity.TipoEquipoCarga.String())
 }

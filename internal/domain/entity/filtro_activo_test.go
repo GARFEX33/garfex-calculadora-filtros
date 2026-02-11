@@ -24,7 +24,7 @@ func TestNewFiltroActivo(t *testing.T) {
 	assert.Equal(t, "FA-001", fa.Clave)
 	assert.Equal(t, entity.TipoEquipoFiltroActivo, fa.Tipo)
 	assert.Equal(t, 480, fa.Voltaje)
-	assert.Equal(t, 100, fa.Amperaje)
+	assert.Equal(t, 100, fa.AmperajeNominal)
 	assert.Equal(t, 125, fa.ITM.Amperaje)
 	assert.Equal(t, 3, fa.ITM.Bornes)
 	assert.Equal(t, 3, fa.ITM.Polos)
