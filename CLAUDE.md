@@ -170,7 +170,7 @@ Al completar cualquier tarea de implementación, **antes del commit final**, ver
 
 ### Desarrollo Paso a Paso
 Este proyecto se desarrolla **incrementalmente**:
-1. **Fase 1 (actual):** 2 tipos de equipos (FA, FR), 6 servicios de cálculo, 2 tablas NOM
+1. **Fase 1 (actual):** 4 tipos de equipos (FA, FR, Transformador, Carga), 6 servicios de cálculo, 2 tablas NOM
 2. **Fase 2:** Más tipos de equipos, más tablas NOM
 3. **Fase 3:** Generación de PDF, frontend (repo separado)
 
@@ -179,8 +179,10 @@ Este proyecto se desarrolla **incrementalmente**:
 ### Reglas de Negocio Clave
 
 #### Tipos de Equipos
-- **Filtro Activo (FA):** Corriente nominal = amperaje directo (no se calcula)
+- **Filtro Activo (FA):** Corriente nominal = AmperajeNominal directo (no se calcula)
 - **Filtro de Rechazo (FR):** Corriente nominal = `I = KVAR / (KV × √3)`
+- **Transformador:** Corriente nominal = `I = KVA / (KV × √3)`
+- **Carga:** Corriente nominal = `I = KW / (KV × factor × FP)` donde factor depende de fases (1/2/3)
 
 #### Pasos de Cálculo
 1. **Corriente Nominal:** Calcular In según tipo de equipo
