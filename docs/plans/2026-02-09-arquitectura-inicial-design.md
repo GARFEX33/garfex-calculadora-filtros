@@ -222,7 +222,7 @@ type ITM struct {
 ```go
 type Equipo struct {
     Clave   string
-    Tipo    TipoEquipo  // enum: FILTRO_ACTIVO, FILTRO_RECHAZO
+    Tipo    TipoEquipo  // enum: FILTRO_ACTIVO, FILTRO_RECHAZO, TRANSFORMADOR, CARGA
     Voltaje int         // en Voltios
     ITM     ITM         // interruptor termomagnético (entidad propia)
 }
@@ -231,11 +231,11 @@ type Equipo struct {
 #### `FiltroActivo` (implementa CalculadorCorriente + CalculadorPotencia)
 ```go
 type FiltroActivo struct {
-    Equipo              // embedded
-    Amperaje int        // qn/In de la BD
+    Equipo                // embedded
+    AmperajeNominal int   // corriente nominal directa del fabricante
 }
 
-// Retorna amperaje directamente (no calcula)
+// Retorna AmperajeNominal directamente (no calcula)
 func (fa *FiltroActivo) CalcularCorrienteNominal() (valueobject.Corriente, error)
 // PF=1: kVA=I×V×√3/1000, kW=kVA, kVAR=0
 func (fa *FiltroActivo) PotenciaKVA() float64
@@ -247,7 +247,7 @@ func (fa *FiltroActivo) PotenciaKVAR() float64
 ```go
 type FiltroRechazo struct {
     Equipo              // embedded
-    KVAR int            // qn/In de la BD
+    KVAR int            // potencia reactiva nominal
 }
 
 // Aplica fórmula: I = KVAR / (KV × √3) donde KV = Voltaje / 1000
@@ -256,6 +256,38 @@ func (fr *FiltroRechazo) CalcularCorrienteNominal() (valueobject.Corriente, erro
 func (fr *FiltroRechazo) PotenciaKVA() float64
 func (fr *FiltroRechazo) PotenciaKW() float64
 func (fr *FiltroRechazo) PotenciaKVAR() float64
+```
+
+#### `Transformador` (implementa CalculadorCorriente + CalculadorPotencia)
+```go
+type Transformador struct {
+    Equipo              // embedded
+    KVA int             // potencia aparente nominal
+}
+
+// I = KVA / (KV × √3) — misma fórmula que FiltroRechazo
+func (tr *Transformador) CalcularCorrienteNominal() (valueobject.Corriente, error)
+// Solo potencia aparente: kVA=KVA, kW=0, kVAR=0
+func (tr *Transformador) PotenciaKVA() float64
+func (tr *Transformador) PotenciaKW() float64
+func (tr *Transformador) PotenciaKVAR() float64
+```
+
+#### `Carga` (implementa CalculadorCorriente + CalculadorPotencia)
+```go
+type Carga struct {
+    Equipo                  // embedded
+    KW             int      // potencia activa
+    FactorPotencia float64  // 0 < FP ≤ 1
+    Fases          int      // 1, 2 o 3
+}
+
+// Fórmula según fases: 3→KW/(KV×√3×FP), 2→KW/(KV×2×FP), 1→KW/(KV×FP)
+func (c *Carga) CalcularCorrienteNominal() (valueobject.Corriente, error)
+// kW=dado, kVA=KW/FP, kVAR=√(kVA²-kW²)
+func (c *Carga) PotenciaKVA() float64
+func (c *Carga) PotenciaKW() float64
+func (c *Carga) PotenciaKVAR() float64
 ```
 
 #### `MemoriaCalculo`

@@ -911,6 +911,22 @@ git commit -m "feat(domain): add FiltroRechazo entity with KVAR formula I=KVAR/(
 
 ---
 
+### Extensión: Transformador + Carga + Rename AmperajeNominal ✅ COMPLETADO (entre TipoEquipo y Task 9)
+
+**Commit:** `f5e1c78`
+
+**Decisión (brainstorming):** Se amplió el modelo de equipos de 2 a 4 tipos para cubrir más escenarios de memorias de cálculo. Diseño documentado en `docs/plans/2026-02-10-nuevos-equipos-design.md`.
+
+**Cambios:**
+- `FiltroActivo.Amperaje` → `AmperajeNominal` (claridad semántica)
+- `Transformador`: KVA como dato de entrada, In=KVA/(KV×√3), potencia=solo KVA
+- `Carga`: KW+FP+Fases como datos de entrada, soporta 1/2/3 fases con factor diferente
+- `TipoEquipoTransformador="TRANSFORMADOR"`, `TipoEquipoCarga="CARGA"` agregados a `tipo_equipo.go`
+
+**Impacto en servicios (Tasks 9-14):** Ninguno. Los servicios trabajan con interfaces `CalculadorCorriente` y `CalculadorPotencia`, agnósticos al tipo de equipo.
+
+---
+
 ### Task 8: Domain Structs — Canalizacion and MemoriaCalculo ✅ COMPLETADO
 
 **Commit:** `30c8274`
