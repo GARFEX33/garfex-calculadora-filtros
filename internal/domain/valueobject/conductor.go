@@ -30,10 +30,16 @@ var calibresValidos = map[string]bool{
 
 // ConductorParams holds all physical and electrical properties of a conductor
 // needed for electrical memory calculations per NOM-001-SEDE-2012.
+//
+// Required fields: Calibre, Material, SeccionMM2.
+// Optional fields (zero-value allowed): TipoAislamiento (empty = bare/desnudo),
+// AreaConAislamientoMM2, DiametroMM, NumeroHilos, resistances, reactance.
+// Optional fields are validated at the point of use (e.g., conduit sizing
+// requires AreaConAislamientoMM2; voltage drop requires resistance values).
 type ConductorParams struct {
 	Calibre               string
 	Material              string
-	TipoAislamiento       string
+	TipoAislamiento       string  // "" for bare conductors
 	SeccionMM2            float64 // sección transversal del conductor (sin aislamiento) [mm²]
 	AreaConAislamientoMM2 float64 // área total incluyendo aislamiento, para cálculo de canalización [mm²]
 	DiametroMM            float64 // diámetro exterior con aislamiento [mm]
@@ -67,13 +73,10 @@ func positivoF(v float64, campo string) error {
 	return nil
 }
 
-func positivoI(v int, campo string) error {
-	if v <= 0 {
-		return fmt.Errorf("%w: %s debe ser mayor que cero", ErrConductorInvalido, campo)
-	}
-	return nil
-}
 
+// NewConductor creates a Conductor value object.
+// Only Calibre, Material, and SeccionMM2 are required.
+// All other fields are optional and validated at the point of use.
 func NewConductor(p ConductorParams) (Conductor, error) {
 	if !calibresValidos[p.Calibre] {
 		return Conductor{}, fmt.Errorf("%w: calibre '%s' no válido según NOM", ErrConductorInvalido, p.Calibre)
@@ -81,22 +84,8 @@ func NewConductor(p ConductorParams) (Conductor, error) {
 	if !materialesValidos[p.Material] {
 		return Conductor{}, fmt.Errorf("%w: material '%s' no válido (Cu o Al)", ErrConductorInvalido, p.Material)
 	}
-	if p.TipoAislamiento == "" {
-		return Conductor{}, fmt.Errorf("%w: tipo de aislamiento vacío", ErrConductorInvalido)
-	}
-	for _, check := range []error{
-		positivoF(p.SeccionMM2, "sección"),
-		positivoF(p.AreaConAislamientoMM2, "área con aislamiento"),
-		positivoF(p.DiametroMM, "diámetro"),
-		positivoI(p.NumeroHilos, "número de hilos"),
-		positivoF(p.ResistenciaPVCPorKm, "resistencia PVC"),
-		positivoF(p.ResistenciaAlPorKm, "resistencia aluminio"),
-		positivoF(p.ResistenciaAceroPorKm, "resistencia acero"),
-		positivoF(p.ReactanciaPorKm, "reactancia"),
-	} {
-		if check != nil {
-			return Conductor{}, check
-		}
+	if err := positivoF(p.SeccionMM2, "sección"); err != nil {
+		return Conductor{}, err
 	}
 	return Conductor{
 		calibre:               p.Calibre,

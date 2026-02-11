@@ -74,31 +74,39 @@ func TestNewConductor_MaterialInvalido(t *testing.T) {
 	assert.True(t, errors.Is(err, valueobject.ErrConductorInvalido))
 }
 
-func TestNewConductor_CamposNumericos(t *testing.T) {
-	tests := []struct {
-		name    string
-		mutate  func(*valueobject.ConductorParams)
-	}{
-		{"empty aislamiento", func(p *valueobject.ConductorParams) { p.TipoAislamiento = "" }},
-		{"zero seccion", func(p *valueobject.ConductorParams) { p.SeccionMM2 = 0 }},
-		{"zero area aislamiento", func(p *valueobject.ConductorParams) { p.AreaConAislamientoMM2 = 0 }},
-		{"zero diametro", func(p *valueobject.ConductorParams) { p.DiametroMM = 0 }},
-		{"zero hilos", func(p *valueobject.ConductorParams) { p.NumeroHilos = 0 }},
-		{"zero res PVC", func(p *valueobject.ConductorParams) { p.ResistenciaPVCPorKm = 0 }},
-		{"zero res Al", func(p *valueobject.ConductorParams) { p.ResistenciaAlPorKm = 0 }},
-		{"zero res acero", func(p *valueobject.ConductorParams) { p.ResistenciaAceroPorKm = 0 }},
-		{"zero reactancia", func(p *valueobject.ConductorParams) { p.ReactanciaPorKm = 0 }},
-	}
+func TestNewConductor_SeccionCero(t *testing.T) {
+	p := conductor12AWGCu()
+	p.SeccionMM2 = 0
+	_, err := valueobject.NewConductor(p)
+	assert.Error(t, err)
+	assert.True(t, errors.Is(err, valueobject.ErrConductorInvalido))
+}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			p := conductor12AWGCu()
-			tt.mutate(&p)
-			_, err := valueobject.NewConductor(p)
-			assert.Error(t, err)
-			assert.True(t, errors.Is(err, valueobject.ErrConductorInvalido))
-		})
-	}
+func TestNewConductor_SeccionNegativa(t *testing.T) {
+	p := conductor12AWGCu()
+	p.SeccionMM2 = -1
+	_, err := valueobject.NewConductor(p)
+	assert.Error(t, err)
+	assert.True(t, errors.Is(err, valueobject.ErrConductorInvalido))
+}
+
+func TestNewConductor_Minimal(t *testing.T) {
+	// Bare conductor with only required fields (Calibre, Material, SeccionMM2).
+	// All other fields are zero-value — valid for ground conductors, etc.
+	c, err := valueobject.NewConductor(valueobject.ConductorParams{
+		Calibre:    "8 AWG",
+		Material:   "Cu",
+		SeccionMM2: 8.37,
+	})
+	require.NoError(t, err)
+
+	assert.Equal(t, "8 AWG", c.Calibre())
+	assert.Equal(t, "Cu", c.Material())
+	assert.Equal(t, "", c.TipoAislamiento())
+	assert.Equal(t, 8.37, c.SeccionMM2())
+	assert.Equal(t, 0.0, c.AreaConAislamientoMM2())
+	assert.Equal(t, 0.0, c.DiametroMM())
+	assert.Equal(t, 0, c.NumeroHilos())
 }
 
 func TestNewConductor_ExtremosCalibre(t *testing.T) {

@@ -11,23 +11,16 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// entradaTierra builds an EntradaTablaTierra with the given key fields
-// and dummy values for the remaining ConductorParams fields.
+// entradaTierra builds an EntradaTablaTierra with only the fields relevant
+// for ground conductor selection (calibre, material, section).
+// Ground conductors can be bare — no insulation or resistance data needed.
 func entradaTierra(itmHasta int, calibre string, seccionMM2 float64) service.EntradaTablaTierra {
 	return service.EntradaTablaTierra{
 		ITMHasta: itmHasta,
 		Conductor: valueobject.ConductorParams{
-			Calibre:               calibre,
-			Material:              "Cu",
-			TipoAislamiento:       "THHN",
-			SeccionMM2:            seccionMM2,
-			AreaConAislamientoMM2: seccionMM2 * 1.5, // dummy
-			DiametroMM:            5.0,               // dummy
-			NumeroHilos:           7,                  // dummy
-			ResistenciaPVCPorKm:   1.0,               // dummy
-			ResistenciaAlPorKm:    1.0,               // dummy
-			ResistenciaAceroPorKm: 1.0,               // dummy
-			ReactanciaPorKm:       0.1,               // dummy
+			Calibre:    calibre,
+			Material:   "Cu",
+			SeccionMM2: seccionMM2,
 		},
 	}
 }

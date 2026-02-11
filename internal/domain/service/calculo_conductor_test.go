@@ -11,23 +11,17 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// entradaConductor builds an EntradaTablaConductor with the given key fields
-// and dummy values for the remaining ConductorParams fields that don't affect selection.
+// entradaConductor builds an EntradaTablaConductor with the fields relevant
+// for conductor selection. Optional fields (resistance, reactance) omitted —
+// they are validated at point of use (voltage drop, etc.), not at construction.
 func entradaConductor(calibre string, capacidad, seccionMM2 float64) service.EntradaTablaConductor {
 	return service.EntradaTablaConductor{
 		Capacidad: capacidad,
 		Conductor: valueobject.ConductorParams{
-			Calibre:               calibre,
-			Material:              "Cu",
-			TipoAislamiento:       "THHN",
-			SeccionMM2:            seccionMM2,
-			AreaConAislamientoMM2: seccionMM2 * 1.5, // dummy
-			DiametroMM:            5.0,               // dummy
-			NumeroHilos:           7,                  // dummy
-			ResistenciaPVCPorKm:   1.0,               // dummy
-			ResistenciaAlPorKm:    1.0,               // dummy
-			ResistenciaAceroPorKm: 1.0,               // dummy
-			ReactanciaPorKm:       0.1,               // dummy
+			Calibre:         calibre,
+			Material:        "Cu",
+			TipoAislamiento: "THHN",
+			SeccionMM2:      seccionMM2,
 		},
 	}
 }
