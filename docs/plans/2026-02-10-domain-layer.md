@@ -1578,6 +1578,13 @@ git commit -m "feat(domain): add ground conductor selection from NOM table 250-1
 
 **Design note:** Per NOM, conduit fill for 2+ conductors is 40% of the conduit's internal area. The service calculates total conductor area, applies the fill factor, and selects the smallest conduit that fits.
 
+**⚠️ Nota de diseño — Nuevo diseño de canalizaciones (2026-02-11):**
+La firma del servicio usa `tipo string` en el plan original, pero el diseño validado usa `TipoCanalizacion` (enum). Al implementar, se debe pasar el tipo como `string` serializado del enum (ej: `"TUBERIA_CONDUIT"`), o adaptar la firma a `TipoCanalizacion`. El enum `TipoCanalizacion` debe crearse en `internal/domain/entity/tipo_canalizacion.go` **antes** de implementar este servicio.
+
+La tabla NOM correcta para cada canalización es responsabilidad de la capa application/infrastructure — el domain service solo recibe `[]EntradaTablaCanalizacion` ya resueltos (mismo patrón que `SeleccionarConductorAlimentacion`).
+
+Ver diseño completo: `docs/plans/2026-02-11-tablas-nom-canalizacion-design.md`
+
 **Step 1: Write the failing test**
 
 ```go

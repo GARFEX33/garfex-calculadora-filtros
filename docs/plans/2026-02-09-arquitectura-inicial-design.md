@@ -126,10 +126,15 @@ garfex-calculadora-filtros/
 ├── internal/
 │   ├── domain/
 │   │   ├── entity/
-│   │   │   ├── equipo.go            # Struct base + interface CalculadorCorriente
-│   │   │   ├── filtro_activo.go     # Embeds Equipo, implementa interfaz
-│   │   │   ├── filtro_rechazo.go    # Embeds Equipo, implementa interfaz
-│   │   │   └── memoria_calculo.go   # Resultado de los pasos
+│   │   │   ├── equipo.go            # Struct base + interfaces CalculadorCorriente/Potencia
+│   │   │   ├── filtro_activo.go     # Embeds Equipo, implementa interfaces
+│   │   │   ├── filtro_rechazo.go    # Embeds Equipo, implementa interfaces
+│   │   │   ├── transformador.go     # Embeds Equipo, implementa interfaces
+│   │   │   ├── carga.go             # Embeds Equipo, implementa interfaces
+│   │   │   ├── tipo_equipo.go       # Enum TipoEquipo (FILTRO_ACTIVO, FILTRO_RECHAZO, ...)
+│   │   │   ├── tipo_canalizacion.go # Enum TipoCanalizacion (TUBERIA_CONDUIT, CHAROLA_...)
+│   │   │   ├── canalizacion.go      # Struct resultado (Tipo, Tamano, AreaTotal)
+│   │   │   └── memoria_calculo.go   # Resultado de todos los pasos
 │   │   │
 │   │   ├── valueobject/
 │   │   │   ├── corriente.go         # Valor inmutable con validación
@@ -174,7 +179,9 @@ garfex-calculadora-filtros/
 │
 ├── data/
 │   └── tablas_nom/
-│       ├── 310-15-b-16.csv            # Conductores en tubería (Fase 1)
+│       ├── 310-15-b-16.csv            # Tubería conduit — ampacidad (Fase 1)
+│       ├── 310-15-b-17.csv            # Charola cable espaciado — ampacidad (Fase 1)
+│       ├── 310-15-b-20.csv            # Charola triangular — ampacidad (Fase 1)
 │       └── 250-122.csv                # Conductores de tierra (Fase 1)
 │
 ├── tests/
@@ -303,11 +310,21 @@ type MemoriaCalculo struct {
     ConductorAlimentacion  valueobject.Conductor
     HilosPorFase           int
     ConductorTierra        valueobject.Conductor
-    Canalizacion           Canalizacion
-    CaidaTension           float64  // porcentaje
+    Canalizacion           Canalizacion  // incluye TipoCanalizacion
+    TemperaturaUsada       int           // 60, 75 o 90 — columna NOM usada para el conductor
+    CaidaTension           float64       // porcentaje
     CumpleNormativa        bool
 }
 ```
+
+**Flujo de cálculo revisado (orden obligatorio):**
+1. Corriente Nominal (según TipoEquipo)
+2. Ajuste de Corriente (factores)
+3. **Selección de TipoCanalizacion** ← determina la tabla NOM de ampacidad
+4. Conductor de Alimentación (usa tabla correspondiente a la canalización, columna auto-seleccionada)
+5. Conductor de Tierra (tabla 250-122, independiente)
+6. Dimensionamiento de Canalización (40% fill)
+7. Caída de Tensión
 
 ### 5.2 Value Objects (inmutables)
 
@@ -404,8 +421,34 @@ func CalcularConductorTierra(itm int, repo port.TablaNOMRepository) (Conductor, 
 
 #### `CalculoCanalizacionService`
 ```go
-func CalcularCanalizacion(conductores []Conductor, tipo string, repo port.TablaNOMRepository) (Canalizacion, error)
-  // tipo: "TUBERIA" | "CHAROLA"
+// TipoCanalizacion determina la tabla NOM de ampacidad usada para seleccionar el conductor.
+// La canalización se selecciona ANTES de calcular el conductor de alimentación.
+type TipoCanalizacion string
+const (
+    TipoCanalizacionTuberiaConduit         TipoCanalizacion = "TUBERIA_CONDUIT"
+    TipoCanalizacionCharolaCableEspaciado  TipoCanalizacion = "CHAROLA_CABLE_ESPACIADO"
+    TipoCanalizacionCharolaCableTriangular TipoCanalizacion = "CHAROLA_CABLE_TRIANGULAR"
+)
+
+// ConductorParaCanalizacion agrupa conductores idénticos para el cálculo de fill.
+type ConductorParaCanalizacion struct {
+    Cantidad   int
+    SeccionMM2 float64  // usa AreaConAislamientoMM2 del Conductor si disponible
+}
+
+// EntradaTablaCanalizacion representa una fila de la tabla de tamaños de tubería/charola.
+type EntradaTablaCanalizacion struct {
+    Tamano          string   // ej: "1/2", "3/4", "1", "1 1/4"
+    AreaInteriorMM2 float64  // área interior usable
+}
+
+func CalcularCanalizacion(
+    conductores []ConductorParaCanalizacion,
+    tipo string,              // TipoCanalizacion serializado
+    tabla []EntradaTablaCanalizacion,
+) (Canalizacion, error)
+  // NOM: 40% fill para tubería con 2+ conductores
+  // Calcula área total, divide por factor de fill, selecciona tamaño mínimo
 ```
 
 #### `CalculoCaidaTensionService`
