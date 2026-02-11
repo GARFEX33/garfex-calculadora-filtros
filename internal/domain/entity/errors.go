@@ -4,6 +4,6 @@ package entity
 import "errors"
 
 var (
-	ErrTipoFiltroInvalido = errors.New("tipo de filtro no válido")
+	ErrTipoEquipoInvalido = errors.New("tipo de equipo no válido")
 	ErrDivisionPorCero    = errors.New("división por cero en cálculo de corriente")
 )

@@ -22,7 +22,7 @@ func NewFiltroActivo(clave string, voltaje, amperaje int, itm ITM) (*FiltroActiv
 	return &FiltroActivo{
 		Equipo: Equipo{
 			Clave:   clave,
-			Tipo:    TipoFiltroActivo,
+			Tipo:    TipoEquipoFiltroActivo,
 			Voltaje: voltaje,
 			ITM:     itm,
 		},

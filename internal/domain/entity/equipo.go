@@ -23,7 +23,7 @@ type CalculadorPotencia interface {
 // Equipo is the base struct embedded by all equipment types.
 type Equipo struct {
 	Clave   string
-	Tipo    TipoFiltro
+	Tipo    TipoEquipo
 	Voltaje int
 	ITM     ITM
 }

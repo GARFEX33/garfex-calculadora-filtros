@@ -23,7 +23,7 @@ func TestNewFiltroRechazo(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, "FR-001", fr.Clave)
-	assert.Equal(t, entity.TipoFiltroRechazo, fr.Tipo)
+	assert.Equal(t, entity.TipoEquipoFiltroRechazo, fr.Tipo)
 	assert.Equal(t, 480, fr.Voltaje)
 	assert.Equal(t, 100, fr.KVAR)
 	assert.Equal(t, 125, fr.ITM.Amperaje)

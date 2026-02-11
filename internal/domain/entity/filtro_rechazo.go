@@ -25,7 +25,7 @@ func NewFiltroRechazo(clave string, voltaje, kvar int, itm ITM) (*FiltroRechazo,
 	return &FiltroRechazo{
 		Equipo: Equipo{
 			Clave:   clave,
-			Tipo:    TipoFiltroRechazo,
+			Tipo:    TipoEquipoFiltroRechazo,
 			Voltaje: voltaje,
 			ITM:     itm,
 		},
