@@ -155,9 +155,22 @@ DB_PORT=5432
 
 ## Flujo de Trabajo
 
+### Actualización de Documentación (OBLIGATORIO al terminar cada tarea)
+
+Al completar cualquier tarea de implementación, **antes del commit final**, verificar si hubo cambios que divergen del plan original y actualizar:
+
+| Documento | Cuándo actualizar |
+|-----------|------------------|
+| `docs/plans/2026-02-10-domain-layer.md` | Cuando la implementación diverge del plan (API diferente, campos extra, decisiones tomadas) |
+| `docs/plans/2026-02-09-arquitectura-inicial-design.md` | Cuando cambia el diseño de una entidad, VO o servicio |
+| `CLAUDE.md` | Cuando cambia una convención de código o regla de negocio del proyecto |
+| `.claude/memory/MEMORY.md` | Cuando hay algo que debe persistir entre sesiones (decisiones, patrones, paths) |
+
+**Regla:** Si la implementación real diverge del plan → marcar la tarea como `✅ COMPLETADO` en el plan y documentar qué cambió y por qué, incluyendo el impacto en tareas futuras.
+
 ### Desarrollo Paso a Paso
 Este proyecto se desarrolla **incrementalmente**:
-1. **Fase 1 (actual):** 2 tipos de equipos (FA, FR), 6 servicios de cálculo, 2 tablas NOM
+1. **Fase 1 (actual):** 4 tipos de equipos (FA, FR, Transformador, Carga), 6 servicios de cálculo, 2 tablas NOM
 2. **Fase 2:** Más tipos de equipos, más tablas NOM
 3. **Fase 3:** Generación de PDF, frontend (repo separado)
 
@@ -166,8 +179,10 @@ Este proyecto se desarrolla **incrementalmente**:
 ### Reglas de Negocio Clave
 
 #### Tipos de Equipos
-- **Filtro Activo (FA):** Corriente nominal = amperaje directo (no se calcula)
+- **Filtro Activo (FA):** Corriente nominal = AmperajeNominal directo (no se calcula)
 - **Filtro de Rechazo (FR):** Corriente nominal = `I = KVAR / (KV × √3)`
+- **Transformador:** Corriente nominal = `I = KVA / (KV × √3)`
+- **Carga:** Corriente nominal = `I = KW / (KV × factor × FP)` donde factor depende de fases (1/2/3)
 
 #### Pasos de Cálculo
 1. **Corriente Nominal:** Calcular In según tipo de equipo
