@@ -207,38 +207,87 @@ type CalculadorCorriente interface {
 }
 ```
 
+#### Entidad `ITM` _(Interruptor Termomagnético)_
+```go
+// ITM es una entidad validada. Para instalaciones trifásicas: Polos=3, Voltaje=equipo.Voltaje.
+type ITM struct {
+    Amperaje int  // corriente nominal del interruptor [A] — de BD campo "itm"
+    Polos    int  // número de polos (3 para trifásico)
+    Bornes   int  // terminales de conductor — de BD campo "bornes"
+    Voltaje  int  // voltaje nominal [V] — igual al voltaje del equipo
+}
+```
+
 #### Struct `Equipo` (base embebida)
 ```go
 type Equipo struct {
     Clave   string
-    Tipo    TipoFiltro  // enum: ACTIVO, RECHAZO
+    Tipo    TipoEquipo  // enum: FILTRO_ACTIVO, FILTRO_RECHAZO, TRANSFORMADOR, CARGA
     Voltaje int         // en Voltios
-    ITM     int         // interruptor termomagnético de fábrica
-    Bornes  int
+    ITM     ITM         // interruptor termomagnético (entidad propia)
 }
 ```
 
-#### `FiltroActivo` (implementa CalculadorCorriente)
+#### `FiltroActivo` (implementa CalculadorCorriente + CalculadorPotencia)
 ```go
 type FiltroActivo struct {
-    Equipo              // embedded
-    Amperaje int        // qn/In de la BD
+    Equipo                // embedded
+    AmperajeNominal int   // corriente nominal directa del fabricante
 }
 
-// Retorna amperaje directamente (no calcula)
+// Retorna AmperajeNominal directamente (no calcula)
 func (fa *FiltroActivo) CalcularCorrienteNominal() (valueobject.Corriente, error)
+// PF=1: kVA=I×V×√3/1000, kW=kVA, kVAR=0
+func (fa *FiltroActivo) PotenciaKVA() float64
+func (fa *FiltroActivo) PotenciaKW() float64
+func (fa *FiltroActivo) PotenciaKVAR() float64
 ```
 
-#### `FiltroRechazo` (implementa CalculadorCorriente)
+#### `FiltroRechazo` (implementa CalculadorCorriente + CalculadorPotencia)
 ```go
 type FiltroRechazo struct {
     Equipo              // embedded
-    KVAR int            // qn/In de la BD
+    KVAR int            // potencia reactiva nominal
 }
 
-// Aplica fórmula: I = KVAR / (KV × √3)
-// donde KV = Voltaje / 1000
+// Aplica fórmula: I = KVAR / (KV × √3) donde KV = Voltaje / 1000
 func (fr *FiltroRechazo) CalcularCorrienteNominal() (valueobject.Corriente, error)
+// Puramente reactivo: kVAR=KVAR, kVA=KVAR, kW=0
+func (fr *FiltroRechazo) PotenciaKVA() float64
+func (fr *FiltroRechazo) PotenciaKW() float64
+func (fr *FiltroRechazo) PotenciaKVAR() float64
+```
+
+#### `Transformador` (implementa CalculadorCorriente + CalculadorPotencia)
+```go
+type Transformador struct {
+    Equipo              // embedded
+    KVA int             // potencia aparente nominal
+}
+
+// I = KVA / (KV × √3) — misma fórmula que FiltroRechazo
+func (tr *Transformador) CalcularCorrienteNominal() (valueobject.Corriente, error)
+// Solo potencia aparente: kVA=KVA, kW=0, kVAR=0
+func (tr *Transformador) PotenciaKVA() float64
+func (tr *Transformador) PotenciaKW() float64
+func (tr *Transformador) PotenciaKVAR() float64
+```
+
+#### `Carga` (implementa CalculadorCorriente + CalculadorPotencia)
+```go
+type Carga struct {
+    Equipo                  // embedded
+    KW             int      // potencia activa
+    FactorPotencia float64  // 0 < FP ≤ 1
+    Fases          int      // 1, 2 o 3
+}
+
+// Fórmula según fases: 3→KW/(KV×√3×FP), 2→KW/(KV×2×FP), 1→KW/(KV×FP)
+func (c *Carga) CalcularCorrienteNominal() (valueobject.Corriente, error)
+// kW=dado, kVA=KW/FP, kVAR=√(kVA²-kW²)
+func (c *Carga) PotenciaKVA() float64
+func (c *Carga) PotenciaKW() float64
+func (c *Carga) PotenciaKVAR() float64
 ```
 
 #### `MemoriaCalculo`
@@ -248,6 +297,9 @@ type MemoriaCalculo struct {
     CorrienteNominal       valueobject.Corriente
     CorrienteAjustada      valueobject.Corriente
     FactoresAjuste         map[string]float64
+    PotenciaKVA            float64  // para display en reporte
+    PotenciaKW             float64
+    PotenciaKVAR           float64
     ConductorAlimentacion  valueobject.Conductor
     HilosPorFase           int
     ConductorTierra        valueobject.Conductor
@@ -281,12 +333,44 @@ type Tension struct {
 
 #### `Conductor`
 ```go
-type Conductor struct {
-    Calibre          string  // ej: "12 AWG", "1/0 AWG"
-    Material         string  // "Cu" o "Al"
-    TipoAislamiento  string  // "THHN", "THW", etc.
+// Constructor usa struct de parámetros (patrón idiomático Go para muchos campos)
+type ConductorParams struct {
+    // Campos requeridos (validados en NewConductor)
+    Calibre    string   // ej: "12 AWG", "1/0 AWG", "500 MCM"
+    Material   string   // "Cu" o "Al"
+    SeccionMM2 float64  // sección transversal sin aislamiento [mm²]
+
+    // Campos opcionales (aceptados sin validación en construcción)
+    TipoAislamiento       string   // "THHN", "THW", "XHHW", "" (desnudo para tierra)
+    AreaConAislamientoMM2 float64  // área total con aislamiento, para canalización [mm²]
+    DiametroMM            float64  // diámetro exterior con aislamiento [mm]
+    NumeroHilos           int      // número de hilos del conductor
+    ResistenciaPVCPorKm   float64  // resistencia en tubería PVC [Ω/km]
+    ResistenciaAlPorKm    float64  // resistencia en tubería aluminio [Ω/km]
+    ResistenciaAceroPorKm float64  // resistencia en tubería acero [Ω/km]
+    ReactanciaPorKm       float64  // reactancia inductiva [Ω/km]
 }
-// Validación: calibres válidos NOM
+
+// Conductor es inmutable — campos no exportados + getters
+type Conductor struct { /* mismos campos, privados */ }
+
+func NewConductor(p ConductorParams) (Conductor, error)
+// Validaciones en construcción:
+//   - Calibre: debe estar en mapa calibresValidos (NOM 310-15(b)(16))
+//     AWG: 18, 16, 14, 12, 10, 8, 6, 4, 2, 1/0, 2/0, 3/0, 4/0
+//     MCM: 250, 300, 350, 400, 500, 600, 700, 750, 800, 900, 1000, 1250, 1500, 1750, 2000
+//   - Material: solo "Cu" o "Al"
+//   - SeccionMM2: debe ser > 0
+//
+// Campos opcionales aceptados sin validación:
+//   - TipoAislamiento: puede ser "" (para conductores desnudos de tierra) o tipo de aislamiento
+//   - Todos los demás campos: 0/vacío es válido, se ignoran si no se usan
+//
+// Validación postponida (al punto de uso):
+//   - Caída de tensión: requiere SeccionMM2() y Material() (siempre disponibles)
+//   - Canalización: usa AreaConAislamientoMM2() si está disponible (> 0)
+//
+// Fuente: NOM-001-SEDE-2012 Tabla 9 (resistencia/reactancia), Tabla 5/8 (área, diámetro, hilos)
 ```
 
 ### 5.3 Services
@@ -341,9 +425,9 @@ func CalcularCaidaTension(conductor Conductor, corriente Corriente, distancia fl
 ```go
 type EquipoRepository interface {
     ObtenerPorClave(ctx context.Context, clave string) (*entity.Equipo, error)
-    ListarPorTipo(ctx context.Context, tipo entity.TipoFiltro) ([]*entity.Equipo, error)
+    ListarPorTipo(ctx context.Context, tipo entity.TipoEquipo) ([]*entity.Equipo, error)
     ListarTodos(ctx context.Context) ([]*entity.Equipo, error)
-    FiltrarPorRangoCapacidad(ctx context.Context, min, max int, tipo *entity.TipoFiltro) ([]*entity.Equipo, error)
+    FiltrarPorRangoCapacidad(ctx context.Context, min, max int, tipo *entity.TipoEquipo) ([]*entity.Equipo, error)
 }
 ```
 
@@ -366,7 +450,7 @@ type TablaNOMRepository interface {
 type EquipoInput struct {
     Modo        string      // "LISTADO" | "AMPERAJE" | "POTENCIA"
     ClaveEquipo *string
-    Tipo        *TipoFiltro
+    Tipo        *TipoEquipo
     Voltaje     *int
     Amperaje    *int
     Potencia    *int        // KVAR
