@@ -901,6 +901,16 @@ git commit -m "feat(domain): add FiltroRechazo entity with KVAR formula I=KVAR/(
 
 ---
 
+### Refactoring: TipoFiltro → TipoEquipo ✅ COMPLETADO (entre Task 8 y 9)
+
+**Commit:** `eaa5167`
+
+**Decisión:** `TipoFiltro` renombrado a `TipoEquipo` para soportar más tipos de equipo en el futuro (tableros, transformadores, cargas, etc.). Los valores de las constantes cambiaron de `"ACTIVO"`/`"RECHAZO"` a `"FILTRO_ACTIVO"`/`"FILTRO_RECHAZO"` para ser descriptivos al agregar nuevos tipos. El error `ErrTipoFiltroInvalido` → `ErrTipoEquipoInvalido`. Archivos: `tipo_filtro.go` → `tipo_equipo.go`, `tipo_filtro_test.go` → `tipo_equipo_test.go`.
+
+**Impacto en BD:** El enum `tipo_filtro` en PostgreSQL con valores `ACTIVO`/`RECHAZO` deberá migrarse a `FILTRO_ACTIVO`/`FILTRO_RECHAZO` al conectar infrastructure (Fase 2+). En Fase 1 no hay conexión a BD real, solo domain layer.
+
+---
+
 ### Task 8: Domain Structs — Canalizacion and MemoriaCalculo ✅ COMPLETADO
 
 **Commit:** `30c8274`
