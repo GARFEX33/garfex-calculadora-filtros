@@ -63,25 +63,52 @@ Nuevo value object en `internal/domain/entity/tipo_canalizacion.go`:
 type TipoCanalizacion string
 
 const (
-    TipoCanalizacionTuberiaConduit         TipoCanalizacion = "TUBERIA_CONDUIT"
+    TipoCanalizacionTuberiaPVC             TipoCanalizacion = "TUBERIA_PVC"
+    TipoCanalizacionTuberiaAluminio        TipoCanalizacion = "TUBERIA_ALUMINIO"
+    TipoCanalizacionTuberiaAceroPG         TipoCanalizacion = "TUBERIA_ACERO_PG"
+    TipoCanalizacionTuberiaAceroPD         TipoCanalizacion = "TUBERIA_ACERO_PD"
     TipoCanalizacionCharolaCableEspaciado  TipoCanalizacion = "CHAROLA_CABLE_ESPACIADO"
     TipoCanalizacionCharolaCableTriangular TipoCanalizacion = "CHAROLA_CABLE_TRIANGULAR"
 )
 ```
 
-**Naming rationale:** Nombres descriptivos (no códigos NOM) para escalabilidad futura — se podrían agregar `DUCTO_SUBTERRANEO`, `CABLE_AEREO`, etc.
+**Naming rationale:** Nombres descriptivos (no códigos NOM) para escalabilidad futura.
+**Expansión (2026-02-11):** Se expandió de 3 a 6 valores para capturar el material del conduit, necesario para seleccionar la columna correcta de resistencia AC en Tabla 9 para caída de tensión por impedancia.
 
-### Mapeo a CSV
+### Mapeo a tabla de ampacidad CSV
 
 ```go
-var tablaCanalizacion = map[TipoCanalizacion]string{
-    TipoCanalizacionTuberiaConduit:         "310-15-b-16.csv",
+// Los 4 tipos de tubería comparten la misma tabla de ampacidad
+var tablaAmpacidad = map[TipoCanalizacion]string{
+    TipoCanalizacionTuberiaPVC:             "310-15-b-16.csv",
+    TipoCanalizacionTuberiaAluminio:        "310-15-b-16.csv",
+    TipoCanalizacionTuberiaAceroPG:         "310-15-b-16.csv",
+    TipoCanalizacionTuberiaAceroPD:         "310-15-b-16.csv",
     TipoCanalizacionCharolaCableEspaciado:  "310-15-b-17.csv",
     TipoCanalizacionCharolaCableTriangular: "310-15-b-20.csv",
 }
 ```
 
-Este mapeo vive en **infrastructure** (CSV repository), no en domain.
+### Mapeo a columna de resistencia (Tabla 9)
+
+```go
+// Cada tipo de canalización mapea a una columna de resistencia AC en Tabla 9
+// Charola no tiene conduit metálico → usa columna PVC (sin efecto de proximidad)
+var columnaResistencia = map[TipoCanalizacion]string{
+    TipoCanalizacionTuberiaPVC:             "res_{material}_pvc",
+    TipoCanalizacionTuberiaAluminio:        "res_{material}_al",
+    TipoCanalizacionTuberiaAceroPG:         "res_{material}_acero",
+    TipoCanalizacionTuberiaAceroPD:         "res_{material}_acero",
+    TipoCanalizacionCharolaCableEspaciado:  "res_{material}_pvc",
+    TipoCanalizacionCharolaCableTriangular: "res_{material}_pvc",
+}
+```
+
+Estos mapeos viven en **infrastructure** (CSV repository), no en domain.
+
+### Relación con Caída de Tensión
+
+El TipoCanalizacion expandido también determina el factor DMG para el cálculo de reactancia inductiva (método impedancia). Ver diseño completo: `docs/plans/2026-02-11-caida-tension-impedancia-design.md`
 
 ## Selección Automática de Temperatura
 
@@ -124,9 +151,9 @@ func seleccionarTemperatura(corrienteAjustada, tipoCanalizacion, override):
 
 | Cambio | Archivo | Descripción |
 |--------|---------|-------------|
-| Nuevo enum | `tipo_canalizacion.go` | `TipoCanalizacion` + validación + constantes |
+| Expandir enum | `tipo_canalizacion.go` | `TipoCanalizacion` 3→6 valores (incluye material conduit) |
 | Actualizar struct | `canalizacion.go` | Usar `TipoCanalizacion` en vez de `string` |
-| Nuevo campo | `memoria_calculo.go` | Agregar `TemperaturaUsada int` |
+| Nuevo campo | `memoria_calculo.go` | Agregar `TemperaturaUsada int` + `ResultadoCaidaTension` |
 
 ### Cambios en infrastructure/application (Fase 2)
 
@@ -140,7 +167,9 @@ func seleccionarTemperatura(corrienteAjustada, tipoCanalizacion, override):
 ## Decisiones Clave
 
 1. **Nombres descriptivos** para TipoCanalizacion (no códigos NOM) — escalabilidad
-2. **Auto-selección de temperatura** con override explícito para 90°C — seguridad NOM
-3. **CSV universal** con mismas columnas — simplifica el parser
-4. **Domain services sin cambio** — la resolución tabla/columna es responsabilidad de capas superiores
-5. **Charola triangular sin 60°C** — fallback automático a 75°C, documentado en MemoriaCalculo
+2. **6 valores** para capturar material del conduit (necesario para Tabla 9 de resistencia)
+3. **Auto-selección de temperatura** con override explícito para 90°C — seguridad NOM
+4. **CSV universal** con mismas columnas — simplifica el parser
+5. **Domain services sin cambio** — la resolución tabla/columna es responsabilidad de capas superiores
+6. **Charola triangular sin 60°C** — fallback automático a 75°C, documentado en MemoriaCalculo
+7. **Método impedancia para caída de tensión** — usa TipoCanalizacion para factor DMG y columna R (ver diseño: `2026-02-11-caida-tension-impedancia-design.md`)

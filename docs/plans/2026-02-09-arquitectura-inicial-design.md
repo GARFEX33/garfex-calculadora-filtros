@@ -11,9 +11,11 @@
 Sistema backend en Go/Gin para calcular memorias de cálculo de instalaciones eléctricas según normativa NOM (México). Arquitectura hexagonal/clean architecture para desacoplamiento total entre frontend, backend y base de datos.
 
 **Fase 1 (MVP):**
-- 2 tipos de equipos: Filtros Activos (FA) y Filtros de Rechazo (FR/KVAR)
+- 4 tipos de equipos: Filtro Activo (FA), Filtro de Rechazo (FR), Transformador, Carga
 - 3 formas de entrada: selección desde listado (Supabase), entrada manual por amperaje, entrada manual por potencia
-- 4 pasos de cálculo: conductor de alimentación, conductor de tierra, canalización, caída de tensión
+- 7 pasos de cálculo: corriente nominal, ajuste, selección canalización, conductor alimentación, conductor tierra, dimensionamiento canalización, caída de tensión (método impedancia)
+- 6 tipos de canalización: 4 tuberías (PVC, Aluminio, Acero PG/PD) + 2 charolas (espaciado, triangular)
+- 7 tablas NOM CSV: 3 ampacidad + 1 tierra + 3 referencia (resistencia/reactancia, dimensiones aislamiento, conductor desnudo)
 
 ---
 
@@ -182,7 +184,10 @@ garfex-calculadora-filtros/
 │       ├── 310-15-b-16.csv            # Tubería conduit — ampacidad (Fase 1)
 │       ├── 310-15-b-17.csv            # Charola cable espaciado — ampacidad (Fase 1)
 │       ├── 310-15-b-20.csv            # Charola triangular — ampacidad (Fase 1)
-│       └── 250-122.csv                # Conductores de tierra (Fase 1)
+│       ├── 250-122.csv                # Conductores de tierra (Fase 1)
+│       ├── tabla-9-resistencia-reactancia.csv   # Resistencia AC + reactancia por tipo conduit
+│       ├── tabla-5-dimensiones-aislamiento.csv  # Diámetros exteriores con aislamiento (THW, RHH, XHHW)
+│       └── tabla-8-conductor-desnudo.csv        # Diámetro, hilos, área de conductor desnudo
 │
 ├── tests/
 │   ├── domain/
@@ -310,9 +315,10 @@ type MemoriaCalculo struct {
     ConductorAlimentacion  valueobject.Conductor
     HilosPorFase           int
     ConductorTierra        valueobject.Conductor
-    Canalizacion           Canalizacion  // incluye TipoCanalizacion
-    TemperaturaUsada       int           // 60, 75 o 90 — columna NOM usada para el conductor
-    CaidaTension           float64       // porcentaje
+    TipoCanalizacion       TipoCanalizacion // tipo de canalización seleccionada
+    Canalizacion           Canalizacion     // resultado del dimensionamiento
+    TemperaturaUsada       int              // 60, 75 o 90 — columna NOM usada para el conductor
+    CaidaTension           ResultadoCaidaTension // resultado completo (%, V, R, X, Z)
     CumpleNormativa        bool
 }
 ```
@@ -421,14 +427,19 @@ func CalcularConductorTierra(itm int, repo port.TablaNOMRepository) (Conductor, 
 
 #### `CalculoCanalizacionService`
 ```go
-// TipoCanalizacion determina la tabla NOM de ampacidad usada para seleccionar el conductor.
+// TipoCanalizacion determina la tabla NOM de ampacidad Y la columna de resistencia (Tabla 9).
 // La canalización se selecciona ANTES de calcular el conductor de alimentación.
 type TipoCanalizacion string
 const (
-    TipoCanalizacionTuberiaConduit         TipoCanalizacion = "TUBERIA_CONDUIT"
+    TipoCanalizacionTuberiaPVC             TipoCanalizacion = "TUBERIA_PVC"
+    TipoCanalizacionTuberiaAluminio        TipoCanalizacion = "TUBERIA_ALUMINIO"
+    TipoCanalizacionTuberiaAceroPG         TipoCanalizacion = "TUBERIA_ACERO_PG"
+    TipoCanalizacionTuberiaAceroPD         TipoCanalizacion = "TUBERIA_ACERO_PD"
     TipoCanalizacionCharolaCableEspaciado  TipoCanalizacion = "CHAROLA_CABLE_ESPACIADO"
     TipoCanalizacionCharolaCableTriangular TipoCanalizacion = "CHAROLA_CABLE_TRIANGULAR"
 )
+// Los 4 tipos de tubería comparten tabla de ampacidad 310-15-b-16.csv
+// Cada tipo mapea a una columna diferente de resistencia en Tabla 9
 
 // ConductorParaCanalizacion agrupa conductores idénticos para el cálculo de fill.
 type ConductorParaCanalizacion struct {
@@ -451,11 +462,34 @@ func CalcularCanalizacion(
   // Calcula área total, divide por factor de fill, selecciona tamaño mínimo
 ```
 
-#### `CalculoCaidaTensionService`
+#### `CalculoCaidaTensionService` (método impedancia NOM)
 ```go
-func CalcularCaidaTension(conductor Conductor, corriente Corriente, distancia float64, tension Tension) (float64, error)
-  // Retorna porcentaje
-  // Valida límites NOM (3% o 5%)
+// EntradaCalculoCaidaTension contiene datos pre-resueltos desde Tablas NOM 9, 5 y 8.
+type EntradaCalculoCaidaTension struct {
+    ResistenciaOhmPorKm float64           // Tabla 9 → columna según material + canalización
+    DiametroExteriorMM  float64           // Tabla 5 → diam_tw_thw (siempre THW)
+    DiametroConductorMM float64           // Tabla 8 → diametro_mm (conductor desnudo)
+    NumeroHilos         int               // Tabla 8 → numero_hilos
+    TipoCanalizacion    TipoCanalizacion  // Determina factor DMG
+    HilosPorFase        int               // Conductores en paralelo (≥1)
+}
+
+type ResultadoCaidaTension struct {
+    Porcentaje  float64  // %VD
+    CaidaVolts  float64  // VD en volts
+    Cumple      bool     // %VD <= limiteNOM
+    Impedancia  float64  // Z (Ω/km) — para reporte
+    Resistencia float64  // R (Ω/km) — para reporte
+    Reactancia  float64  // X (Ω/km) — para reporte
+}
+
+func CalcularCaidaTension(
+    entrada EntradaCalculoCaidaTension,
+    corriente Corriente, distancia float64,
+    tension Tension, limiteNOM float64,
+) (ResultadoCaidaTension, error)
+  // Flujo: RMG → DMG → X → R → Z=√(R²+X²) → VD=√3×I×Z×L_km → %VD
+  // Diseño completo: docs/plans/2026-02-11-caida-tension-impedancia-design.md
 ```
 
 ---
@@ -563,18 +597,21 @@ type PostgresEquipoRepository struct {
 
 ### 7.3 CSVTablaNOMRepository
 
-**Fase 1 - Archivos iniciales:**
+**Fase 1 - Archivos:**
 ```
 data/tablas_nom/
-  ├── 310-15-b-16.csv    # Conductores en tubería
-  └── 250-122.csv        # Conductores de tierra
+  ├── 310-15-b-16.csv                    # Ampacidad — tubería conduit
+  ├── 310-15-b-17.csv                    # Ampacidad — charola cable espaciado
+  ├── 310-15-b-20.csv                    # Ampacidad — charola triangular
+  ├── 250-122.csv                        # Conductores de tierra
+  ├── tabla-9-resistencia-reactancia.csv # R (AC) por tipo conduit + reactancia
+  ├── tabla-5-dimensiones-aislamiento.csv# Diámetro exterior con aislamiento (THW, RHH, XHHW)
+  └── tabla-8-conductor-desnudo.csv      # Diámetro desnudo, hilos, área
 ```
 
 **Futuro (escalable):**
 ```
 data/tablas_nom/
-  ├── 310-15-b-20.csv    # Triangular en charola
-  ├── 310-15-b-17.csv    # Cable con espacio
   ├── 310-60-69.csv      # Individual +2000V Cu
   └── ...
 ```
@@ -758,10 +795,11 @@ Linters mínimos: `errcheck`, `govet`, `staticcheck`, `gofmt`, `goimports`.
 ## 14. Roadmap
 
 ### Fase 1 (MVP) - Actual
-- 2 tipos de equipos (FA, FR)
+- 4 tipos de equipos (FA, FR, Transformador, Carga)
 - 3 formas de entrada
-- 6 servicios de cálculo
-- 2 tablas NOM (tubería, tierra)
+- 6 servicios de cálculo (corriente, ajuste, conductor, tierra, canalización, caída de tensión por impedancia)
+- 7 tablas NOM CSV (3 ampacidad + 1 tierra + 3 referencia: resistencia/reactancia, dimensiones, conductor desnudo)
+- 6 tipos de canalización (4 tuberías + 2 charolas)
 - API REST con Gin
 
 ### Fase 2 (Futuro)

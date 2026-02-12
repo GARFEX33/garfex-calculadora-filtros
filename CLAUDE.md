@@ -81,10 +81,22 @@ Lo que este sistema **no hará** en la fase actual:
 Ver documento de diseño completo: `docs/plans/2026-02-09-arquitectura-inicial-design.md`
 
 ### Tablas NOM (CSV)
-Las tablas de referencia de normativa NOM están en `data/tablas_nom/`:
-- `310-15-b-16.csv` - Conductores en tubería
-- `250-122.csv` - Conductores de tierra
-- (Más tablas se agregarán según se necesiten)
+Las tablas de referencia de normativa NOM están en `data/tablas_nom/`.
+
+**Tablas de ampacidad (selección de conductor de alimentación — dependen del tipo de canalización):**
+- `310-15-b-16.csv` - Tubería conduit (`TUBERIA_PVC/ALUMINIO/ACERO_PG/ACERO_PD`) — 14 AWG a 2000 MCM, Cu/Al 60/75/90°C
+- `310-15-b-17.csv` - Charola cable espaciado (`CHAROLA_CABLE_ESPACIADO`) — 14 AWG a 2000 MCM, Cu/Al 60/75/90°C
+- `310-15-b-20.csv` - Charola triangular (`CHAROLA_CABLE_TRIANGULAR`) — 8 AWG a 1000 MCM, Cu/Al 75/90°C (sin columna 60°C)
+
+**Tabla de conductor de tierra:**
+- `250-122.csv` - Conductores de tierra (independiente del tipo de canalización)
+
+**Tablas de referencia para caída de tensión (método impedancia):**
+- `tabla-9-resistencia-reactancia.csv` - Resistencia AC por tipo conduit (PVC/Al/Acero) y reactancia — 14 AWG a 1000 MCM
+- `tabla-5-dimensiones-aislamiento.csv` - Diámetro exterior con aislamiento (THW, RHH, XHHW) — para cálculo DMG
+- `tabla-8-conductor-desnudo.csv` - Diámetro desnudo + número de hilos — para cálculo RMG
+
+**Formato CSV ampacidad:** `seccion_mm2,calibre,cu_60c,cu_75c,cu_90c,al_60c,al_75c,al_90c` — celdas vacías donde no aplica.
 
 ### Base de Datos (Supabase)
 
@@ -170,7 +182,7 @@ Al completar cualquier tarea de implementación, **antes del commit final**, ver
 
 ### Desarrollo Paso a Paso
 Este proyecto se desarrolla **incrementalmente**:
-1. **Fase 1 (actual):** 4 tipos de equipos (FA, FR, Transformador, Carga), 6 servicios de cálculo, 2 tablas NOM
+1. **Fase 1 (actual):** 4 tipos de equipos (FA, FR, Transformador, Carga), 6 servicios de cálculo, 7 tablas NOM (3 ampacidad + 1 tierra + 3 referencia impedancia)
 2. **Fase 2:** Más tipos de equipos, más tablas NOM
 3. **Fase 3:** Generación de PDF, frontend (repo separado)
 
@@ -187,10 +199,34 @@ Este proyecto se desarrolla **incrementalmente**:
 #### Pasos de Cálculo
 1. **Corriente Nominal:** Calcular In según tipo de equipo
 2. **Ajuste de Corriente:** Aplicar factores (temperatura, agrupamiento, etc.)
-3. **Conductor de Alimentación:** Seleccionar calibre de tabla NOM, considerar hilos por fase
-4. **Conductor de Tierra:** Usar ITM del equipo, tabla 250-122
-5. **Canalización:** Tubería o charola según área de conductores
-6. **Caída de Tensión:** Validar límites NOM (3% o 5%)
+3. **Selección de Canalización:** Elegir `TipoCanalizacion` (6 tipos) — **determina qué tabla NOM usar para ampacidad y qué columna R para impedancia**
+4. **Conductor de Alimentación:** Cargar tabla NOM según canalización → auto-seleccionar columna de temperatura (≤100A→60°C, >100A→75°C, override para 90°C) → seleccionar calibre
+5. **Conductor de Tierra:** Usar ITM del equipo, tabla 250-122 (independiente de la canalización)
+6. **Canalización:** Calcular dimensiones de tubería/charola según área de conductores (40% fill para tubería)
+7. **Caída de Tensión (método impedancia NOM):** Z=√(R²+X²), VD=√3×I×Z×L_km — R de Tabla 9, X calculada geométricamente con DMG/RMG (Tablas 5 y 8)
+
+#### Selección de Temperatura (NOM)
+- Circuitos ≤ 100 A o calibres 14–1 AWG → columna **60°C**
+- Circuitos > 100 A o calibres > 1 AWG → columna **75°C**
+- **90°C:** solo con `temperatura_override: 90` explícito (muy raro — requiere todos los equipos certificados 90°C)
+- Tabla 310-15(b)(20) Charola triangular **no tiene columna 60°C** → fallback automático a 75°C
+
+#### TipoCanalizacion (enum de dominio — 6 valores)
+```go
+TUBERIA_PVC              → tabla 310-15-b-16.csv, R: columna pvc
+TUBERIA_ALUMINIO         → tabla 310-15-b-16.csv, R: columna al
+TUBERIA_ACERO_PG         → tabla 310-15-b-16.csv, R: columna acero
+TUBERIA_ACERO_PD         → tabla 310-15-b-16.csv, R: columna acero
+CHAROLA_CABLE_ESPACIADO  → tabla 310-15-b-17.csv, R: columna pvc
+CHAROLA_CABLE_TRIANGULAR → tabla 310-15-b-20.csv, R: columna pvc
+```
+
+#### Caída de Tensión — Método Impedancia
+- **R** (resistencia AC): Tabla 9 → columna según material conductor + tipo canalización
+- **X** (reactancia inductiva): calculada geométricamente = `(1/n) × 2π×60 × 2×10⁻⁷ × ln(DMG/RMG) × 1000`
+- **RMG**: `(diametro_desnudo/2) × factor_hilos` — datos de Tabla 8
+- **DMG**: `diametro_exterior_thw × factor_canalizacion` — datos de Tabla 5, factor: tubería/triangular=1.0, espaciado=2.0
+- Diseño completo: `docs/plans/2026-02-11-caida-tension-impedancia-design.md`
 
 ## Convenciones de Código
 

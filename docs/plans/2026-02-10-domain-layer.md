@@ -1760,9 +1760,9 @@ git commit -m "feat(domain): add conduit sizing service with NOM 40% fill factor
 
 ---
 
-### Task 13: Service — CalcularCaidaTension ✅ COMPLETADO
+### Task 13: Service — CalcularCaidaTension ✅ COMPLETADO (pendiente rediseño impedancia)
 
-**Commit:** `bbffc2e`
+**Commit:** `bbffc2e` (implementación simplificada con resistividad)
 
 **Files creados:**
 - `internal/domain/service/calculo_caida_tension.go`
@@ -1770,7 +1770,16 @@ git commit -m "feat(domain): add conduit sizing service with NOM 40% fill factor
 
 **Divergencias vs. plan:** Tests adaptados a `NewConductor(ConductorParams{...})` (API actual). Renombrado `TestCalcularCaidaTension_InvalidMaterial` a `TestCalcularCaidaTension_ValidInputNoError` para reflejar lo que realmente prueba.
 
-**⚠️ Adaptación requerida:** El test usa `valueobject.NewConductor(calibre, material, "THHN", seccion)` (API viejo). Debe actualizarse a `valueobject.NewConductor(valueobject.ConductorParams{...})` con todos los campos requeridos. La fórmula usa `conductor.SeccionMM2()` (sección del conductor sin aislamiento), no `AreaConAislamientoMM2()`.
+**⚠️ REDISEÑO PENDIENTE — Método de Impedancia (2026-02-11):**
+La implementación actual usa fórmula simplificada de resistividad: `VD% = (√3 × ρ × L × I) / (S × V) × 100`.
+Se validó que el **método NOM correcto** usa impedancia: `Z = √(R² + X²)` con:
+- **R** de Tabla 9 (resistencia AC real, varía por material conduit)
+- **X** calculada geométricamente con DMG/RMG (Tablas 5 y 8)
+
+Diseño completo: `docs/plans/2026-02-11-caida-tension-impedancia-design.md`
+Tablas NOM validadas: `tabla-9-resistencia-reactancia.csv`, `tabla-5-dimensiones-aislamiento.csv`, `tabla-8-conductor-desnudo.csv`
+
+**La reescritura del servicio será una tarea separada antes de considerar Fase 1 completa.**
 
 **Files:**
 - Create: `internal/domain/service/calculo_caida_tension.go`
