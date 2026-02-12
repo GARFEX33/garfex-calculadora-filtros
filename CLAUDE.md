@@ -18,12 +18,28 @@ Backend API en Go para memorias de calculo de instalaciones electricas segun nor
 | Presentation | `internal/presentation/` | API REST, handlers, errores HTTP, versionado |
 | Datos NOM | `data/tablas_nom/` | Tablas CSV, formatos, reglas de validacion |
 
+## Skills Disponibles
+
+### Skills Genericos
+
+| Skill | Descripcion | Ruta |
+|-------|-------------|------|
+| `golang-patterns` | Patrones Go idiomaticos, error handling, interfaces | [SKILL.md](.agents/skills/golang-patterns/SKILL.md) |
+| `golang-pro` | Go avanzado: concurrencia, microservicios, performance | [SKILL.md](.agents/skills/golang-pro/SKILL.md) |
+| `api-design-principles` | Diseno REST/GraphQL, convenciones API | [SKILL.md](.agents/skills/api-design-principles/SKILL.md) |
+
+### Skills de Proyecto
+
+| Skill | Descripcion | Ruta |
+|-------|-------------|------|
+| `claude-md-manager` | Crear y auditar jerarquia CLAUDE.md | [SKILL.md](.agents/skills/claude-md-manager/SKILL.md) |
+
 ## Auto-invocacion
 
-Cuando realices estas acciones, LEE el CLAUDE.md correspondiente PRIMERO:
+Cuando realices estas acciones, LEE el CLAUDE.md o skill correspondiente PRIMERO:
 
-| Accion | Lee primero |
-|--------|-------------|
+| Accion | Referencia |
+|--------|-----------|
 | Crear/modificar entidad o value object | `internal/domain/CLAUDE.md` |
 | Crear/modificar servicio de calculo | `internal/domain/CLAUDE.md` |
 | Trabajar con ports o use cases | `internal/application/CLAUDE.md` |
@@ -33,6 +49,9 @@ Cuando realices estas acciones, LEE el CLAUDE.md correspondiente PRIMERO:
 | Crear/modificar endpoints API | `internal/presentation/CLAUDE.md` |
 | Trabajar con tablas NOM CSV | `data/tablas_nom/CLAUDE.md` |
 | Agregar nueva tabla NOM | `data/tablas_nom/CLAUDE.md` |
+| Aplicar patrones Go idiomaticos | skill `golang-patterns` |
+| Crear/auditar CLAUDE.md | skill `claude-md-manager` |
+| Disenar API endpoints | skill `api-design-principles` |
 
 ## Stack
 
