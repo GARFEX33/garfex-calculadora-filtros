@@ -2,6 +2,7 @@
 
 Capa de negocio pura. Sin dependencias externas (sin Gin, pgx, CSV).
 Recibe datos ya interpretados — no conoce archivos ni BD.
+Para patrones Go idiomaticos, usa skill `golang-patterns`.
 
 ## Estructura
 

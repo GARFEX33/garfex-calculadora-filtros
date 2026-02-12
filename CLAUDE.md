@@ -27,6 +27,8 @@ Backend API en Go para memorias de calculo de instalaciones electricas segun nor
 | `golang-patterns` | Patrones Go idiomaticos, error handling, interfaces | [SKILL.md](.agents/skills/golang-patterns/SKILL.md) |
 | `golang-pro` | Go avanzado: concurrencia, microservicios, performance | [SKILL.md](.agents/skills/golang-pro/SKILL.md) |
 | `api-design-principles` | Diseno REST/GraphQL, convenciones API | [SKILL.md](.agents/skills/api-design-principles/SKILL.md) |
+| `skill-creator` | Crear nuevos skills siguiendo el spec de Agent Skills | [SKILL.md](.agents/skills/skill-creator/SKILL.md) |
+| `skill-sync` | Sincronizar metadata de skills a tablas Auto-invocacion | [SKILL.md](.agents/skills/skill-sync/SKILL.md) |
 
 ### Skills de Proyecto
 
@@ -52,6 +54,8 @@ Cuando realices estas acciones, LEE el CLAUDE.md o skill correspondiente PRIMERO
 | Aplicar patrones Go idiomaticos | skill `golang-patterns` |
 | Crear/auditar CLAUDE.md | skill `claude-md-manager` |
 | Disenar API endpoints | skill `api-design-principles` |
+| Crear nuevo skill | skill `skill-creator` |
+| Sincronizar skills a CLAUDE.md | skill `skill-sync` |
 
 ## Stack
 
