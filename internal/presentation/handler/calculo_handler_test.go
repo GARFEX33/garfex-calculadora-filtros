@@ -5,12 +5,15 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
+	"github.com/garfex/calculadora-filtros/internal/application/dto"
 	"github.com/garfex/calculadora-filtros/internal/application/usecase"
 	"github.com/garfex/calculadora-filtros/internal/domain/entity"
+	"github.com/garfex/calculadora-filtros/internal/domain/service"
 	"github.com/garfex/calculadora-filtros/internal/domain/valueobject"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
@@ -131,4 +134,55 @@ func TestCalculoHandler_CalcularMemoria_ValidationError(t *testing.T) {
 
 	// Verificar
 	assert.Equal(t, http.StatusBadRequest, w.Code)
+}
+
+func TestCalculoHandler_mapErrorToResponse(t *testing.T) {
+	handler := &CalculoHandler{}
+
+	tests := []struct {
+		name         string
+		inputErr     error
+		wantStatus   int
+		wantCode     string
+		wantContains string
+	}{
+		{
+			name:         "ErrModoInvalido → 400",
+			inputErr:     dto.ErrModoInvalido,
+			wantStatus:   http.StatusBadRequest,
+			wantCode:     "MODO_INVALIDO",
+			wantContains: "Modo de cálculo inválido",
+		},
+		{
+			name:         "ErrConductorNoEncontrado → 422",
+			inputErr:     service.ErrConductorNoEncontrado,
+			wantStatus:   http.StatusUnprocessableEntity,
+			wantCode:     "CONDUCTOR_NO_ENCONTRADO",
+			wantContains: "No se encontró conductor",
+		},
+		{
+			name:         "ErrCanalizacionNoDisponible → 422",
+			inputErr:     service.ErrCanalizacionNoDisponible,
+			wantStatus:   http.StatusUnprocessableEntity,
+			wantCode:     "CANALIZACION_NO_DISPONIBLE",
+			wantContains: "No se encontró canalización",
+		},
+		{
+			name:         "Error genérico → 500",
+			inputErr:     errors.New("error desconocido"),
+			wantStatus:   http.StatusInternalServerError,
+			wantCode:     "INTERNAL_ERROR",
+			wantContains: "Error interno del servidor",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			status, response := handler.mapErrorToResponse(tt.inputErr)
+			assert.Equal(t, tt.wantStatus, status)
+			assert.Equal(t, tt.wantCode, response.Code)
+			assert.Contains(t, response.Error, tt.wantContains)
+			assert.False(t, response.Success)
+		})
+	}
 }

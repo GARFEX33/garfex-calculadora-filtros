@@ -2,11 +2,13 @@
 package handler
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/garfex/calculadora-filtros/internal/application/dto"
 	"github.com/garfex/calculadora-filtros/internal/application/usecase"
 	"github.com/garfex/calculadora-filtros/internal/domain/entity"
+	"github.com/garfex/calculadora-filtros/internal/domain/service"
 	"github.com/garfex/calculadora-filtros/internal/domain/valueobject"
 	"github.com/gin-gonic/gin"
 )
@@ -152,18 +154,105 @@ func (h *CalculoHandler) mapRequestToDTO(req CalcularMemoriaRequest) (dto.Equipo
 }
 
 // mapErrorToResponse mapea errores del dominio a respuestas HTTP.
+// Siguiendo la tabla del AGENTS.md:
+// - ErrEquipoNoEncontrado → 404
+// - ErrModoInvalido → 400
+// - ErrCanalizacionNoSoportada → 400
+// - Validación de input → 400
+// - Error de cálculo (datos insuficientes) → 422
+// - ErrConductorNoEncontrado → 422
+// - Error interno → 500
 func (h *CalculoHandler) mapErrorToResponse(err error) (int, CalcularMemoriaResponseError) {
-	// Por defecto: error interno
-	status := http.StatusInternalServerError
-	response := CalcularMemoriaResponseError{
+	// Errores 400 - Bad Request (datos inválidos)
+	if errors.Is(err, dto.ErrModoInvalido) {
+		return http.StatusBadRequest, CalcularMemoriaResponseError{
+			Success: false,
+			Error:   "Modo de cálculo inválido",
+			Code:    "MODO_INVALIDO",
+			Details: err.Error(),
+		}
+	}
+
+	if errors.Is(err, dto.ErrEquipoInputInvalido) {
+		return http.StatusBadRequest, CalcularMemoriaResponseError{
+			Success: false,
+			Error:   "Datos de entrada inválidos",
+			Code:    "INPUT_INVALIDO",
+			Details: err.Error(),
+		}
+	}
+
+	if errors.Is(err, entity.ErrTipoCanalizacionInvalido) {
+		return http.StatusBadRequest, CalcularMemoriaResponseError{
+			Success: false,
+			Error:   "Tipo de canalización no soportado",
+			Code:    "CANALIZACION_NO_SOPORTADA",
+			Details: err.Error(),
+		}
+	}
+
+	if errors.Is(err, entity.ErrTipoEquipoInvalido) {
+		return http.StatusBadRequest, CalcularMemoriaResponseError{
+			Success: false,
+			Error:   "Tipo de equipo inválido",
+			Code:    "TIPO_EQUIPO_INVALIDO",
+			Details: err.Error(),
+		}
+	}
+
+	if errors.Is(err, valueobject.ErrVoltajeInvalido) ||
+		errors.Is(err, valueobject.ErrCorrienteInvalida) ||
+		errors.Is(err, valueobject.ErrConductorInvalido) {
+		return http.StatusBadRequest, CalcularMemoriaResponseError{
+			Success: false,
+			Error:   "Valor fuera de rango permitido",
+			Code:    "VALOR_INVALIDO",
+			Details: err.Error(),
+		}
+	}
+
+	// Errores 422 - Unprocessable Entity (errores de cálculo)
+	if errors.Is(err, service.ErrConductorNoEncontrado) {
+		return http.StatusUnprocessableEntity, CalcularMemoriaResponseError{
+			Success: false,
+			Error:   "No se encontró conductor adecuado",
+			Code:    "CONDUCTOR_NO_ENCONTRADO",
+			Details: err.Error(),
+		}
+	}
+
+	if errors.Is(err, service.ErrCanalizacionNoDisponible) {
+		return http.StatusUnprocessableEntity, CalcularMemoriaResponseError{
+			Success: false,
+			Error:   "No se encontró canalización adecuada",
+			Code:    "CANALIZACION_NO_DISPONIBLE",
+			Details: err.Error(),
+		}
+	}
+
+	// Errores específicos de validación en cálculos
+	if errors.Is(err, service.ErrDistanciaInvalida) ||
+		errors.Is(err, service.ErrHilosPorFaseInvalido) ||
+		errors.Is(err, service.ErrFactorPotenciaInvalido) {
+		return http.StatusUnprocessableEntity, CalcularMemoriaResponseError{
+			Success: false,
+			Error:   "Parámetros de cálculo inválidos",
+			Code:    "PARAMETROS_INVALIDOS",
+			Details: err.Error(),
+		}
+	}
+
+	// Error 404 - Not Found
+	// Nota: Esto normalmente vendría del repositorio de equipos
+	// if errors.Is(err, repository.ErrEquipoNoEncontrado) {
+	//     return http.StatusNotFound, CalcularMemoriaResponseError{...}
+	// }
+
+	// Por defecto: error interno 500
+	return http.StatusInternalServerError, CalcularMemoriaResponseError{
 		Success: false,
 		Error:   "Error interno del servidor",
 		Code:    "INTERNAL_ERROR",
 		Details: err.Error(),
 	}
-
-	// Mapear errores específicos
-	// TODO: Usar errors.Is cuando tengamos sentinels definidos
-
-	return status, response
 }
