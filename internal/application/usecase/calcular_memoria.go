@@ -190,7 +190,7 @@ func (uc *CalcularMemoriaUseCase) Execute(ctx context.Context, input dto.EquipoI
 		{Cantidad: 1, SeccionMM2: conductorTierra.SeccionMM2()},          // Tierra
 	}
 
-	canalizacion, err := service.CalcularCanalizacion(conductores, string(input.TipoCanalizacion), tablaCanalizacion)
+	canalizacion, err := service.CalcularCanalizacion(conductores, string(input.TipoCanalizacion), tablaCanalizacion, hilosPorFase)
 	if err != nil {
 		return dto.MemoriaOutput{}, fmt.Errorf("paso 6 - calcular canalización: %w", err)
 	}
@@ -200,6 +200,7 @@ func (uc *CalcularMemoriaUseCase) Execute(ctx context.Context, input dto.EquipoI
 		Tamano:           canalizacion.Tamano,
 		AreaTotalMM2:     canalizacion.AnchoRequerido,
 		AreaRequeridaMM2: canalizacion.AnchoRequerido / 0.40,
+		NumeroDeTubos:    canalizacion.NumeroDeTubos,
 	}
 
 	// ============================================================================

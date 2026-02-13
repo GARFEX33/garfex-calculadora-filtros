@@ -28,6 +28,7 @@ type ResultadoCanalizacion struct {
 	Tamano           string
 	AreaTotalMM2     float64
 	AreaRequeridaMM2 float64
+	NumeroDeTubos    int
 }
 
 // ResultadoCaidaTension contiene el resultado del cálculo de caída.
