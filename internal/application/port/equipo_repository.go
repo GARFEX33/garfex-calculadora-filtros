@@ -10,5 +10,6 @@ import (
 // EquipoRepository defines the contract for equipment persistence.
 type EquipoRepository interface {
 	// BuscarPorClave finds an equipment by its unique key.
-	BuscarPorClave(ctx context.Context, clave string) (entity.Equipo, error)
+	// Returns CalculadorCorriente interface which all equipment types implement.
+	BuscarPorClave(ctx context.Context, clave string) (entity.CalculadorCorriente, error)
 }

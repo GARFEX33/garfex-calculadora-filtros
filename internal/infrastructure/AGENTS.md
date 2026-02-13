@@ -4,16 +4,17 @@ Implementa los ports definidos en `application/port/`.
 Tecnologias: PostgreSQL (pgx/v5), CSV (encoding/csv).
 
 > **Skills Reference**:
+>
 > - [`golang-patterns`](.agents/skills/golang-patterns/SKILL.md) — error handling, interfaces, convenciones de repositorios
 > - [`golang-pro`](.agents/skills/golang-pro/SKILL.md) — connection pooling, concurrencia en queries
 
 ### Auto-invoke
 
-| Accion | Skill |
-|--------|-------|
-| Crear o modificar repositorio | `golang-patterns` |
-| Configurar pgx pool o conexion BD | `golang-pro` |
-| Implementar nuevo CSV reader | `golang-patterns` |
+| Accion                            | Skill             |
+| --------------------------------- | ----------------- |
+| Crear o modificar repositorio     | `golang-patterns` |
+| Configurar pgx pool o conexion BD | `golang-pro`      |
+| Implementar nuevo CSV reader      | `golang-patterns` |
 
 ## Estructura
 
@@ -32,19 +33,19 @@ Lee tablas NOM desde `data/tablas_nom/`.
 
 ### Mapeo canalizacion → tabla ampacidad
 
-| TipoCanalizacion | Archivo CSV |
-|---|---|
+| TipoCanalizacion                             | Archivo CSV     |
+| -------------------------------------------- | --------------- |
 | TUBERIA_PVC / ALUMINIO / ACERO_PG / ACERO_PD | 310-15-b-16.csv |
-| CHAROLA_CABLE_ESPACIADO | 310-15-b-17.csv |
-| CHAROLA_CABLE_TRIANGULAR | 310-15-b-20.csv |
+| CHAROLA_CABLE_ESPACIADO                      | 310-15-b-17.csv |
+| CHAROLA_CABLE_TRIANGULAR                     | 310-15-b-20.csv |
 
 ### Mapeo canalizacion → columna R (Tabla 9)
 
-| TipoCanalizacion | Columna resistencia |
-|---|---|
-| TUBERIA_PVC / CHAROLA_ESPACIADO / CHAROLA_TRIANGULAR | `res_{material}_pvc` |
-| TUBERIA_ALUMINIO | `res_{material}_al` |
-| TUBERIA_ACERO_PG / ACERO_PD | `res_{material}_acero` |
+| TipoCanalizacion                                     | Columna resistencia    |
+| ---------------------------------------------------- | ---------------------- |
+| TUBERIA_PVC / CHAROLA_ESPACIADO / CHAROLA_TRIANGULAR | `res_{material}_pvc`   |
+| TUBERIA_ALUMINIO                                     | `res_{material}_al`    |
+| TUBERIA_ACERO_PG / ACERO_PD                          | `res_{material}_acero` |
 
 Charola no tiene conduit metalico → usa columna PVC (sin efecto de proximidad).
 
@@ -71,12 +72,12 @@ Ver topologia completa en `docs/plans/2026-02-09-arquitectura-inicial-design.md`
 
 ## NAMING CONVENTIONS
 
-| Entidad | Patron | Ejemplo |
-|---------|--------|---------|
-| Repositorio PostgreSQL | `PostgresPascalCaseRepository` | `PostgresEquipoRepository` |
-| Repositorio CSV | `CSVPascalCaseRepository` | `CSVTablaNOMRepository` |
-| Cliente BD | `PascalCaseClient` | `PostgresClient` |
-| Archivo | `snake_case.go` | `postgres_equipo_repository.go` |
+| Entidad                | Patron                         | Ejemplo                         |
+| ---------------------- | ------------------------------ | ------------------------------- |
+| Repositorio PostgreSQL | `PostgresPascalCaseRepository` | `PostgresEquipoRepository`      |
+| Repositorio CSV        | `CSVPascalCaseRepository`      | `CSVTablaNOMRepository`         |
+| Cliente BD             | `PascalCaseClient`             | `PostgresClient`                |
+| Archivo                | `snake_case.go`                | `postgres_equipo_repository.go` |
 
 ---
 

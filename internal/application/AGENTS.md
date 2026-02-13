@@ -3,15 +3,16 @@
 Orquesta domain services. Define contratos (ports), no implementaciones.
 
 > **Skills Reference**:
+>
 > - [`golang-patterns`](.agents/skills/golang-patterns/SKILL.md) — interfaces pequeñas, error wrapping, convenciones de ports
 
 ### Auto-invoke
 
-| Accion | Skill |
-|--------|-------|
+| Accion                         | Skill             |
+| ------------------------------ | ----------------- |
 | Definir nuevo port (interface) | `golang-patterns` |
-| Crear o modificar use case | `golang-patterns` |
-| Agregar o modificar DTOs | `golang-patterns` |
+| Crear o modificar use case     | `golang-patterns` |
+| Agregar o modificar DTOs       | `golang-patterns` |
 
 ## Estructura
 
@@ -60,18 +61,21 @@ Pequenas y enfocadas (pocos metodos por interface).
 ## CRITICAL RULES
 
 ### Ports
+
 - ALWAYS: Interfaces pequeñas y enfocadas — pocos metodos por port
 - ALWAYS: Definir ports en `application/port/`, implementar en `infrastructure/`
 - NEVER: Logica de negocio en ports — solo contratos
 - NEVER: Importar tipos de infrastructure en application
 
 ### Use Cases
+
 - ALWAYS: `context.Context` como primer parametro
-- ALWAYS: Seguir el orden obligatorio de los 7 pasos del flujo
+- ALWAYS: Seguir el orden obligatorio
 - ALWAYS: Logica de seleccion de temperatura aqui, no en domain ni infrastructure
 - NEVER: Llamar directamente a infrastructure — solo via ports
 
 ### DTOs
+
 - ALWAYS: Structs planos sin metodos de negocio
 - ALWAYS: Validacion de input en el use case, no en el DTO
 - NEVER: Entidades de domain expuestas directamente en DTOs — mapear siempre
@@ -80,13 +84,13 @@ Pequenas y enfocadas (pocos metodos por interface).
 
 ## NAMING CONVENTIONS
 
-| Entidad | Patron | Ejemplo |
-|---------|--------|---------|
-| Port (interface) | `PascalCaseRepository` | `EquipoRepository`, `TablaNOMRepository` |
-| Use case struct | `PascalCaseUseCase` | `CalcularMemoriaUseCase` |
-| DTO entrada | `PascalCaseInput` | `EquipoInput` |
-| DTO salida | `PascalCaseOutput` | `MemoriaOutput` |
-| Error sentinel | `ErrPascalCase` | `ErrEquipoNoEncontrado`, `ErrModoInvalido` |
+| Entidad          | Patron                 | Ejemplo                                    |
+| ---------------- | ---------------------- | ------------------------------------------ |
+| Port (interface) | `PascalCaseRepository` | `EquipoRepository`, `TablaNOMRepository`   |
+| Use case struct  | `PascalCaseUseCase`    | `CalcularMemoriaUseCase`                   |
+| DTO entrada      | `PascalCaseInput`      | `EquipoInput`                              |
+| DTO salida       | `PascalCaseOutput`     | `MemoriaOutput`                            |
+| Error sentinel   | `ErrPascalCase`        | `ErrEquipoNoEncontrado`, `ErrModoInvalido` |
 
 ---
 
