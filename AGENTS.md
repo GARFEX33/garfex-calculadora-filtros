@@ -15,7 +15,7 @@ Backend API en Go para memorias de calculo de instalaciones electricas segun nor
 | Domain                  | `internal/domain/`                 | Orquestador — apunta a entity/, vo/, service/ |
 | Domain — Entity         | `internal/domain/entity/`          | Entidades, TipoEquipo, TipoCanalizacion, MemoriaCalculo |
 | Domain — Value Objects  | `internal/domain/valueobject/`     | Corriente, Tension, Conductor                |
-| Domain — Services       | `internal/domain/service/`         | 6 servicios de calculo, caida de tension     |
+| Domain — Services       | `internal/domain/service/`         | 6 servicios de calculo, formula IEEE-141 caida tension |
 | Application             | `internal/application/`            | Ports, use cases, DTOs, orquestacion         |
 | Infrastructure          | `internal/infrastructure/`         | Repos, CSV, PostgreSQL, mapeos, entorno      |
 | Presentation            | `internal/presentation/`           | API REST, handlers, errores HTTP, versionado |
@@ -103,5 +103,5 @@ Al terminar cada tarea, actualizar: plan si diverge, AGENTS.md si cambia una reg
 
 - Arquitectura: `docs/plans/2026-02-09-arquitectura-inicial-design.md`
 - Domain layer: `docs/plans/2026-02-10-domain-layer.md`
-- Caida de tension: `docs/plans/2026-02-11-caida-tension-impedancia-design.md`
+- Caida de tension (IEEE-141): `docs/plans/2026-02-12-caida-tension-ieee141-design.md`
 - Canalizacion: `docs/plans/2026-02-11-tablas-nom-canalizacion-design.md`

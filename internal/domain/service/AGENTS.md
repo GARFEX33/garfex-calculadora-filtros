@@ -21,23 +21,49 @@ Logica de calculo pura. Reciben datos ya interpretados — sin I/O, sin CSV, sin
 | SeleccionarConductorAlimentacion | `calculo_conductor.go` | Recibe `[]EntradaTablaConductor` pre-resueltos |
 | SeleccionarConductorTierra | `calculo_tierra.go` | ITM + tabla 250-122 pre-resuelta |
 | CalcularCanalizacion | `calculo_canalizacion.go` | 40% fill NOM para tuberia |
-| CalcularCaidaTension | `calculo_caida_tension.go` | Metodo impedancia Z = sqrt(R²+X²) |
+| CalcularCaidaTension | `calculo_caida_tension.go` | Formula IEEE-141/NOM con factor de potencia |
 
-## Caida de Tension (metodo impedancia)
+## Caida de Tension (formula IEEE-141 / NOM)
 
-Formula: `VD = sqrt3 x I x Z x L_km`
+```
+%Vd = (√3 × Ib × L × (R·cosθ + X·senθ) / (V × N)) × 100
+VD  = V × (%Vd / 100)
+```
 
-- **R:** recibida de Tabla 9 (pre-resuelta por infrastructure)
-- **X:** calculada geometricamente con DMG/RMG
-- **RMG** = (diametro_desnudo/2) x factorHilos[numHilos]
-- **DMG** = diametro_exterior_thw x factorDMG[tipoCanalizacion]
+- **R:** de Tabla 9, columna `res_{material}_{conduit}` (pre-resuelta por infrastructure)
+- **X:** de Tabla 9, columna `reactancia_al` o `reactancia_acero` (pre-resuelta por infrastructure)
+- **cosθ = FactorPotencia:** FA/FR/TR = 1.0 fijo | Carga = FP explícito del equipo
+- **N = HilosPorFase:** conductores en paralelo por fase
 
-| Parametro | Valores |
-|-----------|---------|
-| Factores hilos | 1=0.7788, 7=0.726, 19=0.758, 37=0.768, 61=0.772 |
-| Factores DMG | tuberia/triangular=1.0, espaciado=2.0 |
+### EntradaCalculoCaidaTension
 
-Diseno completo: `docs/plans/2026-02-11-caida-tension-impedancia-design.md`
+| Campo | Tipo | Fuente |
+|-------|------|--------|
+| `ResistenciaOhmPorKm` | float64 | Tabla 9 → columna R según material + conduit |
+| `ReactanciaOhmPorKm` | float64 | Tabla 9 → `reactancia_al` o `reactancia_acero` |
+| `TipoCanalizacion` | TipoCanalizacion | Para documentar en reporte |
+| `HilosPorFase` | int | CF ≥ 1 |
+| `FactorPotencia` | float64 | FA/FR/TR = 1.0 | Carga = FP explícito |
+
+### ResultadoCaidaTension (vive en entity/)
+
+| Campo | Semántica |
+|-------|-----------|
+| `Porcentaje` | %Vd calculado |
+| `CaidaVolts` | VD en volts |
+| `Cumple` | %Vd ≤ limiteNOM |
+| `Impedancia` | Término efectivo R·cosθ + X·senθ (Ω/km) |
+| `Resistencia` | R_ef = R / N (Ω/km) |
+| `Reactancia` | X_ef = X / N (Ω/km) |
+
+### Mapeo X en Tabla 9
+
+| TipoCanalizacion | Columna X |
+|-----------------|-----------|
+| PVC, Aluminio, Charola espaciado, Charola triangular | `reactancia_al` |
+| Acero PG, Acero PD | `reactancia_acero` |
+
+Diseno completo: `docs/plans/2026-02-12-caida-tension-ieee141-design.md`
 
 ## Regla clave
 

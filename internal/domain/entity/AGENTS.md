@@ -32,9 +32,11 @@ Los 4 tipos de tuberia comparten tabla de ampacidad. Cada tipo mapea a columna R
 
 Todos implementan `CalculadorCorriente`. Carga y Transformador tambien implementan `CalculadorPotencia`.
 
-## MemoriaCalculo
+## MemoriaCalculo y ResultadoCaidaTension
 
-Agrupa todos los pasos: `CorrienteNominal`, `CorrienteAjustada`, `FactoresAjuste`, `Potencias`, `ConductorAlimentacion`, `ConductorTierra`, `TipoCanalizacion`, `Canalizacion`, `TemperaturaUsada`, `CaidaTension`, `CumpleNormativa`.
+`MemoriaCalculo` agrupa todos los pasos: `CorrienteNominal`, `CorrienteAjustada`, `FactoresAjuste`, `Potencias`, `ConductorAlimentacion`, `ConductorTierra`, `TipoCanalizacion`, `Canalizacion`, `TemperaturaUsada`, `CaidaTension`, `CumpleNormativa`.
+
+`ResultadoCaidaTension` vive en `entity/` (no en `service/`) para evitar ciclo de dependencias — `service` importa `entity`. Contiene: `Porcentaje`, `CaidaVolts`, `Cumple`, `Impedancia` (término efectivo R·cosθ + X·senθ), `Resistencia` (R_ef), `Reactancia` (X_ef).
 
 ## Patron para nuevo equipo (Fase 2+)
 
