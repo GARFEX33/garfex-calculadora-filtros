@@ -68,3 +68,45 @@ func TestCalcularCanalizacion_EmptyConductors(t *testing.T) {
 	_, err := service.CalcularCanalizacion(nil, "TUBERIA_CONDUIT", tablaCanalizacionTest)
 	assert.Error(t, err)
 }
+
+func TestCalcularCanalizacion_FillFactor1Conductor(t *testing.T) {
+	conductores := []service.ConductorParaCanalizacion{
+		{Cantidad: 1, SeccionMM2: 8.37}, // 1 × 8 AWG
+	}
+	// Total area = 1×8.37 = 8.37 mm²
+	// Fill factor for 1 conductor = 53%
+	// Required conduit area at 53% fill = 8.37 / 0.53 = 15.79 mm²
+	// Smallest conduit ≥ 15.79 → "1/2" (78 mm²)
+
+	result, err := service.CalcularCanalizacion(conductores, "TUBERIA_CONDUIT", tablaCanalizacionTest)
+	require.NoError(t, err)
+	assert.Equal(t, "1/2", result.Tamano)
+}
+
+func TestCalcularCanalizacion_FillFactor2Conductores(t *testing.T) {
+	conductores := []service.ConductorParaCanalizacion{
+		{Cantidad: 2, SeccionMM2: 3.31}, // 2 × 12 AWG (phase + neutral)
+	}
+	// Total area = 2×3.31 = 6.62 mm²
+	// Fill factor for 2 conductors = 31%
+	// Required conduit area at 31% fill = 6.62 / 0.31 = 21.35 mm²
+	// Smallest conduit ≥ 21.35 → "1/2" (78 mm²)
+
+	result, err := service.CalcularCanalizacion(conductores, "TUBERIA_CONDUIT", tablaCanalizacionTest)
+	require.NoError(t, err)
+	assert.Equal(t, "1/2", result.Tamano)
+}
+
+func TestCalcularCanalizacion_FillFactor3Conductores(t *testing.T) {
+	conductores := []service.ConductorParaCanalizacion{
+		{Cantidad: 3, SeccionMM2: 3.31}, // 3 × 12 AWG (3-phase)
+	}
+	// Total area = 3×3.31 = 9.93 mm²
+	// Fill factor for 3+ conductors = 40%
+	// Required conduit area at 40% fill = 9.93 / 0.40 = 24.83 mm²
+	// Smallest conduit ≥ 24.83 → "1/2" (78 mm²)
+
+	result, err := service.CalcularCanalizacion(conductores, "TUBERIA_CONDUIT", tablaCanalizacionTest)
+	require.NoError(t, err)
+	assert.Equal(t, "1/2", result.Tamano)
+}

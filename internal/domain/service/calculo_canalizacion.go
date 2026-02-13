@@ -14,6 +14,17 @@ var ErrCanalizacionNoDisponible = errors.New("no se encontró canalización con 
 // factorRellenoTuberia is the NOM fill factor for conduit with 2+ conductors (40%).
 const factorRellenoTuberia = 0.40
 
+func determinarFillFactor(cantidad int) float64 {
+	switch cantidad {
+	case 1:
+		return 0.53
+	case 2:
+		return 0.31
+	default:
+		return 0.40
+	}
+}
+
 // ConductorParaCanalizacion holds the quantity and cross-section area
 // of a group of identical conductors for conduit sizing calculations.
 type ConductorParaCanalizacion struct {
@@ -37,11 +48,14 @@ func CalcularCanalizacion(
 	}
 
 	var areaTotal float64
+	var cantidadTotal int
 	for _, c := range conductores {
 		areaTotal += float64(c.Cantidad) * c.SeccionMM2
+		cantidadTotal += c.Cantidad
 	}
 
-	areaRequerida := areaTotal / factorRellenoTuberia
+	factorRelleno := determinarFillFactor(cantidadTotal)
+	areaRequerida := areaTotal / factorRelleno
 
 	for _, entrada := range tabla {
 		if entrada.AreaInteriorMM2 >= areaRequerida {
