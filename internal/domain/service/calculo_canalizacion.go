@@ -11,9 +11,6 @@ import (
 // ErrCanalizacionNoDisponible is returned when no conduit size fits the required area.
 var ErrCanalizacionNoDisponible = errors.New("no se encontró canalización con área suficiente")
 
-// factorRellenoTuberia is the NOM fill factor for conduit with 2+ conductors (40%).
-const factorRellenoTuberia = 0.40
-
 func determinarFillFactor(cantidad int) float64 {
 	switch cantidad {
 	case 1:

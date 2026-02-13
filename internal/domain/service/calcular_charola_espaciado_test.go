@@ -150,7 +150,8 @@ func TestCalcularCharolaEspaciado(t *testing.T) {
 		)
 
 		require.NoError(t, err)
-		anchoRequerido := float64(3+1-1)*10.0 + 5.0
+		// Monofasico: 1 fase (1 hilo) + 1 neutro = 2 hilos totales
+		anchoRequerido := float64(2-1)*10.0 + 5.0
 		assert.Equal(t, anchoRequerido, result.AnchoRequerido)
 	})
 
