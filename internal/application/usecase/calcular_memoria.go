@@ -61,13 +61,34 @@ func (uc *CalcularMemoriaUseCase) Execute(ctx context.Context, input dto.EquipoI
 	cantidadConductores := input.SistemaElectrico.CantidadConductores()
 	output.CantidadConductores = cantidadConductores
 
-	// Calcular factores de corrección
-	factorAgrupamiento := 1.0
-	factorTemperatura := 1.0
+	// Paso 2a: Obtener temperatura ambiente del estado
+	tempAmbiente, err := uc.tablaRepo.ObtenerTemperaturaPorEstado(ctx, input.Estado)
+	if err != nil {
+		return dto.MemoriaOutput{}, fmt.Errorf("obtener temperatura para estado %s: %w", input.Estado, err)
+	}
+	output.TemperaturaAmbiente = tempAmbiente
 
-	// TODO: Obtener tablas de factores del repositorio y calcular:
-	// factorAgrupamiento, err := service.CalcularFactorAgrupamiento(cantidadConductores, tablaAgrupamiento)
-	// factorTemperatura, err := service.CalcularFactorTemperatura(temperaturaAmbiente, temperaturaConductor, tablaTemperatura)
+	// Calcular Corriente Nominal (Paso 1) para determinar temperatura
+	corrienteNominal, err := uc.calcularCorrienteNominal(ctx, input)
+	if err != nil {
+		return dto.MemoriaOutput{}, fmt.Errorf("paso 1 - corriente nominal: %w", err)
+	}
+	output.CorrienteNominal = corrienteNominal.Valor()
+
+	// Seleccionar temperatura del conductor (según reglas)
+	temperatura := uc.seleccionarTemperatura(corrienteNominal, input)
+	output.TemperaturaUsada = int(temperatura)
+
+	// Calcular factores de corrección
+	factorTemperatura, err := uc.tablaRepo.ObtenerFactorTemperatura(ctx, tempAmbiente, temperatura)
+	if err != nil {
+		return dto.MemoriaOutput{}, fmt.Errorf("calcular factor temperatura: %w", err)
+	}
+
+	factorAgrupamiento, err := uc.tablaRepo.ObtenerFactorAgrupamiento(ctx, cantidadConductores)
+	if err != nil {
+		return dto.MemoriaOutput{}, fmt.Errorf("calcular factor agrupamiento: %w", err)
+	}
 
 	output.FactorAgrupamientoCalculado = factorAgrupamiento
 	output.FactorTemperaturaCalculado = factorTemperatura
@@ -87,13 +108,8 @@ func (uc *CalcularMemoriaUseCase) Execute(ctx context.Context, input dto.EquipoI
 	}
 
 	// ============================================================================
-	// PASO 1: Calcular Corriente Nominal
+	// PASO 1: Calcular Corriente Nominal (ya calculado arriba)
 	// ============================================================================
-	corrienteNominal, err := uc.calcularCorrienteNominal(ctx, input)
-	if err != nil {
-		return dto.MemoriaOutput{}, fmt.Errorf("paso 1 - corriente nominal: %w", err)
-	}
-	output.CorrienteNominal = corrienteNominal.Valor()
 
 	// ============================================================================
 	// PASO 2: Ajustar Corriente
@@ -113,9 +129,7 @@ func (uc *CalcularMemoriaUseCase) Execute(ctx context.Context, input dto.EquipoI
 	// ============================================================================
 	// PASO 4: Seleccionar Conductor de Alimentación
 	// ============================================================================
-	// Determinar temperatura según reglas del AGENTS.md
-	temperatura := uc.seleccionarTemperatura(corrienteAjustada, input)
-	output.TemperaturaUsada = int(temperatura)
+	// La temperatura ya fue seleccionada arriba
 
 	// Determinar material (usamos cobre por defecto, podría venir en input)
 	material := valueobject.MaterialCobre
