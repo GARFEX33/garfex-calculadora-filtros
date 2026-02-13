@@ -40,8 +40,11 @@ GET  /api/v1/equipos/{clave}                          -> Equipo
 | Error domain | HTTP status |
 |---|---|
 | ErrEquipoNoEncontrado | 404 |
+| ErrModoInvalido | 400 |
+| ErrCanalizacionNoSoportada | 400 |
 | Validacion de input | 400 |
 | Error de calculo (datos insuficientes) | 422 |
+| ErrConductorNoEncontrado | 422 |
 | Error interno | 500 |
 
 **Regla:** Solo los handlers conocen HTTP status codes. El domain y application solo retornan `error`.
