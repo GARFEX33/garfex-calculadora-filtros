@@ -8,6 +8,31 @@ Backend API en Go para memorias de calculo de instalaciones electricas segun nor
 - Cada capa tiene su propio AGENTS.md con guias especificas
 - El AGENTS.md del directorio tiene precedencia sobre este archivo cuando hay conflicto
 
+## Regla de Skills (OBLIGATORIO)
+
+**ANTES de cualquier accion, verificar si aplica un skill.** Si hay 1% de probabilidad de que aplique, invocar el skill con la herramienta `Skill`.
+
+Orden de prioridad:
+1. **Skills de proceso primero** (brainstorming, debugging) — determinan COMO abordar la tarea
+2. **Skills de implementacion segundo** (golang-patterns, api-design) — guian la ejecucion
+
+Si el skill tiene checklist, crear todos con TodoWrite antes de seguirlo.
+
+## Workflow de Desarrollo (OBLIGATORIO)
+
+Para cualquier feature o bugfix, seguir este flujo de skills en orden:
+
+| Paso | Skill | Trigger | Que hace |
+|------|-------|---------|----------|
+| 1 | `brainstorming` | Usuario pide feature/cambio | Refina ideas con preguntas, explora alternativas, presenta diseño por secciones para validar. Guarda documento de diseño. |
+| 2 | `writing-plans` | Diseño aprobado | Divide el trabajo en tareas pequeñas (2-5 min cada una). Cada tarea tiene: rutas exactas, código completo, pasos de verificación. |
+| 3 | `subagent-driven-development` o `executing-plans` | Plan listo | Despacha subagente fresco por tarea con revisión de dos etapas (spec + calidad), o ejecuta en batches con checkpoints humanos. |
+| 4 | `test-driven-development` | Durante implementación | RED-GREEN-REFACTOR: escribir test que falla → verlo fallar → código mínimo → verlo pasar → commit. Borra código escrito antes de tests. |
+| 5 | `requesting-code-review` | Entre tareas | Revisa contra el plan, reporta issues por severidad. Issues críticos bloquean progreso. |
+| 6 | `finishing-a-development-branch` | Tareas completas | Verifica tests, presenta opciones (merge/PR/keep/discard), limpia worktree. |
+
+**IMPORTANTE:** No saltear pasos. Si el usuario dice "agregá X", empezar con `brainstorming`, NO con código.
+
 ## Guias por Capa
 
 | Capa                    | Ubicacion                          | AGENTS.md contiene                           |
@@ -68,13 +93,44 @@ Go 1.22+, Gin, PostgreSQL (pgx/v5), testify, golangci-lint
 
 ## Comandos
 
+### Desarrollo
+
 ```bash
 go test ./...           # Tests
 go test -race ./...     # Tests con race detector
 go build ./...          # Compilacion
 go vet ./...            # Analisis estatico
 golangci-lint run       # Linting completo
-go run cmd/api/main.go  # Servidor dev
+```
+
+### Iniciar Servidor
+
+**IMPORTANTE:** Asegurarse de que el puerto 8080 esté libre antes de iniciar:
+
+```bash
+# Opción 1: Compilar y ejecutar (recomendado)
+go build -o server.exe ./cmd/api/main.go
+./server.exe
+
+# Opción 2: Ejecutar directamente (sin compilar)
+go run cmd/api/main.go
+
+# Opción 3: Puerto personalizado (si 8080 está ocupado)
+set PORT=8090
+go run cmd/api/main.go
+```
+
+**Verificar que el servidor está corriendo:**
+```bash
+curl http://localhost:8080/health
+# Respuesta esperada: {"status":"ok"}
+```
+
+**Endpoint principal:**
+```bash
+curl -X POST http://localhost:8080/api/v1/calculos/memoria \
+  -H "Content-Type: application/json" \
+  -d '{"modo":"MANUAL_AMPERAJE","amperaje_nominal":50,"tension":220,"tipo_canalizacion":"TUBERIA_PVC","hilos_por_fase":1,"longitud_circuito":10,"itm":100}'
 ```
 
 ## Fases

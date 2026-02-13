@@ -22,9 +22,16 @@ Adapta HTTP <-> Application. Solo Gin handlers y middleware.
 
 ## API Endpoints
 
+### Fase 1 (implementados)
+
 ```
 GET  /health                                          -> 200 {"status": "ok"}
 POST /api/v1/calculos/memoria                         -> MemoriaOutput
+```
+
+### Fase 2 (pendientes)
+
+```
 GET  /api/v1/equipos?tipo=&min_capacidad=&max_capacidad= -> []Equipo
 GET  /api/v1/equipos/{clave}                          -> Equipo
 ```
@@ -32,8 +39,10 @@ GET  /api/v1/equipos/{clave}                          -> Equipo
 ## Formato de Errores (consistente en todos los endpoints)
 
 ```json
-{"error": "descripcion", "code": "EQUIPO_NO_ENCONTRADO", "details": "..."}
+{"success": false, "error": "descripcion", "code": "EQUIPO_NO_ENCONTRADO", "details": "..."}
 ```
+
+El campo `success` es `false` para errores, `true` para respuestas exitosas (donde el campo `data` contiene el resultado).
 
 ## Mapeo Domain -> HTTP
 

@@ -36,6 +36,12 @@ Datos de normativa NOM en formato CSV. Leidos por `infrastructure/repository/`.
 | `tabla-5-dimensiones-aislamiento.csv` | Tabla 5 | Diametro exterior THW (mm) para DMG |
 | `tabla-8-conductor-desnudo.csv` | Tabla 8 | Diametro desnudo (mm) + hilos para RMG |
 
+### Canalizacion (dimensionamiento de tuberia)
+
+| Archivo | Tabla NOM | Dato |
+|---------|-----------|------|
+| `tabla-conduit-dimensiones.csv` | Capítulo 9, Tabla 4 | Area interior (mm²) por tamaño de conduit |
+
 ## Formato CSV Ampacidad
 
 ```
