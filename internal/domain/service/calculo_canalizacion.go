@@ -32,11 +32,18 @@ type ConductorParaCanalizacion struct {
 // CalcularCanalizacion selects the smallest conduit whose usable area
 // (interior area × fill factor) accommodates all conductors.
 // tipo should be a TipoCanalizacion string value (e.g., "TUBERIA_CONDUIT").
+// numeroDeTubos indicates how many parallel conduits to use (must be >= 1).
+// When numeroDeTubos > 1, the total conductor area and count are divided evenly
+// among the tubes; fill factor is determined per-tube conductor count.
 func CalcularCanalizacion(
 	conductores []ConductorParaCanalizacion,
 	tipo string,
 	tabla []valueobject.EntradaTablaCanalizacion,
+	numeroDeTubos int,
 ) (entity.Canalizacion, error) {
+	if numeroDeTubos < 1 {
+		return entity.Canalizacion{}, fmt.Errorf("numeroDeTubos debe ser mayor a cero")
+	}
 	if len(conductores) == 0 {
 		return entity.Canalizacion{}, fmt.Errorf("lista de conductores vacía")
 	}
@@ -51,8 +58,10 @@ func CalcularCanalizacion(
 		cantidadTotal += c.Cantidad
 	}
 
-	factorRelleno := determinarFillFactor(cantidadTotal)
-	areaRequerida := areaTotal / factorRelleno
+	conductoresPorTubo := cantidadTotal / numeroDeTubos
+	factorRelleno := determinarFillFactor(conductoresPorTubo)
+	areaPorTubo := areaTotal / float64(numeroDeTubos)
+	areaRequerida := areaPorTubo / factorRelleno
 
 	for _, entrada := range tabla {
 		if entrada.AreaInteriorMM2 >= areaRequerida {
@@ -60,6 +69,7 @@ func CalcularCanalizacion(
 				Tipo:           tipo,
 				Tamano:         entrada.Tamano,
 				AnchoRequerido: areaTotal,
+				NumeroDeTubos:  numeroDeTubos,
 			}, nil
 		}
 	}
