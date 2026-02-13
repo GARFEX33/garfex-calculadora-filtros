@@ -1,7 +1,13 @@
 package entity
 
-import "fmt"
+import "errors"
 
+// SistemaElectrico represents the type of electrical system configuration.
+// It determines the number of conductors needed for the installation:
+//   - Delta: 3-phase, 3-wire system (3 conductors)
+//   - Estrella (Wye): 3-phase, 4-wire system (4 conductors)
+//   - Bifasico: 2-phase system (3 conductors)
+//   - Monofasico: single-phase system (2 conductors)
 type SistemaElectrico string
 
 const (
@@ -11,8 +17,9 @@ const (
 	SistemaElectricoMonofasico SistemaElectrico = "MONOFASICO"
 )
 
-var ErrSistemaElectricoInvalido = fmt.Errorf("sistema eléctrico no válido")
+var ErrSistemaElectricoInvalido = errors.New("sistema eléctrico no válido")
 
+// ParseSistemaElectrico converts a string to SistemaElectrico.
 func ParseSistemaElectrico(s string) (SistemaElectrico, error) {
 	switch s {
 	case string(SistemaElectricoDelta):
@@ -24,10 +31,24 @@ func ParseSistemaElectrico(s string) (SistemaElectrico, error) {
 	case string(SistemaElectricoMonofasico):
 		return SistemaElectricoMonofasico, nil
 	default:
-		return "", fmt.Errorf("%w: '%s'", ErrSistemaElectricoInvalido, s)
+		return "", errors.New("sistema eléctrico no válido: " + s)
 	}
 }
 
+// ValidarSistemaElectrico returns an error if se is not a recognized electrical system type.
+func ValidarSistemaElectrico(se SistemaElectrico) error {
+	switch se {
+	case SistemaElectricoDelta,
+		SistemaElectricoEstrella,
+		SistemaElectricoBifasico,
+		SistemaElectricoMonofasico:
+		return nil
+	default:
+		return ErrSistemaElectricoInvalido
+	}
+}
+
+// CantidadConductores returns the number of conductors required for the electrical system.
 func (s SistemaElectrico) CantidadConductores() int {
 	switch s {
 	case SistemaElectricoDelta:
