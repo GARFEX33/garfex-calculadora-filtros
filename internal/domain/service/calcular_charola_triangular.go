@@ -1,11 +1,14 @@
 package service
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/garfex/calculadora-filtros/internal/domain/entity"
 	"github.com/garfex/calculadora-filtros/internal/domain/valueobject"
 )
+
+var ErrCharolaTriangularNoEncontrada = errors.New("no se encontró charola triangular suficiente")
 
 func CalcularCharolaTriangular(
 	hilosPorFase int,
@@ -14,10 +17,10 @@ func CalcularCharolaTriangular(
 	tablaCharola []valueobject.EntradaTablaCanalizacion,
 ) (entity.Canalizacion, error) {
 	if hilosPorFase < 1 {
-		return entity.Canalizacion{}, fmt.Errorf("CalcularCharolaTriangular: hilos por fase debe ser >= 1: %d", hilosPorFase)
+		return entity.Canalizacion{}, fmt.Errorf("CalcularCharolaTriangular: %w", errors.New("hilos por fase debe ser >= 1"))
 	}
 	if len(tablaCharola) == 0 {
-		return entity.Canalizacion{}, fmt.Errorf("CalcularCharolaTriangular: tabla vacía")
+		return entity.Canalizacion{}, fmt.Errorf("CalcularCharolaTriangular: %w", errors.New("tabla vacía"))
 	}
 
 	const factorTriangular = 2.15
@@ -28,15 +31,12 @@ func CalcularCharolaTriangular(
 	for _, entrada := range tablaCharola {
 		if entrada.AreaInteriorMM2 >= anchoRequerido {
 			return entity.Canalizacion{
-				Tipo:      string(entity.TipoCanalizacionCharolaCableTriangular),
-				Tamano:    entrada.Tamano,
-				AreaTotal: anchoRequerido,
+				Tipo:           string(entity.TipoCanalizacionCharolaCableTriangular),
+				Tamano:         entrada.Tamano,
+				AnchoRequerido: anchoRequerido,
 			}, nil
 		}
 	}
 
-	return entity.Canalizacion{}, fmt.Errorf(
-		"CalcularCharolaTriangular: no se encontró charola triangular suficiente: ancho requerido %.2f mm",
-		anchoRequerido,
-	)
+	return entity.Canalizacion{}, fmt.Errorf("CalcularCharolaTriangular: %w", ErrCharolaTriangularNoEncontrada)
 }

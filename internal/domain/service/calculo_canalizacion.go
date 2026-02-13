@@ -46,9 +46,9 @@ func CalcularCanalizacion(
 	for _, entrada := range tabla {
 		if entrada.AreaInteriorMM2 >= areaRequerida {
 			return entity.Canalizacion{
-				Tipo:      tipo,
-				Tamano:    entrada.Tamano,
-				AreaTotal: areaTotal,
+				Tipo:           tipo,
+				Tamano:         entrada.Tamano,
+				AnchoRequerido: areaTotal,
 			}, nil
 		}
 	}

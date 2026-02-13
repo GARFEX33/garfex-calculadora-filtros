@@ -178,8 +178,8 @@ func (uc *CalcularMemoriaUseCase) Execute(ctx context.Context, input dto.EquipoI
 	output.Canalizacion = dto.ResultadoCanalizacion{
 		Tipo:             input.TipoCanalizacion,
 		Tamano:           canalizacion.Tamano,
-		AreaTotalMM2:     canalizacion.AreaTotal,
-		AreaRequeridaMM2: canalizacion.AreaTotal / 0.40,
+		AreaTotalMM2:     canalizacion.AnchoRequerido,
+		AreaRequeridaMM2: canalizacion.AnchoRequerido / 0.40,
 	}
 
 	// ============================================================================

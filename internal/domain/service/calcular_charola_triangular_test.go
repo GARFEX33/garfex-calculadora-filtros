@@ -51,4 +51,50 @@ func TestCalcularCharolaTriangular(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, "6", result.Tamano)
 	})
+
+	t.Run("error: hilosPorFase menor que 1", func(t *testing.T) {
+		conductorFase := service.ConductorConDiametro{DiametroMM: 10.0}
+		conductorTierra := service.ConductorConDiametro{DiametroMM: 5.0}
+
+		_, err := service.CalcularCharolaTriangular(
+			0,
+			conductorFase,
+			conductorTierra,
+			tablaCharola,
+		)
+
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "hilos por fase debe ser >= 1")
+	})
+
+	t.Run("error: tabla vacía", func(t *testing.T) {
+		conductorFase := service.ConductorConDiametro{DiametroMM: 10.0}
+		conductorTierra := service.ConductorConDiametro{DiametroMM: 5.0}
+
+		_, err := service.CalcularCharolaTriangular(
+			2,
+			conductorFase,
+			conductorTierra,
+			[]valueobject.EntradaTablaCanalizacion{},
+		)
+
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "tabla vacía")
+	})
+
+	t.Run("error: ninguna charola suficiente", func(t *testing.T) {
+		// Conductor muy grande que no cabe en ninguna charola de la tabla
+		conductorFase := service.ConductorConDiametro{DiametroMM: 100.0}
+		conductorTierra := service.ConductorConDiametro{DiametroMM: 50.0}
+
+		_, err := service.CalcularCharolaTriangular(
+			5,
+			conductorFase,
+			conductorTierra,
+			tablaCharola,
+		)
+
+		require.Error(t, err)
+		assert.ErrorIs(t, err, service.ErrCharolaTriangularNoEncontrada)
+	})
 }

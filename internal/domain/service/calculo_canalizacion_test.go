@@ -36,7 +36,7 @@ func TestCalcularCanalizacion_Tuberia(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "TUBERIA_CONDUIT", result.Tipo)
 	assert.Equal(t, "1 1/2", result.Tamano)
-	assert.InDelta(t, 114.16, result.AreaTotal, 0.01)
+	assert.InDelta(t, 114.16, result.AnchoRequerido, 0.01)
 }
 
 func TestCalcularCanalizacion_SmallConductors(t *testing.T) {

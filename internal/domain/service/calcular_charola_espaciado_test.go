@@ -100,7 +100,7 @@ func TestCalcularCharolaEspaciado(t *testing.T) {
 
 		require.NoError(t, err)
 		anchoRequerido := float64(3-1)*10.0 + 5.0
-		assert.Equal(t, anchoRequerido, result.AreaTotal)
+		assert.Equal(t, anchoRequerido, result.AnchoRequerido)
 	})
 
 	t.Run("Estrella system requires 4 conductors (with neutro)", func(t *testing.T) {
@@ -117,7 +117,7 @@ func TestCalcularCharolaEspaciado(t *testing.T) {
 
 		require.NoError(t, err)
 		anchoRequerido := float64(4-1)*10.0 + 5.0
-		assert.Equal(t, anchoRequerido, result.AreaTotal)
+		assert.Equal(t, anchoRequerido, result.AnchoRequerido)
 	})
 
 	t.Run("Bifasico system requires 3 conductors (no neutro)", func(t *testing.T) {
@@ -134,7 +134,7 @@ func TestCalcularCharolaEspaciado(t *testing.T) {
 
 		require.NoError(t, err)
 		anchoRequerido := float64(3-1)*10.0 + 5.0
-		assert.Equal(t, anchoRequerido, result.AreaTotal)
+		assert.Equal(t, anchoRequerido, result.AnchoRequerido)
 	})
 
 	t.Run("Monofasico system requires 2 conductors (with neutro)", func(t *testing.T) {
@@ -151,7 +151,7 @@ func TestCalcularCharolaEspaciado(t *testing.T) {
 
 		require.NoError(t, err)
 		anchoRequerido := float64(3+1-1)*10.0 + 5.0
-		assert.Equal(t, anchoRequerido, result.AreaTotal)
+		assert.Equal(t, anchoRequerido, result.AnchoRequerido)
 	})
 
 	t.Run("hilosPorFase less than 1 returns error", func(t *testing.T) {
