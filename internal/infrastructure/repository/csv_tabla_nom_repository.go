@@ -14,11 +14,24 @@ import (
 	"github.com/garfex/calculadora-filtros/internal/domain/valueobject"
 )
 
+// impedanciaEntry holds all impedance values for a given calibre from Tabla 9.
+type impedanciaEntry struct {
+	ReactanciaAl    float64
+	ReactanciaAcero float64
+	ResCuPVC        float64
+	ResCuAl         float64
+	ResCuAcero      float64
+	ResAlPVC        float64
+	ResAlAl         float64
+	ResAlAcero      float64
+}
+
 // CSVTablaNOMRepository reads NOM tables from CSV files with in-memory caching.
 type CSVTablaNOMRepository struct {
 	basePath        string
 	tablaTierra     []service.EntradaTablaTierra
 	tablasAmpacidad map[entity.TipoCanalizacion]map[valueobject.MaterialConductor]map[valueobject.Temperatura][]service.EntradaTablaConductor
+	tablaImpedancia map[string]impedanciaEntry // key: calibre
 }
 
 // NewCSVTablaNOMRepository creates a new repository and loads all tables into memory.
@@ -43,6 +56,13 @@ func NewCSVTablaNOMRepository(basePath string) (*CSVTablaNOMRepository, error) {
 		return nil, fmt.Errorf("failed to load ground table: %w", err)
 	}
 	repo.tablaTierra = tablaTierra
+
+	// Load impedance table (Tabla 9)
+	tablaImpedancia, err := repo.loadTablaImpedancia()
+	if err != nil {
+		return nil, fmt.Errorf("failed to load impedance table: %w", err)
+	}
+	repo.tablaImpedancia = tablaImpedancia
 
 	// Load ampacity tables for conduit types
 	for _, canalizacion := range []entity.TipoCanalizacion{
@@ -102,6 +122,64 @@ func (r *CSVTablaNOMRepository) ObtenerTablaAmpacidad(
 	}
 
 	return tabla, nil
+}
+
+// ObtenerImpedancia returns R and X values for the given calibre and conduit type.
+func (r *CSVTablaNOMRepository) ObtenerImpedancia(
+	ctx context.Context,
+	calibre string,
+	canalizacion entity.TipoCanalizacion,
+	material valueobject.MaterialConductor,
+) (valueobject.ResistenciaReactancia, error) {
+	entry, ok := r.tablaImpedancia[calibre]
+	if !ok {
+		return valueobject.ResistenciaReactancia{}, fmt.Errorf("calibre not found in impedance table: %s", calibre)
+	}
+
+	// Determine reactance based on conduit type
+	var x float64
+	switch canalizacion {
+	case entity.TipoCanalizacionTuberiaAceroPG, entity.TipoCanalizacionTuberiaAceroPD:
+		x = entry.ReactanciaAcero
+	default:
+		x = entry.ReactanciaAl
+	}
+
+	// Determine resistance based on material and conduit type
+	var res float64
+	if material == valueobject.MaterialCobre {
+		switch canalizacion {
+		case entity.TipoCanalizacionTuberiaAluminio:
+			res = entry.ResCuAl
+		case entity.TipoCanalizacionTuberiaAceroPG, entity.TipoCanalizacionTuberiaAceroPD:
+			res = entry.ResCuAcero
+		default:
+			res = entry.ResCuPVC
+		}
+	} else { // Aluminio
+		switch canalizacion {
+		case entity.TipoCanalizacionTuberiaAluminio:
+			res = entry.ResAlAl
+		case entity.TipoCanalizacionTuberiaAceroPG, entity.TipoCanalizacionTuberiaAceroPD:
+			res = entry.ResAlAcero
+		default:
+			res = entry.ResAlPVC
+		}
+	}
+
+	return valueobject.ResistenciaReactancia{
+		R: res,
+		X: x,
+	}, nil
+}
+
+// ObtenerTablaCanalizacion returns conduit sizing table entries.
+// TODO: Implement when conduit sizing CSV is available.
+func (r *CSVTablaNOMRepository) ObtenerTablaCanalizacion(
+	ctx context.Context,
+	canalizacion entity.TipoCanalizacion,
+) ([]service.EntradaTablaCanalizacion, error) {
+	return nil, fmt.Errorf("ObtenerTablaCanalizacion not yet implemented")
 }
 
 func (r *CSVTablaNOMRepository) loadTablaTierra() ([]service.EntradaTablaTierra, error) {
@@ -279,4 +357,86 @@ func extractByTemperature(entries []rawAmpacidadEntry, material valueobject.Mate
 	}
 
 	return result
+}
+
+func (r *CSVTablaNOMRepository) loadTablaImpedancia() (map[string]impedanciaEntry, error) {
+	filePath := filepath.Join(r.basePath, "tabla-9-resistencia-reactancia.csv")
+	file, err := os.Open(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("cannot open tabla-9-resistencia-reactancia.csv: %w", err)
+	}
+	defer file.Close()
+
+	reader := csv.NewReader(file)
+	records, err := reader.ReadAll()
+	if err != nil {
+		return nil, fmt.Errorf("cannot read tabla-9-resistencia-reactancia.csv: %w", err)
+	}
+
+	if len(records) < 2 {
+		return nil, fmt.Errorf("tabla-9-resistencia-reactancia.csv is empty or missing header")
+	}
+
+	// Find column indices
+	header := records[0]
+	colIdx := make(map[string]int)
+	for i, col := range header {
+		colIdx[col] = i
+	}
+
+	requiredCols := []string{
+		"calibre", "reactancia_al", "reactancia_acero",
+		"res_cu_pvc", "res_cu_al", "res_cu_acero",
+		"res_al_pvc", "res_al_al", "res_al_acero",
+	}
+
+	indices := make(map[string]int)
+	for _, col := range requiredCols {
+		idx, ok := colIdx[col]
+		if !ok {
+			return nil, fmt.Errorf("tabla-9-resistencia-reactancia.csv: missing column %s", col)
+		}
+		indices[col] = idx
+	}
+
+	result := make(map[string]impedanciaEntry)
+	for _, record := range records[1:] {
+		if len(record) < len(header) {
+			continue // Skip incomplete rows
+		}
+
+		calibre := record[indices["calibre"]]
+
+		entry := impedanciaEntry{}
+
+		// Parse all fields
+		if v, err := strconv.ParseFloat(record[indices["reactancia_al"]], 64); err == nil {
+			entry.ReactanciaAl = v
+		}
+		if v, err := strconv.ParseFloat(record[indices["reactancia_acero"]], 64); err == nil {
+			entry.ReactanciaAcero = v
+		}
+		if v, err := strconv.ParseFloat(record[indices["res_cu_pvc"]], 64); err == nil {
+			entry.ResCuPVC = v
+		}
+		if v, err := strconv.ParseFloat(record[indices["res_cu_al"]], 64); err == nil {
+			entry.ResCuAl = v
+		}
+		if v, err := strconv.ParseFloat(record[indices["res_cu_acero"]], 64); err == nil {
+			entry.ResCuAcero = v
+		}
+		if v, err := strconv.ParseFloat(record[indices["res_al_pvc"]], 64); err == nil {
+			entry.ResAlPVC = v
+		}
+		if v, err := strconv.ParseFloat(record[indices["res_al_al"]], 64); err == nil {
+			entry.ResAlAl = v
+		}
+		if v, err := strconv.ParseFloat(record[indices["res_al_acero"]], 64); err == nil {
+			entry.ResAlAcero = v
+		}
+
+		result[calibre] = entry
+	}
+
+	return result, nil
 }

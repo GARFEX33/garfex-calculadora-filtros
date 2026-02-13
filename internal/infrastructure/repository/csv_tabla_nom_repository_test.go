@@ -66,3 +66,32 @@ func TestCSVTablaNOMRepository_ObtenerTablaAmpacidad(t *testing.T) {
 		})
 	}
 }
+
+func TestCSVTablaNOMRepository_ObtenerImpedancia(t *testing.T) {
+	repo, err := NewCSVTablaNOMRepository("testdata")
+	require.NoError(t, err)
+
+	ctx := context.Background()
+
+	tests := []struct {
+		name         string
+		calibre      string
+		canalizacion entity.TipoCanalizacion
+		material     valueobject.MaterialConductor
+		wantR        float64
+		wantX        float64
+	}{
+		{"14 AWG PVC Copper", "14 AWG", entity.TipoCanalizacionTuberiaPVC, valueobject.MaterialCobre, 10.2, 0.19},
+		{"12 AWG PVC Copper", "12 AWG", entity.TipoCanalizacionTuberiaPVC, valueobject.MaterialCobre, 6.6, 0.177},
+		{"6 AWG PVC Aluminium", "6 AWG", entity.TipoCanalizacionTuberiaPVC, valueobject.MaterialAluminio, 2.66, 0.167},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			imp, err := repo.ObtenerImpedancia(ctx, tt.calibre, tt.canalizacion, tt.material)
+			require.NoError(t, err)
+			assert.InDelta(t, tt.wantR, imp.R, 0.01, "R mismatch")
+			assert.InDelta(t, tt.wantX, imp.X, 0.01, "X mismatch")
+		})
+	}
+}
