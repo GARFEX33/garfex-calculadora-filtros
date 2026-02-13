@@ -20,8 +20,12 @@ func CalcularFactorTemperatura(
 	tempConductor valueobject.Temperatura,
 	tabla []EntradaTablaFactorTemperatura,
 ) (float64, error) {
+	if len(tabla) == 0 {
+		return 0, fmt.Errorf("CalcularFactorTemperatura: tabla vacía")
+	}
+
 	if tempAmbiente < -10 {
-		return 0, fmt.Errorf("temperatura ambiente inválida: %d°C", tempAmbiente)
+		return 0, fmt.Errorf("CalcularFactorTemperatura: temperatura ambiente inválida: %d°C", tempAmbiente)
 	}
 
 	for _, entrada := range tabla {
@@ -34,12 +38,12 @@ func CalcularFactorTemperatura(
 			case valueobject.Temp90:
 				return entrada.Factor90C, nil
 			default:
-				return 0, fmt.Errorf("temperatura de conductor no soportada: %v", tempConductor)
+				return 0, fmt.Errorf("CalcularFactorTemperatura: temperatura de conductor no soportada: %v", tempConductor)
 			}
 		}
 	}
 
-	return 0, fmt.Errorf("no se encontró factor para temperatura ambiente %d°C", tempAmbiente)
+	return 0, fmt.Errorf("CalcularFactorTemperatura: no se encontró factor para temperatura ambiente %d°C", tempAmbiente)
 }
 
 func rangoContiene(rango string, temp int) bool {
