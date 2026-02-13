@@ -10,7 +10,6 @@ import (
 	"strconv"
 
 	"github.com/garfex/calculadora-filtros/internal/domain/entity"
-	"github.com/garfex/calculadora-filtros/internal/domain/service"
 	"github.com/garfex/calculadora-filtros/internal/domain/valueobject"
 )
 
@@ -29,8 +28,8 @@ type impedanciaEntry struct {
 // CSVTablaNOMRepository reads NOM tables from CSV files with in-memory caching.
 type CSVTablaNOMRepository struct {
 	basePath        string
-	tablaTierra     []service.EntradaTablaTierra
-	tablasAmpacidad map[entity.TipoCanalizacion]map[valueobject.MaterialConductor]map[valueobject.Temperatura][]service.EntradaTablaConductor
+	tablaTierra     []valueobject.EntradaTablaTierra
+	tablasAmpacidad map[entity.TipoCanalizacion]map[valueobject.MaterialConductor]map[valueobject.Temperatura][]valueobject.EntradaTablaConductor
 	tablaImpedancia map[string]impedanciaEntry // key: calibre
 }
 
@@ -47,7 +46,7 @@ func NewCSVTablaNOMRepository(basePath string) (*CSVTablaNOMRepository, error) {
 
 	repo := &CSVTablaNOMRepository{
 		basePath:        basePath,
-		tablasAmpacidad: make(map[entity.TipoCanalizacion]map[valueobject.MaterialConductor]map[valueobject.Temperatura][]service.EntradaTablaConductor),
+		tablasAmpacidad: make(map[entity.TipoCanalizacion]map[valueobject.MaterialConductor]map[valueobject.Temperatura][]valueobject.EntradaTablaConductor),
 	}
 
 	// Load ground conductor table
@@ -71,13 +70,13 @@ func NewCSVTablaNOMRepository(basePath string) (*CSVTablaNOMRepository, error) {
 		entity.TipoCanalizacionTuberiaAceroPG,
 		entity.TipoCanalizacionTuberiaAceroPD,
 	} {
-		repo.tablasAmpacidad[canalizacion] = make(map[valueobject.MaterialConductor]map[valueobject.Temperatura][]service.EntradaTablaConductor)
+		repo.tablasAmpacidad[canalizacion] = make(map[valueobject.MaterialConductor]map[valueobject.Temperatura][]valueobject.EntradaTablaConductor)
 
 		for _, material := range []valueobject.MaterialConductor{
 			valueobject.MaterialCobre,
 			valueobject.MaterialAluminio,
 		} {
-			repo.tablasAmpacidad[canalizacion][material] = make(map[valueobject.Temperatura][]service.EntradaTablaConductor)
+			repo.tablasAmpacidad[canalizacion][material] = make(map[valueobject.Temperatura][]valueobject.EntradaTablaConductor)
 
 			tabla, err := repo.loadTablaAmpacidad("310-15-b-16.csv", material)
 			if err != nil {
@@ -95,7 +94,7 @@ func NewCSVTablaNOMRepository(basePath string) (*CSVTablaNOMRepository, error) {
 }
 
 // ObtenerTablaTierra returns the ground conductor table (250-122).
-func (r *CSVTablaNOMRepository) ObtenerTablaTierra(ctx context.Context) ([]service.EntradaTablaTierra, error) {
+func (r *CSVTablaNOMRepository) ObtenerTablaTierra(ctx context.Context) ([]valueobject.EntradaTablaTierra, error) {
 	return r.tablaTierra, nil
 }
 
@@ -105,7 +104,7 @@ func (r *CSVTablaNOMRepository) ObtenerTablaAmpacidad(
 	canalizacion entity.TipoCanalizacion,
 	material valueobject.MaterialConductor,
 	temperatura valueobject.Temperatura,
-) ([]service.EntradaTablaConductor, error) {
+) ([]valueobject.EntradaTablaConductor, error) {
 	byMaterial, ok := r.tablasAmpacidad[canalizacion]
 	if !ok {
 		return nil, fmt.Errorf("no ampacity table for conduit type: %s", canalizacion)
@@ -178,11 +177,11 @@ func (r *CSVTablaNOMRepository) ObtenerImpedancia(
 func (r *CSVTablaNOMRepository) ObtenerTablaCanalizacion(
 	ctx context.Context,
 	canalizacion entity.TipoCanalizacion,
-) ([]service.EntradaTablaCanalizacion, error) {
+) ([]valueobject.EntradaTablaCanalizacion, error) {
 	return nil, fmt.Errorf("ObtenerTablaCanalizacion not yet implemented")
 }
 
-func (r *CSVTablaNOMRepository) loadTablaTierra() ([]service.EntradaTablaTierra, error) {
+func (r *CSVTablaNOMRepository) loadTablaTierra() ([]valueobject.EntradaTablaTierra, error) {
 	filePath := filepath.Join(r.basePath, "250-122.csv")
 	file, err := os.Open(filePath)
 	if err != nil {
@@ -209,7 +208,7 @@ func (r *CSVTablaNOMRepository) loadTablaTierra() ([]service.EntradaTablaTierra,
 		}
 	}
 
-	var result []service.EntradaTablaTierra
+	var result []valueobject.EntradaTablaTierra
 	for i, record := range records[1:] {
 		itm, err := strconv.Atoi(record[0])
 		if err != nil {
@@ -221,7 +220,7 @@ func (r *CSVTablaNOMRepository) loadTablaTierra() ([]service.EntradaTablaTierra,
 			return nil, fmt.Errorf("250-122.csv line %d: invalid seccion_mm2: %w", i+2, err)
 		}
 
-		result = append(result, service.EntradaTablaTierra{
+		result = append(result, valueobject.EntradaTablaTierra{
 			ITMHasta: itm,
 			Conductor: valueobject.ConductorParams{
 				Calibre:    record[1],
@@ -323,8 +322,8 @@ func (r *CSVTablaNOMRepository) loadTablaAmpacidad(filename string, material val
 	return result, nil
 }
 
-func extractByTemperature(entries []rawAmpacidadEntry, material valueobject.MaterialConductor, temp valueobject.Temperatura) []service.EntradaTablaConductor {
-	var result []service.EntradaTablaConductor
+func extractByTemperature(entries []rawAmpacidadEntry, material valueobject.MaterialConductor, temp valueobject.Temperatura) []valueobject.EntradaTablaConductor {
+	var result []valueobject.EntradaTablaConductor
 
 	for _, e := range entries {
 		var capacidad float64
@@ -350,7 +349,7 @@ func extractByTemperature(entries []rawAmpacidadEntry, material valueobject.Mate
 			params.Material = "Al"
 		}
 
-		result = append(result, service.EntradaTablaConductor{
+		result = append(result, valueobject.EntradaTablaConductor{
 			Capacidad: capacidad,
 			Conductor: params,
 		})

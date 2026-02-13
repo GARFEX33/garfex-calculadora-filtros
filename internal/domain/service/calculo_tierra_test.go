@@ -14,8 +14,8 @@ import (
 // entradaTierra builds an EntradaTablaTierra with only the fields relevant
 // for ground conductor selection (calibre, material, section).
 // Ground conductors can be bare — no insulation or resistance data needed.
-func entradaTierra(itmHasta int, calibre string, seccionMM2 float64) service.EntradaTablaTierra {
-	return service.EntradaTablaTierra{
+func entradaTierra(itmHasta int, calibre string, seccionMM2 float64) valueobject.EntradaTablaTierra {
+	return valueobject.EntradaTablaTierra{
 		ITMHasta: itmHasta,
 		Conductor: valueobject.ConductorParams{
 			Calibre:    calibre,
@@ -28,7 +28,7 @@ func entradaTierra(itmHasta int, calibre string, seccionMM2 float64) service.Ent
 // Simplified NOM table 250-122 excerpt.
 // "3 AWG" and "1 AWG" from original plan replaced with "4 AWG" and "2 AWG"
 // because 3 AWG and 1 AWG are not valid calibres per NOM 310-15(b)(16).
-var tablaTierraTest = []service.EntradaTablaTierra{
+var tablaTierraTest = []valueobject.EntradaTablaTierra{
 	entradaTierra(15, "14 AWG", 2.08),
 	entradaTierra(20, "12 AWG", 3.31),
 	entradaTierra(40, "10 AWG", 5.26),

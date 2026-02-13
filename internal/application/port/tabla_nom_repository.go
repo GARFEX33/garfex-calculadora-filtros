@@ -5,7 +5,6 @@ import (
 	"context"
 
 	"github.com/garfex/calculadora-filtros/internal/domain/entity"
-	"github.com/garfex/calculadora-filtros/internal/domain/service"
 	"github.com/garfex/calculadora-filtros/internal/domain/valueobject"
 )
 
@@ -17,10 +16,10 @@ type TablaNOMRepository interface {
 		canalizacion entity.TipoCanalizacion,
 		material valueobject.MaterialConductor,
 		temperatura valueobject.Temperatura,
-	) ([]service.EntradaTablaConductor, error)
+	) ([]valueobject.EntradaTablaConductor, error)
 
 	// ObtenerTablaTierra returns the ground conductor table (250-122).
-	ObtenerTablaTierra(ctx context.Context) ([]service.EntradaTablaTierra, error)
+	ObtenerTablaTierra(ctx context.Context) ([]valueobject.EntradaTablaTierra, error)
 
 	// ObtenerImpedancia returns R and X values for the given calibre and conduit type.
 	ObtenerImpedancia(
@@ -34,5 +33,5 @@ type TablaNOMRepository interface {
 	ObtenerTablaCanalizacion(
 		ctx context.Context,
 		canalizacion entity.TipoCanalizacion,
-	) ([]service.EntradaTablaCanalizacion, error)
+	) ([]valueobject.EntradaTablaCanalizacion, error)
 }

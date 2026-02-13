@@ -5,12 +5,13 @@ import (
 	"testing"
 
 	"github.com/garfex/calculadora-filtros/internal/domain/service"
+	"github.com/garfex/calculadora-filtros/internal/domain/valueobject"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 // Simplified conduit sizing table (tubería EMT)
-var tablaCanalizacionTest = []service.EntradaTablaCanalizacion{
+var tablaCanalizacionTest = []valueobject.EntradaTablaCanalizacion{
 	{Tamano: "1/2", AreaInteriorMM2: 78.0},
 	{Tamano: "3/4", AreaInteriorMM2: 122.0},
 	{Tamano: "1", AreaInteriorMM2: 198.0},

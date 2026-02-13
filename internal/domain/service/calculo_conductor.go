@@ -10,21 +10,12 @@ import (
 
 var ErrConductorNoEncontrado = errors.New("no se encontró conductor con capacidad suficiente")
 
-// EntradaTablaConductor represents one row from NOM table 310-15(b)(16).
-// Must be sorted smallest-to-largest calibre (as in the NOM table).
-// Conductor holds the full physical/electrical properties needed to construct
-// a Conductor value object.
-type EntradaTablaConductor struct {
-	Capacidad float64 // ampacity in amperes
-	Conductor valueobject.ConductorParams
-}
-
 // SeleccionarConductorAlimentacion picks the smallest conductor from the NOM table
 // whose ampacity >= corrienteAjustada / hilosPorFase.
 func SeleccionarConductorAlimentacion(
 	corrienteAjustada valueobject.Corriente,
 	hilosPorFase int,
-	tabla []EntradaTablaConductor,
+	tabla []valueobject.EntradaTablaConductor,
 ) (valueobject.Conductor, error) {
 	if len(tabla) == 0 {
 		return valueobject.Conductor{}, fmt.Errorf("%w: tabla vacía", ErrConductorNoEncontrado)

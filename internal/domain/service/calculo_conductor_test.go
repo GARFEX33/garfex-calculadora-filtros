@@ -14,8 +14,8 @@ import (
 // entradaConductor builds an EntradaTablaConductor with the fields relevant
 // for conductor selection. Optional fields (resistance, reactance) omitted —
 // they are validated at point of use (voltage drop, etc.), not at construction.
-func entradaConductor(calibre string, capacidad, seccionMM2 float64) service.EntradaTablaConductor {
-	return service.EntradaTablaConductor{
+func entradaConductor(calibre string, capacidad, seccionMM2 float64) valueobject.EntradaTablaConductor {
+	return valueobject.EntradaTablaConductor{
 		Capacidad: capacidad,
 		Conductor: valueobject.ConductorParams{
 			Calibre:         calibre,
@@ -27,7 +27,7 @@ func entradaConductor(calibre string, capacidad, seccionMM2 float64) service.Ent
 }
 
 // Simplified NOM table 310-15(b)(16) excerpt for Cu THHN 90°C
-var tablaConductorTest = []service.EntradaTablaConductor{
+var tablaConductorTest = []valueobject.EntradaTablaConductor{
 	entradaConductor("14 AWG", 25, 2.08),
 	entradaConductor("12 AWG", 30, 3.31),
 	entradaConductor("10 AWG", 40, 5.26),
