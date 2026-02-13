@@ -8,7 +8,6 @@ import (
 	"github.com/garfex/calculadora-filtros/internal/application/dto"
 	"github.com/garfex/calculadora-filtros/internal/application/usecase"
 	"github.com/garfex/calculadora-filtros/internal/domain/entity"
-	"github.com/garfex/calculadora-filtros/internal/domain/service"
 	"github.com/garfex/calculadora-filtros/internal/domain/valueobject"
 	"github.com/gin-gonic/gin"
 )
@@ -212,7 +211,7 @@ func (h *CalculoHandler) mapErrorToResponse(err error) (int, CalcularMemoriaResp
 	}
 
 	// Errores 422 - Unprocessable Entity (errores de cálculo)
-	if errors.Is(err, service.ErrConductorNoEncontrado) {
+	if errors.Is(err, dto.ErrConductorNoEncontrado) {
 		return http.StatusUnprocessableEntity, CalcularMemoriaResponseError{
 			Success: false,
 			Error:   "No se encontró conductor adecuado",
@@ -221,7 +220,7 @@ func (h *CalculoHandler) mapErrorToResponse(err error) (int, CalcularMemoriaResp
 		}
 	}
 
-	if errors.Is(err, service.ErrCanalizacionNoDisponible) {
+	if errors.Is(err, dto.ErrCanalizacionNoDisponible) {
 		return http.StatusUnprocessableEntity, CalcularMemoriaResponseError{
 			Success: false,
 			Error:   "No se encontró canalización adecuada",
@@ -231,9 +230,9 @@ func (h *CalculoHandler) mapErrorToResponse(err error) (int, CalcularMemoriaResp
 	}
 
 	// Errores específicos de validación en cálculos
-	if errors.Is(err, service.ErrDistanciaInvalida) ||
-		errors.Is(err, service.ErrHilosPorFaseInvalido) ||
-		errors.Is(err, service.ErrFactorPotenciaInvalido) {
+	if errors.Is(err, dto.ErrDistanciaInvalida) ||
+		errors.Is(err, dto.ErrHilosPorFaseInvalido) ||
+		errors.Is(err, dto.ErrFactorPotenciaInvalido) {
 		return http.StatusUnprocessableEntity, CalcularMemoriaResponseError{
 			Success: false,
 			Error:   "Parámetros de cálculo inválidos",
