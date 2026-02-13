@@ -31,6 +31,8 @@ type CSVTablaNOMRepository struct {
 	tablaTierra     []valueobject.EntradaTablaTierra
 	tablasAmpacidad map[entity.TipoCanalizacion]map[valueobject.MaterialConductor]map[valueobject.Temperatura][]valueobject.EntradaTablaConductor
 	tablaImpedancia map[string]impedanciaEntry // key: calibre
+	tablaConduit    []valueobject.EntradaTablaCanalizacion
+	tablasCharola   map[entity.TipoCanalizacion][]valueobject.EntradaTablaCanalizacion
 }
 
 // NewCSVTablaNOMRepository creates a new repository and loads all tables into memory.
@@ -62,6 +64,16 @@ func NewCSVTablaNOMRepository(basePath string) (*CSVTablaNOMRepository, error) {
 		return nil, fmt.Errorf("failed to load impedance table: %w", err)
 	}
 	repo.tablaImpedancia = tablaImpedancia
+
+	// Load conduit sizing table
+	tablaConduit, err := repo.loadTablaConduit()
+	if err != nil {
+		return nil, fmt.Errorf("failed to load conduit sizing table: %w", err)
+	}
+	repo.tablaConduit = tablaConduit
+
+	// Initialize cable tray tables (will be loaded when needed)
+	repo.tablasCharola = make(map[entity.TipoCanalizacion][]valueobject.EntradaTablaCanalizacion)
 
 	// Load ampacity tables for conduit types
 	for _, canalizacion := range []entity.TipoCanalizacion{
@@ -173,12 +185,26 @@ func (r *CSVTablaNOMRepository) ObtenerImpedancia(
 }
 
 // ObtenerTablaCanalizacion returns conduit sizing table entries.
-// TODO: Implement when conduit sizing CSV is available.
 func (r *CSVTablaNOMRepository) ObtenerTablaCanalizacion(
 	ctx context.Context,
 	canalizacion entity.TipoCanalizacion,
 ) ([]valueobject.EntradaTablaCanalizacion, error) {
-	return nil, fmt.Errorf("ObtenerTablaCanalizacion not yet implemented")
+	switch canalizacion {
+	case entity.TipoCanalizacionTuberiaPVC,
+		entity.TipoCanalizacionTuberiaAluminio,
+		entity.TipoCanalizacionTuberiaAceroPG,
+		entity.TipoCanalizacionTuberiaAceroPD:
+		return r.tablaConduit, nil
+	case entity.TipoCanalizacionCharolaCableEspaciado,
+		entity.TipoCanalizacionCharolaCableTriangular:
+		tabla, ok := r.tablasCharola[canalizacion]
+		if !ok {
+			return nil, fmt.Errorf("tabla de charola no cargada para: %s", canalizacion)
+		}
+		return tabla, nil
+	default:
+		return nil, fmt.Errorf("tipo de canalización no soportado: %s", canalizacion)
+	}
 }
 
 func (r *CSVTablaNOMRepository) loadTablaTierra() ([]valueobject.EntradaTablaTierra, error) {
@@ -435,6 +461,60 @@ func (r *CSVTablaNOMRepository) loadTablaImpedancia() (map[string]impedanciaEntr
 		}
 
 		result[calibre] = entry
+	}
+
+	return result, nil
+}
+
+func (r *CSVTablaNOMRepository) loadTablaConduit() ([]valueobject.EntradaTablaCanalizacion, error) {
+	filePath := filepath.Join(r.basePath, "tabla-conduit-dimensiones.csv")
+	file, err := os.Open(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("cannot open tabla-conduit-dimensiones.csv: %w", err)
+	}
+	defer file.Close()
+
+	reader := csv.NewReader(file)
+	records, err := reader.ReadAll()
+	if err != nil {
+		return nil, fmt.Errorf("cannot read tabla-conduit-dimensiones.csv: %w", err)
+	}
+
+	if len(records) < 2 {
+		return nil, fmt.Errorf("tabla-conduit-dimensiones.csv is empty or missing header")
+	}
+
+	// Find column indices
+	header := records[0]
+	colIdx := make(map[string]int)
+	for i, col := range header {
+		colIdx[col] = i
+	}
+
+	tamanoIdx, ok := colIdx["tamano"]
+	if !ok {
+		return nil, fmt.Errorf("tabla-conduit-dimensiones.csv: missing column tamano")
+	}
+	areaIdx, ok := colIdx["area_interior_mm2"]
+	if !ok {
+		return nil, fmt.Errorf("tabla-conduit-dimensiones.csv: missing column area_interior_mm2")
+	}
+
+	var result []valueobject.EntradaTablaCanalizacion
+	for i, record := range records[1:] {
+		if len(record) < len(header) {
+			continue // Skip incomplete rows
+		}
+
+		area, err := strconv.ParseFloat(record[areaIdx], 64)
+		if err != nil {
+			return nil, fmt.Errorf("tabla-conduit-dimensiones.csv line %d: invalid area_interior_mm2: %w", i+2, err)
+		}
+
+		result = append(result, valueobject.EntradaTablaCanalizacion{
+			Tamano:          record[tamanoIdx],
+			AreaInteriorMM2: area,
+		})
 	}
 
 	return result, nil

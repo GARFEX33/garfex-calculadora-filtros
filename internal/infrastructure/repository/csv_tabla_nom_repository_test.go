@@ -95,3 +95,33 @@ func TestCSVTablaNOMRepository_ObtenerImpedancia(t *testing.T) {
 		})
 	}
 }
+
+func TestCSVTablaNOMRepository_ObtenerTablaCanalizacion(t *testing.T) {
+	repo, err := NewCSVTablaNOMRepository("testdata")
+	require.NoError(t, err)
+
+	ctx := context.Background()
+
+	tests := []struct {
+		name         string
+		canalizacion entity.TipoCanalizacion
+		minEntries   int
+	}{
+		{"PVC", entity.TipoCanalizacionTuberiaPVC, 10},
+		{"Aluminio", entity.TipoCanalizacionTuberiaAluminio, 10},
+		{"Acero PG", entity.TipoCanalizacionTuberiaAceroPG, 10},
+		{"Acero PD", entity.TipoCanalizacionTuberiaAceroPD, 10},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tabla, err := repo.ObtenerTablaCanalizacion(ctx, tt.canalizacion)
+			require.NoError(t, err)
+			assert.GreaterOrEqual(t, len(tabla), tt.minEntries)
+
+			// Check first entry has valid data
+			assert.NotEmpty(t, tabla[0].Tamano)
+			assert.Greater(t, tabla[0].AreaInteriorMM2, 0.0)
+		})
+	}
+}
