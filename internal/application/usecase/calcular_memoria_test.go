@@ -112,8 +112,8 @@ func TestCalcularMemoriaUseCase_Execute_ManualAmperaje(t *testing.T) {
 
 	// Verificar
 	require.NoError(t, err)
-	assert.Equal(t, 50.0, output.CorrienteNominal.Valor())
-	assert.Equal(t, 50.0, output.CorrienteAjustada.Valor())        // Sin factores
+	assert.Equal(t, 50.0, output.CorrienteNominal)
+	assert.Equal(t, 50.0, output.CorrienteAjustada)                // Sin factores
 	assert.Equal(t, "8 AWG", output.ConductorAlimentacion.Calibre) // 50A < 55A
 	assert.Equal(t, "8 AWG", output.ConductorTierra.Calibre)       // ITM 100
 	assert.True(t, output.CumpleNormativa)

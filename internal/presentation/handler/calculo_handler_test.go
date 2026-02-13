@@ -103,7 +103,7 @@ func TestCalculoHandler_CalcularMemoria_Success(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.True(t, response.Success)
-		assert.Equal(t, 50.0, response.Data.CorrienteNominal.Valor())
+		assert.Equal(t, 50.0, response.Data.CorrienteNominal)
 	}
 }
 

@@ -2,6 +2,7 @@
 package valueobject
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 )
@@ -33,6 +34,18 @@ func NewTension(valor int) (Tension, error) {
 
 func (t Tension) Valor() int     { return t.valor }
 func (t Tension) Unidad() string { return t.unidad }
+
+// MarshalJSON serializa Tension a JSON.
+func (t Tension) MarshalJSON() ([]byte, error) {
+	type alias Tension
+	return json.Marshal(&struct {
+		Valor  int    `json:"valor"`
+		Unidad string `json:"unidad"`
+	}{
+		Valor:  t.valor,
+		Unidad: t.unidad,
+	})
+}
 
 func (t Tension) EnKilovoltios() float64 {
 	return float64(t.valor) / 1000.0

@@ -2,6 +2,7 @@
 package valueobject
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 )
@@ -73,7 +74,6 @@ func positivoF(v float64, campo string) error {
 	return nil
 }
 
-
 // NewConductor creates a Conductor value object.
 // Only Calibre, Material, and SeccionMM2 are required.
 // All other fields are optional and validated at the point of use.
@@ -102,7 +102,7 @@ func NewConductor(p ConductorParams) (Conductor, error) {
 	}, nil
 }
 
-func (c Conductor) Calibre() string               { return c.calibre }
+func (c Conductor) Calibre() string                { return c.calibre }
 func (c Conductor) Material() string               { return c.material }
 func (c Conductor) TipoAislamiento() string        { return c.tipoAislamiento }
 func (c Conductor) SeccionMM2() float64            { return c.seccionMM2 }
@@ -113,3 +113,32 @@ func (c Conductor) ResistenciaPVCPorKm() float64   { return c.resistenciaPVCPorK
 func (c Conductor) ResistenciaAlPorKm() float64    { return c.resistenciaAlPorKm }
 func (c Conductor) ResistenciaAceroPorKm() float64 { return c.resistenciaAceroPorKm }
 func (c Conductor) ReactanciaPorKm() float64       { return c.reactanciaPorKm }
+
+// MarshalJSON serializa Conductor a JSON.
+func (c Conductor) MarshalJSON() ([]byte, error) {
+	return json.Marshal(&struct {
+		Calibre               string  `json:"calibre"`
+		Material              string  `json:"material"`
+		TipoAislamiento       string  `json:"tipo_aislamiento"`
+		SeccionMM2            float64 `json:"seccion_mm2"`
+		AreaConAislamientoMM2 float64 `json:"area_con_aislamiento_mm2,omitempty"`
+		DiametroMM            float64 `json:"diametro_mm,omitempty"`
+		NumeroHilos           int     `json:"numero_hilos,omitempty"`
+		ResistenciaPVCPorKm   float64 `json:"resistencia_pvc_por_km,omitempty"`
+		ResistenciaAlPorKm    float64 `json:"resistencia_al_por_km,omitempty"`
+		ResistenciaAceroPorKm float64 `json:"resistencia_acero_por_km,omitempty"`
+		ReactanciaPorKm       float64 `json:"reactancia_por_km,omitempty"`
+	}{
+		Calibre:               c.calibre,
+		Material:              c.material,
+		TipoAislamiento:       c.tipoAislamiento,
+		SeccionMM2:            c.seccionMM2,
+		AreaConAislamientoMM2: c.areaConAislamientoMM2,
+		DiametroMM:            c.diametroMM,
+		NumeroHilos:           c.numeroHilos,
+		ResistenciaPVCPorKm:   c.resistenciaPVCPorKm,
+		ResistenciaAlPorKm:    c.resistenciaAlPorKm,
+		ResistenciaAceroPorKm: c.resistenciaAceroPorKm,
+		ReactanciaPorKm:       c.reactanciaPorKm,
+	})
+}

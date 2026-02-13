@@ -40,7 +40,7 @@ func (uc *CalcularMemoriaUseCase) Execute(ctx context.Context, input dto.EquipoI
 	output := dto.MemoriaOutput{
 		TipoEquipo:       input.TipoEquipo,
 		Clave:            input.Clave,
-		Tension:          input.Tension,
+		Tension:          input.Tension.Valor(),
 		FactorPotencia:   input.FactorPotencia,
 		TipoCanalizacion: input.TipoCanalizacion,
 		ITM:              input.ITM,
@@ -87,7 +87,7 @@ func (uc *CalcularMemoriaUseCase) Execute(ctx context.Context, input dto.EquipoI
 	if err != nil {
 		return dto.MemoriaOutput{}, fmt.Errorf("paso 1 - corriente nominal: %w", err)
 	}
-	output.CorrienteNominal = corrienteNominal
+	output.CorrienteNominal = corrienteNominal.Valor()
 
 	// ============================================================================
 	// PASO 2: Ajustar Corriente
@@ -96,7 +96,7 @@ func (uc *CalcularMemoriaUseCase) Execute(ctx context.Context, input dto.EquipoI
 	if err != nil {
 		return dto.MemoriaOutput{}, fmt.Errorf("paso 2 - ajustar corriente: %w", err)
 	}
-	output.CorrienteAjustada = corrienteAjustada
+	output.CorrienteAjustada = corrienteAjustada.Valor()
 	output.CorrientePorHilo = corrienteAjustada.Valor() / float64(hilosPorFase)
 
 	// ============================================================================
@@ -109,7 +109,7 @@ func (uc *CalcularMemoriaUseCase) Execute(ctx context.Context, input dto.EquipoI
 	// ============================================================================
 	// Determinar temperatura según reglas del AGENTS.md
 	temperatura := uc.seleccionarTemperatura(corrienteAjustada, input)
-	output.TemperaturaUsada = temperatura
+	output.TemperaturaUsada = int(temperatura)
 
 	// Determinar material (usamos cobre por defecto, podría venir en input)
 	material := valueobject.MaterialCobre
@@ -126,6 +126,9 @@ func (uc *CalcularMemoriaUseCase) Execute(ctx context.Context, input dto.EquipoI
 		return dto.MemoriaOutput{}, fmt.Errorf("paso 4 - seleccionar conductor: %w", err)
 	}
 
+	// Determinar nombre de tabla usada según canalización
+	tablaUsada := uc.nombreTablaAmpacidad(input.TipoCanalizacion, material, temperatura)
+
 	output.ConductorAlimentacion = dto.ResultadoConductor{
 		Calibre:         conductor.Calibre(),
 		Material:        conductor.Material(),
@@ -133,6 +136,7 @@ func (uc *CalcularMemoriaUseCase) Execute(ctx context.Context, input dto.EquipoI
 		TipoAislamiento: conductor.TipoAislamiento(),
 		Capacidad:       uc.buscarCapacidadEnTabla(tablaAmpacidad, conductor.Calibre()),
 	}
+	output.TablaAmpacidadUsada = tablaUsada
 
 	// ============================================================================
 	// PASO 5: Seleccionar Conductor de Tierra
@@ -297,4 +301,46 @@ func (uc *CalcularMemoriaUseCase) generarObservaciones(output dto.MemoriaOutput)
 	}
 
 	return obs
+}
+
+// nombreTablaAmpacidad genera el nombre descriptivo de la tabla NOM usada.
+func (uc *CalcularMemoriaUseCase) nombreTablaAmpacidad(
+	canalizacion entity.TipoCanalizacion,
+	material valueobject.MaterialConductor,
+	temperatura valueobject.Temperatura,
+) string {
+	// Mapeo de canalización a tabla NOM
+	var tabla string
+	switch canalizacion {
+	case entity.TipoCanalizacionTuberiaPVC,
+		entity.TipoCanalizacionTuberiaAluminio,
+		entity.TipoCanalizacionTuberiaAceroPG,
+		entity.TipoCanalizacionTuberiaAceroPD:
+		tabla = "NOM-310-15-B-16"
+	case entity.TipoCanalizacionCharolaCableEspaciado:
+		tabla = "NOM-310-15-B-17"
+	case entity.TipoCanalizacionCharolaCableTriangular:
+		tabla = "NOM-310-15-B-20"
+	default:
+		tabla = "NOM-310-15-B-16"
+	}
+
+	// Material
+	mat := "Cu"
+	if material == valueobject.MaterialAluminio {
+		mat = "Al"
+	}
+
+	// Temperatura
+	temp := "75°C"
+	switch temperatura {
+	case valueobject.Temp60:
+		temp = "60°C"
+	case valueobject.Temp75:
+		temp = "75°C"
+	case valueobject.Temp90:
+		temp = "90°C"
+	}
+
+	return fmt.Sprintf("%s (%s, %s)", tabla, mat, temp)
 }

@@ -2,6 +2,7 @@
 package valueobject
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 )
@@ -23,6 +24,18 @@ func NewCorriente(valor float64) (Corriente, error) {
 
 func (c Corriente) Valor() float64 { return c.valor }
 func (c Corriente) Unidad() string { return c.unidad }
+
+// MarshalJSON serializa Corriente a JSON.
+func (c Corriente) MarshalJSON() ([]byte, error) {
+	type alias Corriente
+	return json.Marshal(&struct {
+		Valor  float64 `json:"valor"`
+		Unidad string  `json:"unidad"`
+	}{
+		Valor:  c.valor,
+		Unidad: c.unidad,
+	})
+}
 
 func (c Corriente) Multiplicar(factor float64) (Corriente, error) {
 	return NewCorriente(c.valor * factor)

@@ -72,8 +72,10 @@ func NewCSVTablaNOMRepository(basePath string) (*CSVTablaNOMRepository, error) {
 	}
 	repo.tablaConduit = tablaConduit
 
-	// Initialize cable tray tables (will be loaded when needed)
+	// Load cable tray sizing tables
 	repo.tablasCharola = make(map[entity.TipoCanalizacion][]valueobject.EntradaTablaCanalizacion)
+	repo.tablasCharola[entity.TipoCanalizacionCharolaCableEspaciado] = repo.crearTablaCharolaEspaciado()
+	repo.tablasCharola[entity.TipoCanalizacionCharolaCableTriangular] = repo.crearTablaCharolaTriangular()
 
 	// Load ampacity tables for conduit types
 	for _, canalizacion := range []entity.TipoCanalizacion{
@@ -99,6 +101,45 @@ func NewCSVTablaNOMRepository(basePath string) (*CSVTablaNOMRepository, error) {
 			for _, temp := range []valueobject.Temperatura{valueobject.Temp60, valueobject.Temp75, valueobject.Temp90} {
 				repo.tablasAmpacidad[canalizacion][material][temp] = extractByTemperature(tabla, material, temp)
 			}
+		}
+	}
+
+	// Load ampacity tables for cable trays (charolas)
+	// Charola cable espaciado -> 310-15-b-17.csv
+	repo.tablasAmpacidad[entity.TipoCanalizacionCharolaCableEspaciado] = make(map[valueobject.MaterialConductor]map[valueobject.Temperatura][]valueobject.EntradaTablaConductor)
+	for _, material := range []valueobject.MaterialConductor{
+		valueobject.MaterialCobre,
+		valueobject.MaterialAluminio,
+	} {
+		repo.tablasAmpacidad[entity.TipoCanalizacionCharolaCableEspaciado][material] = make(map[valueobject.Temperatura][]valueobject.EntradaTablaConductor)
+
+		tabla, err := repo.loadTablaAmpacidad("310-15-b-17.csv", material)
+		if err != nil {
+			return nil, fmt.Errorf("failed to load ampacity table for charola espaciado %s: %w", material, err)
+		}
+
+		// Extract by temperature
+		for _, temp := range []valueobject.Temperatura{valueobject.Temp60, valueobject.Temp75, valueobject.Temp90} {
+			repo.tablasAmpacidad[entity.TipoCanalizacionCharolaCableEspaciado][material][temp] = extractByTemperature(tabla, material, temp)
+		}
+	}
+
+	// Charola cable triangular -> 310-15-b-20.csv
+	repo.tablasAmpacidad[entity.TipoCanalizacionCharolaCableTriangular] = make(map[valueobject.MaterialConductor]map[valueobject.Temperatura][]valueobject.EntradaTablaConductor)
+	for _, material := range []valueobject.MaterialConductor{
+		valueobject.MaterialCobre,
+		valueobject.MaterialAluminio,
+	} {
+		repo.tablasAmpacidad[entity.TipoCanalizacionCharolaCableTriangular][material] = make(map[valueobject.Temperatura][]valueobject.EntradaTablaConductor)
+
+		tabla, err := repo.loadTablaAmpacidad("310-15-b-20.csv", material)
+		if err != nil {
+			return nil, fmt.Errorf("failed to load ampacity table for charola triangular %s: %w", material, err)
+		}
+
+		// Extract by temperature - charola triangular no tiene 60C, solo 75C y 90C
+		for _, temp := range []valueobject.Temperatura{valueobject.Temp75, valueobject.Temp90} {
+			repo.tablasAmpacidad[entity.TipoCanalizacionCharolaCableTriangular][material][temp] = extractByTemperature(tabla, material, temp)
 		}
 	}
 
@@ -246,17 +287,58 @@ func (r *CSVTablaNOMRepository) loadTablaTierra() ([]valueobject.EntradaTablaTie
 			return nil, fmt.Errorf("250-122.csv line %d: invalid seccion_mm2: %w", i+2, err)
 		}
 
+		// Normalizar material (CU -> Cu, AL -> Al)
+		material := record[3]
+		switch material {
+		case "CU":
+			material = "Cu"
+		case "AL":
+			material = "Al"
+		}
+
 		result = append(result, valueobject.EntradaTablaTierra{
 			ITMHasta: itm,
 			Conductor: valueobject.ConductorParams{
 				Calibre:    record[1],
 				SeccionMM2: seccion,
-				Material:   record[3],
+				Material:   material,
 			},
 		})
 	}
 
 	return result, nil
+}
+
+// crearTablaCharolaEspaciado crea la tabla de dimensiones para charola cable espaciado.
+// Los tamaños son anchos estándar de charola en mm.
+func (r *CSVTablaNOMRepository) crearTablaCharolaEspaciado() []valueobject.EntradaTablaCanalizacion {
+	// Tamaños estándar de charola (ancho en mm) y área aproximada
+	// Asumiendo charola de 50mm de alto estándar
+	return []valueobject.EntradaTablaCanalizacion{
+		{Tamano: "50mm", AreaInteriorMM2: 2500},   // 50mm x 50mm
+		{Tamano: "100mm", AreaInteriorMM2: 5000},  // 100mm x 50mm
+		{Tamano: "150mm", AreaInteriorMM2: 7500},  // 150mm x 50mm
+		{Tamano: "200mm", AreaInteriorMM2: 10000}, // 200mm x 50mm
+		{Tamano: "300mm", AreaInteriorMM2: 15000}, // 300mm x 50mm
+		{Tamano: "450mm", AreaInteriorMM2: 22500}, // 450mm x 50mm
+		{Tamano: "600mm", AreaInteriorMM2: 30000}, // 600mm x 50mm
+	}
+}
+
+// crearTablaCharolaTriangular crea la tabla de dimensiones para charola cable triangular.
+// Los tamaños son anchos estándar de charola en mm.
+func (r *CSVTablaNOMRepository) crearTablaCharolaTriangular() []valueobject.EntradaTablaCanalizacion {
+	// Mismos tamaños pero el área efectiva es diferente por la forma triangular
+	// Se usa 40% del área rectangular para el cálculo de llenado
+	return []valueobject.EntradaTablaCanalizacion{
+		{Tamano: "50mm", AreaInteriorMM2: 2500},
+		{Tamano: "100mm", AreaInteriorMM2: 5000},
+		{Tamano: "150mm", AreaInteriorMM2: 7500},
+		{Tamano: "200mm", AreaInteriorMM2: 10000},
+		{Tamano: "300mm", AreaInteriorMM2: 15000},
+		{Tamano: "450mm", AreaInteriorMM2: 22500},
+		{Tamano: "600mm", AreaInteriorMM2: 30000},
+	}
 }
 
 // rawAmpacidadEntry holds raw data from CSV before temperature extraction.

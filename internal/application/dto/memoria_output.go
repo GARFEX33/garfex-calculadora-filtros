@@ -3,7 +3,6 @@ package dto
 
 import (
 	"github.com/garfex/calculadora-filtros/internal/domain/entity"
-	"github.com/garfex/calculadora-filtros/internal/domain/valueobject"
 )
 
 // PasoMemoria representa un paso individual del cálculo.
@@ -44,29 +43,29 @@ type ResultadoCaidaTension struct {
 // Es el DTO de salida para el use case CalcularMemoria.
 type MemoriaOutput struct {
 	// Información del equipo
-	TipoEquipo     entity.TipoEquipo
-	Clave          string
-	Tension        valueobject.Tension
-	FactorPotencia float64
+	TipoEquipo     entity.TipoEquipo `json:"tipo_equipo"`
+	Clave          string            `json:"clave"`
+	Tension        int               `json:"tension"`
+	FactorPotencia float64           `json:"factor_potencia"`
 
 	// Paso 1: Corriente Nominal
-	CorrienteNominal valueobject.Corriente
+	CorrienteNominal float64 `json:"corriente_nominal"`
 
 	// Paso 2: Ajuste de Corriente
-	FactorAgrupamiento float64
-	FactorTemperatura  float64
-	FactorTotalAjuste  float64
-	CorrienteAjustada  valueobject.Corriente
-	HilosPorFase       int
-	CorrientePorHilo   float64
+	FactorAgrupamiento float64 `json:"factor_agrupamiento"`
+	FactorTemperatura  float64 `json:"factor_temperatura"`
+	FactorTotalAjuste  float64 `json:"factor_total_ajuste"`
+	CorrienteAjustada  float64 `json:"corriente_ajustada"`
+	HilosPorFase       int     `json:"hilos_por_fase"`
+	CorrientePorHilo   float64 `json:"corriente_por_hilo"`
 
 	// Paso 3: Tipo de Canalización
-	TipoCanalizacion entity.TipoCanalizacion
+	TipoCanalizacion entity.TipoCanalizacion `json:"tipo_canalizacion"`
 
 	// Paso 4: Conductor de Alimentación
-	TemperaturaUsada      valueobject.Temperatura
-	ConductorAlimentacion ResultadoConductor
-	TablaAmpacidadUsada   string
+	TemperaturaUsada      int                `json:"temperatura_usada"`
+	ConductorAlimentacion ResultadoConductor `json:"conductor_alimentacion"`
+	TablaAmpacidadUsada   string             `json:"tabla_ampacidad_usada"`
 
 	// Paso 5: Conductor de Tierra
 	ConductorTierra ResultadoConductor
