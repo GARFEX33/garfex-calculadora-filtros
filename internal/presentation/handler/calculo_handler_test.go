@@ -47,6 +47,26 @@ func (m *mockTablaRepo) ObtenerTablaCanalizacion(ctx context.Context, canalizaci
 	}, nil
 }
 
+func (m *mockTablaRepo) ObtenerTemperaturaPorEstado(ctx context.Context, estado string) (int, error) {
+	return 25, nil
+}
+
+func (m *mockTablaRepo) ObtenerFactorTemperatura(ctx context.Context, tempAmbiente int, tempConductor valueobject.Temperatura) (float64, error) {
+	return 1.0, nil
+}
+
+func (m *mockTablaRepo) ObtenerFactorAgrupamiento(ctx context.Context, cantidadConductores int) (float64, error) {
+	return 1.0, nil
+}
+
+func (m *mockTablaRepo) ObtenerDiametroConductor(ctx context.Context, calibre string, material string, conAislamiento bool) (float64, error) {
+	return 3.5, nil
+}
+
+func (m *mockTablaRepo) ObtenerCharolaPorAncho(ctx context.Context, anchoRequeridoMM float64) (valueobject.EntradaTablaCanalizacion, error) {
+	return valueobject.EntradaTablaCanalizacion{Tamano: "100mm", AreaInteriorMM2: 5000}, nil
+}
+
 type mockEquipoRepo struct{}
 
 func (m *mockEquipoRepo) BuscarPorClave(ctx context.Context, clave string) (entity.CalculadorCorriente, error) {

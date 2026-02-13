@@ -10,6 +10,7 @@ import (
 	"strconv"
 
 	"github.com/garfex/calculadora-filtros/internal/domain/entity"
+	"github.com/garfex/calculadora-filtros/internal/domain/service"
 	"github.com/garfex/calculadora-filtros/internal/domain/valueobject"
 )
 
@@ -25,14 +26,25 @@ type impedanciaEntry struct {
 	ResAlAcero      float64
 }
 
+// diametroConductorEntry holds diameter values for conductors from Tabla 5.
+type diametroConductorEntry struct {
+	DiamTWTHW   float64
+	DiamRHH_RHW float64
+	DiamXHHW    float64
+}
+
 // CSVTablaNOMRepository reads NOM tables from CSV files with in-memory caching.
 type CSVTablaNOMRepository struct {
-	basePath        string
-	tablaTierra     []valueobject.EntradaTablaTierra
-	tablasAmpacidad map[entity.TipoCanalizacion]map[valueobject.MaterialConductor]map[valueobject.Temperatura][]valueobject.EntradaTablaConductor
-	tablaImpedancia map[string]impedanciaEntry // key: calibre
-	tablaConduit    []valueobject.EntradaTablaCanalizacion
-	tablasCharola   map[entity.TipoCanalizacion][]valueobject.EntradaTablaCanalizacion
+	basePath             string
+	tablaTierra          []valueobject.EntradaTablaTierra
+	tablasAmpacidad      map[entity.TipoCanalizacion]map[valueobject.MaterialConductor]map[valueobject.Temperatura][]valueobject.EntradaTablaConductor
+	tablaImpedancia      map[string]impedanciaEntry // key: calibre
+	tablaConduit         []valueobject.EntradaTablaCanalizacion
+	tablasCharola        map[entity.TipoCanalizacion][]valueobject.EntradaTablaCanalizacion
+	estadosTemperatura   map[string]int
+	factoresTemperatura  []service.EntradaTablaFactorTemperatura
+	factoresAgrupamiento []service.EntradaTablaFactorAgrupamiento
+	tablaDiametros       map[string]diametroConductorEntry
 }
 
 // NewCSVTablaNOMRepository creates a new repository and loads all tables into memory.
@@ -143,6 +155,34 @@ func NewCSVTablaNOMRepository(basePath string) (*CSVTablaNOMRepository, error) {
 		}
 	}
 
+	// Load estados_temperatura.csv
+	estadosTemp, err := repo.loadEstadosTemperatura()
+	if err != nil {
+		return nil, fmt.Errorf("failed to load estados_temperatura: %w", err)
+	}
+	repo.estadosTemperatura = estadosTemp
+
+	// Load factores_temperatura (310-15-b-2-a.csv)
+	factoresTemp, err := repo.loadFactoresTemperatura()
+	if err != nil {
+		return nil, fmt.Errorf("failed to load factores_temperatura: %w", err)
+	}
+	repo.factoresTemperatura = factoresTemp
+
+	// Load factores_agrupamiento (310-15-b-3-a.csv)
+	factoresAgr, err := repo.loadFactoresAgrupamiento()
+	if err != nil {
+		return nil, fmt.Errorf("failed to load factores_agrupamiento: %w", err)
+	}
+	repo.factoresAgrupamiento = factoresAgr
+
+	// Load tabla diametros (tabla-5-dimensiones-aislamiento.csv)
+	tablaDiam, err := repo.loadTablaDiametros()
+	if err != nil {
+		return nil, fmt.Errorf("failed to load tabla diametros: %w", err)
+	}
+	repo.tablaDiametros = tablaDiam
+
 	return repo, nil
 }
 
@@ -246,6 +286,63 @@ func (r *CSVTablaNOMRepository) ObtenerTablaCanalizacion(
 	default:
 		return nil, fmt.Errorf("tipo de canalización no soportado: %s", canalizacion)
 	}
+}
+
+// ObtenerTemperaturaPorEstado returns the average temperature for a given Mexican state.
+func (r *CSVTablaNOMRepository) ObtenerTemperaturaPorEstado(ctx context.Context, estado string) (int, error) {
+	temp, ok := r.estadosTemperatura[estado]
+	if !ok {
+		return 0, fmt.Errorf("estado no encontrado: %s", estado)
+	}
+	return temp, nil
+}
+
+// ObtenerFactorTemperatura returns the temperature correction factor based on ambient temperature and conductor temperature.
+func (r *CSVTablaNOMRepository) ObtenerFactorTemperatura(ctx context.Context, tempAmbiente int, tempConductor valueobject.Temperatura) (float64, error) {
+	return service.CalcularFactorTemperatura(tempAmbiente, tempConductor, r.factoresTemperatura)
+}
+
+// ObtenerFactorAgrupamiento returns the grouping factor based on the number of conductors.
+func (r *CSVTablaNOMRepository) ObtenerFactorAgrupamiento(ctx context.Context, cantidadConductores int) (float64, error) {
+	return service.CalcularFactorAgrupamiento(cantidadConductores, r.factoresAgrupamiento)
+}
+
+// ObtenerDiametroConductor returns the diameter in mm for a given calibre, material, and insulation type.
+func (r *CSVTablaNOMRepository) ObtenerDiametroConductor(ctx context.Context, calibre string, material string, conAislamiento bool) (float64, error) {
+	entry, ok := r.tablaDiametros[calibre]
+	if !ok {
+		return 0, fmt.Errorf("calibre no encontrado en tabla de diametros: %s", calibre)
+	}
+
+	if conAislamiento {
+		return entry.DiamTWTHW, nil
+	}
+	return entry.DiamRHH_RHW, nil
+}
+
+// ObtenerCharolaPorAncho returns the smallest tray size that fits the required width.
+func (r *CSVTablaNOMRepository) ObtenerCharolaPorAncho(ctx context.Context, anchoRequeridoMM float64) (valueobject.EntradaTablaCanalizacion, error) {
+	tabla, ok := r.tablasCharola[entity.TipoCanalizacionCharolaCableEspaciado]
+	if !ok {
+		return valueobject.EntradaTablaCanalizacion{}, fmt.Errorf("tabla de charola no cargada")
+	}
+
+	for _, entrada := range tabla {
+		anchoMM := parseAnchoCharola(entrada.Tamano)
+		if anchoMM >= anchoRequeridoMM {
+			return entrada, nil
+		}
+	}
+
+	return valueobject.EntradaTablaCanalizacion{}, fmt.Errorf("no se encontró charola para ancho requerido: %.2f mm", anchoRequeridoMM)
+}
+
+func parseAnchoCharola(tamano string) float64 {
+	var ancho float64
+	if _, err := fmt.Sscanf(tamano, "%fmm", &ancho); err == nil {
+		return ancho
+	}
+	return 0
 }
 
 func (r *CSVTablaNOMRepository) loadTablaTierra() ([]valueobject.EntradaTablaTierra, error) {
@@ -600,4 +697,196 @@ func (r *CSVTablaNOMRepository) loadTablaConduit() ([]valueobject.EntradaTablaCa
 	}
 
 	return result, nil
+}
+
+func (r *CSVTablaNOMRepository) loadEstadosTemperatura() (map[string]int, error) {
+	filePath := filepath.Join(r.basePath, "estados_temperatura.csv")
+	file, err := os.Open(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("cannot open estados_temperatura.csv: %w", err)
+	}
+	defer file.Close()
+
+	reader := csv.NewReader(file)
+	records, err := reader.ReadAll()
+	if err != nil {
+		return nil, fmt.Errorf("cannot read estados_temperatura.csv: %w", err)
+	}
+
+	if len(records) < 2 {
+		return nil, fmt.Errorf("estados_temperatura.csv is empty or missing header")
+	}
+
+	result := make(map[string]int)
+	for i, record := range records[1:] {
+		if len(record) < 2 {
+			continue
+		}
+
+		temp, err := strconv.Atoi(record[1])
+		if err != nil {
+			return nil, fmt.Errorf("estados_temperatura.csv line %d: invalid temperatura: %w", i+2, err)
+		}
+
+		result[record[0]] = temp
+	}
+
+	return result, nil
+}
+
+func (r *CSVTablaNOMRepository) loadFactoresTemperatura() ([]service.EntradaTablaFactorTemperatura, error) {
+	filePath := filepath.Join(r.basePath, "310-15-b-2-a.csv")
+	file, err := os.Open(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("cannot open 310-15-b-2-a.csv: %w", err)
+	}
+	defer file.Close()
+
+	reader := csv.NewReader(file)
+	records, err := reader.ReadAll()
+	if err != nil {
+		return nil, fmt.Errorf("cannot read 310-15-b-2-a.csv: %w", err)
+	}
+
+	if len(records) < 2 {
+		return nil, fmt.Errorf("310-15-b-2-a.csv is empty or missing header")
+	}
+
+	var result []service.EntradaTablaFactorTemperatura
+	for _, record := range records[1:] {
+		if len(record) < 4 {
+			continue
+		}
+
+		f60, _ := strconv.ParseFloat(record[1], 64)
+		f75, _ := strconv.ParseFloat(record[2], 64)
+		f90, _ := strconv.ParseFloat(record[3], 64)
+
+		result = append(result, service.EntradaTablaFactorTemperatura{
+			RangoTempC: record[0],
+			Factor60C:  f60,
+			Factor75C:  f75,
+			Factor90C:  f90,
+		})
+	}
+
+	return result, nil
+}
+
+func (r *CSVTablaNOMRepository) loadFactoresAgrupamiento() ([]service.EntradaTablaFactorAgrupamiento, error) {
+	filePath := filepath.Join(r.basePath, "310-15-b-3-a.csv")
+	file, err := os.Open(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("cannot open 310-15-b-3-a.csv: %w", err)
+	}
+	defer file.Close()
+
+	reader := csv.NewReader(file)
+	records, err := reader.ReadAll()
+	if err != nil {
+		return nil, fmt.Errorf("cannot read 310-15-b-3-a.csv: %w", err)
+	}
+
+	if len(records) < 2 {
+		return nil, fmt.Errorf("310-15-b-3-a.csv is empty or missing header")
+	}
+
+	var result []service.EntradaTablaFactorAgrupamiento
+	for _, record := range records[1:] {
+		if len(record) < 2 {
+			continue
+		}
+
+		factor, _ := strconv.ParseFloat(record[1], 64)
+
+		min, max := parseCantidadConductores(record[0])
+
+		result = append(result, service.EntradaTablaFactorAgrupamiento{
+			CantidadMin: min,
+			CantidadMax: max,
+			Factor:      factor,
+		})
+	}
+
+	return result, nil
+}
+
+func (r *CSVTablaNOMRepository) loadTablaDiametros() (map[string]diametroConductorEntry, error) {
+	filePath := filepath.Join(r.basePath, "tabla-5-dimensiones-aislamiento.csv")
+	file, err := os.Open(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("cannot open tabla-5-dimensiones-aislamiento.csv: %w", err)
+	}
+	defer file.Close()
+
+	reader := csv.NewReader(file)
+	records, err := reader.ReadAll()
+	if err != nil {
+		return nil, fmt.Errorf("cannot read tabla-5-dimensiones-aislamiento.csv: %w", err)
+	}
+
+	if len(records) < 2 {
+		return nil, fmt.Errorf("tabla-5-dimensiones-aislamiento.csv is empty or missing header")
+	}
+
+	header := records[0]
+	colIdx := make(map[string]int)
+	for i, col := range header {
+		colIdx[col] = i
+	}
+
+	calibreIdx, ok := colIdx["calibre"]
+	if !ok {
+		return nil, fmt.Errorf("tabla-5-dimensiones-aislamiento.csv: missing column calibre")
+	}
+	diamTWTHWIdx, ok := colIdx["diam_tw_thw"]
+	if !ok {
+		return nil, fmt.Errorf("tabla-5-dimensiones-aislamiento.csv: missing column diam_tw_thw")
+	}
+	diamRHH_RHWIdx, ok := colIdx["diam_rhh_rhw"]
+	if !ok {
+		return nil, fmt.Errorf("tabla-5-dimensiones-aislamiento.csv: missing column diam_rhh_rhw")
+	}
+	diamXHHWIdx, ok := colIdx["diam_xhhw"]
+	if !ok {
+		return nil, fmt.Errorf("tabla-5-dimensiones-aislamiento.csv: missing column diam_xhhw")
+	}
+
+	result := make(map[string]diametroConductorEntry)
+	for _, record := range records[1:] {
+		if len(record) < len(header) {
+			continue
+		}
+
+		entry := diametroConductorEntry{}
+		if v, err := strconv.ParseFloat(record[diamTWTHWIdx], 64); err == nil {
+			entry.DiamTWTHW = v
+		}
+		if v, err := strconv.ParseFloat(record[diamRHH_RHWIdx], 64); err == nil {
+			entry.DiamRHH_RHW = v
+		}
+		if v, err := strconv.ParseFloat(record[diamXHHWIdx], 64); err == nil {
+			entry.DiamXHHW = v
+		}
+
+		result[record[calibreIdx]] = entry
+	}
+
+	return result, nil
+}
+
+func parseCantidadConductores(s string) (min, max int) {
+	if s == "41+" {
+		return 41, -1
+	}
+	if s == "1" {
+		return 1, 1
+	}
+	if _, err := fmt.Sscanf(s, "%d-%d", &min, &max); err == nil {
+		return
+	}
+	if _, err := fmt.Sscanf(s, "%d+", &min); err == nil {
+		return min, -1
+	}
+	return 0, 0
 }
