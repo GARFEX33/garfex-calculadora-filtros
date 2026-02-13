@@ -110,3 +110,73 @@ func TestCalcularCanalizacion_FillFactor3Conductores(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "1/2", result.Tamano)
 }
+
+func TestCalcularCanalizacion_DosTubos(t *testing.T) {
+	conductores := []service.ConductorParaCanalizacion{
+		{Cantidad: 3, SeccionMM2: 33.62}, // 3 phases × 2 AWG
+		{Cantidad: 1, SeccionMM2: 13.30}, // 1 ground × 6 AWG
+	}
+	// Total area = 114.16 mm², cantidadTotal = 4
+	// Con 2 tubos: conductoresPorTubo = 4/2 = 2 → fillFactor = 0.31
+	// areaPorTubo = 114.16/2 = 57.08 mm²
+	// areaRequerida = 57.08/0.31 = 184.13 mm²
+	// Smallest ≥ 184.13 → "1" (198 mm²)
+	// Con 1 tubo habría dado "1 1/2" (360 mm²) — el tubo individual es más chico
+
+	result, err := service.CalcularCanalizacion(conductores, "TUBERIA_CONDUIT", tablaCanalizacionTest, 2)
+	require.NoError(t, err)
+	assert.Equal(t, "TUBERIA_CONDUIT", result.Tipo)
+	assert.Equal(t, "1", result.Tamano)
+	assert.Equal(t, 2, result.NumeroDeTubos)
+	assert.InDelta(t, 114.16, result.AnchoRequerido, 0.01)
+}
+
+func TestCalcularCanalizacion_DosTubosSmall(t *testing.T) {
+	conductores := []service.ConductorParaCanalizacion{
+		{Cantidad: 4, SeccionMM2: 3.31}, // 4 × 12 AWG
+	}
+	// Total area = 13.24 mm², cantidadTotal = 4
+	// Con 2 tubos: conductoresPorTubo = 4/2 = 2 → fillFactor = 0.31
+	// areaPorTubo = 13.24/2 = 6.62 mm²
+	// areaRequerida = 6.62/0.31 = 21.35 mm²
+	// Smallest ≥ 21.35 → "1/2" (78 mm²)
+
+	result, err := service.CalcularCanalizacion(conductores, "TUBERIA_CONDUIT", tablaCanalizacionTest, 2)
+	require.NoError(t, err)
+	assert.Equal(t, "1/2", result.Tamano)
+	assert.Equal(t, 2, result.NumeroDeTubos)
+}
+
+func TestCalcularCanalizacion_NumeroDeTubosCero(t *testing.T) {
+	conductores := []service.ConductorParaCanalizacion{
+		{Cantidad: 3, SeccionMM2: 3.31},
+	}
+	_, err := service.CalcularCanalizacion(conductores, "TUBERIA_CONDUIT", tablaCanalizacionTest, 0)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "numeroDeTubos debe ser mayor a cero")
+}
+
+func TestCalcularCanalizacion_NumeroDeTubosNegativo(t *testing.T) {
+	conductores := []service.ConductorParaCanalizacion{
+		{Cantidad: 3, SeccionMM2: 3.31},
+	}
+	_, err := service.CalcularCanalizacion(conductores, "TUBERIA_CONDUIT", tablaCanalizacionTest, -1)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "numeroDeTubos debe ser mayor a cero")
+}
+
+func TestCalcularCanalizacion_NumeroDeTubosMayorQueConductores(t *testing.T) {
+	conductores := []service.ConductorParaCanalizacion{
+		{Cantidad: 2, SeccionMM2: 3.31},
+	}
+	// 2 conductores, 5 tubos — permitido, el servicio no juzga
+	// cantidadTotal=2, conductoresPorTubo=2/5=0 → fillFactor=0.40 (default)
+	// areaPorTubo = 6.62/5 = 1.324 mm²
+	// areaRequerida = 1.324/0.40 = 3.31 mm²
+	// Smallest ≥ 3.31 → "1/2" (78 mm²)
+
+	result, err := service.CalcularCanalizacion(conductores, "TUBERIA_CONDUIT", tablaCanalizacionTest, 5)
+	require.NoError(t, err)
+	assert.Equal(t, "1/2", result.Tamano)
+	assert.Equal(t, 5, result.NumeroDeTubos)
+}
