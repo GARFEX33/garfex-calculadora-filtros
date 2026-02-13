@@ -35,7 +35,7 @@ Pequenas y enfocadas (pocos metodos por interface).
 4. Resolver tabla ampacidad + columna temperatura — llamar SeleccionarConductorAlimentacion
 5. Conductor de Tierra (ITM -> tabla 250-122)
 6. Dimensionar Canalizacion (40% fill)
-7. Resolver datos Tablas 9/5/8 — llamar CalcularCaidaTension
+7. Resolver R y X de Tabla 9 + FP del equipo — llamar CalcularCaidaTension
 
 ## Seleccion de Temperatura (logica aqui, no en domain)
 
