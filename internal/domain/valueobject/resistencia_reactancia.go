@@ -1,5 +1,5 @@
-// internal/application/port/resistencia_reactancia.go
-package port
+// internal/domain/valueobject/resistencia_reactancia.go
+package valueobject
 
 // ResistenciaReactancia holds the impedance values for voltage drop calculation.
 type ResistenciaReactancia struct {

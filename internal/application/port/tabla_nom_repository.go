@@ -28,7 +28,7 @@ type TablaNOMRepository interface {
 		calibre string,
 		canalizacion entity.TipoCanalizacion,
 		material valueobject.MaterialConductor,
-	) (ResistenciaReactancia, error)
+	) (valueobject.ResistenciaReactancia, error)
 
 	// ObtenerTablaCanalizacion returns conduit sizing table entries.
 	ObtenerTablaCanalizacion(
