@@ -33,13 +33,13 @@ type EntradaCalculoCaidaTension struct {
 // CalcularCaidaTension calculates the voltage drop for a three-phase system
 // using the IEEE-141 / NOM formula with power factor:
 //
-//	%e = 173 × (In/CF) × L_km × (R·cosθ + X·senθ) / E_FF
-//	VD = E_FF × (%e / 100)
+//	%Vd = (√3 × Ib × L × (R·cosθ + X·senθ) / (V × N)) × 100
+//	VD  = V × (%Vd / 100)
 //
-// Where 173 = √3 × 100, cosθ = FactorPotencia, senθ = √(1 - FP²).
+// Where cosθ = FactorPotencia, senθ = √(1 - FP²), N = HilosPorFase.
 //
 // For FP = 1.0 (FiltroActivo, FiltroRechazo, Transformador) the formula
-// reduces to: %e = 173 × (In/CF) × L_km × R / E_FF  (reactance has no effect).
+// reduces to: %Vd = (√3 × Ib × L × R / (V × N)) × 100  (reactance has no effect).
 func CalcularCaidaTension(
 	entrada EntradaCalculoCaidaTension,
 	corriente valueobject.Corriente,
@@ -70,11 +70,10 @@ func CalcularCaidaTension(
 	// Step 5: effective impedance term (Ω/km)
 	terminoEfectivo := rEf*cosTheta + xEf*sinTheta
 
-	// Step 6: %e = 173 × (In/CF) × L_km × terminoEfectivo / E_FF
-	// Note: corriente already represents In (total, not per conductor).
-	// CF (HilosPorFase) is already applied to R and X above.
+	// Step 6: %Vd = (√3 × Ib × L × terminoEfectivo / (V × N)) × 100
+	// Note: N (HilosPorFase) is already applied to R and X above via rEf and xEf.
 	lKm := distancia / 1000.0
-	porcentaje := 173 * corriente.Valor() * lKm * terminoEfectivo / float64(tension.Valor())
+	porcentaje := math.Sqrt(3) * corriente.Valor() * lKm * terminoEfectivo / float64(tension.Valor()) * 100
 
 	// Step 7: VD in volts
 	vd := float64(tension.Valor()) * (porcentaje / 100)
