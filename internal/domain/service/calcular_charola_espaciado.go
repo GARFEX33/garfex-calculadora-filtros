@@ -10,23 +10,16 @@ import (
 
 var ErrCharolaNoEncontrada = errors.New("no se encontró charola suficiente")
 
-// CableControl representa un cable de control o comunicación que se transporta en charola.
-type CableControl struct {
-	Cantidad   int
-	DiametroMM float64
-}
-
-type ConductorConDiametro struct {
-	DiametroMM float64
-}
+// CalcularCharolaEspaciado calcula el ancho requerido de charola para cables espaciados.
+// Recibe value objects del dominio para representar conductores y cables de control.
 
 func CalcularCharolaEspaciado(
 	hilosPorFase int,
 	sistema entity.SistemaElectrico,
-	conductorFase ConductorConDiametro,
-	conductorTierra ConductorConDiametro,
+	conductorFase valueobject.ConductorCharola,
+	conductorTierra valueobject.ConductorCharola,
 	tablaCharola []valueobject.EntradaTablaCanalizacion,
-	cablesControl []CableControl,
+	cablesControl []valueobject.CableControl,
 ) (entity.Canalizacion, error) {
 	if hilosPorFase < 1 {
 		return entity.Canalizacion{}, fmt.Errorf("CalcularCharolaEspaciado: %w", errors.New("hilos por fase debe ser >= 1"))
@@ -62,16 +55,33 @@ func CalcularCharolaEspaciado(
 
 	totalHilos := hilosFaseTotal + hilosNeutro
 
-	// Calcular ancho para cables de control
+	// Calcular ancho para cables en charola con espaciado
+	// Formula: EF + ancho_fuerza + EC + ancho_control + tierra
+	// EF (espacio fuerza) = total_hilos * diametro_fase
+	// EC (espacio control) = 2 * diametro_control (uno a cada lado)
+	// ancho_fuerza = total_hilos * diametro_fase
+	// ancho_control = diametro_control
+
+	// Espacio fuerza = cantidad de fases * diametro fase
+	espacioFuerza := float64(totalHilos) * conductorFase.DiametroMM()
+
+	// Espacio control = 2 * diametro control (uno a cada lado)
+	var espacioControl float64
 	var anchoControl float64
 	for _, cable := range cablesControl {
-		if cable.Cantidad > 0 && cable.DiametroMM > 0 {
-			anchoControl += float64(cable.Cantidad) * cable.DiametroMM
+		if cable.Cantidad() > 0 && cable.DiametroMM() > 0 {
+			espacioControl += 2.0 * cable.DiametroMM() // espacio a cada lado
+			anchoControl += cable.DiametroMM()         // diametro del cable
 		}
 	}
 
-	anchoRequerido := float64(totalHilos-1)*conductorFase.DiametroMM + conductorTierra.DiametroMM + anchoControl
+	// Ancho fuerza = total_hilos * diametro fase
+	anchoFuerza := float64(totalHilos) * conductorFase.DiametroMM()
 
+	// Ancho total = EF + ancho_fuerza + EC + ancho_control + tierra
+	anchoRequerido := espacioFuerza + anchoFuerza + espacioControl + anchoControl + conductorTierra.DiametroMM()
+
+	// alturaCharolaMM: altura estándar de charola NOM-001-SEDE para convertir área interior (mm²) a ancho (mm).
 	const alturaCharolaMM float64 = 50.0
 	for _, entrada := range tablaCharola {
 		anchoCharolaMM := entrada.AreaInteriorMM2 / alturaCharolaMM

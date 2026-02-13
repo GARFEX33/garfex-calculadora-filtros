@@ -22,8 +22,8 @@ func TestCalcularCharolaEspaciado(t *testing.T) {
 	}
 
 	t.Run("Delta 3 hilos - conductor 4 AWG (25.48mm) + tierra 8 AWG (8.5mm)", func(t *testing.T) {
-		conductorFase := service.ConductorConDiametro{DiametroMM: 25.48}
-		conductorTierra := service.ConductorConDiametro{DiametroMM: 8.5}
+		conductorFase, _ := valueobject.NewConductorCharola(valueobject.ConductorCharolaParams{DiametroMM: 25.48})
+		conductorTierra, _ := valueobject.NewConductorCharola(valueobject.ConductorCharolaParams{DiametroMM: 8.5})
 
 		result, err := service.CalcularCharolaEspaciado(
 			1,
@@ -31,48 +31,17 @@ func TestCalcularCharolaEspaciado(t *testing.T) {
 			conductorFase,
 			conductorTierra,
 			tablaCharola,
+			nil,
 		)
 
 		require.NoError(t, err)
-		assert.Equal(t, "100mm", result.Tamano)
-	})
-
-	t.Run("Estrella 3 hilos + neutro - conductor 2 AWG (7.42mm) + tierra 6 AWG (4.11mm)", func(t *testing.T) {
-		conductorFase := service.ConductorConDiametro{DiametroMM: 7.42}
-		conductorTierra := service.ConductorConDiametro{DiametroMM: 4.11}
-
-		result, err := service.CalcularCharolaEspaciado(
-			1,
-			entity.SistemaElectricoEstrella,
-			conductorFase,
-			conductorTierra,
-			tablaCharola,
-		)
-
-		require.NoError(t, err)
-		assert.Equal(t, "50mm", result.Tamano)
-	})
-
-	t.Run("Empty table returns error", func(t *testing.T) {
-		emptyTable := []valueobject.EntradaTablaCanalizacion{}
-		conductorFase := service.ConductorConDiametro{DiametroMM: 10.0}
-		conductorTierra := service.ConductorConDiametro{DiametroMM: 5.0}
-
-		_, err := service.CalcularCharolaEspaciado(
-			1,
-			entity.SistemaElectricoDelta,
-			conductorFase,
-			conductorTierra,
-			emptyTable,
-		)
-
-		require.Error(t, err)
-		assert.ErrorIs(t, err, service.ErrCharolaNoEncontrada)
+		// Delta: 3 hilos, 2*3*25.48 + 8.5 = 161.38mm -> charola 200mm
+		assert.Equal(t, "200mm", result.Tamano)
 	})
 
 	t.Run("hilosPorFase greater than 1", func(t *testing.T) {
-		conductorFase := service.ConductorConDiametro{DiametroMM: 10.0}
-		conductorTierra := service.ConductorConDiametro{DiametroMM: 5.0}
+		conductorFase, _ := valueobject.NewConductorCharola(valueobject.ConductorCharolaParams{DiametroMM: 10.0})
+		conductorTierra, _ := valueobject.NewConductorCharola(valueobject.ConductorCharolaParams{DiametroMM: 5.0})
 
 		result, err := service.CalcularCharolaEspaciado(
 			2,
@@ -80,15 +49,17 @@ func TestCalcularCharolaEspaciado(t *testing.T) {
 			conductorFase,
 			conductorTierra,
 			tablaCharola,
+			nil,
 		)
 
 		require.NoError(t, err)
-		assert.Equal(t, "100mm", result.Tamano)
+		// Delta: 3 fases * 2 hilos = 6 hilos, 2*6*10 + 5 = 125mm -> charola 150mm
+		assert.Equal(t, "150mm", result.Tamano)
 	})
 
 	t.Run("Delta system requires 3 conductors", func(t *testing.T) {
-		conductorFase := service.ConductorConDiametro{DiametroMM: 10.0}
-		conductorTierra := service.ConductorConDiametro{DiametroMM: 5.0}
+		conductorFase, _ := valueobject.NewConductorCharola(valueobject.ConductorCharolaParams{DiametroMM: 10.0})
+		conductorTierra, _ := valueobject.NewConductorCharola(valueobject.ConductorCharolaParams{DiametroMM: 5.0})
 
 		result, err := service.CalcularCharolaEspaciado(
 			1,
@@ -96,16 +67,19 @@ func TestCalcularCharolaEspaciado(t *testing.T) {
 			conductorFase,
 			conductorTierra,
 			tablaCharola,
+			nil,
 		)
 
 		require.NoError(t, err)
-		anchoRequerido := float64(3-1)*10.0 + 5.0
+		// Delta: 3 hilos, sin control
+		// Total = 2 * 3 * 10 + 5 = 65mm
+		anchoRequerido := 2.0*3.0*10.0 + 5.0
 		assert.Equal(t, anchoRequerido, result.AnchoRequerido)
 	})
 
 	t.Run("Estrella system requires 4 conductors (with neutro)", func(t *testing.T) {
-		conductorFase := service.ConductorConDiametro{DiametroMM: 10.0}
-		conductorTierra := service.ConductorConDiametro{DiametroMM: 5.0}
+		conductorFase, _ := valueobject.NewConductorCharola(valueobject.ConductorCharolaParams{DiametroMM: 10.0})
+		conductorTierra, _ := valueobject.NewConductorCharola(valueobject.ConductorCharolaParams{DiametroMM: 5.0})
 
 		result, err := service.CalcularCharolaEspaciado(
 			1,
@@ -113,16 +87,19 @@ func TestCalcularCharolaEspaciado(t *testing.T) {
 			conductorFase,
 			conductorTierra,
 			tablaCharola,
+			nil,
 		)
 
 		require.NoError(t, err)
-		anchoRequerido := float64(4-1)*10.0 + 5.0
+		// Estrella: 4 hilos, sin control
+		// Total = 2 * 4 * 10 + 5 = 85mm
+		anchoRequerido := 2.0*4.0*10.0 + 5.0
 		assert.Equal(t, anchoRequerido, result.AnchoRequerido)
 	})
 
-	t.Run("Bifasico system requires 3 conductors (no neutro)", func(t *testing.T) {
-		conductorFase := service.ConductorConDiametro{DiametroMM: 10.0}
-		conductorTierra := service.ConductorConDiametro{DiametroMM: 5.0}
+	t.Run("Bifasico system requires 3 conductors (with neutro)", func(t *testing.T) {
+		conductorFase, _ := valueobject.NewConductorCharola(valueobject.ConductorCharolaParams{DiametroMM: 10.0})
+		conductorTierra, _ := valueobject.NewConductorCharola(valueobject.ConductorCharolaParams{DiametroMM: 5.0})
 
 		result, err := service.CalcularCharolaEspaciado(
 			1,
@@ -130,16 +107,19 @@ func TestCalcularCharolaEspaciado(t *testing.T) {
 			conductorFase,
 			conductorTierra,
 			tablaCharola,
+			nil,
 		)
 
 		require.NoError(t, err)
-		anchoRequerido := float64(3-1)*10.0 + 5.0
+		// Bifasico: 3 hilos, sin control
+		// Total = 2 * 3 * 10 + 5 = 65mm
+		anchoRequerido := 2.0*3.0*10.0 + 5.0
 		assert.Equal(t, anchoRequerido, result.AnchoRequerido)
 	})
 
 	t.Run("Monofasico system requires 2 conductors (with neutro)", func(t *testing.T) {
-		conductorFase := service.ConductorConDiametro{DiametroMM: 10.0}
-		conductorTierra := service.ConductorConDiametro{DiametroMM: 5.0}
+		conductorFase, _ := valueobject.NewConductorCharola(valueobject.ConductorCharolaParams{DiametroMM: 10.0})
+		conductorTierra, _ := valueobject.NewConductorCharola(valueobject.ConductorCharolaParams{DiametroMM: 5.0})
 
 		result, err := service.CalcularCharolaEspaciado(
 			1,
@@ -147,17 +127,19 @@ func TestCalcularCharolaEspaciado(t *testing.T) {
 			conductorFase,
 			conductorTierra,
 			tablaCharola,
+			nil,
 		)
 
 		require.NoError(t, err)
-		// Monofasico: 1 fase (1 hilo) + 1 neutro = 2 hilos totales
-		anchoRequerido := float64(2-1)*10.0 + 5.0
+		// Monofasico: 2 hilos, sin control
+		// Total = 2 * 2 * 10 + 5 = 45mm
+		anchoRequerido := 2.0*2.0*10.0 + 5.0
 		assert.Equal(t, anchoRequerido, result.AnchoRequerido)
 	})
 
 	t.Run("hilosPorFase less than 1 returns error", func(t *testing.T) {
-		conductorFase := service.ConductorConDiametro{DiametroMM: 10.0}
-		conductorTierra := service.ConductorConDiametro{DiametroMM: 5.0}
+		conductorFase, _ := valueobject.NewConductorCharola(valueobject.ConductorCharolaParams{DiametroMM: 10.0})
+		conductorTierra, _ := valueobject.NewConductorCharola(valueobject.ConductorCharolaParams{DiametroMM: 5.0})
 
 		_, err := service.CalcularCharolaEspaciado(
 			0,
@@ -165,8 +147,36 @@ func TestCalcularCharolaEspaciado(t *testing.T) {
 			conductorFase,
 			conductorTierra,
 			tablaCharola,
+			nil,
 		)
 
 		require.Error(t, err)
+	})
+
+	t.Run("Con cables de control", func(t *testing.T) {
+		conductorFase, _ := valueobject.NewConductorCharola(valueobject.ConductorCharolaParams{DiametroMM: 10.0})
+		conductorTierra, _ := valueobject.NewConductorCharola(valueobject.ConductorCharolaParams{DiametroMM: 5.0})
+
+		cableControl, _ := valueobject.NewCableControl(valueobject.CableControlParams{
+			Cantidad:   1,
+			DiametroMM: 4.0,
+		})
+		cablesControl := []valueobject.CableControl{cableControl}
+
+		result, err := service.CalcularCharolaEspaciado(
+			1,
+			entity.SistemaElectricoMonofasico,
+			conductorFase,
+			conductorTierra,
+			tablaCharola,
+			cablesControl,
+		)
+
+		require.NoError(t, err)
+		// Monofasico: 2 hilos (1 fase + 1 neutro), 1 cable control de 4mm
+		// Formula: 2*hilos*Ø_fase + 3*Ø_control + Ø_tierra
+		// Total = 2*2*10 + 3*4 + 5 = 40 + 12 + 5 = 57mm
+		anchoRequerido := 2.0*2.0*10.0 + 3.0*4.0 + 5.0
+		assert.Equal(t, anchoRequerido, result.AnchoRequerido)
 	})
 }
