@@ -48,6 +48,16 @@ type MemoriaOutput struct {
 	Tension        int               `json:"tension"`
 	FactorPotencia float64           `json:"factor_potencia"`
 
+	// NUEVOS: Información de cálculo
+	Estado              string                  `json:"estado"`
+	TemperaturaAmbiente int                     `json:"temperatura_ambiente"`
+	SistemaElectrico    entity.SistemaElectrico `json:"sistema_electrico"`
+	CantidadConductores int                     `json:"cantidad_conductores"`
+
+	// Factores calculados
+	FactorTemperaturaCalculado  float64 `json:"factor_temperatura_calculado"`
+	FactorAgrupamientoCalculado float64 `json:"factor_agrupamiento_calculado"`
+
 	// Paso 1: Corriente Nominal
 	CorrienteNominal float64 `json:"corriente_nominal"`
 

@@ -80,6 +80,8 @@ func TestCalculoHandler_CalcularMemoria_Success(t *testing.T) {
 		TipoCanalizacion:   "TUBERIA_PVC",
 		LongitudCircuito:   10,
 		PorcentajeCaidaMax: 3.0,
+		Estado:             "INTERIOR",
+		SistemaElectrico:   "MONOFASICO",
 	}
 
 	jsonData, _ := json.Marshal(reqBody)

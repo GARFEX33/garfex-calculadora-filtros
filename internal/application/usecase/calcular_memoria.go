@@ -46,6 +46,8 @@ func (uc *CalcularMemoriaUseCase) Execute(ctx context.Context, input dto.EquipoI
 		ITM:              input.ITM,
 		LongitudCircuito: input.LongitudCircuito,
 		FillFactor:       0.40, // 40% para tubería según NOM
+		Estado:           input.Estado,
+		SistemaElectrico: input.SistemaElectrico,
 	}
 
 	// Configurar defaults
@@ -55,16 +57,20 @@ func (uc *CalcularMemoriaUseCase) Execute(ctx context.Context, input dto.EquipoI
 	}
 	output.HilosPorFase = hilosPorFase
 
-	factorAgrupamiento := input.FactorAgrupamiento
-	if factorAgrupamiento <= 0 {
-		factorAgrupamiento = 1.0
-	}
+	// Obtener cantidad de conductores del sistema eléctrico
+	cantidadConductores := input.SistemaElectrico.CantidadConductores()
+	output.CantidadConductores = cantidadConductores
 
-	factorTemperatura := input.FactorTemperatura
-	if factorTemperatura <= 0 {
-		factorTemperatura = 1.0
-	}
+	// Calcular factores de corrección
+	factorAgrupamiento := 1.0
+	factorTemperatura := 1.0
 
+	// TODO: Obtener tablas de factores del repositorio y calcular:
+	// factorAgrupamiento, err := service.CalcularFactorAgrupamiento(cantidadConductores, tablaAgrupamiento)
+	// factorTemperatura, err := service.CalcularFactorTemperatura(temperaturaAmbiente, temperaturaConductor, tablaTemperatura)
+
+	output.FactorAgrupamientoCalculado = factorAgrupamiento
+	output.FactorTemperaturaCalculado = factorTemperatura
 	output.FactorAgrupamiento = factorAgrupamiento
 	output.FactorTemperatura = factorTemperatura
 	output.FactorTotalAjuste = factorAgrupamiento * factorTemperatura

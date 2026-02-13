@@ -105,6 +105,8 @@ func TestCalcularMemoriaUseCase_Execute_ManualAmperaje(t *testing.T) {
 		TipoCanalizacion:      entity.TipoCanalizacionTuberiaPVC,
 		LongitudCircuito:      10,
 		PorcentajeCaidaMaximo: 3.0,
+		Estado:                "INTERIOR",
+		SistemaElectrico:      entity.SistemaElectricoMonofasico,
 	}
 
 	// Ejecutar

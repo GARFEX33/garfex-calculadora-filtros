@@ -39,9 +39,9 @@ type EquipoInput struct {
 	LongitudCircuito      float64                  // metros, para caída de tensión
 	PorcentajeCaidaMaximo float64                  // default: 3.0%
 
-	// Factores de ajuste
-	FactorAgrupamiento float64 // default: 1.0
-	FactorTemperatura  float64 // default: 1.0
+	// NUEVO: Reemplaza factor_agrupamiento y factor_temperatura
+	Estado           string                  `json:"estado" binding:"required"`
+	SistemaElectrico entity.SistemaElectrico `json:"sistema_electrico" binding:"required"`
 }
 
 // Validate verifica que el input tenga los campos requeridos según el modo.
@@ -70,6 +70,14 @@ func (e EquipoInput) Validate() error {
 
 	if e.ITM <= 0 {
 		return ErrEquipoInputInvalido
+	}
+
+	if e.Estado == "" {
+		return ErrEquipoInputInvalido
+	}
+
+	if err := entity.ValidarSistemaElectrico(e.SistemaElectrico); err != nil {
+		return err
 	}
 
 	return nil

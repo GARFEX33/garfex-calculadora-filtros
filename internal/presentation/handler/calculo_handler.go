@@ -3,6 +3,7 @@ package handler
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/garfex/calculadora-filtros/internal/application/dto"
@@ -39,8 +40,8 @@ type CalcularMemoriaRequest struct {
 	HilosPorFase       int     `json:"hilos_por_fase,omitempty"`
 	LongitudCircuito   float64 `json:"longitud_circuito" binding:"required,gt=0"`
 	PorcentajeCaidaMax float64 `json:"porcentaje_caida_max,omitempty"`
-	FactorAgrupamiento float64 `json:"factor_agrupamiento,omitempty"`
-	FactorTemperatura  float64 `json:"factor_temperatura,omitempty"`
+	Estado             string  `json:"estado" binding:"required"`
+	SistemaElectrico   string  `json:"sistema_electrico" binding:"required"`
 }
 
 // CalcularMemoriaResponse representa la respuesta exitosa.
@@ -133,7 +134,12 @@ func (h *CalculoHandler) mapRequestToDTO(req CalcularMemoriaRequest) (dto.Equipo
 		tempOverride = &temp
 	}
 
-	return dto.EquipoInput{
+	sistemaElectrico, err := entity.ParseSistemaElectrico(req.SistemaElectrico)
+	if err != nil {
+		return dto.EquipoInput{}, fmt.Errorf("sistema eléctrico inválido: %w", err)
+	}
+
+	input := dto.EquipoInput{
 		Modo:                  modo,
 		Clave:                 req.Clave,
 		TipoEquipo:            tipoEquipo,
@@ -147,9 +153,11 @@ func (h *CalculoHandler) mapRequestToDTO(req CalcularMemoriaRequest) (dto.Equipo
 		HilosPorFase:          req.HilosPorFase,
 		LongitudCircuito:      req.LongitudCircuito,
 		PorcentajeCaidaMaximo: req.PorcentajeCaidaMax,
-		FactorAgrupamiento:    req.FactorAgrupamiento,
-		FactorTemperatura:     req.FactorTemperatura,
-	}, nil
+		Estado:                req.Estado,
+		SistemaElectrico:      sistemaElectrico,
+	}
+
+	return input, nil
 }
 
 // mapErrorToResponse mapea errores del dominio a respuestas HTTP.
