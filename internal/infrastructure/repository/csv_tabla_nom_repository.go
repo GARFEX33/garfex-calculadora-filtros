@@ -9,14 +9,16 @@ import (
 	"path/filepath"
 	"strconv"
 
+	"github.com/garfex/calculadora-filtros/internal/domain/entity"
 	"github.com/garfex/calculadora-filtros/internal/domain/service"
 	"github.com/garfex/calculadora-filtros/internal/domain/valueobject"
 )
 
 // CSVTablaNOMRepository reads NOM tables from CSV files with in-memory caching.
 type CSVTablaNOMRepository struct {
-	basePath    string
-	tablaTierra []service.EntradaTablaTierra
+	basePath        string
+	tablaTierra     []service.EntradaTablaTierra
+	tablasAmpacidad map[entity.TipoCanalizacion]map[valueobject.MaterialConductor]map[valueobject.Temperatura][]service.EntradaTablaConductor
 }
 
 // NewCSVTablaNOMRepository creates a new repository and loads all tables into memory.
@@ -31,7 +33,8 @@ func NewCSVTablaNOMRepository(basePath string) (*CSVTablaNOMRepository, error) {
 	}
 
 	repo := &CSVTablaNOMRepository{
-		basePath: basePath,
+		basePath:        basePath,
+		tablasAmpacidad: make(map[entity.TipoCanalizacion]map[valueobject.MaterialConductor]map[valueobject.Temperatura][]service.EntradaTablaConductor),
 	}
 
 	// Load ground conductor table
@@ -41,12 +44,64 @@ func NewCSVTablaNOMRepository(basePath string) (*CSVTablaNOMRepository, error) {
 	}
 	repo.tablaTierra = tablaTierra
 
+	// Load ampacity tables for conduit types
+	for _, canalizacion := range []entity.TipoCanalizacion{
+		entity.TipoCanalizacionTuberiaPVC,
+		entity.TipoCanalizacionTuberiaAluminio,
+		entity.TipoCanalizacionTuberiaAceroPG,
+		entity.TipoCanalizacionTuberiaAceroPD,
+	} {
+		repo.tablasAmpacidad[canalizacion] = make(map[valueobject.MaterialConductor]map[valueobject.Temperatura][]service.EntradaTablaConductor)
+
+		for _, material := range []valueobject.MaterialConductor{
+			valueobject.MaterialCobre,
+			valueobject.MaterialAluminio,
+		} {
+			repo.tablasAmpacidad[canalizacion][material] = make(map[valueobject.Temperatura][]service.EntradaTablaConductor)
+
+			tabla, err := repo.loadTablaAmpacidad("310-15-b-16.csv", material)
+			if err != nil {
+				return nil, fmt.Errorf("failed to load ampacity table for %s %s: %w", canalizacion, material, err)
+			}
+
+			// Extract by temperature
+			for _, temp := range []valueobject.Temperatura{valueobject.Temp60, valueobject.Temp75, valueobject.Temp90} {
+				repo.tablasAmpacidad[canalizacion][material][temp] = extractByTemperature(tabla, material, temp)
+			}
+		}
+	}
+
 	return repo, nil
 }
 
 // ObtenerTablaTierra returns the ground conductor table (250-122).
 func (r *CSVTablaNOMRepository) ObtenerTablaTierra(ctx context.Context) ([]service.EntradaTablaTierra, error) {
 	return r.tablaTierra, nil
+}
+
+// ObtenerTablaAmpacidad returns ampacity table entries for the given conduit type, material, and temperature.
+func (r *CSVTablaNOMRepository) ObtenerTablaAmpacidad(
+	ctx context.Context,
+	canalizacion entity.TipoCanalizacion,
+	material valueobject.MaterialConductor,
+	temperatura valueobject.Temperatura,
+) ([]service.EntradaTablaConductor, error) {
+	byMaterial, ok := r.tablasAmpacidad[canalizacion]
+	if !ok {
+		return nil, fmt.Errorf("no ampacity table for conduit type: %s", canalizacion)
+	}
+
+	byTemp, ok := byMaterial[material]
+	if !ok {
+		return nil, fmt.Errorf("no ampacity table for material: %s", material)
+	}
+
+	tabla, ok := byTemp[temperatura]
+	if !ok {
+		return nil, fmt.Errorf("no ampacity table for temperature: %d°C", temperatura)
+	}
+
+	return tabla, nil
 }
 
 func (r *CSVTablaNOMRepository) loadTablaTierra() ([]service.EntradaTablaTierra, error) {
@@ -99,4 +154,129 @@ func (r *CSVTablaNOMRepository) loadTablaTierra() ([]service.EntradaTablaTierra,
 	}
 
 	return result, nil
+}
+
+// rawAmpacidadEntry holds raw data from CSV before temperature extraction.
+type rawAmpacidadEntry struct {
+	Capacidad60 float64
+	Capacidad75 float64
+	Capacidad90 float64
+	Conductor   valueobject.ConductorParams
+}
+
+func (r *CSVTablaNOMRepository) loadTablaAmpacidad(filename string, material valueobject.MaterialConductor) ([]rawAmpacidadEntry, error) {
+	filePath := filepath.Join(r.basePath, filename)
+	file, err := os.Open(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("cannot open %s: %w", filename, err)
+	}
+	defer file.Close()
+
+	reader := csv.NewReader(file)
+	records, err := reader.ReadAll()
+	if err != nil {
+		return nil, fmt.Errorf("cannot read %s: %w", filename, err)
+	}
+
+	if len(records) < 2 {
+		return nil, fmt.Errorf("%s is empty or missing header", filename)
+	}
+
+	// Determine column indices based on material
+	materialPrefix := "cu"
+	if material == valueobject.MaterialAluminio {
+		materialPrefix = "al"
+	}
+
+	// Find column indices
+	header := records[0]
+	colIdx := make(map[string]int)
+	for i, col := range header {
+		colIdx[col] = i
+	}
+
+	seccionIdx, ok := colIdx["seccion_mm2"]
+	if !ok {
+		return nil, fmt.Errorf("%s: missing column seccion_mm2", filename)
+	}
+	calibreIdx, ok := colIdx["calibre"]
+	if !ok {
+		return nil, fmt.Errorf("%s: missing column calibre", filename)
+	}
+	col60 := materialPrefix + "_60c"
+	col75 := materialPrefix + "_75c"
+	col90 := materialPrefix + "_90c"
+
+	idx60, has60 := colIdx[col60]
+	idx75, has75 := colIdx[col75]
+	idx90, has90 := colIdx[col90]
+
+	var result []rawAmpacidadEntry
+	for i, record := range records[1:] {
+		if len(record) < len(header) {
+			continue // Skip incomplete rows
+		}
+
+		seccion, err := strconv.ParseFloat(record[seccionIdx], 64)
+		if err != nil {
+			return nil, fmt.Errorf("%s line %d: invalid seccion_mm2: %w", filename, i+2, err)
+		}
+
+		entry := rawAmpacidadEntry{
+			Conductor: valueobject.ConductorParams{
+				Calibre:    record[calibreIdx],
+				SeccionMM2: seccion,
+			},
+		}
+
+		if has60 && record[idx60] != "" {
+			entry.Capacidad60, _ = strconv.ParseFloat(record[idx60], 64)
+		}
+		if has75 && record[idx75] != "" {
+			entry.Capacidad75, _ = strconv.ParseFloat(record[idx75], 64)
+		}
+		if has90 && record[idx90] != "" {
+			entry.Capacidad90, _ = strconv.ParseFloat(record[idx90], 64)
+		}
+
+		result = append(result, entry)
+	}
+
+	return result, nil
+}
+
+func extractByTemperature(entries []rawAmpacidadEntry, material valueobject.MaterialConductor, temp valueobject.Temperatura) []service.EntradaTablaConductor {
+	var result []service.EntradaTablaConductor
+
+	for _, e := range entries {
+		var capacidad float64
+		switch temp {
+		case valueobject.Temp60:
+			capacidad = e.Capacidad60
+		case valueobject.Temp75:
+			capacidad = e.Capacidad75
+		case valueobject.Temp90:
+			capacidad = e.Capacidad90
+		}
+
+		// Skip entries without capacity for this temperature
+		if capacidad <= 0 {
+			continue
+		}
+
+		// Set material
+		params := e.Conductor
+		if material == valueobject.MaterialCobre {
+			params.Material = "Cu"
+		} else {
+			params.Material = "Al"
+		}
+
+		result = append(result, service.EntradaTablaConductor{
+			Capacidad: capacidad,
+			Conductor: params,
+		})
+	}
+
+	return result
 }
