@@ -34,4 +34,13 @@ type TablaNOMRepository interface {
 		ctx context.Context,
 		canalizacion entity.TipoCanalizacion,
 	) ([]valueobject.EntradaTablaCanalizacion, error)
+
+	// Tablas de factores
+	ObtenerTemperaturaPorEstado(ctx context.Context, estado string) (int, error)
+	ObtenerFactorTemperatura(ctx context.Context, tempAmbiente int, tempConductor valueobject.Temperatura) (float64, error)
+	ObtenerFactorAgrupamiento(ctx context.Context, cantidadConductores int) (float64, error)
+
+	// Dimensiones para canalización
+	ObtenerDiametroConductor(ctx context.Context, calibre string, material string, conAislamiento bool) (float64, error)
+	ObtenerCharolaPorAncho(ctx context.Context, anchoRequeridoMM float64) (valueobject.EntradaTablaCanalizacion, error)
 }
