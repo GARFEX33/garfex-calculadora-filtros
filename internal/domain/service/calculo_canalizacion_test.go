@@ -32,7 +32,7 @@ func TestCalcularCanalizacion_Tuberia(t *testing.T) {
 	// Required conduit area at 40% fill = 114.16 / 0.40 = 285.4 mm²
 	// Smallest conduit ≥ 285.4 → "1 1/2" (360 mm²)
 
-	result, err := service.CalcularCanalizacion(conductores, "TUBERIA_CONDUIT", tablaCanalizacionTest)
+	result, err := service.CalcularCanalizacion(conductores, "TUBERIA_CONDUIT", tablaCanalizacionTest, 1)
 	require.NoError(t, err)
 	assert.Equal(t, "TUBERIA_CONDUIT", result.Tipo)
 	assert.Equal(t, "1 1/2", result.Tamano)
@@ -48,7 +48,7 @@ func TestCalcularCanalizacion_SmallConductors(t *testing.T) {
 	// Required = 12.01 / 0.40 = 30.025 mm²
 	// Smallest ≥ 30.025 → "1/2" (78 mm²)
 
-	result, err := service.CalcularCanalizacion(conductores, "TUBERIA_CONDUIT", tablaCanalizacionTest)
+	result, err := service.CalcularCanalizacion(conductores, "TUBERIA_CONDUIT", tablaCanalizacionTest, 1)
 	require.NoError(t, err)
 	assert.Equal(t, "1/2", result.Tamano)
 }
@@ -59,13 +59,13 @@ func TestCalcularCanalizacion_NoFit(t *testing.T) {
 	}
 	// Total = 20 × 253.4 = 5068 mm² → required = 12670 mm² → exceeds all conduits
 
-	_, err := service.CalcularCanalizacion(conductores, "TUBERIA_CONDUIT", tablaCanalizacionTest)
+	_, err := service.CalcularCanalizacion(conductores, "TUBERIA_CONDUIT", tablaCanalizacionTest, 1)
 	assert.Error(t, err)
 	assert.True(t, errors.Is(err, service.ErrCanalizacionNoDisponible))
 }
 
 func TestCalcularCanalizacion_EmptyConductors(t *testing.T) {
-	_, err := service.CalcularCanalizacion(nil, "TUBERIA_CONDUIT", tablaCanalizacionTest)
+	_, err := service.CalcularCanalizacion(nil, "TUBERIA_CONDUIT", tablaCanalizacionTest, 1)
 	assert.Error(t, err)
 }
 
@@ -78,7 +78,7 @@ func TestCalcularCanalizacion_FillFactor1Conductor(t *testing.T) {
 	// Required conduit area at 53% fill = 8.37 / 0.53 = 15.79 mm²
 	// Smallest conduit ≥ 15.79 → "1/2" (78 mm²)
 
-	result, err := service.CalcularCanalizacion(conductores, "TUBERIA_CONDUIT", tablaCanalizacionTest)
+	result, err := service.CalcularCanalizacion(conductores, "TUBERIA_CONDUIT", tablaCanalizacionTest, 1)
 	require.NoError(t, err)
 	assert.Equal(t, "1/2", result.Tamano)
 }
@@ -92,7 +92,7 @@ func TestCalcularCanalizacion_FillFactor2Conductores(t *testing.T) {
 	// Required conduit area at 31% fill = 6.62 / 0.31 = 21.35 mm²
 	// Smallest conduit ≥ 21.35 → "1/2" (78 mm²)
 
-	result, err := service.CalcularCanalizacion(conductores, "TUBERIA_CONDUIT", tablaCanalizacionTest)
+	result, err := service.CalcularCanalizacion(conductores, "TUBERIA_CONDUIT", tablaCanalizacionTest, 1)
 	require.NoError(t, err)
 	assert.Equal(t, "1/2", result.Tamano)
 }
@@ -106,7 +106,7 @@ func TestCalcularCanalizacion_FillFactor3Conductores(t *testing.T) {
 	// Required conduit area at 40% fill = 9.93 / 0.40 = 24.83 mm²
 	// Smallest conduit ≥ 24.83 → "1/2" (78 mm²)
 
-	result, err := service.CalcularCanalizacion(conductores, "TUBERIA_CONDUIT", tablaCanalizacionTest)
+	result, err := service.CalcularCanalizacion(conductores, "TUBERIA_CONDUIT", tablaCanalizacionTest, 1)
 	require.NoError(t, err)
 	assert.Equal(t, "1/2", result.Tamano)
 }
