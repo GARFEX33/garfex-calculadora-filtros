@@ -119,14 +119,11 @@ func (h *CalculoHandler) mapRequestToDTO(req CalcularMemoriaRequest) (dto.Equipo
 		return dto.EquipoInput{}, err
 	}
 
-	// Parsear tipo de canalización
-	tipoCanalizacion := entity.TipoCanalizacion(req.TipoCanalizacion)
+	// Tipo de canalización (string para el DTO)
+	tipoCanalizacion := req.TipoCanalizacion
 
-	// Parsear tipo de equipo si aplica
-	var tipoEquipo entity.TipoEquipo
-	if req.TipoEquipo != "" {
-		tipoEquipo = entity.TipoEquipo(req.TipoEquipo)
-	}
+	// Tipo de equipo (string para el DTO)
+	tipoEquipo := req.TipoEquipo
 
 	// Temperatura override
 	var tempOverride *valueobject.Temperatura
@@ -135,8 +132,11 @@ func (h *CalculoHandler) mapRequestToDTO(req CalcularMemoriaRequest) (dto.Equipo
 		tempOverride = &temp
 	}
 
-	sistemaElectrico, err := entity.ParseSistemaElectrico(req.SistemaElectrico)
-	if err != nil {
+	// Sistema eléctrico (DTO string)
+	sistemaElectrico := dto.SistemaElectrico(req.SistemaElectrico)
+
+	// Validar sistema eléctrico
+	if err := entity.ValidarSistemaElectrico(sistemaElectrico.ToEntity()); err != nil {
 		return dto.EquipoInput{}, fmt.Errorf("sistema eléctrico inválido: %w", err)
 	}
 

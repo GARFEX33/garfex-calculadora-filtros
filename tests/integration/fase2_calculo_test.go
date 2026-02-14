@@ -34,14 +34,14 @@ func TestFase2_CalculoCompleto(t *testing.T) {
 
 	input := dto.EquipoInput{
 		Modo:             dto.ModoManualAmperaje,
-		TipoEquipo:       entity.TipoEquipoFiltroActivo,
+		TipoEquipo:       "FILTRO_ACTIVO",
 		Clave:            "FA-TEST-001",
 		AmperajeNominal:  100,
 		Tension:          tension,
 		FactorPotencia:   0.9,
 		Estado:           "Nuevo Leon",
-		SistemaElectrico: entity.SistemaElectricoDelta,
-		TipoCanalizacion: entity.TipoCanalizacionTuberiaPVC,
+		SistemaElectrico: dto.SistemaElectricoDelta,
+		TipoCanalizacion: "TUBERIA_PVC",
 		ITM:              125,
 		LongitudCircuito: 50,
 		HilosPorFase:     1,
@@ -52,7 +52,7 @@ func TestFase2_CalculoCompleto(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "Nuevo Leon", output.Estado)
 	assert.Equal(t, 37, output.TemperaturaAmbiente) // 36.8°C → round → 37°C (temp máxima 2022)
-	assert.Equal(t, entity.SistemaElectricoDelta, output.SistemaElectrico)
+	assert.Equal(t, dto.SistemaElectricoDelta, output.SistemaElectrico)
 	assert.Equal(t, 3, output.CantidadConductores)
 	assert.InDelta(t, 0.94, output.FactorTemperaturaCalculado, 0.01)  // rango 36-40°C, conductor 60C (100A) → 0.94
 	assert.InDelta(t, 0.70, output.FactorAgrupamientoCalculado, 0.01) // 3 conductores → 0.70

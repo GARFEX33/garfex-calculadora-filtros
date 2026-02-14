@@ -103,8 +103,8 @@ func (o *OrquestadorMemoriaCalculo) Execute(ctx context.Context, input dto.Equip
 		ctx,
 		corrienteNominalVO,
 		input.Estado,
-		input.TipoCanalizacion,
-		input.SistemaElectrico,
+		input.ToEntityTipoCanalizacion(),
+		input.SistemaElectrico.ToEntity(),
 		input.TemperaturaOverride,
 	)
 	if err != nil {
@@ -139,7 +139,7 @@ func (o *OrquestadorMemoriaCalculo) Execute(ctx context.Context, input dto.Equip
 		input.ITM,
 		material,
 		temperaturaVO,
-		input.TipoCanalizacion,
+		input.ToEntityTipoCanalizacion(),
 	)
 	if err != nil {
 		return dto.MemoriaOutput{}, fmt.Errorf("pasos 4-5 - seleccionar conductores: %w", err)
@@ -162,16 +162,15 @@ func (o *OrquestadorMemoriaCalculo) Execute(ctx context.Context, input dto.Equip
 	// Paso 6: Dimensionar Canalización
 	resultadoCanalizacion, err := o.dimensionarCanalizacion.Execute(
 		ctx,
-		resultadoConductores.Alimentacion,
-		resultadoConductores.Tierra,
+		resultadoConductores.Alimentacion.SeccionMM2(),
+		resultadoConductores.Tierra.SeccionMM2(),
 		hilosPorFase,
-		input.TipoCanalizacion,
+		input.ToEntityTipoCanalizacion(),
 	)
 	if err != nil {
 		return dto.MemoriaOutput{}, fmt.Errorf("paso 6 - dimensionar canalización: %w", err)
 	}
 	output.Canalizacion = dto.ResultadoCanalizacion{
-		Tipo:             input.TipoCanalizacion,
 		Tamano:           resultadoCanalizacion.Tamano,
 		AreaTotalMM2:     resultadoCanalizacion.AreaTotalMM2,
 		AreaRequeridaMM2: resultadoCanalizacion.AreaTotalMM2 / 0.40,
@@ -186,7 +185,7 @@ func (o *OrquestadorMemoriaCalculo) Execute(ctx context.Context, input dto.Equip
 		input.LongitudCircuito,
 		input.Tension,
 		limiteCaida,
-		input.TipoCanalizacion,
+		input.ToEntityTipoCanalizacion(),
 		input.FactorPotencia,
 		hilosPorFase,
 	)

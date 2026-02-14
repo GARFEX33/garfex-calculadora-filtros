@@ -26,7 +26,7 @@ func inputBase(t *testing.T) dto.EquipoInput {
 		Tension:          tension220(t),
 		ITM:              125,
 		Estado:           "Nuevo Leon",
-		SistemaElectrico: entity.SistemaElectricoDelta,
+		SistemaElectrico: dto.SistemaElectricoDelta,
 	}
 }
 
@@ -122,16 +122,16 @@ func TestEquipoInput_Validate_EstadoVacio(t *testing.T) {
 
 func TestEquipoInput_Validate_SistemaElectricoInvalido(t *testing.T) {
 	input := inputBase(t)
-	input.SistemaElectrico = entity.SistemaElectrico("INVALIDO")
+	input.SistemaElectrico = dto.SistemaElectrico("INVALIDO")
 	assert.ErrorIs(t, input.Validate(), entity.ErrSistemaElectricoInvalido)
 }
 
 func TestEquipoInput_Validate_TodosSistemas(t *testing.T) {
-	sistemas := []entity.SistemaElectrico{
-		entity.SistemaElectricoDelta,
-		entity.SistemaElectricoEstrella,
-		entity.SistemaElectricoBifasico,
-		entity.SistemaElectricoMonofasico,
+	sistemas := []dto.SistemaElectrico{
+		dto.SistemaElectricoDelta,
+		dto.SistemaElectricoEstrella,
+		dto.SistemaElectricoBifasico,
+		dto.SistemaElectricoMonofasico,
 	}
 	for _, s := range sistemas {
 		t.Run(string(s), func(t *testing.T) {

@@ -143,12 +143,12 @@ func TestOrquestadorMemoriaCalculo_Execute(t *testing.T) {
 		Tension:          tension,
 		FactorPotencia:   0.9,
 		ITM:              100,
-		TipoCanalizacion: entity.TipoCanalizacionTuberiaPVC,
+		TipoCanalizacion: "TUBERIA_PVC",
 		HilosPorFase:     1,
 		Material:         valueobject.MaterialCobre,
 		LongitudCircuito: 10,
 		Estado:           "Sonora",
-		SistemaElectrico: entity.SistemaElectricoDelta,
+		SistemaElectrico: dto.SistemaElectricoDelta,
 	}
 
 	// Execute
@@ -161,7 +161,7 @@ func TestOrquestadorMemoriaCalculo_Execute(t *testing.T) {
 	assert.Equal(t, 220, output.Tension)
 	assert.Equal(t, 100, output.ITM)
 	assert.Equal(t, "Sonora", output.Estado)
-	assert.Equal(t, entity.SistemaElectricoDelta, output.SistemaElectrico)
+	assert.Equal(t, dto.SistemaElectricoDelta, output.SistemaElectrico)
 	assert.Equal(t, 3, output.CantidadConductores) // Delta = 3
 
 	// Verify conductor selected
