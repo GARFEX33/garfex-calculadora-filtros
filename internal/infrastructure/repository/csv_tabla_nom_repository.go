@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/csv"
 	"fmt"
+	"math"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -723,12 +724,12 @@ func (r *CSVTablaNOMRepository) loadEstadosTemperatura() (map[string]int, error)
 			continue
 		}
 
-		temp, err := strconv.Atoi(record[1])
+		tempF, err := strconv.ParseFloat(record[1], 64)
 		if err != nil {
 			return nil, fmt.Errorf("estados_temperatura.csv line %d: invalid temperatura: %w", i+2, err)
 		}
 
-		result[record[0]] = temp
+		result[record[0]] = int(math.Round(tempF))
 	}
 
 	return result, nil
@@ -876,17 +877,17 @@ func (r *CSVTablaNOMRepository) loadTablaDiametros() (map[string]diametroConduct
 }
 
 func parseCantidadConductores(s string) (min, max int) {
-	if s == "41+" {
-		return 41, -1
+	// Rango con "+" al final: "41+"
+	if _, err := fmt.Sscanf(s, "%d+", &min); err == nil {
+		return min, -1
 	}
-	if s == "1" {
-		return 1, 1
-	}
+	// Rango con guión: "5-6", "7-9", "10-20", etc.
 	if _, err := fmt.Sscanf(s, "%d-%d", &min, &max); err == nil {
 		return
 	}
-	if _, err := fmt.Sscanf(s, "%d+", &min); err == nil {
-		return min, -1
+	// Entero simple: "1", "2", "3", "4"
+	if _, err := fmt.Sscanf(s, "%d", &min); err == nil {
+		return min, min
 	}
 	return 0, 0
 }
