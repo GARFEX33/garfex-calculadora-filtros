@@ -3,6 +3,7 @@ package repository
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/garfex/calculadora-filtros/internal/domain/entity"
@@ -122,6 +123,98 @@ func TestCSVTablaNOMRepository_ObtenerTablaCanalizacion(t *testing.T) {
 			// Check first entry has valid data
 			assert.NotEmpty(t, tabla[0].Tamano)
 			assert.Greater(t, tabla[0].AreaInteriorMM2, 0.0)
+		})
+	}
+}
+
+func TestCSVTablaNOMRepository_ObtenerTemperaturaPorEstado(t *testing.T) {
+	repo, err := NewCSVTablaNOMRepository("testdata")
+	require.NoError(t, err)
+
+	ctx := context.Background()
+
+	tests := []struct {
+		estado      string
+		expectedMin int // temperatura mínima esperada (para verificar que no es el valor viejo)
+		expectedMax int
+		wantErr     bool
+	}{
+		{"Nuevo Leon", 36, 38, false},       // 36.8 → round → 37
+		{"Sonora", 38, 39, false},           // 38.2 → round → 38
+		{"Tlaxcala", 27, 28, false},         // 27.5 → round → 28
+		{"Ciudad de Mexico", 29, 30, false}, // 29.1 → round → 29
+		{"Estado Inexistente", 0, 0, true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.estado, func(t *testing.T) {
+			temp, err := repo.ObtenerTemperaturaPorEstado(ctx, tt.estado)
+			if tt.wantErr {
+				assert.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+			assert.GreaterOrEqual(t, temp, tt.expectedMin, "temperatura demasiado baja — posible dato incorrecto")
+			assert.LessOrEqual(t, temp, tt.expectedMax, "temperatura demasiado alta — posible dato incorrecto")
+		})
+	}
+}
+
+func TestCSVTablaNOMRepository_ObtenerFactorAgrupamiento(t *testing.T) {
+	repo, err := NewCSVTablaNOMRepository("testdata")
+	require.NoError(t, err)
+
+	ctx := context.Background()
+
+	tests := []struct {
+		cantidad int
+		expected float64
+	}{
+		{1, 1.00},
+		{2, 0.80}, // bug anterior: retornaba 0.30
+		{3, 0.70}, // bug anterior: retornaba 0.30
+		{4, 0.65}, // bug anterior: retornaba 0.30
+		{5, 0.60},
+		{6, 0.60},
+		{7, 0.50},
+		{10, 0.45},
+		{21, 0.40},
+		{31, 0.35},
+		{41, 0.30},
+		{50, 0.30},
+	}
+
+	for _, tt := range tests {
+		t.Run(fmt.Sprintf("%d_conductores", tt.cantidad), func(t *testing.T) {
+			factor, err := repo.ObtenerFactorAgrupamiento(ctx, tt.cantidad)
+			require.NoError(t, err)
+			assert.InDelta(t, tt.expected, factor, 0.001)
+		})
+	}
+}
+
+func TestCSVTablaNOMRepository_ObtenerFactorTemperatura(t *testing.T) {
+	repo, err := NewCSVTablaNOMRepository("testdata")
+	require.NoError(t, err)
+
+	ctx := context.Background()
+
+	tests := []struct {
+		tempAmbiente  int
+		tempConductor valueobject.Temperatura
+		expected      float64
+	}{
+		{37, valueobject.Temp60, 0.94}, // Nuevo Leon real: rango 36-40, 60C
+		{37, valueobject.Temp75, 0.95}, // rango 36-40, 75C
+		{31, valueobject.Temp75, 1.00}, // rango 31-35, base
+		{21, valueobject.Temp75, 1.07}, // rango 21-25
+	}
+
+	for _, tt := range tests {
+		t.Run(fmt.Sprintf("%d°C_%dC", tt.tempAmbiente, tt.tempConductor), func(t *testing.T) {
+			factor, err := repo.ObtenerFactorTemperatura(ctx, tt.tempAmbiente, tt.tempConductor)
+			require.NoError(t, err)
+			assert.InDelta(t, tt.expected, factor, 0.001)
 		})
 	}
 }
