@@ -35,6 +35,27 @@ func TestNombreTablaAmpacidad(t *testing.T) {
 			temperatura:  valueobject.Temp60,
 			expected:     "NOM-310-15-B-16 (Cu, 60°C)",
 		},
+		{
+			name:         "Charola cable espaciado con cobre 75C",
+			canalizacion: "CHAROLA_CABLE_ESPACIADO",
+			material:     valueobject.MaterialCobre,
+			temperatura:  valueobject.Temp75,
+			expected:     "NOM-310-15-B-17 (Cu, 75°C)",
+		},
+		{
+			name:         "Tubería aluminio con aluminio 75C",
+			canalizacion: "TUBERIA_ALUMINIO",
+			material:     valueobject.MaterialAluminio,
+			temperatura:  valueobject.Temp75,
+			expected:     "NOM-310-15-B-16 (Al, 75°C)",
+		},
+		{
+			name:         "Acero PD con cobre 75C",
+			canalizacion: "TUBERIA_ACERO_PD",
+			material:     valueobject.MaterialCobre,
+			temperatura:  valueobject.Temp75,
+			expected:     "NOM-310-15-B-16 (Cu, 75°C)",
+		},
 	}
 
 	for _, tt := range tests {
