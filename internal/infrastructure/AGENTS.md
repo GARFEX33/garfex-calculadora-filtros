@@ -49,10 +49,21 @@ Lee tablas NOM desde `data/tablas_nom/`.
 
 Charola no tiene conduit metalico → usa columna PVC (sin efecto de proximidad).
 
+### Tabla 250-122 (Conductor de Tierra)
+
+Formato CSV con columnas Cu + Al:
+```csv
+itm_hasta,cu_calibre,cu_seccion_mm2,al_calibre,al_seccion_mm2
+```
+
+- Al vacío = no disponible para ese ITM (fallback a Cu)
+- ITM > 100A aprox: tiene valores Al definidos
+- ITM ≤ 100A: solo Cu (Al vacío → fallback)
+
 ## Variables de Entorno
 
 `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `ENVIRONMENT`
-Ver topologia completa en `docs/plans/2026-02-09-arquitectura-inicial-design.md`.
+Ver topologia completa en `docs/plans/completed/2026-02-09-arquitectura-inicial-design.md`.
 
 ---
 

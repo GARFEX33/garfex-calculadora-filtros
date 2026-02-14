@@ -19,8 +19,20 @@ Logica de calculo pura. Reciben datos ya interpretados — sin I/O, sin CSV, sin
 | CorrienteNominal | `calculo_corriente_nominal.go` | Calcula In segun TipoEquipo |
 | AjusteCorriente | `ajuste_corriente.go` | Aplica factores temperatura y agrupamiento |
 | SeleccionarConductorAlimentacion | `calculo_conductor.go` | Recibe `[]EntradaTablaConductor` pre-resueltos |
-| SeleccionarConductorTierra | `calculo_tierra.go` | ITM + tabla 250-122 pre-resuelta |
+| SeleccionarConductorTierra | `calculo_tierra.go` | ITM + material (Cu/Al) + tabla 250-122 pre-resuelta |
 | CalcularCanalizacion | `calculo_canalizacion.go` | 40% fill NOM para tuberia |
+
+### SeleccionarConductorTierra (material Cu/Al)
+
+**Firma:** `SeleccionarConductorTierra(itm int, material MaterialConductor, tabla []EntradaTablaTierra)`
+
+**Lógica de material:**
+1. Buscar entrada donde `ITM <= ITMHasta`
+2. Si `material == Al` y entrada tiene `ConductorAl` → usar Al
+3. Si `material == Al` pero entrada NO tiene `ConductorAl` → **fallback a Cu** (regla NOM)
+4. Si `material == Cu` → usar siempre Cu
+
+**Nota:** Tabla 250-122 solo tiene Al para ITM > 100A aprox. Para ITM ≤ 100A, Al no está definido → fallback silencioso a Cu.
 | CalcularCaidaTension | `calculo_caida_tension.go` | Formula IEEE-141/NOM con factor de potencia |
 
 ## Caida de Tension (formula IEEE-141 / NOM)
@@ -63,7 +75,7 @@ VD  = V × (%Vd / 100)
 | PVC, Aluminio, Charola espaciado, Charola triangular | `reactancia_al` |
 | Acero PG, Acero PD | `reactancia_acero` |
 
-Diseno completo: `docs/plans/2026-02-12-caida-tension-ieee141-design.md`
+Diseno completo: `docs/plans/completed/2026-02-12-caida-tension-ieee141-design.md`
 
 ## Regla clave
 

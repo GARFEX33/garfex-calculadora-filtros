@@ -39,7 +39,7 @@ Para cualquier feature o bugfix, seguir este flujo de skills en orden:
 | ----------------------- | ---------------------------------- | -------------------------------------------- |
 | Domain                  | `internal/domain/`                 | Orquestador — apunta a entity/, vo/, service/ |
 | Domain — Entity         | `internal/domain/entity/`          | Entidades, TipoEquipo, TipoCanalizacion, MemoriaCalculo |
-| Domain — Value Objects  | `internal/domain/valueobject/`     | Corriente, Tension, Conductor                |
+| Domain — Value Objects  | `internal/domain/valueobject/`     | Corriente, Tension, Conductor, MaterialConductor |
 | Domain — Services       | `internal/domain/service/`         | 6 servicios de calculo, formula IEEE-141 caida tension |
 | Application             | `internal/application/`            | Ports, use cases, DTOs, orquestacion         |
 | Infrastructure          | `internal/infrastructure/`         | Repos, CSV, PostgreSQL, mapeos, entorno      |
@@ -130,8 +130,12 @@ curl http://localhost:8080/health
 ```bash
 curl -X POST http://localhost:8080/api/v1/calculos/memoria \
   -H "Content-Type: application/json" \
-  -d '{"modo":"MANUAL_AMPERAJE","amperaje_nominal":50,"tension":220,"tipo_canalizacion":"TUBERIA_PVC","hilos_por_fase":1,"longitud_circuito":10,"itm":100}'
+  -d '{"modo":"MANUAL_AMPERAJE","amperaje_nominal":50,"tension":220,"tipo_canalizacion":"TUBERIA_PVC","hilos_por_fase":1,"longitud_circuito":10,"itm":100,"factor_potencia":0.9,"estado":"Sonora","sistema_electrico":"DELTA","material":"Cu"}'
 ```
+
+**Campos obligatorios:** `modo`, `tension`, `tipo_canalizacion`, `itm`, `longitud_circuito`, `estado`, `sistema_electrico`
+
+**Campo `material`:** Opcional, valores: `"Cu"` (default) o `"Al"`
 
 ## Fases
 
@@ -157,7 +161,16 @@ Al terminar cada tarea, actualizar: plan si diverge, AGENTS.md si cambia una reg
 
 ## Documentacion
 
-- Arquitectura: `docs/plans/2026-02-09-arquitectura-inicial-design.md`
-- Domain layer: `docs/plans/2026-02-10-domain-layer.md`
-- Caida de tension (IEEE-141): `docs/plans/2026-02-12-caida-tension-ieee141-design.md`
-- Canalizacion: `docs/plans/2026-02-11-tablas-nom-canalizacion-design.md`
+### Implementados (en `docs/plans/completed/`)
+
+- Arquitectura inicial: `completed/2026-02-09-arquitectura-inicial-design.md`
+- Domain layer: `completed/2026-02-10-domain-layer.md`
+- Tablas NOM canalizacion: `completed/2026-02-11-tablas-nom-canalizacion-design.md`
+- Caída de tension IEEE-141: `completed/2026-02-12-caida-tension-ieee141-design.md`
+- Ports CSV infrastructure: `completed/2026-02-12-ports-csv-infrastructure-design.md`
+- Material Cu/Al conductor tierra: `completed/2026-02-13-material-conductor-tierra-design.md`
+
+### Pendientes (en `docs/plans/`)
+
+- Canalizacion multi-tubo: `2026-02-13-canalizacion-multi-tubo-plan.md`
+- Fase 2 memoria calculo: `2026-02-13-fase2-memoria-calculo-design.md`

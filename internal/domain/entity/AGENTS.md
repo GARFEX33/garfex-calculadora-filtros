@@ -19,6 +19,9 @@ Entidades y tipos del dominio. Sin dependencias externas.
 
 **TipoCanalizacion (6):** `TUBERIA_PVC`, `TUBERIA_ALUMINIO`, `TUBERIA_ACERO_PG`, `TUBERIA_ACERO_PD`, `CHAROLA_CABLE_ESPACIADO`, `CHAROLA_CABLE_TRIANGULAR`
 
+**SistemaElectrico (4):** `DELTA`, `ESTRELLA`, `BIFASICO`, `MONOFASICO`
+- Determina cantidad de conductores: Delta=3, Estrella=4, Bifasico=3, Monofasico=2
+
 Los 4 tipos de tuberia comparten tabla de ampacidad. Cada tipo mapea a columna R diferente en Tabla 9.
 
 ## Formulas por Tipo de Equipo
