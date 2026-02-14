@@ -3,6 +3,7 @@ package usecase
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/garfex/calculadora-filtros/internal/application/dto"
@@ -67,6 +68,21 @@ func (m *mockTablaNOMRepository) ObtenerDiametroConductor(ctx context.Context, c
 
 func (m *mockTablaNOMRepository) ObtenerCharolaPorAncho(ctx context.Context, anchoRequeridoMM float64) (valueobject.EntradaTablaCanalizacion, error) {
 	return valueobject.EntradaTablaCanalizacion{Tamano: "100mm", AreaInteriorMM2: 5000}, nil
+}
+
+func (m *mockTablaNOMRepository) ObtenerCapacidadConductor(
+	ctx context.Context,
+	canalizacion entity.TipoCanalizacion,
+	material valueobject.MaterialConductor,
+	temperatura valueobject.Temperatura,
+	calibre string,
+) (float64, error) {
+	for _, entrada := range m.tablaAmpacidad {
+		if entrada.Conductor.Calibre == calibre {
+			return entrada.Capacidad, nil
+		}
+	}
+	return 0, fmt.Errorf("calibre no encontrado: %s", calibre)
 }
 
 // mockEquipoRepository es un mock simple para tests
