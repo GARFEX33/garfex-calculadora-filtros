@@ -11,54 +11,64 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// entradaTierra builds an EntradaTablaTierra with only the fields relevant
-// for ground conductor selection (calibre, material, section).
-// Ground conductors can be bare — no insulation or resistance data needed.
-func entradaTierra(itmHasta int, calibre string, seccionMM2 float64) valueobject.EntradaTablaTierra {
+func entradaTierraCu(itmHasta int, calibre string, seccionMM2 float64) valueobject.EntradaTablaTierra {
 	return valueobject.EntradaTablaTierra{
 		ITMHasta: itmHasta,
-		Conductor: valueobject.ConductorParams{
+		ConductorCu: valueobject.ConductorParams{
 			Calibre:    calibre,
 			Material:   "Cu",
 			SeccionMM2: seccionMM2,
 		},
+		ConductorAl: nil,
 	}
 }
 
-// Simplified NOM table 250-122 excerpt.
-// "3 AWG" and "1 AWG" from original plan replaced with "4 AWG" and "2 AWG"
-// because 3 AWG and 1 AWG are not valid calibres per NOM 310-15(b)(16).
-var tablaTierraTest = []valueobject.EntradaTablaTierra{
-	entradaTierra(15, "14 AWG", 2.08),
-	entradaTierra(20, "12 AWG", 3.31),
-	entradaTierra(40, "10 AWG", 5.26),
-	entradaTierra(60, "10 AWG", 5.26),
-	entradaTierra(100, "8 AWG", 8.37),
-	entradaTierra(200, "6 AWG", 13.30),
-	entradaTierra(400, "4 AWG", 21.15),
-	entradaTierra(600, "2 AWG", 33.62),
-	entradaTierra(800, "1/0 AWG", 53.49),
-	entradaTierra(1000, "2/0 AWG", 67.43),
+func entradaTierraCuAl(itmHasta int, cuCalibre string, cuSeccion float64, alCalibre string, alSeccion float64) valueobject.EntradaTablaTierra {
+	al := valueobject.ConductorParams{
+		Calibre:    alCalibre,
+		Material:   "Al",
+		SeccionMM2: alSeccion,
+	}
+	return valueobject.EntradaTablaTierra{
+		ITMHasta: itmHasta,
+		ConductorCu: valueobject.ConductorParams{
+			Calibre:    cuCalibre,
+			Material:   "Cu",
+			SeccionMM2: cuSeccion,
+		},
+		ConductorAl: &al,
+	}
 }
 
-func TestSeleccionarConductorTierra(t *testing.T) {
+var tablaTierraTest = []valueobject.EntradaTablaTierra{
+	entradaTierraCu(15, "14 AWG", 2.08),
+	entradaTierraCu(20, "12 AWG", 3.31),
+	entradaTierraCu(60, "10 AWG", 5.26),
+	entradaTierraCu(100, "8 AWG", 8.37),
+	entradaTierraCuAl(200, "6 AWG", 13.3, "4 AWG", 21.2),
+	entradaTierraCuAl(400, "2 AWG", 33.6, "1/0 AWG", 42.4),
+	entradaTierraCuAl(800, "1/0 AWG", 53.5, "3/0 AWG", 85.0),
+	entradaTierraCuAl(1000, "2/0 AWG", 67.4, "4/0 AWG", 107.2),
+	entradaTierraCuAl(4000, "500 MCM", 253.0, "750 MCM", 380.0),
+}
+
+func TestSeleccionarConductorTierra_CuExplicito(t *testing.T) {
 	tests := []struct {
 		name            string
 		itm             int
 		expectedCalibre string
 	}{
-		{"ITM 15 → 14 AWG", 15, "14 AWG"},
-		{"ITM 20 → 12 AWG", 20, "12 AWG"},
-		{"ITM 30 → 10 AWG (≤40)", 30, "10 AWG"},
-		{"ITM 100 → 8 AWG", 100, "8 AWG"},
-		{"ITM 125 → 6 AWG (≤200)", 125, "6 AWG"},
-		{"ITM 400 → 4 AWG", 400, "4 AWG"},
-		{"ITM 600 → 2 AWG", 600, "2 AWG"},
+		{"ITM 15 → 14 AWG Cu", 15, "14 AWG"},
+		{"ITM 20 → 12 AWG Cu", 20, "12 AWG"},
+		{"ITM 30 → 10 AWG Cu (≤60)", 30, "10 AWG"},
+		{"ITM 100 → 8 AWG Cu", 100, "8 AWG"},
+		{"ITM 125 → 6 AWG Cu (≤200)", 125, "6 AWG"},
+		{"ITM 400 → 2 AWG Cu", 400, "2 AWG"},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			conductor, err := service.SeleccionarConductorTierra(tt.itm, tablaTierraTest)
+			conductor, err := service.SeleccionarConductorTierra(tt.itm, valueobject.MaterialCobre, tablaTierraTest)
 			require.NoError(t, err)
 			assert.Equal(t, tt.expectedCalibre, conductor.Calibre())
 			assert.Equal(t, "Cu", conductor.Material())
@@ -66,18 +76,39 @@ func TestSeleccionarConductorTierra(t *testing.T) {
 	}
 }
 
+func TestSeleccionarConductorTierra_AluminioDisponible(t *testing.T) {
+	conductor, err := service.SeleccionarConductorTierra(200, valueobject.MaterialAluminio, tablaTierraTest)
+	require.NoError(t, err)
+	assert.Equal(t, "4 AWG", conductor.Calibre())
+	assert.Equal(t, "Al", conductor.Material())
+}
+
+func TestSeleccionarConductorTierra_AluminioFallbackCu(t *testing.T) {
+	conductor, err := service.SeleccionarConductorTierra(60, valueobject.MaterialAluminio, tablaTierraTest)
+	require.NoError(t, err)
+	assert.Equal(t, "10 AWG", conductor.Calibre())
+	assert.Equal(t, "Cu", conductor.Material())
+}
+
+func TestSeleccionarConductorTierra_AluminioITMMaximo(t *testing.T) {
+	conductor, err := service.SeleccionarConductorTierra(4000, valueobject.MaterialAluminio, tablaTierraTest)
+	require.NoError(t, err)
+	assert.Equal(t, "750 MCM", conductor.Calibre())
+	assert.Equal(t, "Al", conductor.Material())
+}
+
 func TestSeleccionarConductorTierra_ITMExceedsTable(t *testing.T) {
-	_, err := service.SeleccionarConductorTierra(1200, tablaTierraTest)
+	_, err := service.SeleccionarConductorTierra(5000, valueobject.MaterialCobre, tablaTierraTest)
 	assert.Error(t, err)
 	assert.True(t, errors.Is(err, service.ErrConductorNoEncontrado))
 }
 
 func TestSeleccionarConductorTierra_InvalidITM(t *testing.T) {
-	_, err := service.SeleccionarConductorTierra(0, tablaTierraTest)
+	_, err := service.SeleccionarConductorTierra(0, valueobject.MaterialCobre, tablaTierraTest)
 	assert.Error(t, err)
 }
 
 func TestSeleccionarConductorTierra_EmptyTable(t *testing.T) {
-	_, err := service.SeleccionarConductorTierra(100, nil)
+	_, err := service.SeleccionarConductorTierra(100, valueobject.MaterialCobre, nil)
 	assert.Error(t, err)
 }
