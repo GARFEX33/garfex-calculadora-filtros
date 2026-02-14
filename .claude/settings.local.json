@@ -1,0 +1,11 @@
+{
+  "enabledPlugins": {
+    "superpowers-developing-for-claude-code@superpowers-marketplace": true,
+    "superpowers@claude-plugins-official": true
+  },
+  "permissions": {
+    "allow": [
+      "Bash(git worktree:*)"
+    ]
+  }
+}
