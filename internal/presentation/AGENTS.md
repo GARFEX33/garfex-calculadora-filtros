@@ -29,6 +29,32 @@ GET  /health                                          -> 200 {"status": "ok"}
 POST /api/v1/calculos/memoria                         -> MemoriaOutput
 ```
 
+#### POST /api/v1/calculos/memoria
+
+**Request Body** (campos obligatorios marcados con *):
+
+```json
+{
+  "modo": "MANUAL_AMPERAJE",           // * LISTADO | MANUAL_AMPERAJE | MANUAL_POTENCIA
+  "amperaje_nominal": 100,             // MANUAL_AMPERAJE
+  "potencia_nominal": 50,              // MANUAL_POTENCIA (KVAR o KVA)
+  "tension": 220,                      // * Voltaje
+  "factor_potencia": 0.9,              // Opcional, default 1.0
+  "itm": 200,                          // * Capacidad del interruptor (A)
+  "tipo_canalizacion": "TUBERIA_PVC",  // * Tipo de canalización
+  "hilos_por_fase": 1,                 // Opcional, default 1
+  "longitud_circuito": 50,             // * Metros
+  "material": "Cu",                    // Opcional: "Cu" | "Al", default "Cu"
+  "estado": "Sonora",                  // * Estado de México (para temperatura ambiente)
+  "sistema_electrico": "DELTA"         // * DELTA | ESTRELLA | BIFASICO | MONOFASICO
+}
+```
+
+**Campo `material`:**
+- Opcional, default: `"Cu"` (cobre)
+- Valores aceptados: `"Cu"`, `"cu"`, `"Al"`, `"al"` (case-insensitive)
+- Afecta selección de conductor de alimentación, tierra e impedancia
+
 ### Fase 2 (pendientes)
 
 ```

@@ -31,6 +31,13 @@ Inmutables. Encapsulan validacion y semantica. Sin dependencias externas.
 - Campos requeridos: `Calibre`, `Material`, `SeccionMM2`
 - `TipoAislamiento` vacio para conductores desnudos (tierra)
 
+### MaterialConductor
+
+- Tipo: `int` con constantes `MaterialCobre` (0) y `MaterialAluminio` (1)
+- Serialización JSON: string "CU" / "AL" (via `MarshalJSON()`)
+- Deserialización JSON: case-insensitive, acepta "Cu", "cu", "cobre", "Al", "al", "aluminio"
+- Método `String()` retorna: "CU" o "AL"
+
 ## Reglas de Value Objects
 
 - Son inmutables — no exponer setters

@@ -46,8 +46,27 @@ Pequenas y enfocadas (pocos metodos por interface).
 
 ## DTOs
 
-- **EquipoInput:** modo (LISTADO/MANUAL_AMPERAJE/MANUAL_POTENCIA), datos del equipo, parametros de instalacion, TipoCanalizacion, TemperaturaOverride
+- **EquipoInput:** modo (LISTADO/MANUAL_AMPERAJE/MANUAL_POTENCIA), datos del equipo, parametros de instalacion, TipoCanalizacion, TemperaturaOverride, **Material** (Cu/Al, default Cu)
 - **MemoriaOutput:** resultado completo de todos los pasos para el reporte
+
+### Campo Material (Cu/Al)
+
+- Tipo: `valueobject.MaterialConductor` (internamente int, JSON como string "CU"/"AL")
+- Valores aceptados: "Cu", "cu", "CU", "cobre", "Al", "al", "AL", "aluminio"
+- Default: Cobre (`MaterialCobre`) si no se especifica o string vacío
+- Afecta:
+  - Paso 4: Selección de conductor de alimentación (tabla ampacidad Cu vs Al)
+  - Paso 5: Selección de conductor de tierra según ITM + material
+  - Paso 7: Cálculo de caída de tensión (R y X diferente por material)
+
+### Conductor de Tierra - Lógica de Material (Paso 5)
+
+1. Buscar entrada en tabla 250-122 donde `ITM <= ITMHasta`
+2. Si `material == Al` Y entrada tiene `ConductorAl` → usar Al
+3. Si `material == Al` PERO entrada NO tiene `ConductorAl` → **fallback a Cu** (regla NOM)
+4. Si `material == Cu` → usar siempre Cu
+
+Tabla 250-122 solo tiene Al para ITM > 100A (aprox). Para ITM ≤ 100A, Al no está definido → siempre fallback a Cu.
 
 ## Convenciones
 
