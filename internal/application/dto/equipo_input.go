@@ -36,7 +36,7 @@ type EquipoInput struct {
 	TipoCanalizacion      entity.TipoCanalizacion
 	TemperaturaOverride   *valueobject.Temperatura      // nil = usar lógica por defecto
 	HilosPorFase          int                           // default: 1
-	Material              valueobject.MaterialConductor // "Cu" o "Al"; si vacío, default Cu
+	Material              valueobject.MaterialConductor `json:"material"` // "Cu" o "Al"; si vacío, default Cu
 	LongitudCircuito      float64                       // metros, para caída de tensión
 	PorcentajeCaidaMaximo float64                       // default: 3.0%
 

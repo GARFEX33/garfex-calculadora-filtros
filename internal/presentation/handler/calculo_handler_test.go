@@ -25,7 +25,7 @@ type mockTablaRepo struct{}
 
 func (m *mockTablaRepo) ObtenerTablaTierra(ctx context.Context) ([]valueobject.EntradaTablaTierra, error) {
 	return []valueobject.EntradaTablaTierra{
-		{ITMHasta: 100, Conductor: valueobject.ConductorParams{Calibre: "8 AWG", Material: "Cu", SeccionMM2: 8.37}},
+		{ITMHasta: 100, ConductorCu: valueobject.ConductorParams{Calibre: "8 AWG", Material: "Cu", SeccionMM2: 8.37}},
 	}, nil
 }
 

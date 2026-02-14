@@ -45,96 +45,17 @@ Los factores se calculan **automáticamente** a partir de estos inputs.
 
 Temperatura promedio anual por estado de México.
 
-```csv
-estado,temperatura_promedio_c
-Aguascalientes,18
-Baja California,22
-Baja California Sur,25
-Campeche,26
-Coahuila,21
-Colima,26
-Chiapas,24
-Chihuahua,19
-Ciudad de Mexico,16
-Durango,17
-Guanajuato,19
-Guerrero,26
-Hidalgo,18
-Jalisco,21
-Mexico,16
-Michoacan,21
-Morelos,21
-Nayarit,25
-Nuevo Leon,21
-Oaxaca,24
-Puebla,18
-Queretaro,19
-Quintana Roo,26
-San Luis Potosi,20
-Sinaloa,25
-Sonora,24
-Tabasco,27
-Tamaulipas,24
-Tlaxcala,16
-Veracruz,24
-Yucatan,26
-Zacatecas,17
-```
-
 ### 2. 310-15-b-2-a.csv
 
 Factores de corrección por temperatura ambiente (NOM-001-SEDE Tabla 310-15(b)(2)(a)).
-
-```csv
-rango_temp_c,factor_60c,factor_75c,factor_90c
-10-15,1.20,1.15,1.12
-16-20,1.15,1.11,1.09
-21-25,1.10,1.07,1.05
-26-30,1.05,1.03,1.02
-31-35,1.00,1.00,1.00
-36-40,0.94,0.95,0.96
-41-45,0.88,0.90,0.91
-46-50,0.82,0.85,0.87
-51-55,0.75,0.80,0.82
-56-60,0.67,0.74,0.77
-61-70,0.58,0.67,0.71
-71-80,0.47,0.58,0.63
-```
 
 ### 3. 310-15-b-3-a.csv
 
 Factores de ajuste por cantidad de conductores (NOM-001-SEDE Tabla 310-15(b)(3)(a)).
 
-```csv
-cantidad_conductores,factor
-1,1.00
-2,0.80
-3,0.70
-4,0.65
-5-6,0.60
-7-9,0.50
-10-20,0.45
-21-30,0.40
-31-40,0.35
-41+,0.30
-```
-
 ### 4. charola_dimensiones.csv
 
 Tamaños comerciales de charola portacables.
-
-```csv
-tamano_pulgadas,ancho_mm,tipo
-6,152.4,comercial
-9,228.6,comercial
-12,304.8,comercial
-16,406.4,comercial
-18,457.2,comercial
-20,508.0,comercial
-24,609.6,comercial
-30,762.0,comercial
-36,914.4,comercial
-```
 
 ### 5. Tablas existentes a usar
 

@@ -12,12 +12,10 @@ type EntradaTablaConductor struct {
 
 // EntradaTablaTierra represents one row from NOM table 250-122.
 // Entries must be sorted by ITMHasta ascending.
-// ConductorCu is always present. ConductorAl is nil when aluminium is not
-// permitted for this ITM range (per NOM) — callers fall back to ConductorCu.
 type EntradaTablaTierra struct {
 	ITMHasta    int
-	ConductorCu ConductorParams  // always present
-	ConductorAl *ConductorParams // nil = not available for this ITM, use Cu fallback
+	ConductorCu ConductorParams
+	ConductorAl *ConductorParams // nil = not permitted for this ITM range
 }
 
 // EntradaTablaCanalizacion represents one row from a conduit sizing table.

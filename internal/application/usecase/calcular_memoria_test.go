@@ -85,8 +85,8 @@ func (m *mockEquipoRepository) BuscarPorClave(ctx context.Context, clave string)
 func TestCalcularMemoriaUseCase_Execute_ManualAmperaje(t *testing.T) {
 	// Setup mocks
 	tablaTierra := []valueobject.EntradaTablaTierra{
-		{ITMHasta: 100, Conductor: valueobject.ConductorParams{Calibre: "8 AWG", Material: "Cu", SeccionMM2: 8.37}},
-		{ITMHasta: 200, Conductor: valueobject.ConductorParams{Calibre: "6 AWG", Material: "Cu", SeccionMM2: 13.3}},
+		{ITMHasta: 100, ConductorCu: valueobject.ConductorParams{Calibre: "8 AWG", Material: "Cu", SeccionMM2: 8.37}},
+		{ITMHasta: 200, ConductorCu: valueobject.ConductorParams{Calibre: "6 AWG", Material: "Cu", SeccionMM2: 13.3}},
 	}
 
 	tablaAmpacidad := []valueobject.EntradaTablaConductor{

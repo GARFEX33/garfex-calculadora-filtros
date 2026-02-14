@@ -40,6 +40,7 @@ type CalcularMemoriaRequest struct {
 	HilosPorFase       int     `json:"hilos_por_fase,omitempty"`
 	LongitudCircuito   float64 `json:"longitud_circuito" binding:"required,gt=0"`
 	PorcentajeCaidaMax float64 `json:"porcentaje_caida_max,omitempty"`
+	Material           string  `json:"material,omitempty"` // "Cu" o "Al"; default: Cu
 	Estado             string  `json:"estado" binding:"required"`
 	SistemaElectrico   string  `json:"sistema_electrico" binding:"required"`
 }
@@ -139,6 +140,19 @@ func (h *CalculoHandler) mapRequestToDTO(req CalcularMemoriaRequest) (dto.Equipo
 		return dto.EquipoInput{}, fmt.Errorf("sistema eléctrico inválido: %w", err)
 	}
 
+	// Parsear material (default: cobre)
+	material := valueobject.MaterialCobre
+	if req.Material != "" {
+		switch req.Material {
+		case "Al", "AL", "aluminio", "Aluminio":
+			material = valueobject.MaterialAluminio
+		case "Cu", "CU", "cobre", "Cobre":
+			material = valueobject.MaterialCobre
+		default:
+			return dto.EquipoInput{}, fmt.Errorf("material inválido: %s (esperado Cu o Al)", req.Material)
+		}
+	}
+
 	input := dto.EquipoInput{
 		Modo:                  modo,
 		Clave:                 req.Clave,
@@ -153,6 +167,7 @@ func (h *CalculoHandler) mapRequestToDTO(req CalcularMemoriaRequest) (dto.Equipo
 		HilosPorFase:          req.HilosPorFase,
 		LongitudCircuito:      req.LongitudCircuito,
 		PorcentajeCaidaMaximo: req.PorcentajeCaidaMax,
+		Material:              material,
 		Estado:                req.Estado,
 		SistemaElectrico:      sistemaElectrico,
 	}
