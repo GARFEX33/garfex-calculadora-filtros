@@ -112,11 +112,38 @@ func TestNewConductor_Minimal(t *testing.T) {
 func TestNewConductor_ExtremosCalibre(t *testing.T) {
 	base := conductor12AWGCu()
 
-	base.Calibre = "18 AWG"
+	// Extremo inferior: 14 AWG
+	base.Calibre = "14 AWG"
 	_, err := valueobject.NewConductor(base)
 	assert.NoError(t, err)
 
+	// Extremo superior: 1000 MCM
+	base.Calibre = "1000 MCM"
+	_, err = valueobject.NewConductor(base)
+	assert.NoError(t, err)
+
+	// Calibres eliminados: ahora inválidos
+	base.Calibre = "18 AWG"
+	_, err = valueobject.NewConductor(base)
+	assert.Error(t, err)
+
+	base.Calibre = "16 AWG"
+	_, err = valueobject.NewConductor(base)
+	assert.Error(t, err)
+
+	base.Calibre = "3 AWG"
+	_, err = valueobject.NewConductor(base)
+	assert.Error(t, err)
+
+	base.Calibre = "1 AWG"
+	_, err = valueobject.NewConductor(base)
+	assert.Error(t, err)
+
 	base.Calibre = "2000 MCM"
+	_, err = valueobject.NewConductor(base)
+	assert.Error(t, err)
+
+	base.Calibre = "750 MCM"
 	_, err = valueobject.NewConductor(base)
 	assert.NoError(t, err)
 }
