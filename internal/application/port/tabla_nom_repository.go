@@ -18,6 +18,15 @@ type TablaNOMRepository interface {
 		temperatura valueobject.Temperatura,
 	) ([]valueobject.EntradaTablaConductor, error)
 
+	// ObtenerCapacidadConductor returns the ampacity for a specific calibre.
+	ObtenerCapacidadConductor(
+		ctx context.Context,
+		canalizacion entity.TipoCanalizacion,
+		material valueobject.MaterialConductor,
+		temperatura valueobject.Temperatura,
+		calibre string,
+	) (float64, error)
+
 	// ObtenerTablaTierra returns the ground conductor table (250-122).
 	ObtenerTablaTierra(ctx context.Context) ([]valueobject.EntradaTablaTierra, error)
 
