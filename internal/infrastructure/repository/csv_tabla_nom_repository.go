@@ -217,6 +217,28 @@ func (r *CSVTablaNOMRepository) ObtenerTablaAmpacidad(
 	return tabla, nil
 }
 
+// ObtenerCapacidadConductor returns the ampacity for a specific calibre.
+func (r *CSVTablaNOMRepository) ObtenerCapacidadConductor(
+	ctx context.Context,
+	canalizacion entity.TipoCanalizacion,
+	material valueobject.MaterialConductor,
+	temperatura valueobject.Temperatura,
+	calibre string,
+) (float64, error) {
+	tabla, err := r.ObtenerTablaAmpacidad(ctx, canalizacion, material, temperatura)
+	if err != nil {
+		return 0, fmt.Errorf("obtener tabla ampacidad: %w", err)
+	}
+
+	for _, entrada := range tabla {
+		if entrada.Conductor.Calibre == calibre {
+			return entrada.Capacidad, nil
+		}
+	}
+
+	return 0, fmt.Errorf("calibre %s no encontrado en tabla", calibre)
+}
+
 // ObtenerImpedancia returns R and X values for the given calibre and conduit type.
 func (r *CSVTablaNOMRepository) ObtenerImpedancia(
 	ctx context.Context,

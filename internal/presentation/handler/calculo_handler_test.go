@@ -67,6 +67,11 @@ func (m *mockTablaRepo) ObtenerCharolaPorAncho(ctx context.Context, anchoRequeri
 	return valueobject.EntradaTablaCanalizacion{Tamano: "100mm", AreaInteriorMM2: 5000}, nil
 }
 
+func (m *mockTablaRepo) ObtenerCapacidadConductor(ctx context.Context, canalizacion entity.TipoCanalizacion, material valueobject.MaterialConductor, temperatura valueobject.Temperatura, calibre string) (float64, error) {
+	// Simple mock implementation
+	return 55, nil
+}
+
 type mockEquipoRepo struct{}
 
 func (m *mockEquipoRepo) BuscarPorClave(ctx context.Context, clave string) (entity.CalculadorCorriente, error) {
