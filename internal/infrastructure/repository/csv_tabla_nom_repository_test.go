@@ -38,7 +38,7 @@ func TestCSVTablaNOMRepository_ObtenerTablaTierra(t *testing.T) {
 
 	// Check first entry
 	assert.Equal(t, 15, tabla[0].ITMHasta)
-	assert.Equal(t, "14 AWG", tabla[0].Conductor.Calibre)
+	assert.Equal(t, "14 AWG", tabla[0].ConductorCu.Calibre)
 }
 
 func TestCSVTablaNOMRepository_ObtenerTablaAmpacidad(t *testing.T) {

@@ -366,42 +366,54 @@ func (r *CSVTablaNOMRepository) loadTablaTierra() ([]valueobject.EntradaTablaTie
 
 	// Validate header
 	header := records[0]
-	expectedHeader := []string{"itm_hasta", "calibre", "seccion_mm2", "material"}
+	expectedHeader := []string{"itm_hasta", "cu_calibre", "cu_seccion_mm2", "al_calibre", "al_seccion_mm2"}
 	for i, col := range expectedHeader {
 		if i >= len(header) || header[i] != col {
-			return nil, fmt.Errorf("250-122.csv: invalid header, expected %v at position %d", expectedHeader, i)
+			return nil, fmt.Errorf("250-122.csv: invalid header at position %d, expected %q got %q", i, col, header[i])
 		}
 	}
 
 	var result []valueobject.EntradaTablaTierra
 	for i, record := range records[1:] {
+		if len(record) < 3 {
+			continue
+		}
+
 		itm, err := strconv.Atoi(record[0])
 		if err != nil {
 			return nil, fmt.Errorf("250-122.csv line %d: invalid ITM value: %w", i+2, err)
 		}
 
-		seccion, err := strconv.ParseFloat(record[2], 64)
+		cuSeccion, err := strconv.ParseFloat(record[2], 64)
 		if err != nil {
-			return nil, fmt.Errorf("250-122.csv line %d: invalid seccion_mm2: %w", i+2, err)
+			return nil, fmt.Errorf("250-122.csv line %d: invalid cu_seccion_mm2: %w", i+2, err)
 		}
 
-		// Normalizar material (CU -> Cu, AL -> Al)
-		material := record[3]
-		switch material {
-		case "CU":
-			material = "Cu"
-		case "AL":
-			material = "Al"
-		}
-
-		result = append(result, valueobject.EntradaTablaTierra{
+		entrada := valueobject.EntradaTablaTierra{
 			ITMHasta: itm,
-			Conductor: valueobject.ConductorParams{
+			ConductorCu: valueobject.ConductorParams{
 				Calibre:    record[1],
-				SeccionMM2: seccion,
-				Material:   material,
+				Material:   "Cu",
+				SeccionMM2: cuSeccion,
 			},
-		})
+			ConductorAl: nil,
+		}
+
+		// Parse Al columns if present and non-empty
+		if len(record) >= 5 && record[3] != "" && record[4] != "" {
+			alSeccion, err := strconv.ParseFloat(record[4], 64)
+			if err != nil {
+				return nil, fmt.Errorf("250-122.csv line %d: invalid al_seccion_mm2: %w", i+2, err)
+			}
+			alParams := valueobject.ConductorParams{
+				Calibre:    record[3],
+				Material:   "Al",
+				SeccionMM2: alSeccion,
+			}
+			entrada.ConductorAl = &alParams
+		}
+
+		result = append(result, entrada)
 	}
 
 	return result, nil
