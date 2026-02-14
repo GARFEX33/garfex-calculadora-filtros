@@ -7,7 +7,7 @@ import (
 
 	"github.com/garfex/calculadora-filtros/internal/application/dto"
 	"github.com/garfex/calculadora-filtros/internal/application/port"
-	"github.com/garfex/calculadora-filtros/internal/application/usecase/helpers"
+	"github.com/garfex/calculadora-filtros/internal/presentation/formatters"
 )
 
 // OrquestadorMemoriaCalculo orquesta el cálculo completo de memoria.
@@ -187,7 +187,7 @@ func (o *OrquestadorMemoriaCalculo) Execute(ctx context.Context, input dto.Equip
 	}
 
 	// Generar observaciones
-	output.Observaciones = helpers.GenerarObservaciones(output)
+	output.Observaciones = formatters.GenerarObservaciones(output)
 	output.CumpleNormativa = resultadoCaida.Cumple
 
 	return output, nil

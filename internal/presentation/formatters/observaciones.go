@@ -1,4 +1,5 @@
-package helpers
+// internal/presentation/formatters/observaciones.go
+package formatters
 
 import (
 	"fmt"
@@ -6,6 +7,7 @@ import (
 	"github.com/garfex/calculadora-filtros/internal/application/dto"
 )
 
+// GenerarObservaciones genera observaciones sobre el cálculo.
 func GenerarObservaciones(output dto.MemoriaOutput) []string {
 	var obs []string
 

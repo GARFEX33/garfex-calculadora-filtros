@@ -1,4 +1,5 @@
-package helpers
+// internal/presentation/formatters/observaciones_test.go
+package formatters
 
 import (
 	"testing"

@@ -1,4 +1,5 @@
-package helpers
+// internal/presentation/formatters/nombre_tabla.go
+package formatters
 
 import (
 	"fmt"
@@ -6,11 +7,13 @@ import (
 	"github.com/garfex/calculadora-filtros/internal/domain/valueobject"
 )
 
+// NombreTablaAmpacidad genera el nombre descriptivo de la tabla NOM usada.
 func NombreTablaAmpacidad(
 	canalizacion string,
 	material valueobject.MaterialConductor,
 	temperatura valueobject.Temperatura,
 ) string {
+	// Mapeo de canalización a tabla NOM
 	var tabla string
 	switch canalizacion {
 	case "TUBERIA_PVC", "TUBERIA_ALUMINIO", "TUBERIA_ACERO_PG", "TUBERIA_ACERO_PD":
@@ -23,11 +26,13 @@ func NombreTablaAmpacidad(
 		tabla = "NOM-310-15-B-16"
 	}
 
+	// Material
 	mat := "Cu"
 	if material == valueobject.MaterialAluminio {
 		mat = "Al"
 	}
 
+	// Temperatura
 	temp := "75°C"
 	switch temperatura {
 	case valueobject.Temp60:

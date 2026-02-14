@@ -1,4 +1,5 @@
-package helpers
+// internal/presentation/formatters/nombre_tabla_test.go
+package formatters
 
 import (
 	"testing"

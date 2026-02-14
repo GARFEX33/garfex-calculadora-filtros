@@ -6,10 +6,10 @@ import (
 	"fmt"
 
 	"github.com/garfex/calculadora-filtros/internal/application/port"
-	"github.com/garfex/calculadora-filtros/internal/application/usecase/helpers"
 	"github.com/garfex/calculadora-filtros/internal/domain/entity"
 	"github.com/garfex/calculadora-filtros/internal/domain/service"
 	"github.com/garfex/calculadora-filtros/internal/domain/valueobject"
+	"github.com/garfex/calculadora-filtros/internal/presentation/formatters"
 )
 
 // ResultadoConductores contiene los conductores seleccionados.
@@ -74,7 +74,7 @@ func (uc *SeleccionarConductorUseCase) Execute(
 	}
 
 	// Determinar nombre de tabla usada según canalización
-	tablaUsada := helpers.NombreTablaAmpacidad(string(tipoCanalizacion), material, temperatura)
+	tablaUsada := formatters.NombreTablaAmpacidad(string(tipoCanalizacion), material, temperatura)
 
 	return ResultadoConductores{
 		Alimentacion: conductor,
