@@ -20,7 +20,7 @@ func TestAjustarCorriente_SingleFactor(t *testing.T) {
 
 	result, err := service.AjustarCorriente(cn, factores)
 	require.NoError(t, err)
-	assert.InDelta(t, 125.0, result.Valor(), 0.001)
+	assert.InDelta(t, 125.0, result.CorrienteAjustada.Valor(), 0.001)
 }
 
 func TestAjustarCorriente_MultipleFactors(t *testing.T) {
@@ -36,7 +36,7 @@ func TestAjustarCorriente_MultipleFactors(t *testing.T) {
 	// 100 × 1.25 × 0.88 × 0.80 = 88.0
 	result, err := service.AjustarCorriente(cn, factores)
 	require.NoError(t, err)
-	assert.InDelta(t, 88.0, result.Valor(), 0.01)
+	assert.InDelta(t, 88.0, result.CorrienteAjustada.Valor(), 0.01)
 }
 
 func TestAjustarCorriente_EmptyFactors(t *testing.T) {
@@ -45,7 +45,7 @@ func TestAjustarCorriente_EmptyFactors(t *testing.T) {
 
 	result, err := service.AjustarCorriente(cn, nil)
 	require.NoError(t, err)
-	assert.InDelta(t, 100.0, result.Valor(), 0.001)
+	assert.InDelta(t, 100.0, result.CorrienteAjustada.Valor(), 0.001)
 }
 
 func TestAjustarCorriente_ZeroFactorFails(t *testing.T) {

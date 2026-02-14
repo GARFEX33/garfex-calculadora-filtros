@@ -16,7 +16,7 @@ func entradaTierraCu(itmHasta int, calibre string, seccionMM2 float64) valueobje
 		ITMHasta: itmHasta,
 		ConductorCu: valueobject.ConductorParams{
 			Calibre:    calibre,
-			Material:   "Cu",
+			Material:   valueobject.MaterialCobre,
 			SeccionMM2: seccionMM2,
 		},
 		ConductorAl: nil,
@@ -26,14 +26,14 @@ func entradaTierraCu(itmHasta int, calibre string, seccionMM2 float64) valueobje
 func entradaTierraCuAl(itmHasta int, cuCalibre string, cuSeccion float64, alCalibre string, alSeccion float64) valueobject.EntradaTablaTierra {
 	al := valueobject.ConductorParams{
 		Calibre:    alCalibre,
-		Material:   "Al",
+		Material:   valueobject.MaterialAluminio,
 		SeccionMM2: alSeccion,
 	}
 	return valueobject.EntradaTablaTierra{
 		ITMHasta: itmHasta,
 		ConductorCu: valueobject.ConductorParams{
 			Calibre:    cuCalibre,
-			Material:   "Cu",
+			Material:   valueobject.MaterialCobre,
 			SeccionMM2: cuSeccion,
 		},
 		ConductorAl: &al,
@@ -71,7 +71,7 @@ func TestSeleccionarConductorTierra_CuExplicito(t *testing.T) {
 			conductor, err := service.SeleccionarConductorTierra(tt.itm, valueobject.MaterialCobre, tablaTierraTest)
 			require.NoError(t, err)
 			assert.Equal(t, tt.expectedCalibre, conductor.Calibre())
-			assert.Equal(t, "Cu", conductor.Material())
+			assert.Equal(t, valueobject.MaterialCobre, conductor.Material())
 		})
 	}
 }
@@ -80,21 +80,21 @@ func TestSeleccionarConductorTierra_AluminioDisponible(t *testing.T) {
 	conductor, err := service.SeleccionarConductorTierra(200, valueobject.MaterialAluminio, tablaTierraTest)
 	require.NoError(t, err)
 	assert.Equal(t, "4 AWG", conductor.Calibre())
-	assert.Equal(t, "Al", conductor.Material())
+	assert.Equal(t, valueobject.MaterialAluminio, conductor.Material())
 }
 
 func TestSeleccionarConductorTierra_AluminioFallbackCu(t *testing.T) {
 	conductor, err := service.SeleccionarConductorTierra(60, valueobject.MaterialAluminio, tablaTierraTest)
 	require.NoError(t, err)
 	assert.Equal(t, "10 AWG", conductor.Calibre())
-	assert.Equal(t, "Cu", conductor.Material())
+	assert.Equal(t, valueobject.MaterialCobre, conductor.Material())
 }
 
 func TestSeleccionarConductorTierra_AluminioITMMaximo(t *testing.T) {
 	conductor, err := service.SeleccionarConductorTierra(4000, valueobject.MaterialAluminio, tablaTierraTest)
 	require.NoError(t, err)
 	assert.Equal(t, "750 MCM", conductor.Calibre())
-	assert.Equal(t, "Al", conductor.Material())
+	assert.Equal(t, valueobject.MaterialAluminio, conductor.Material())
 }
 
 func TestSeleccionarConductorTierra_ITMExceedsTable(t *testing.T) {

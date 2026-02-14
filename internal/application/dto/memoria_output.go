@@ -1,10 +1,6 @@
 // internal/application/dto/memoria_output.go
 package dto
 
-import (
-	"github.com/garfex/calculadora-filtros/internal/domain/entity"
-)
-
 // PasoMemoria representa un paso individual del cálculo.
 type PasoMemoria struct {
 	Numero      int
@@ -24,7 +20,6 @@ type ResultadoConductor struct {
 
 // ResultadoCanalizacion contiene la información de la canalización.
 type ResultadoCanalizacion struct {
-	Tipo             entity.TipoCanalizacion
 	Tamano           string
 	AreaTotalMM2     float64
 	AreaRequeridaMM2 float64
@@ -40,20 +35,42 @@ type ResultadoCaidaTension struct {
 	ResistenciaEfectiva float64 // R·cosθ + X·senθ
 }
 
+// EntradaDimensionarCanalizacion es el DTO de entrada para DimensionarCanalizacionUseCase.
+type EntradaDimensionarCanalizacion struct {
+	ConductorAlimentacionSeccionMM2 float64
+	ConductorTierraSeccionMM2       float64
+	HilosPorFase                    int
+	TipoCanalizacion                string
+}
+
+// ResultadoAjusteCorriente contiene el resultado del ajuste de corriente.
+type ResultadoAjusteCorriente struct {
+	CorrienteAjustada  float64 `json:"corriente_ajustada"`
+	FactorTemperatura  float64 `json:"factor_temperatura"`
+	FactorAgrupamiento float64 `json:"factor_agrupamiento"`
+	FactorTotal        float64 `json:"factor_total"`
+	Temperatura        int     `json:"temperatura"` // 60 o 75
+}
+
+// ResultadoCorriente contains the result of the current calculation.
+type ResultadoCorriente struct {
+	CorrienteNominal float64 `json:"corriente_nominal"`
+}
+
 // MemoriaOutput contiene el resultado completo de todos los pasos.
 // Es el DTO de salida para el use case CalcularMemoria.
 type MemoriaOutput struct {
 	// Información del equipo
-	TipoEquipo     entity.TipoEquipo `json:"tipo_equipo"`
-	Clave          string            `json:"clave"`
-	Tension        int               `json:"tension"`
-	FactorPotencia float64           `json:"factor_potencia"`
+	TipoEquipo     string  `json:"tipo_equipo"`
+	Clave          string  `json:"clave"`
+	Tension        int     `json:"tension"`
+	FactorPotencia float64 `json:"factor_potencia"`
 
 	// NUEVOS: Información de cálculo
-	Estado              string                  `json:"estado"`
-	TemperaturaAmbiente int                     `json:"temperatura_ambiente"`
-	SistemaElectrico    entity.SistemaElectrico `json:"sistema_electrico"`
-	CantidadConductores int                     `json:"cantidad_conductores"`
+	Estado              string           `json:"estado"`
+	TemperaturaAmbiente int              `json:"temperatura_ambiente"`
+	SistemaElectrico    SistemaElectrico `json:"sistema_electrico"`
+	CantidadConductores int              `json:"cantidad_conductores"`
 
 	// Factores calculados
 	FactorTemperaturaCalculado  float64 `json:"factor_temperatura_calculado"`
@@ -71,7 +88,7 @@ type MemoriaOutput struct {
 	CorrientePorHilo   float64 `json:"corriente_por_hilo"`
 
 	// Paso 3: Tipo de Canalización
-	TipoCanalizacion entity.TipoCanalizacion `json:"tipo_canalizacion"`
+	TipoCanalizacion string `json:"tipo_canalizacion"`
 
 	// Material del conductor
 	Material string `json:"material"` // "Cu" o "Al"

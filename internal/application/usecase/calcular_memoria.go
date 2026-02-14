@@ -38,7 +38,7 @@ func (uc *CalcularMemoriaUseCase) Execute(ctx context.Context, input dto.EquipoI
 	}
 
 	output := dto.MemoriaOutput{
-		TipoEquipo:       input.TipoEquipo,
+		TipoEquipo:       string(input.TipoEquipo),
 		Clave:            input.Clave,
 		Tension:          input.Tension.Valor(),
 		FactorPotencia:   input.FactorPotencia,
@@ -114,12 +114,12 @@ func (uc *CalcularMemoriaUseCase) Execute(ctx context.Context, input dto.EquipoI
 	// ============================================================================
 	// PASO 2: Ajustar Corriente
 	// ============================================================================
-	corrienteAjustada, err := service.AjustarCorriente(corrienteNominal, factores)
+	resultadoAjuste, err := service.AjustarCorriente(corrienteNominal, factores)
 	if err != nil {
 		return dto.MemoriaOutput{}, fmt.Errorf("paso 2 - ajustar corriente: %w", err)
 	}
-	output.CorrienteAjustada = corrienteAjustada.Valor()
-	output.CorrientePorHilo = corrienteAjustada.Valor() / float64(hilosPorFase)
+	output.CorrienteAjustada = resultadoAjuste.CorrienteAjustada.Valor()
+	output.CorrientePorHilo = resultadoAjuste.CorrienteAjustada.Valor() / float64(hilosPorFase)
 
 	// ============================================================================
 	// PASO 3: Seleccionar TipoCanalizacion (ya viene en input)
@@ -136,23 +136,23 @@ func (uc *CalcularMemoriaUseCase) Execute(ctx context.Context, input dto.EquipoI
 	output.Material = material.String()
 
 	// Obtener tabla de ampacidad
-	tablaAmpacidad, err := uc.tablaRepo.ObtenerTablaAmpacidad(ctx, input.TipoCanalizacion, material, temperatura)
+	tablaAmpacidad, err := uc.tablaRepo.ObtenerTablaAmpacidad(ctx, input.ToEntityTipoCanalizacion(), material, temperatura)
 	if err != nil {
 		return dto.MemoriaOutput{}, fmt.Errorf("paso 4 - obtener tabla ampacidad: %w", err)
 	}
 
 	// Seleccionar conductor
-	conductor, err := service.SeleccionarConductorAlimentacion(corrienteAjustada, hilosPorFase, tablaAmpacidad)
+	conductor, err := service.SeleccionarConductorAlimentacion(resultadoAjuste.CorrienteAjustada, hilosPorFase, tablaAmpacidad)
 	if err != nil {
 		return dto.MemoriaOutput{}, fmt.Errorf("paso 4 - seleccionar conductor: %w", err)
 	}
 
 	// Determinar nombre de tabla usada según canalización
-	tablaUsada := uc.nombreTablaAmpacidad(input.TipoCanalizacion, material, temperatura)
+	tablaUsada := uc.nombreTablaAmpacidad(input.ToEntityTipoCanalizacion(), material, temperatura)
 
 	output.ConductorAlimentacion = dto.ResultadoConductor{
 		Calibre:         conductor.Calibre(),
-		Material:        conductor.Material(),
+		Material:        conductor.Material().String(),
 		SeccionMM2:      conductor.SeccionMM2(),
 		TipoAislamiento: conductor.TipoAislamiento(),
 		Capacidad:       uc.buscarCapacidadEnTabla(tablaAmpacidad, conductor.Calibre()),
@@ -174,14 +174,14 @@ func (uc *CalcularMemoriaUseCase) Execute(ctx context.Context, input dto.EquipoI
 
 	output.ConductorTierra = dto.ResultadoConductor{
 		Calibre:    conductorTierra.Calibre(),
-		Material:   conductorTierra.Material(),
+		Material:   conductorTierra.Material().String(),
 		SeccionMM2: conductorTierra.SeccionMM2(),
 	}
 
 	// ============================================================================
 	// PASO 6: Dimensionar Canalización
 	// ============================================================================
-	tablaCanalizacion, err := uc.tablaRepo.ObtenerTablaCanalizacion(ctx, input.TipoCanalizacion)
+	tablaCanalizacion, err := uc.tablaRepo.ObtenerTablaCanalizacion(ctx, input.ToEntityTipoCanalizacion())
 	if err != nil {
 		return dto.MemoriaOutput{}, fmt.Errorf("paso 6 - obtener tabla canalización: %w", err)
 	}
@@ -197,7 +197,6 @@ func (uc *CalcularMemoriaUseCase) Execute(ctx context.Context, input dto.EquipoI
 	}
 
 	output.Canalizacion = dto.ResultadoCanalizacion{
-		Tipo:             input.TipoCanalizacion,
 		Tamano:           canalizacion.Tamano,
 		AreaTotalMM2:     canalizacion.AnchoRequerido,
 		AreaRequeridaMM2: canalizacion.AnchoRequerido / 0.40,
@@ -207,7 +206,7 @@ func (uc *CalcularMemoriaUseCase) Execute(ctx context.Context, input dto.EquipoI
 	// ============================================================================
 	// PASO 7: Calcular Caída de Tensión
 	// ============================================================================
-	impedancia, err := uc.tablaRepo.ObtenerImpedancia(ctx, conductor.Calibre(), input.TipoCanalizacion, material)
+	impedancia, err := uc.tablaRepo.ObtenerImpedancia(ctx, conductor.Calibre(), input.ToEntityTipoCanalizacion(), material)
 	if err != nil {
 		return dto.MemoriaOutput{}, fmt.Errorf("paso 7 - obtener impedancia: %w", err)
 	}
@@ -215,14 +214,14 @@ func (uc *CalcularMemoriaUseCase) Execute(ctx context.Context, input dto.EquipoI
 	entradaCaida := service.EntradaCalculoCaidaTension{
 		ResistenciaOhmPorKm: impedancia.R,
 		ReactanciaOhmPorKm:  impedancia.X,
-		TipoCanalizacion:    input.TipoCanalizacion,
+		TipoCanalizacion:    input.ToEntityTipoCanalizacion(),
 		HilosPorFase:        hilosPorFase,
 		FactorPotencia:      input.FactorPotencia,
 	}
 
 	resultadoCaida, err := service.CalcularCaidaTension(
 		entradaCaida,
-		corrienteAjustada,
+		resultadoAjuste.CorrienteAjustada,
 		input.LongitudCircuito,
 		input.Tension,
 		limiteCaida,
@@ -283,7 +282,7 @@ func (uc *CalcularMemoriaUseCase) seleccionarTemperatura(corriente valueobject.C
 	// Reglas según AGENTS.md de application
 	if corriente.Valor() <= 100 {
 		// <= 100A -> 60C (o 75C si charola triangular sin columna 60C)
-		if input.TipoCanalizacion == entity.TipoCanalizacionCharolaCableTriangular {
+		if input.ToEntityTipoCanalizacion() == entity.TipoCanalizacionCharolaCableTriangular {
 			return valueobject.Temp75
 		}
 		return valueobject.Temp60

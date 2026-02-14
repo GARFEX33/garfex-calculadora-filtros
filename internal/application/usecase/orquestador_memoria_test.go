@@ -24,13 +24,13 @@ type mockRepoForIntegration struct {
 func newMockRepoForIntegration() *mockRepoForIntegration {
 	return &mockRepoForIntegration{
 		tablaTierra: []valueobject.EntradaTablaTierra{
-			{ITMHasta: 100, ConductorCu: valueobject.ConductorParams{Calibre: "8 AWG", Material: "Cu", SeccionMM2: 8.37}},
-			{ITMHasta: 200, ConductorCu: valueobject.ConductorParams{Calibre: "6 AWG", Material: "Cu", SeccionMM2: 13.3}},
+			{ITMHasta: 100, ConductorCu: valueobject.ConductorParams{Calibre: "8 AWG", Material: valueobject.MaterialCobre, SeccionMM2: 8.37}},
+			{ITMHasta: 200, ConductorCu: valueobject.ConductorParams{Calibre: "6 AWG", Material: valueobject.MaterialCobre, SeccionMM2: 13.3}},
 		},
 		tablaAmpacidad: []valueobject.EntradaTablaConductor{
-			{Capacidad: 30, Conductor: valueobject.ConductorParams{Calibre: "10 AWG", Material: "Cu", SeccionMM2: 5.26}},
-			{Capacidad: 55, Conductor: valueobject.ConductorParams{Calibre: "8 AWG", Material: "Cu", SeccionMM2: 8.37}},
-			{Capacidad: 75, Conductor: valueobject.ConductorParams{Calibre: "6 AWG", Material: "Cu", SeccionMM2: 13.3}},
+			{Capacidad: 30, Conductor: valueobject.ConductorParams{Calibre: "10 AWG", Material: valueobject.MaterialCobre, SeccionMM2: 5.26}},
+			{Capacidad: 55, Conductor: valueobject.ConductorParams{Calibre: "8 AWG", Material: valueobject.MaterialCobre, SeccionMM2: 8.37}},
+			{Capacidad: 75, Conductor: valueobject.ConductorParams{Calibre: "6 AWG", Material: valueobject.MaterialCobre, SeccionMM2: 13.3}},
 		},
 		tablaCanalizacion: []valueobject.EntradaTablaCanalizacion{
 			{Tamano: "1/2", AreaInteriorMM2: 78},
@@ -82,6 +82,27 @@ func (m *mockRepoForIntegration) ObtenerFactorAgrupamiento(ctx context.Context, 
 	return 1.0, nil
 }
 
+// mockSeleccionarTemperatura implements SeleccionarTemperaturaPort for testing
+type mockSeleccionarTemperatura struct{}
+
+func (m *mockSeleccionarTemperatura) SeleccionarTemperatura(
+	corriente valueobject.Corriente,
+	tipoCanalizacion entity.TipoCanalizacion,
+	override *valueobject.Temperatura,
+) valueobject.Temperatura {
+	// Default to 60°C for testing
+	if override != nil {
+		return *override
+	}
+	if corriente.Valor() <= 100 {
+		return valueobject.Temp60
+	}
+	return valueobject.Temp75
+}
+
+// mockAjustarCorriente implements AjustarCorrientePort for testing
+type mockAjustarCorriente struct{}
+
 func (m *mockRepoForIntegration) ObtenerDiametroConductor(ctx context.Context, calibre string, material string, conAislamiento bool) (float64, error) {
 	return 3.5, nil
 }
@@ -96,7 +117,8 @@ func TestOrquestadorMemoriaCalculo_Execute(t *testing.T) {
 
 	// Create micro use cases
 	calcularCorrienteUC := NewCalcularCorrienteUseCase(nil)
-	ajustarCorrienteUC := NewAjustarCorrienteUseCase(repo)
+	seleccionarTempMock := &mockSeleccionarTemperatura{}
+	ajustarCorrienteUC := NewAjustarCorrienteUseCase(repo, seleccionarTempMock)
 	seleccionarConductorUC := NewSeleccionarConductorUseCase(repo)
 	dimensionarCanalizacionUC := NewDimensionarCanalizacionUseCase(repo)
 	calcularCaidaTensionUC := NewCalcularCaidaTensionUseCase(repo)
@@ -121,12 +143,12 @@ func TestOrquestadorMemoriaCalculo_Execute(t *testing.T) {
 		Tension:          tension,
 		FactorPotencia:   0.9,
 		ITM:              100,
-		TipoCanalizacion: entity.TipoCanalizacionTuberiaPVC,
+		TipoCanalizacion: "TUBERIA_PVC",
 		HilosPorFase:     1,
 		Material:         valueobject.MaterialCobre,
 		LongitudCircuito: 10,
 		Estado:           "Sonora",
-		SistemaElectrico: entity.SistemaElectricoDelta,
+		SistemaElectrico: dto.SistemaElectricoDelta,
 	}
 
 	// Execute
@@ -139,12 +161,12 @@ func TestOrquestadorMemoriaCalculo_Execute(t *testing.T) {
 	assert.Equal(t, 220, output.Tension)
 	assert.Equal(t, 100, output.ITM)
 	assert.Equal(t, "Sonora", output.Estado)
-	assert.Equal(t, entity.SistemaElectricoDelta, output.SistemaElectrico)
+	assert.Equal(t, dto.SistemaElectricoDelta, output.SistemaElectrico)
 	assert.Equal(t, 3, output.CantidadConductores) // Delta = 3
 
 	// Verify conductor selected
 	assert.NotEmpty(t, output.ConductorAlimentacion.Calibre)
-	assert.Equal(t, "Cu", output.ConductorAlimentacion.Material)
+	assert.Equal(t, "CU", output.ConductorAlimentacion.Material)
 	assert.NotZero(t, output.ConductorAlimentacion.SeccionMM2)
 
 	// Verify tierra

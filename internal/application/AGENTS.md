@@ -1,3 +1,7 @@
+Aquí lo tienes completo, limpio y reorganizado:
+
+---
+
 # Application Layer
 
 Orquesta domain services. Define contratos (ports), no implementaciones.
@@ -6,7 +10,9 @@ Orquesta domain services. Define contratos (ports), no implementaciones.
 >
 > - [`golang-patterns`](.agents/skills/golang-patterns/SKILL.md) — interfaces pequeñas, error wrapping, convenciones de ports
 
-### Auto-invoke
+---
+
+## Auto-invoke
 
 | Accion                         | Skill             |
 | ------------------------------ | ----------------- |
@@ -14,109 +20,233 @@ Orquesta domain services. Define contratos (ports), no implementaciones.
 | Crear o modificar use case     | `golang-patterns` |
 | Agregar o modificar DTOs       | `golang-patterns` |
 
+---
+
 ## Estructura
 
 - `port/` — Interfaces que infrastructure implementa
-- `usecase/` — CalcularMemoriaUseCase (orquesta los 7 pasos)
-- `dto/` — EquipoInput, MemoriaOutput (entrada/salida de la API)
+- `usecase/` — Orquestadores (ej. `CalcularMemoriaUseCase`)
+- `dto/` — Entrada/salida de la API
+
+---
 
 ## Ports (interfaces)
 
 - **EquipoRepository** — buscar equipos en BD (PostgreSQL)
 - **TablaNOMRepository** — leer tablas CSV de ampacidad, tierra, impedancia
 
-Las interfaces se definen aqui, se implementan en `infrastructure/`.
-Pequenas y enfocadas (pocos metodos por interface).
+Reglas:
+
+- Interfaces pequeñas y enfocadas (1–3 metodos)
+- Definidas en `application/port/`
+- Implementadas en `infrastructure/`
+- Sin logica de negocio
+- Sin importar infrastructure en application
+
+---
 
 ## Flujo del UseCase (orden obligatorio)
 
-1. Corriente Nominal (segun TipoEquipo)
-2. Ajuste de Corriente (factores)
-3. Seleccionar TipoCanalizacion — determina tabla NOM
-4. Resolver tabla ampacidad + columna temperatura — llamar SeleccionarConductorAlimentacion
-5. Conductor de Tierra (ITM -> tabla 250-122)
+1. Corriente Nominal
+2. Ajuste de Corriente
+3. Seleccionar TipoCanalizacion
+4. Resolver tabla ampacidad + temperatura → `SeleccionarConductorAlimentacion`
+5. Conductor de Tierra (tabla 250-122)
 6. Dimensionar Canalizacion (40% fill)
-7. Resolver R y X de Tabla 9 + FP del equipo — llamar CalcularCaidaTension
+7. Resolver R y X + FP → `CalcularCaidaTension`
 
-## Seleccion de Temperatura (logica aqui, no en domain)
-
-- <= 100A -> 60C (o 75C si charola triangular sin columna 60C)
-- > 100A -> 75C
-- 90C solo con `temperatura_override: 90` explicito del usuario
+---
 
 ## DTOs
 
-- **EquipoInput:** modo (LISTADO/MANUAL_AMPERAJE/MANUAL_POTENCIA), datos del equipo, parametros de instalacion, TipoCanalizacion, TemperaturaOverride, **Material** (Cu/Al, default Cu)
-- **MemoriaOutput:** resultado completo de todos los pasos para el reporte
+- Structs planos sin metodos de negocio
+- Validacion de input en el use case
+- Nunca exponer entidades de domain directamente
+- Mapping domain ↔ DTO siempre explicito
 
-### Campo Material (Cu/Al)
+### EquipoInput
 
-- Tipo: `valueobject.MaterialConductor` (internamente int, JSON como string "CU"/"AL")
-- Valores aceptados: "Cu", "cu", "CU", "cobre", "Al", "al", "AL", "aluminio"
-- Default: Cobre (`MaterialCobre`) si no se especifica o string vacío
-- Afecta:
-  - Paso 4: Selección de conductor de alimentación (tabla ampacidad Cu vs Al)
-  - Paso 5: Selección de conductor de tierra según ITM + material
-  - Paso 7: Cálculo de caída de tensión (R y X diferente por material)
+Incluye:
 
-### Conductor de Tierra - Lógica de Material (Paso 5)
+- Modo (LISTADO / MANUAL_AMPERAJE / MANUAL_POTENCIA)
+- Datos del equipo
+- Parametros de instalacion
+- TipoCanalizacion
+- TemperaturaOverride
+- Material (Cu/Al, default Cu)
 
-1. Buscar entrada en tabla 250-122 donde `ITM <= ITMHasta`
-2. Si `material == Al` Y entrada tiene `ConductorAl` → usar Al
-3. Si `material == Al` PERO entrada NO tiene `ConductorAl` → **fallback a Cu** (regla NOM)
-4. Si `material == Cu` → usar siempre Cu
+### MemoriaOutput
 
-Tabla 250-122 solo tiene Al para ITM > 100A (aprox). Para ITM ≤ 100A, Al no está definido → siempre fallback a Cu.
-
-## Convenciones
-
-- `context.Context` como primer parametro en operaciones I/O
-- Errores de flujo: `ErrEquipoNoEncontrado`, `ErrModoInvalido`
-- DTOs son structs planos sin logica de negocio
-- Nunca importar infrastructure — solo domain
+Resultado completo de todos los pasos.
 
 ---
 
-## CRITICAL RULES
+## Campo Material (Cu/Al)
 
-### Ports
+- Tipo: `valueobject.MaterialConductor`
+- JSON: "CU" / "AL"
+- Default: Cobre si vacío
 
-- ALWAYS: Interfaces pequeñas y enfocadas — pocos metodos por port
-- ALWAYS: Definir ports en `application/port/`, implementar en `infrastructure/`
-- NEVER: Logica de negocio en ports — solo contratos
-- NEVER: Importar tipos de infrastructure en application
+Afecta:
 
-### Use Cases
-
-- ALWAYS: `context.Context` como primer parametro
-- ALWAYS: Seguir el orden obligatorio
-- ALWAYS: Logica de seleccion de temperatura aqui, no en domain ni infrastructure
-- NEVER: Llamar directamente a infrastructure — solo via ports
-
-### DTOs
-
-- ALWAYS: Structs planos sin metodos de negocio
-- ALWAYS: Validacion de input en el use case, no en el DTO
-- NEVER: Entidades de domain expuestas directamente en DTOs — mapear siempre
+- Seleccion de conductor de alimentacion
+- Seleccion de conductor de tierra
+- Calculo de caida de tension
 
 ---
 
-## NAMING CONVENTIONS
+## Conductor de Tierra - Regla Material
 
-| Entidad          | Patron                 | Ejemplo                                    |
-| ---------------- | ---------------------- | ------------------------------------------ |
-| Port (interface) | `PascalCaseRepository` | `EquipoRepository`, `TablaNOMRepository`   |
-| Use case struct  | `PascalCaseUseCase`    | `CalcularMemoriaUseCase`                   |
-| DTO entrada      | `PascalCaseInput`      | `EquipoInput`                              |
-| DTO salida       | `PascalCaseOutput`     | `MemoriaOutput`                            |
-| Error sentinel   | `ErrPascalCase`        | `ErrEquipoNoEncontrado`, `ErrModoInvalido` |
+1. Buscar fila donde `ITM <= ITMHasta`
+2. Si material == Al y existe ConductorAl → usar Al
+3. Si material == Al y NO existe ConductorAl → fallback a Cu
+4. Si material == Cu → usar Cu
 
 ---
 
-## QA CHECKLIST
+# CRITICAL RULES
+
+## Dependency Direction
+
+- Application puede depender de domain
+- Domain nunca depende de application
+- Application nunca depende de infrastructure
+
+---
+
+# Use Case Rules
+
+## Responsibility
+
+A use case **only orchestrates**.
+It must not contain business rules.
+
+---
+
+## Allowed
+
+- Call repository ports
+- Build domain input structures
+- Call domain services
+- Map result to DTO
+- Handle errors
+
+---
+
+## Forbidden
+
+- Business calculations
+- Mathematical formulas
+- Electrical rules
+- Complex conditional logic
+- Large switch statements
+- Infrastructure dependencies
+
+---
+
+## Structural Pattern
+
+```
+func (uc *XUseCase) Execute(...) (dto.Result, error) {
+    data, err := uc.repo.Method(...)
+    if err != nil { return dto.Result{}, err }
+
+    result, err := service.DomainLogic(...)
+    if err != nil { return dto.Result{}, err }
+
+    return dto.Result{ ... }, nil
+}
+```
+
+---
+
+## Golden Rule
+
+If business rules change, the use case should remain untouched.
+
+---
+
+## Refactor Trigger
+
+Refactor to `domain/service` when:
+
+- A formula appears
+- More than 2 business conditionals are added
+- Logic is reused in another use case
+- The use case grows beyond orchestration
+
+---
+
+# Use Case Quality Constraints
+
+- Use case < ~80 lineas
+- No duplicacion de logica entre use cases
+- Error wrapping con `%w`
+- Naming cumple convenciones definidas
+
+---
+
+# Naming Conventions
+
+| Entidad        | Patron                 |
+| -------------- | ---------------------- |
+| Port           | `PascalCaseRepository` |
+| Use case       | `PascalCaseUseCase`    |
+| DTO entrada    | `PascalCaseInput`      |
+| DTO salida     | `PascalCaseOutput`     |
+| Error sentinel | `ErrPascalCase`        |
+
+---
+
+# QA CHECKLIST
+
+## Tests
 
 - [ ] `go test ./internal/application/...` pasa
-- [ ] Flujo del UseCase respeta el orden obligatorio de 7 pasos
-- [ ] Seleccion de temperatura implementada en application (no en domain)
+
+---
+
+## Arquitectura
+
+- [ ] Use case solo orquesta
+- [ ] Logica delegada a domain/service
+- [ ] Sin reglas electricas directas
+- [ ] Flujo respeta el orden obligatorio
+
+---
+
+## Dependencias
+
 - [ ] Sin imports de infrastructure
-- [ ] Errores de flujo usan sentinels definidos en esta capa
+- [ ] Solo depende de port, dto y domain
+- [ ] Domain no depende de application
+- [ ] Ningun tipo de infrastructure filtrado
+
+---
+
+## DTO Boundary
+
+- [ ] No se retornan entidades de domain directamente
+- [ ] Mapping domain ↔ DTO explicito
+- [ ] DTOs sin metodos de negocio
+
+---
+
+## Ports
+
+- [ ] Interfaces pequeñas (1–3 metodos)
+- [ ] Sin logica en interfaces
+- [ ] Metodos reciben context.Context si hacen I/O
+
+---
+
+## Consistencia
+
+- [ ] Errores de flujo usan sentinels
+- [ ] Error wrapping con `%w`
+- [ ] Naming correcto
+- [ ] No hay duplicacion de logica
+
+---
+
+Con esto tienes una guía clara, coherente y fuerte para cualquier agente o refactor futuro.

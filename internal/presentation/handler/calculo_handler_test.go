@@ -25,14 +25,14 @@ type mockTablaRepo struct{}
 
 func (m *mockTablaRepo) ObtenerTablaTierra(ctx context.Context) ([]valueobject.EntradaTablaTierra, error) {
 	return []valueobject.EntradaTablaTierra{
-		{ITMHasta: 100, ConductorCu: valueobject.ConductorParams{Calibre: "8 AWG", Material: "Cu", SeccionMM2: 8.37}},
+		{ITMHasta: 100, ConductorCu: valueobject.ConductorParams{Calibre: "8 AWG", Material: valueobject.MaterialCobre, SeccionMM2: 8.37}},
 	}, nil
 }
 
 func (m *mockTablaRepo) ObtenerTablaAmpacidad(ctx context.Context, canalizacion entity.TipoCanalizacion, material valueobject.MaterialConductor, temperatura valueobject.Temperatura) ([]valueobject.EntradaTablaConductor, error) {
 	return []valueobject.EntradaTablaConductor{
-		{Capacidad: 30, Conductor: valueobject.ConductorParams{Calibre: "10 AWG", Material: "Cu", SeccionMM2: 5.26}},
-		{Capacidad: 55, Conductor: valueobject.ConductorParams{Calibre: "8 AWG", Material: "Cu", SeccionMM2: 8.37}},
+		{Capacidad: 30, Conductor: valueobject.ConductorParams{Calibre: "10 AWG", Material: valueobject.MaterialCobre, SeccionMM2: 5.26}},
+		{Capacidad: 55, Conductor: valueobject.ConductorParams{Calibre: "8 AWG", Material: valueobject.MaterialCobre, SeccionMM2: 8.37}},
 	}, nil
 }
 

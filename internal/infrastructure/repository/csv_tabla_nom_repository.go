@@ -415,7 +415,7 @@ func (r *CSVTablaNOMRepository) loadTablaTierra() ([]valueobject.EntradaTablaTie
 			ITMHasta: itm,
 			ConductorCu: valueobject.ConductorParams{
 				Calibre:    record[1],
-				Material:   "Cu",
+				Material:   valueobject.MaterialCobre,
 				SeccionMM2: cuSeccion,
 			},
 			ConductorAl: nil,
@@ -429,7 +429,7 @@ func (r *CSVTablaNOMRepository) loadTablaTierra() ([]valueobject.EntradaTablaTie
 			}
 			alParams := valueobject.ConductorParams{
 				Calibre:    record[3],
-				Material:   "Al",
+				Material:   valueobject.MaterialAluminio,
 				SeccionMM2: alSeccion,
 			}
 			entrada.ConductorAl = &alParams
@@ -584,9 +584,9 @@ func extractByTemperature(entries []rawAmpacidadEntry, material valueobject.Mate
 		// Set material
 		params := e.Conductor
 		if material == valueobject.MaterialCobre {
-			params.Material = "Cu"
+			params.Material = valueobject.MaterialCobre
 		} else {
-			params.Material = "Al"
+			params.Material = valueobject.MaterialAluminio
 		}
 
 		result = append(result, valueobject.EntradaTablaConductor{

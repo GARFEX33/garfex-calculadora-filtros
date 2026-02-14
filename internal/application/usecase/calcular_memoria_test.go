@@ -101,14 +101,14 @@ func (m *mockEquipoRepository) BuscarPorClave(ctx context.Context, clave string)
 func TestCalcularMemoriaUseCase_Execute_ManualAmperaje(t *testing.T) {
 	// Setup mocks
 	tablaTierra := []valueobject.EntradaTablaTierra{
-		{ITMHasta: 100, ConductorCu: valueobject.ConductorParams{Calibre: "8 AWG", Material: "Cu", SeccionMM2: 8.37}},
-		{ITMHasta: 200, ConductorCu: valueobject.ConductorParams{Calibre: "6 AWG", Material: "Cu", SeccionMM2: 13.3}},
+		{ITMHasta: 100, ConductorCu: valueobject.ConductorParams{Calibre: "8 AWG", Material: valueobject.MaterialCobre, SeccionMM2: 8.37}},
+		{ITMHasta: 200, ConductorCu: valueobject.ConductorParams{Calibre: "6 AWG", Material: valueobject.MaterialCobre, SeccionMM2: 13.3}},
 	}
 
 	tablaAmpacidad := []valueobject.EntradaTablaConductor{
-		{Capacidad: 30, Conductor: valueobject.ConductorParams{Calibre: "10 AWG", Material: "Cu", SeccionMM2: 5.26}},
-		{Capacidad: 55, Conductor: valueobject.ConductorParams{Calibre: "8 AWG", Material: "Cu", SeccionMM2: 8.37}},
-		{Capacidad: 75, Conductor: valueobject.ConductorParams{Calibre: "6 AWG", Material: "Cu", SeccionMM2: 13.3}},
+		{Capacidad: 30, Conductor: valueobject.ConductorParams{Calibre: "10 AWG", Material: valueobject.MaterialCobre, SeccionMM2: 5.26}},
+		{Capacidad: 55, Conductor: valueobject.ConductorParams{Calibre: "8 AWG", Material: valueobject.MaterialCobre, SeccionMM2: 8.37}},
+		{Capacidad: 75, Conductor: valueobject.ConductorParams{Calibre: "6 AWG", Material: valueobject.MaterialCobre, SeccionMM2: 13.3}},
 	}
 
 	tablaCanalizacion := []valueobject.EntradaTablaCanalizacion{
@@ -138,11 +138,11 @@ func TestCalcularMemoriaUseCase_Execute_ManualAmperaje(t *testing.T) {
 		Tension:               tension,
 		FactorPotencia:        1.0,
 		ITM:                   100,
-		TipoCanalizacion:      entity.TipoCanalizacionTuberiaPVC,
+		TipoCanalizacion:      "TUBERIA_PVC",
 		LongitudCircuito:      10,
 		PorcentajeCaidaMaximo: 3.0,
 		Estado:                "INTERIOR",
-		SistemaElectrico:      entity.SistemaElectricoMonofasico,
+		SistemaElectrico:      dto.SistemaElectricoMonofasico,
 	}
 
 	// Ejecutar
@@ -176,13 +176,13 @@ func TestCalcularMemoriaUseCase_seleccionarTemperatura(t *testing.T) {
 		name      string
 		corriente float64
 		override  *valueobject.Temperatura
-		canaliz   entity.TipoCanalizacion
+		canaliz   string
 		want      valueobject.Temperatura
 	}{
-		{"<= 100A default", 50, nil, entity.TipoCanalizacionTuberiaPVC, valueobject.Temp60},
-		{"> 100A default", 150, nil, entity.TipoCanalizacionTuberiaPVC, valueobject.Temp75},
-		{"Charola triangular", 50, nil, entity.TipoCanalizacionCharolaCableTriangular, valueobject.Temp75},
-		{"Override 90C", 50, &[]valueobject.Temperatura{valueobject.Temp90}[0], entity.TipoCanalizacionTuberiaPVC, valueobject.Temp90},
+		{"<= 100A default", 50, nil, "TUBERIA_PVC", valueobject.Temp60},
+		{"> 100A default", 150, nil, "TUBERIA_PVC", valueobject.Temp75},
+		{"Charola triangular", 50, nil, "CHAROLA_CABLE_TRIANGULAR", valueobject.Temp75},
+		{"Override 90C", 50, &[]valueobject.Temperatura{valueobject.Temp90}[0], "TUBERIA_PVC", valueobject.Temp90},
 	}
 
 	for _, tt := range tests {

@@ -5,18 +5,11 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/garfex/calculadora-filtros/internal/application/dto"
 	"github.com/garfex/calculadora-filtros/internal/application/port"
 	"github.com/garfex/calculadora-filtros/internal/domain/entity"
 	"github.com/garfex/calculadora-filtros/internal/domain/service"
-	"github.com/garfex/calculadora-filtros/internal/domain/valueobject"
 )
-
-// ResultadoCanalizacionUseCase contiene el resultado del dimensionamiento.
-type ResultadoCanalizacionUseCase struct {
-	Tamano        string
-	NumeroDeTubos int
-	AreaTotalMM2  float64
-}
 
 // DimensionarCanalizacionUseCase ejecuta el Paso 6: Dimensionar Canalización.
 type DimensionarCanalizacionUseCase struct {
@@ -35,29 +28,31 @@ func NewDimensionarCanalizacionUseCase(
 // Execute dimensiona la canalización.
 func (uc *DimensionarCanalizacionUseCase) Execute(
 	ctx context.Context,
-	conductorAlimentacion valueobject.Conductor,
-	conductorTierra valueobject.Conductor,
+	conductorAlimentacionSeccionMM2 float64,
+	conductorTierraSeccionMM2 float64,
 	hilosPorFase int,
 	tipoCanalizacion entity.TipoCanalizacion,
-) (ResultadoCanalizacionUseCase, error) {
+) (dto.ResultadoCanalizacion, error) {
 	tablaCanalizacion, err := uc.tablaRepo.ObtenerTablaCanalizacion(ctx, tipoCanalizacion)
 	if err != nil {
-		return ResultadoCanalizacionUseCase{}, fmt.Errorf("obtener tabla canalización: %w", err)
+		return dto.ResultadoCanalizacion{}, fmt.Errorf("obtener tabla canalización: %w", err)
 	}
 
 	conductores := []service.ConductorParaCanalizacion{
-		{Cantidad: hilosPorFase * 3, SeccionMM2: conductorAlimentacion.SeccionMM2()}, // Fases
-		{Cantidad: 1, SeccionMM2: conductorTierra.SeccionMM2()},                      // Tierra
+		{Cantidad: hilosPorFase * 3, SeccionMM2: conductorAlimentacionSeccionMM2}, // Fases
+		{Cantidad: 1, SeccionMM2: conductorTierraSeccionMM2},                      // Tierra
 	}
 
 	resultado, err := service.CalcularCanalizacion(conductores, string(tipoCanalizacion), tablaCanalizacion, hilosPorFase)
 	if err != nil {
-		return ResultadoCanalizacionUseCase{}, fmt.Errorf("calcular canalización: %w", err)
+		return dto.ResultadoCanalizacion{}, fmt.Errorf("calcular canalización: %w", err)
 	}
 
-	return ResultadoCanalizacionUseCase{
-		Tamano:        resultado.Tamano,
-		NumeroDeTubos: resultado.NumeroDeTubos,
-		AreaTotalMM2:  resultado.AnchoRequerido,
+	// Map domain entity to DTO with primitive types (no domain objects exposed)
+	return dto.ResultadoCanalizacion{
+		Tamano:           resultado.Tamano,
+		AreaTotalMM2:     resultado.AnchoRequerido,
+		AreaRequeridaMM2: resultado.AnchoRequerido,
+		NumeroDeTubos:    resultado.NumeroDeTubos,
 	}, nil
 }

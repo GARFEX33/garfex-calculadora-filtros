@@ -15,7 +15,7 @@ import (
 func conductor12AWGCu() valueobject.ConductorParams {
 	return valueobject.ConductorParams{
 		Calibre:               "12 AWG",
-		Material:              "Cu",
+		Material:              valueobject.MaterialCobre,
 		TipoAislamiento:       "THHN",
 		SeccionMM2:            3.31,
 		AreaConAislamientoMM2: 11.68,
@@ -33,7 +33,7 @@ func TestNewConductor_Valid(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, "12 AWG", c.Calibre())
-	assert.Equal(t, "Cu", c.Material())
+	assert.Equal(t, valueobject.MaterialCobre, c.Material())
 	assert.Equal(t, "THHN", c.TipoAislamiento())
 	assert.Equal(t, 3.31, c.SeccionMM2())
 	assert.Equal(t, 11.68, c.AreaConAislamientoMM2())
@@ -68,7 +68,7 @@ func TestNewConductor_CalibreInvalido(t *testing.T) {
 
 func TestNewConductor_MaterialInvalido(t *testing.T) {
 	p := conductor12AWGCu()
-	p.Material = "Fe"
+	p.Material = valueobject.MaterialConductor(999) // Invalid material
 	_, err := valueobject.NewConductor(p)
 	assert.Error(t, err)
 	assert.True(t, errors.Is(err, valueobject.ErrConductorInvalido))
@@ -95,13 +95,13 @@ func TestNewConductor_Minimal(t *testing.T) {
 	// All other fields are zero-value — valid for ground conductors, etc.
 	c, err := valueobject.NewConductor(valueobject.ConductorParams{
 		Calibre:    "8 AWG",
-		Material:   "Cu",
+		Material:   valueobject.MaterialCobre,
 		SeccionMM2: 8.37,
 	})
 	require.NoError(t, err)
 
 	assert.Equal(t, "8 AWG", c.Calibre())
-	assert.Equal(t, "Cu", c.Material())
+	assert.Equal(t, valueobject.MaterialCobre, c.Material())
 	assert.Equal(t, "", c.TipoAislamiento())
 	assert.Equal(t, 8.37, c.SeccionMM2())
 	assert.Equal(t, 0.0, c.AreaConAislamientoMM2())
