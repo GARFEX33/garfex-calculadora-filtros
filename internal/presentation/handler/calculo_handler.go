@@ -140,15 +140,10 @@ func (h *CalculoHandler) mapRequestToDTO(req CalcularMemoriaRequest) (dto.Equipo
 		return dto.EquipoInput{}, fmt.Errorf("sistema eléctrico inválido: %w", err)
 	}
 
-	// Parsear material (default: cobre)
+	// Parsear material usando UnmarshalJSON del valueobject (DRY)
 	material := valueobject.MaterialCobre
 	if req.Material != "" {
-		switch req.Material {
-		case "Al", "AL", "aluminio", "Aluminio":
-			material = valueobject.MaterialAluminio
-		case "Cu", "CU", "cobre", "Cobre":
-			material = valueobject.MaterialCobre
-		default:
+		if err := material.UnmarshalJSON([]byte(fmt.Sprintf("%q", req.Material))); err != nil {
 			return dto.EquipoInput{}, fmt.Errorf("material inválido: %s (esperado Cu o Al)", req.Material)
 		}
 	}
