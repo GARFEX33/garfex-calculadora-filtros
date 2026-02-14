@@ -7,20 +7,16 @@ import (
 
 	"github.com/garfex/calculadora-filtros/internal/application/dto"
 	"github.com/garfex/calculadora-filtros/internal/application/port"
+	"github.com/garfex/calculadora-filtros/internal/domain/service"
 	"github.com/garfex/calculadora-filtros/internal/domain/valueobject"
 )
 
-// ResultadoCorriente contiene el resultado del cálculo de corriente.
-type ResultadoCorriente struct {
-	Nominal valueobject.Corriente
-}
-
-// CalcularCorrienteUseCase ejecuta el Paso 1: Corriente Nominal.
+// CalcularCorrienteUseCase executes Step 1: Nominal Current.
 type CalcularCorrienteUseCase struct {
 	equipoRepo port.EquipoRepository
 }
 
-// NewCalcularCorrienteUseCase crea una nueva instancia.
+// NewCalcularCorrienteUseCase creates a new instance.
 func NewCalcularCorrienteUseCase(
 	equipoRepo port.EquipoRepository,
 ) *CalcularCorrienteUseCase {
@@ -29,38 +25,59 @@ func NewCalcularCorrienteUseCase(
 	}
 }
 
-// Execute calcula la corriente nominal según el modo.
-func (uc *CalcularCorrienteUseCase) Execute(ctx context.Context, input dto.EquipoInput) (ResultadoCorriente, error) {
+// Execute calculates the nominal current according to the mode.
+func (uc *CalcularCorrienteUseCase) Execute(ctx context.Context, input dto.EquipoInput) (dto.ResultadoCorriente, error) {
 	switch input.Modo {
 	case dto.ModoListado:
-		if input.Clave == "" {
-			return ResultadoCorriente{}, dto.ErrEquipoInputInvalido
-		}
-		equipo, err := uc.equipoRepo.BuscarPorClave(ctx, input.Clave)
-		if err != nil {
-			return ResultadoCorriente{}, fmt.Errorf("buscar equipo: %w", err)
-		}
-		// Calcular corriente según tipo de equipo
-		corriente, err := equipo.CalcularCorrienteNominal()
-		if err != nil {
-			return ResultadoCorriente{}, fmt.Errorf("calcular corriente: %w", err)
-		}
-		return ResultadoCorriente{Nominal: corriente}, nil
+		return uc.calcularDesdeListado(ctx, input)
 
 	case dto.ModoManualAmperaje:
-		if input.AmperajeNominal <= 0 {
-			return ResultadoCorriente{}, dto.ErrEquipoInputInvalido
-		}
-		corriente, err := valueobject.NewCorriente(input.AmperajeNominal)
-		if err != nil {
-			return ResultadoCorriente{}, err
-		}
-		return ResultadoCorriente{Nominal: corriente}, nil
+		return uc.calcularManualAmperaje(input)
 
 	case dto.ModoManualPotencia:
-		return ResultadoCorriente{}, fmt.Errorf("modo MANUAL_POTENCIA requiere implementación adicional")
+		return uc.calcularManualPotencia(input)
 
 	default:
-		return ResultadoCorriente{}, dto.ErrModoInvalido
+		return dto.ResultadoCorriente{}, dto.ErrModoInvalido
 	}
+}
+
+// calcularDesdeListado calculates current from equipment listing.
+func (uc *CalcularCorrienteUseCase) calcularDesdeListado(ctx context.Context, input dto.EquipoInput) (dto.ResultadoCorriente, error) {
+	if input.Clave == "" {
+		return dto.ResultadoCorriente{}, dto.ErrEquipoInputInvalido
+	}
+
+	equipo, err := uc.equipoRepo.BuscarPorClave(ctx, input.Clave)
+	if err != nil {
+		return dto.ResultadoCorriente{}, fmt.Errorf("buscar equipo: %w", err)
+	}
+
+	// Use domain service to calculate current
+	corriente, err := service.CalcularCorrienteNominal(equipo)
+	if err != nil {
+		return dto.ResultadoCorriente{}, fmt.Errorf("calcular corriente: %w", err)
+	}
+
+	return dto.ResultadoCorriente{CorrienteNominal: corriente.Valor()}, nil
+}
+
+// calcularManualAmperaje calculates current from manual amperage.
+func (uc *CalcularCorrienteUseCase) calcularManualAmperaje(input dto.EquipoInput) (dto.ResultadoCorriente, error) {
+	if input.AmperajeNominal <= 0 {
+		return dto.ResultadoCorriente{}, dto.ErrEquipoInputInvalido
+	}
+
+	corriente, err := valueobject.NewCorriente(input.AmperajeNominal)
+	if err != nil {
+		return dto.ResultadoCorriente{}, err
+	}
+
+	return dto.ResultadoCorriente{CorrienteNominal: corriente.Valor()}, nil
+}
+
+// calcularManualPotencia calculates current from manual power.
+func (uc *CalcularCorrienteUseCase) calcularManualPotencia(input dto.EquipoInput) (dto.ResultadoCorriente, error) {
+	// TODO: Implementar según fórmula para potencia
+	return dto.ResultadoCorriente{}, fmt.Errorf("modo MANUAL_POTENCIA requiere implementación adicional")
 }

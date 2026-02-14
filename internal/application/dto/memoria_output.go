@@ -40,6 +40,20 @@ type ResultadoCaidaTension struct {
 	ResistenciaEfectiva float64 // R·cosθ + X·senθ
 }
 
+// ResultadoAjusteCorriente contiene el resultado del ajuste de corriente.
+type ResultadoAjusteCorriente struct {
+	CorrienteAjustada  float64 `json:"corriente_ajustada"`
+	FactorTemperatura  float64 `json:"factor_temperatura"`
+	FactorAgrupamiento float64 `json:"factor_agrupamiento"`
+	FactorTotal        float64 `json:"factor_total"`
+	Temperatura        int     `json:"temperatura"` // 60 o 75
+}
+
+// ResultadoCorriente contains the result of the current calculation.
+type ResultadoCorriente struct {
+	CorrienteNominal float64 `json:"corriente_nominal"`
+}
+
 // MemoriaOutput contiene el resultado completo de todos los pasos.
 // Es el DTO de salida para el use case CalcularMemoria.
 type MemoriaOutput struct {

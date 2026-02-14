@@ -19,7 +19,7 @@ func entradaConductor(calibre string, capacidad, seccionMM2 float64) valueobject
 		Capacidad: capacidad,
 		Conductor: valueobject.ConductorParams{
 			Calibre:         calibre,
-			Material:        "Cu",
+			Material:        valueobject.MaterialCobre,
 			TipoAislamiento: "THHN",
 			SeccionMM2:      seccionMM2,
 		},

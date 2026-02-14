@@ -114,12 +114,12 @@ func (uc *CalcularMemoriaUseCase) Execute(ctx context.Context, input dto.EquipoI
 	// ============================================================================
 	// PASO 2: Ajustar Corriente
 	// ============================================================================
-	corrienteAjustada, err := service.AjustarCorriente(corrienteNominal, factores)
+	resultadoAjuste, err := service.AjustarCorriente(corrienteNominal, factores)
 	if err != nil {
 		return dto.MemoriaOutput{}, fmt.Errorf("paso 2 - ajustar corriente: %w", err)
 	}
-	output.CorrienteAjustada = corrienteAjustada.Valor()
-	output.CorrientePorHilo = corrienteAjustada.Valor() / float64(hilosPorFase)
+	output.CorrienteAjustada = resultadoAjuste.CorrienteAjustada.Valor()
+	output.CorrientePorHilo = resultadoAjuste.CorrienteAjustada.Valor() / float64(hilosPorFase)
 
 	// ============================================================================
 	// PASO 3: Seleccionar TipoCanalizacion (ya viene en input)
@@ -142,7 +142,7 @@ func (uc *CalcularMemoriaUseCase) Execute(ctx context.Context, input dto.EquipoI
 	}
 
 	// Seleccionar conductor
-	conductor, err := service.SeleccionarConductorAlimentacion(corrienteAjustada, hilosPorFase, tablaAmpacidad)
+	conductor, err := service.SeleccionarConductorAlimentacion(resultadoAjuste.CorrienteAjustada, hilosPorFase, tablaAmpacidad)
 	if err != nil {
 		return dto.MemoriaOutput{}, fmt.Errorf("paso 4 - seleccionar conductor: %w", err)
 	}
@@ -152,7 +152,7 @@ func (uc *CalcularMemoriaUseCase) Execute(ctx context.Context, input dto.EquipoI
 
 	output.ConductorAlimentacion = dto.ResultadoConductor{
 		Calibre:         conductor.Calibre(),
-		Material:        conductor.Material(),
+		Material:        conductor.Material().String(),
 		SeccionMM2:      conductor.SeccionMM2(),
 		TipoAislamiento: conductor.TipoAislamiento(),
 		Capacidad:       uc.buscarCapacidadEnTabla(tablaAmpacidad, conductor.Calibre()),
@@ -174,7 +174,7 @@ func (uc *CalcularMemoriaUseCase) Execute(ctx context.Context, input dto.EquipoI
 
 	output.ConductorTierra = dto.ResultadoConductor{
 		Calibre:    conductorTierra.Calibre(),
-		Material:   conductorTierra.Material(),
+		Material:   conductorTierra.Material().String(),
 		SeccionMM2: conductorTierra.SeccionMM2(),
 	}
 
@@ -222,7 +222,7 @@ func (uc *CalcularMemoriaUseCase) Execute(ctx context.Context, input dto.EquipoI
 
 	resultadoCaida, err := service.CalcularCaidaTension(
 		entradaCaida,
-		corrienteAjustada,
+		resultadoAjuste.CorrienteAjustada,
 		input.LongitudCircuito,
 		input.Tension,
 		limiteCaida,

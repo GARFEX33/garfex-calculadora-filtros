@@ -5,20 +5,12 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/garfex/calculadora-filtros/internal/application/dto"
 	"github.com/garfex/calculadora-filtros/internal/application/port"
 	"github.com/garfex/calculadora-filtros/internal/domain/entity"
 	"github.com/garfex/calculadora-filtros/internal/domain/service"
 	"github.com/garfex/calculadora-filtros/internal/domain/valueobject"
 )
-
-// ResultadoCaidaTensionUseCase contiene el resultado del cálculo de caída.
-type ResultadoCaidaTensionUseCase struct {
-	Porcentaje          float64
-	CaidaVolts          float64
-	Cumple              bool
-	LimitePorcentaje    float64
-	ResistenciaEfectiva float64
-}
 
 // CalcularCaidaTensionUseCase ejecuta el Paso 7: Calcular Caída de Tensión.
 type CalcularCaidaTensionUseCase struct {
@@ -45,17 +37,14 @@ func (uc *CalcularCaidaTensionUseCase) Execute(
 	tipoCanalizacion entity.TipoCanalizacion,
 	factorPotencia float64,
 	hilosPorFase int,
-) (ResultadoCaidaTensionUseCase, error) {
-	// Convertir material string a MaterialConductor
-	material := valueobject.MaterialCobre
-	if conductor.Material() == "Al" || conductor.Material() == "AL" {
-		material = valueobject.MaterialAluminio
-	}
+) (dto.ResultadoCaidaTension, error) {
+	// El conductor ya tiene el material como MaterialConductor
+	material := conductor.Material()
 
 	// Obtener impedancia
 	impedancia, err := uc.tablaRepo.ObtenerImpedancia(ctx, conductor.Calibre(), tipoCanalizacion, material)
 	if err != nil {
-		return ResultadoCaidaTensionUseCase{}, fmt.Errorf("obtener impedancia: %w", err)
+		return dto.ResultadoCaidaTension{}, fmt.Errorf("obtener impedancia: %w", err)
 	}
 
 	entradaCaida := service.EntradaCalculoCaidaTension{
@@ -74,10 +63,10 @@ func (uc *CalcularCaidaTensionUseCase) Execute(
 		limiteCaida,
 	)
 	if err != nil {
-		return ResultadoCaidaTensionUseCase{}, fmt.Errorf("calcular caída de tensión: %w", err)
+		return dto.ResultadoCaidaTension{}, fmt.Errorf("calcular caída de tensión: %w", err)
 	}
 
-	return ResultadoCaidaTensionUseCase{
+	return dto.ResultadoCaidaTension{
 		Porcentaje:          resultadoCaida.Porcentaje,
 		CaidaVolts:          resultadoCaida.CaidaVolts,
 		Cumple:              resultadoCaida.Cumple,

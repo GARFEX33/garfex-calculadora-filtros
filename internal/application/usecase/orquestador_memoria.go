@@ -7,6 +7,7 @@ import (
 
 	"github.com/garfex/calculadora-filtros/internal/application/dto"
 	"github.com/garfex/calculadora-filtros/internal/application/port"
+	"github.com/garfex/calculadora-filtros/internal/domain/valueobject"
 	"github.com/garfex/calculadora-filtros/internal/presentation/formatters"
 )
 
@@ -89,12 +90,18 @@ func (o *OrquestadorMemoriaCalculo) Execute(ctx context.Context, input dto.Equip
 	if err != nil {
 		return dto.MemoriaOutput{}, fmt.Errorf("paso 1 - corriente nominal: %w", err)
 	}
-	output.CorrienteNominal = resultadoCorriente.Nominal.Valor()
+	output.CorrienteNominal = resultadoCorriente.CorrienteNominal
+
+	// Convert to domain object for next step
+	corrienteNominalVO, err := valueobject.NewCorriente(resultadoCorriente.CorrienteNominal)
+	if err != nil {
+		return dto.MemoriaOutput{}, fmt.Errorf("corriente nominal inválida: %w", err)
+	}
 
 	// Paso 2: Ajuste de Corriente
 	resultadoAjuste, err := o.ajustarCorriente.Execute(
 		ctx,
-		resultadoCorriente.Nominal,
+		corrienteNominalVO,
 		input.Estado,
 		input.TipoCanalizacion,
 		input.SistemaElectrico,
@@ -103,14 +110,22 @@ func (o *OrquestadorMemoriaCalculo) Execute(ctx context.Context, input dto.Equip
 	if err != nil {
 		return dto.MemoriaOutput{}, fmt.Errorf("paso 2 - ajustar corriente: %w", err)
 	}
-	output.CorrienteAjustada = resultadoAjuste.CorrienteAjustada.Valor()
-	output.CorrientePorHilo = resultadoAjuste.CorrienteAjustada.Valor() / float64(hilosPorFase)
+
+	// Convert DTO to domain objects for subsequent use cases
+	corrienteAjustadaVO, err := valueobject.NewCorriente(resultadoAjuste.CorrienteAjustada)
+	if err != nil {
+		return dto.MemoriaOutput{}, fmt.Errorf("corriente ajustada inválida: %w", err)
+	}
+	temperaturaVO := valueobject.Temperatura(resultadoAjuste.Temperatura)
+
+	output.CorrienteAjustada = resultadoAjuste.CorrienteAjustada
+	output.CorrientePorHilo = resultadoAjuste.CorrienteAjustada / float64(hilosPorFase)
 	output.FactorTemperaturaCalculado = resultadoAjuste.FactorTemperatura
 	output.FactorAgrupamientoCalculado = resultadoAjuste.FactorAgrupamiento
 	output.FactorTemperatura = resultadoAjuste.FactorTemperatura
 	output.FactorAgrupamiento = resultadoAjuste.FactorAgrupamiento
 	output.FactorTotalAjuste = resultadoAjuste.FactorTotal
-	output.TemperaturaUsada = int(resultadoAjuste.Temperatura)
+	output.TemperaturaUsada = resultadoAjuste.Temperatura
 
 	// Material
 	material := input.Material
@@ -119,11 +134,11 @@ func (o *OrquestadorMemoriaCalculo) Execute(ctx context.Context, input dto.Equip
 	// Pasos 4-5: Seleccionar Conductores
 	resultadoConductores, err := o.seleccionarConductor.Execute(
 		ctx,
-		resultadoAjuste.CorrienteAjustada,
+		corrienteAjustadaVO,
 		hilosPorFase,
 		input.ITM,
 		material,
-		resultadoAjuste.Temperatura,
+		temperaturaVO,
 		input.TipoCanalizacion,
 	)
 	if err != nil {
@@ -131,7 +146,7 @@ func (o *OrquestadorMemoriaCalculo) Execute(ctx context.Context, input dto.Equip
 	}
 	output.ConductorAlimentacion = dto.ResultadoConductor{
 		Calibre:         resultadoConductores.Alimentacion.Calibre(),
-		Material:        resultadoConductores.Alimentacion.Material(),
+		Material:        resultadoConductores.Alimentacion.Material().String(),
 		SeccionMM2:      resultadoConductores.Alimentacion.SeccionMM2(),
 		TipoAislamiento: resultadoConductores.Alimentacion.TipoAislamiento(),
 		Capacidad:       resultadoConductores.Capacidad,
@@ -140,7 +155,7 @@ func (o *OrquestadorMemoriaCalculo) Execute(ctx context.Context, input dto.Equip
 
 	output.ConductorTierra = dto.ResultadoConductor{
 		Calibre:    resultadoConductores.Tierra.Calibre(),
-		Material:   resultadoConductores.Tierra.Material(),
+		Material:   resultadoConductores.Tierra.Material().String(),
 		SeccionMM2: resultadoConductores.Tierra.SeccionMM2(),
 	}
 
@@ -167,7 +182,7 @@ func (o *OrquestadorMemoriaCalculo) Execute(ctx context.Context, input dto.Equip
 	resultadoCaida, err := o.calcularCaidaTension.Execute(
 		ctx,
 		resultadoConductores.Alimentacion,
-		resultadoAjuste.CorrienteAjustada,
+		corrienteAjustadaVO,
 		input.LongitudCircuito,
 		input.Tension,
 		limiteCaida,

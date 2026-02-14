@@ -9,9 +9,9 @@ import (
 
 var ErrConductorInvalido = errors.New("datos de conductor inválidos")
 
-var materialesValidos = map[string]bool{
-	"Cu": true,
-	"Al": true,
+var materialesValidos = map[MaterialConductor]bool{
+	MaterialCobre:    true,
+	MaterialAluminio: true,
 }
 
 // calibresValidos contiene los calibres permitidos según NOM 310-15(b)(16) y 250-122.
@@ -36,7 +36,7 @@ var calibresValidos = map[string]bool{
 // requires AreaConAislamientoMM2; voltage drop requires resistance values).
 type ConductorParams struct {
 	Calibre               string
-	Material              string
+	Material              MaterialConductor
 	TipoAislamiento       string  // "" for bare conductors
 	SeccionMM2            float64 // sección transversal del conductor (sin aislamiento) [mm²]
 	AreaConAislamientoMM2 float64 // área total incluyendo aislamiento, para cálculo de canalización [mm²]
@@ -52,7 +52,7 @@ type ConductorParams struct {
 // properties per NOM-001-SEDE-2012. Immutable.
 type Conductor struct {
 	calibre               string
-	material              string
+	material              MaterialConductor
 	tipoAislamiento       string
 	seccionMM2            float64
 	areaConAislamientoMM2 float64
@@ -79,7 +79,7 @@ func NewConductor(p ConductorParams) (Conductor, error) {
 		return Conductor{}, fmt.Errorf("%w: calibre '%s' no válido según NOM", ErrConductorInvalido, p.Calibre)
 	}
 	if !materialesValidos[p.Material] {
-		return Conductor{}, fmt.Errorf("%w: material '%s' no válido (Cu o Al)", ErrConductorInvalido, p.Material)
+		return Conductor{}, fmt.Errorf("%w: material '%s' no válido (Cu o Al)", ErrConductorInvalido, p.Material.String())
 	}
 	if err := positivoF(p.SeccionMM2, "sección"); err != nil {
 		return Conductor{}, err
@@ -100,7 +100,7 @@ func NewConductor(p ConductorParams) (Conductor, error) {
 }
 
 func (c Conductor) Calibre() string                { return c.calibre }
-func (c Conductor) Material() string               { return c.material }
+func (c Conductor) Material() MaterialConductor    { return c.material }
 func (c Conductor) TipoAislamiento() string        { return c.tipoAislamiento }
 func (c Conductor) SeccionMM2() float64            { return c.seccionMM2 }
 func (c Conductor) AreaConAislamientoMM2() float64 { return c.areaConAislamientoMM2 }
@@ -127,7 +127,7 @@ func (c Conductor) MarshalJSON() ([]byte, error) {
 		ReactanciaPorKm       float64 `json:"reactancia_por_km,omitempty"`
 	}{
 		Calibre:               c.calibre,
-		Material:              c.material,
+		Material:              c.material.String(),
 		TipoAislamiento:       c.tipoAislamiento,
 		SeccionMM2:            c.seccionMM2,
 		AreaConAislamientoMM2: c.areaConAislamientoMM2,
