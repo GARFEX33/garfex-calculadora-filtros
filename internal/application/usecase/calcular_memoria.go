@@ -132,7 +132,8 @@ func (uc *CalcularMemoriaUseCase) Execute(ctx context.Context, input dto.EquipoI
 	// La temperatura ya fue seleccionada arriba
 
 	// Determinar material (usamos cobre por defecto, podría venir en input)
-	material := valueobject.MaterialCobre
+	material := input.Material
+	output.Material = material.String()
 
 	// Obtener tabla de ampacidad
 	tablaAmpacidad, err := uc.tablaRepo.ObtenerTablaAmpacidad(ctx, input.TipoCanalizacion, material, temperatura)
@@ -166,7 +167,7 @@ func (uc *CalcularMemoriaUseCase) Execute(ctx context.Context, input dto.EquipoI
 		return dto.MemoriaOutput{}, fmt.Errorf("paso 5 - obtener tabla tierra: %w", err)
 	}
 
-	conductorTierra, err := service.SeleccionarConductorTierra(input.ITM, tablaTierra)
+	conductorTierra, err := service.SeleccionarConductorTierra(input.ITM, material, tablaTierra)
 	if err != nil {
 		return dto.MemoriaOutput{}, fmt.Errorf("paso 5 - seleccionar conductor tierra: %w", err)
 	}

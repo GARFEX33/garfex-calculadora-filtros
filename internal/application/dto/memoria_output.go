@@ -73,6 +73,9 @@ type MemoriaOutput struct {
 	// Paso 3: Tipo de Canalización
 	TipoCanalizacion entity.TipoCanalizacion `json:"tipo_canalizacion"`
 
+	// Material del conductor
+	Material string `json:"material"` // "Cu" o "Al"
+
 	// Paso 4: Conductor de Alimentación
 	TemperaturaUsada      int                `json:"temperatura_usada"`
 	ConductorAlimentacion ResultadoConductor `json:"conductor_alimentacion"`

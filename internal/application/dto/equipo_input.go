@@ -34,10 +34,11 @@ type EquipoInput struct {
 
 	// Parámetros de instalación
 	TipoCanalizacion      entity.TipoCanalizacion
-	TemperaturaOverride   *valueobject.Temperatura // nil = usar lógica por defecto
-	HilosPorFase          int                      // default: 1
-	LongitudCircuito      float64                  // metros, para caída de tensión
-	PorcentajeCaidaMaximo float64                  // default: 3.0%
+	TemperaturaOverride   *valueobject.Temperatura      // nil = usar lógica por defecto
+	HilosPorFase          int                           // default: 1
+	Material              valueobject.MaterialConductor // "Cu" o "Al"; si vacío, default Cu
+	LongitudCircuito      float64                       // metros, para caída de tensión
+	PorcentajeCaidaMaximo float64                       // default: 3.0%
 
 	// NUEVO: Reemplaza factor_agrupamiento y factor_temperatura
 	Estado           string                  `json:"estado" binding:"required"`
