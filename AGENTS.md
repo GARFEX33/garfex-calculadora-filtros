@@ -19,6 +19,28 @@ Orden de prioridad:
 
 Si el skill tiene checklist, crear todos con TodoWrite antes de seguirlo.
 
+## Regla Anti-Duplicación (OBLIGATORIO)
+
+**Antes de pedir a un agente que cree código nuevo, verificar que no existe:**
+
+```bash
+# Buscar funcionalidad similar
+rg -i "concepto|calcular|procesar" internal/{feature} --type go
+
+# Buscar TODOs sin implementar
+rg "TODO|FIXME|XXX" internal/{feature} --type go
+
+# Listar servicios de dominio existentes
+ls internal/{feature}/domain/service/*.go
+```
+
+**Checklist de prevención:**
+- [ ] ¿Ya existe un servicio que haga este cálculo/proceso?
+- [ ] ¿Hay algún método con TODO que debería implementarse primero?
+- [ ] ¿Estoy pidiendo crear duplicación en lugar de reutilizar?
+
+**Ejemplo real:** El servicio `CalcularAmperajeNominalCircuito` fue creado mientras `CalcularCorrienteUseCase.calcularManualPotencia()` tenía un TODO sin implementar. Resultado: duplicación que tuvo que consolidarse después.
+
 ## Workflow de Desarrollo (OBLIGATORIO)
 
 Para cualquier feature o bugfix, seguir este flujo de skills en orden:

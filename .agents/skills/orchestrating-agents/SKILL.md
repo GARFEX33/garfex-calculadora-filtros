@@ -216,6 +216,65 @@ git commit -m "feat: implement {feature} with vertical slices
 4. **Verificación obligatoria** — cada agente debe reportar tests verdes
 5. **No tocar fuera del scope** — cada agente respeta sus límites
 
+## Cómo evitar duplicación de código
+
+### Checklist ANTES de despachar un agente
+
+Antes de pedirle a un agente que cree algo nuevo, el orquestador debe verificar:
+
+```bash
+# 1. Buscar si ya existe algo similar
+rg -i "concepto|calcular|procesar" internal/{feature} --type go
+
+# 2. Buscar TODOs sin implementar
+rg "TODO|FIXME|XXX" internal/{feature} --type go
+
+# 3. Buscar por patrones de comportamiento
+rg -i "fórmula|algoritmo|regla" internal/{feature}/domain/service --type go
+```
+
+### Regla de oro: Un concepto = Un lugar
+
+| Concepto | ¿Dónde debe vivir? | Ejemplo |
+|----------|-------------------|---------|
+| Cálculo matemático/fórmula | `domain/service/` | `CalcularAmperajeNominalCircuito` |
+| Orquestación de pasos | `application/usecase/` | `CalcularMemoriaUseCase` |
+| Mapeo HTTP/JSON | `infrastructure/adapter/driver/http/` | `CalculoHandler` |
+
+**Señales de alerta de duplicación:**
+- [ ] Dos archivos con "calcular" en el nombre
+- [ ] Un método con `TODO: Implementar...` que nunca se hizo
+- [ ] El agente propone crear un servicio que "calcula X desde Y" cuando ya existe uno similar
+- [ ] Nombres similares: `CalcularCorriente` vs `CalcularAmperaje`
+
+### Proceso de verificación
+
+**Antes de despachar domain-agent:**
+```
+¿Ya existe un servicio en domain/service/ que haga cálculos similares?
+  ↓
+Si SÍ → ¿Podemos extenderlo en lugar de crear uno nuevo?
+  ↓
+Si NO → Proceder con domain-agent
+```
+
+**Antes de despachar application-agent:**
+```
+¿El use case existente tiene un método sin implementar (TODO) que encaja?
+  ↓
+Si SÍ → Agente debe implementar usando el servicio de dominio existente
+  ↓
+Si NO → Proceder con application-agent
+```
+
+### Caso de estudio: Consolidación de cálculo de amperaje
+
+**Problema:** Se creó `CalcularAmperajeNominalCircuito` en domain, pero `CalcularCorrienteUseCase.calcularManualPotencia()` tenía un TODO sin implementar.
+
+**Solución:** Implementar el método del use case usando el servicio de dominio existente en lugar de crear duplicación.
+
+**Aprendizaje:** Siempre buscar TODOs antes de crear código nuevo.
+
 ## Ejemplo completo
 
 Ver referencia en: `docs/examples/orchestrating-agents-example.md`

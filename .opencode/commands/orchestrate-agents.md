@@ -290,14 +290,33 @@ Listo para application-agent.
 
 ## Checklist del Orquestador
 
-Antes de despachar cada agente:
+### ANTES de despachar el primer agente (Prevención de duplicación)
+
+```bash
+# 1. Buscar si ya existe funcionalidad similar
+rg -i "concepto|calcular|procesar" internal/{feature} --type go
+
+# 2. Buscar TODOs sin implementar que puedan reutilizarse
+rg "TODO|FIXME|XXX" internal/{feature} --type go
+
+# 3. Revisar servicios de dominio existentes
+ls internal/{feature}/domain/service/*.go
+```
+
+**Preguntas clave:**
+- [ ] ¿Ya existe un servicio que haga este cálculo/proceso?
+- [ ] ¿Hay algún método con TODO que debería implementarse primero?
+- [ ] ¿Estoy pidiendo crear duplicación en lugar de reutilizar?
+
+### Antes de despachar cada agente:
 
 - [ ] Rama creada y activa (`git checkout -b feature/x`)
 - [ ] Agente anterior completó su trabajo (excepto domain-agent)
 - [ ] Contexto claro: características deseadas
 - [ ] Scope definido: qué carpetas puede tocar
+- [ ] **Verificado que no hay duplicación potencial** ⚠️
 
-Durante la orquestación:
+### Durante la orquestación:
 
 - [ ] Revisar diseño propuesto por agente (brainstorming)
 - [ ] Aprobar o solicitar cambios
@@ -305,7 +324,7 @@ Durante la orquestación:
 - [ ] Esperar reporte de ejecución (executing-plans)
 - [ ] Verificar tests reportados por agente
 
-Después de todos los agentes:
+### Después de todos los agentes:
 
 - [ ] Hacer wiring en `cmd/api/main.go`
 - [ ] Correr `go test ./...` completo
