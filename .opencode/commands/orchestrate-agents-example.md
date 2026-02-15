@@ -1,319 +1,567 @@
-# Ejemplo: Orquestar Agentes para Nueva Feature
+# Ejemplo: Orquestar Agentes (Flujo Completo)
 
-Este ejemplo muestra el flujo completo de cómo usar el comando `orchestrate-agents` para implementar una nueva feature.
+Este ejemplo muestra cómo el orquestador delega TODO el ciclo de trabajo a los agentes, quienes piensan, planifican e implementan autónomamente.
 
 ## Escenario
 
-Queremos agregar una nueva feature llamada `proyectos` que permita guardar memorias de cálculo en proyectos con nombre, cliente, y fecha.
+**Usuario:** "Quiero agregar una feature `proyectos` para guardar memorias de cálculo agrupadas por proyecto. Cada proyecto tiene nombre, cliente, y puede tener múltiples memorias."
 
-## Paso 1: Brainstorming (Coordinador)
+## Actores
 
-```
-Usuario: Quiero agregar soporte para proyectos que agrupen memorias de cálculo
+- **Orquestador** (este chat) — coordina, pregunta al usuario, aprueba diseños
+- **Domain-Agent** — piensa, planifica e implementa el dominio
+- **Application-Agent** — piensa, planifica e implementa application
+- **Infrastructure-Agent** — piensa, planifica e implementa infraestructura
 
-Coordinador: Invoca skill brainstorming
-→ Diseño aprobado: docs/plans/2026-02-20-proyectos-design.md
-```
+---
 
-## Paso 2: Writing Plans (Coordinador)
+## FASE 1: Orquestador Inicia
 
-```
-Coordinador: Invoca skill writing-plans
-→ Plan creado: docs/plans/2026-02-20-proyectos-plan.md
-```
-
-Contenido típico del plan:
-
-```markdown
-# Plan: Proyectos Feature
-
-## Paso 1 — Crear shared/kernel/ (si aplica)
-Ya existe, no se necesita.
-
-## Paso 2 — Crear proyectos/domain/
-- entity/proyecto.go (Proyecto, IDProyecto)
-- entity/errors.go
-- repository/proyecto_repository.go (interface)
-
-## Paso 3 — Crear proyectos/application/
-- port/proyecto_repository.go
-- usecase/crear_proyecto.go
-- usecase/agregar_memoria.go
-- dto/proyecto_input.go, proyecto_output.go
-
-## Paso 4 — Crear proyectos/infrastructure/
-- adapter/driven/postgres/postgres_proyecto_repository.go
-- adapter/driver/http/proyecto_handler.go
-- router.go
-
-## Paso 5 — Wiring en cmd/api/main.go
-- Instanciar repositorio
-- Crear use cases
-- Configurar router
-```
-
-## Paso 3: Crear Rama (Coordinador)
+### Paso 1: Crear rama
 
 ```bash
 git checkout -b feature/proyectos
 ```
 
-## Paso 4: Despachar Domain-Agent
+### Paso 2: Despachar Domain-Agent
 
-**Comando:**
+**Orquestador invoca:**
 ```bash
-orchestrate-agents --agent domain --steps "2" --plan docs/plans/2026-02-20-proyectos-plan.md --feature proyectos
+orchestrate-agents --agent domain --feature proyectos
 ```
 
-**Prompt que se envía:**
+**Prompt enviado:**
+
+```
+Sos el domain-agent.
+
+Características deseadas por el usuario:
+"Quiero agregar una feature 'proyectos' para guardar memorias de cálculo 
+agrupadas por proyecto. Cada proyecto tiene nombre, cliente, y puede tener 
+múltiples memorias."
+
+Feature: proyectos
+Scope: internal/proyectos/domain/ + shared/kernel/ (si necesitás VOs nuevos)
+
+Contexto disponible:
+- shared/kernel/ ya existe con Corriente, Tension, MaterialConductor, etc.
+- No hay dependencias previas para esta feature
+- La feature 'calculos' ya existe con MemoriaCalculo
+
+Tu trabajo completo:
+1. SKILL: brainstorming-dominio
+   - Explorá: ¿qué entidades, VOs, agregados necesitás?
+   - Pensá en invariants y reglas de negocio
+   - Diseñá el modelo de dominio
+   - PRESENTÁ el diseño al orquestador para aprobación
+
+2. SKILL: writing-plans-dominio
+   - Creá tus propias tareas con TodoWrite
+   - Planificá la implementación paso a paso
+
+3. SKILL: executing-plans-dominio
+   - Implementá cada tarea
+   - Verificá con go test después de cada una
+
+Reglas:
+- Domain nunca depende de Application ni Infrastructure
+- Si tenés dudas sobre requisitos, preguntá al orquestador
+- Reportá progreso después de cada fase (brainstorming, writing, executing)
+```
 
 ---
 
-Sos el **domain-agent** de este proyecto. Tu trabajo es ejecutar **Paso 2** del plan.
+## FASE 2: Domain-Agent Trabaja (Autónomo)
 
-## Proyecto
+### Brainstorming-Dominio
 
-- Repositorio: `C:\PROGRAMACION\garfex-calculadora-filtros`
-- Rama activa: `feature/proyectos`
-- Módulo Go: `github.com/garfex/calculadora-filtros`
+**Domain-Agent invoca skill:** `brainstorming-dominio`
 
-## Contexto — qué hicieron los agentes anteriores
+**Domain-Agent → Orquestador:**
+```
+✅ Brainstorming-dominio completado
 
-Empezando desde cero. No hay agentes previos.
+DISEÑO PROPUESTO:
 
-El shared/kernel ya existe con:
-- valueobject.Corriente, Tension, Temperatura, etc.
+Entidades:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Proyecto (Aggregate Root)
+├── ID: IDProyecto (VO)
+├── Nombre: string (validado: no vacío, max 100 chars)
+├── Cliente: string (validado: no vacío)
+├── FechaCreacion: time.Time
+├── Estado: EstadoProyecto (VO: enum ACTIVO, ARCHIVADO, CANCELADO)
+└── Memorias: []MemoriaAsociada
 
-## Tu scope
+Value Objects:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- IDProyecto: UUID con validación
+- EstadoProyecto: enum con métodos de transición
+- MemoriaAsociada: referencia a MemoriaCalculo (solo ID + FechaAgregada)
 
-- `internal/proyectos/domain/entity/`
-- `internal/proyectos/domain/repository/`
+Domain Services:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- (ninguno necesario por ahora, lógica en entidad)
 
-**NO toques:**
-- `internal/proyectos/application/`
-- `internal/proyectos/infrastructure/`
-- `cmd/api/main.go`
+Repository Interface:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- ProyectoRepository en domain/repository/
+- Métodos: Save, FindByID, List, Update, Delete
 
-## Plan a ejecutar
+Reglas de Negocio Identificadas:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. Nombre no puede estar vacío
+2. Cliente no puede estar vacío
+3. FechaCreacion se setea automáticamente al crear
+4. Estado inicial siempre ACTIVO
+5. Solo proyectos ACTIVOS pueden recibir nuevas memorias
 
-`docs/plans/2026-02-20-proyectos-plan.md`
+PREGUNTAS AL ORQUESTADOR:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. ¿Una memoria puede estar en múltiples proyectos? (Sugiero: NO)
+2. ¿Necesitamos histórico de cambios de estado? (Sugiero: NO por ahora)
+3. ¿El cliente es solo string o entidad separada? (Sugiero: string simple)
 
-## Instrucciones
+¿Aprobás este diseño? ¿Tenés cambios?
+```
 
-1. Leé el plan completo
-2. Creá tus propias tareas con TodoWrite antes de empezar
-3. Ejecutá cada tarea marcando `in_progress` → `completed`
-4. Verificá con `go test ./internal/proyectos/domain/...` antes de terminar
-5. Si algo falla, arreglalo antes de seguir
+**Orquestador → Domain-Agent:**
+```
+Respuestas:
+1. NO, una memoria solo en un proyecto ✓
+2. NO, sin histórico por ahora ✓
+3. Cliente como string simple ✓
 
-## Al terminar
+Diseño APROBADO ✅
 
-Reportá:
-- Lista exacta de archivos creados/modificados
-- Output de `go test ./internal/proyectos/domain/...`
-- Issues encontrados (si hay)
+Continuá con writing-plans-dominio.
+```
+
+### Writing-Plans-Dominio
+
+**Domain-Agent invoca skill:** `writing-plans-dominio`
+
+**Domain-Agent → Orquestador:**
+```
+✅ Writing-plans-dominio completado
+
+PLAN DE TAREAS:
+
+Phase 1: Value Objects
+- [ ] T1: Crear VO IDProyecto (UUID + validación)
+- [ ] T2: Crear VO EstadoProyecto (enum + métodos)
+- [ ] T3: Tests de VOs
+
+Phase 2: Entidad Proyecto
+- [ ] T4: Crear struct Proyecto
+- [ ] T5: Implementar constructor NewProyecto
+- [ ] T6: Implementar método AgregarMemoria
+- [ ] T7: Implementar método Archivar
+- [ ] T8: Tests de entidad
+
+Phase 3: Repository
+- [ ] T9: Crear interface ProyectoRepository
+- [ ] T10: Definir errores de dominio
+
+Verificación: go test ./internal/proyectos/domain/...
+
+¿Aprobás este plan de tareas?
+```
+
+**Orquestador → Domain-Agent:**
+```
+✅ Plan APROBADO
+
+Ejecutá las tareas con executing-plans-dominio.
+```
+
+### Executing-Plans-Dominio
+
+**Domain-Agent invoca skill:** `executing-plans-dominio`
+
+**Domain-Agent → Orquestador (updates en progreso):**
+```
+Progreso de ejecución:
+
+Phase 1: Value Objects
+✅ T1: IDProyecto creado (uuid validation, tests pass)
+✅ T2: EstadoProyecto creado (enum con CanAgregarMemoria())
+✅ T3: Tests VOs - 6/6 pass
+
+Phase 2: Entidad Proyecto (en progreso)
+✅ T4: Struct Proyecto creado
+✅ T5: Constructor NewProyecto con validaciones
+✅ T6: AgregarMemoria con regla de estado
+⏳ T7: Método Archivar (implementando)
+⏳ T8: Tests de entidad (pendiente)
+
+Tests actuales: 10/10 pass ✅
+```
+
+**Domain-Agent → Orquestador (final):**
+```
+✅ Executing-plans-dominio COMPLETADO
+
+ARCHIVOS CREADOS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+internal/proyectos/domain/
+├── entity/
+│   ├── proyecto.go              (entidad + métodos)
+│   ├── proyecto_test.go         (tests de comportamiento)
+│   ├── id_proyecto.go           (VO ID)
+│   ├── estado_proyecto.go       (VO Estado)
+│   └── vo_test.go               (tests de VOs)
+├── repository/
+│   └── proyecto_repository.go   (interface)
+└── errors.go                    (ErrProyectoNoEncontrado, etc.)
+
+TEST RESULTS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+go test ./internal/proyectos/domain/...
+✅ PASS: 18/18 tests
+✅ Coverage: 96%
+✅ Race detector: pass
+
+DECISIONES TOMADAS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+- Agregué validación de nombre único (no mostrada en diseño inicial)
+- Agregué método CanAgregarMemoria() para encapsular regla
+- Error específico ErrProyectoArchivado para intentos de agregar
+
+Sin issues bloqueantes.
+
+🎯 LISTO PARA APPLICATION-AGENT
+```
 
 ---
 
-**Respuesta esperada del agente:**
+## FASE 3: Despachar Application-Agent
+
+**Orquestador invoca:**
+```bash
+orchestrate-agents --agent application --feature proyectos
+```
+
+**Prompt enviado:**
 
 ```
-✅ Paso 2 completado
+Sos el application-agent.
+
+CONTEXTO (Domain-Agent completó):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Entidades:
+- Proyecto: ID, Nombre, Cliente, FechaCreacion, Estado, Memorias[]
+- VOs: IDProyecto, EstadoProyecto, MemoriaAsociada
+
+Repository Interface:
+- ProyectoRepository: Save, FindByID, List, Update, Delete
+
+Reglas de Negocio ya implementadas:
+- Validaciones en constructor
+- Solo ACTIVOS pueden recibir memorias
+- Método Archivar() cambia estado
+
+Características deseadas por usuario:
+"Necesito poder crear proyectos y agregar memorias de cálculo a ellos"
+
+Feature: proyectos
+Scope: internal/proyectos/application/
+
+Tu trabajo completo:
+1. SKILL: brainstorming-application
+   - Analizá el dominio
+   - Diseñá casos de uso necesarios
+   - Definí ports (driver y driven)
+   - Diseñá DTOs
+   - PRESENTÁ al orquestador
+
+2. SKILL: writing-plans-application
+   - Creá tus tareas
+
+3. SKILL: executing-plans-application
+   - Implementá ports, use cases, DTOs
+   - Verificá tests
+
+Reglas:
+- Use cases solo orquestan (sin lógica de negocio)
+- No expongas entidades de domain directamente
+- Usa DTOs para entrada/salida
+```
+
+### Brainstorming-Application
+
+**Application-Agent → Orquestador:**
+```
+✅ Brainstorming-application completado
+
+CASOS DE USO IDENTIFICADOS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. CrearProyectoUseCase
+   Input: nombre, cliente
+   Output: proyecto creado con ID
+
+2. AgregarMemoriaAProyectoUseCase
+   Input: proyectoID, memoriaID
+   Output: confirmación
+   Errores: proyecto no existe, proyecto archivado
+
+3. ObtenerProyectoUseCase
+   Input: proyectoID
+   Output: proyecto con sus memorias
+
+4. ListarProyectosUseCase
+   Input: filtros (opcional)
+   Output: lista de proyectos
+
+5. ArchivarProyectoUseCase
+   Input: proyectoID
+   Output: confirmación
+
+PORTS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Driver (entry points):
+- (ninguno explicito, los handlers HTTP llaman use cases)
+
+Driven (dependencias):
+- ProyectoRepository (ya existe en domain)
+
+DTOs:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Input:
+- CrearProyectoInput
+- AgregarMemoriaInput
+- ProyectoIDInput
+
+Output:
+- ProyectoOutput (sin lógica, campos planos)
+- ProyectoListOutput
+
+¿Aprobás estos casos de uso?
+```
+
+**Orquestador → Application-Agent:**
+```
+✅ Casos de uso APROBADOS
+
+Agregué uno más:
+6. CambiarNombreProyectoUseCase (para edición)
+
+Continuá con writing-plans.
+```
+
+### Writing + Executing Plans
+
+**Application-Agent ejecuta** (resumen):**
+
+```
+✅ Todos los pasos completados
 
 Archivos creados:
-- internal/proyectos/domain/entity/proyecto.go
-- internal/proyectos/domain/entity/errors.go
-- internal/proyectos/domain/repository/proyecto_repository.go
+- port/
+  ├── proyecto_repository.go (re-export de domain)
+  └── errors.go
+- usecase/
+  ├── crear_proyecto.go
+  ├── crear_proyecto_test.go
+  ├── agregar_memoria.go
+  ├── agregar_memoria_test.go
+  ├── obtener_proyecto.go
+  ├── listar_proyectos.go
+  ├── archivar_proyecto.go
+  └── cambiar_nombre.go
+- dto/
+  ├── proyecto_input.go
+  └── proyecto_output.go
 
-Tests:
-ok  github.com/garfex/calculadora-filtros/internal/proyectos/domain/entity
-ok  github.com/garfex/calculadora-filtros/internal/proyectos/domain/repository
+Tests: 24/24 pass ✅
 
-Sin issues.
+🎯 LISTO PARA INFRASTRUCTURE-AGENT
 ```
 
-## Paso 5: Despachar Application-Agent
+---
 
-**Comando:**
+## FASE 4: Despachar Infrastructure-Agent
+
+**Orquestador invoca:**
 ```bash
-orchestrate-agents --agent application --steps "3" --plan docs/plans/2026-02-20-proyectos-plan.md --feature proyectos
+orchestrate-agents --agent infrastructure --feature proyectos
 ```
 
-**Prompt que se envía:**
+**Contexto enviado:**
+```
+CONTEXTO (Application-Agent completó):
+- Ports: ProyectoRepository interface
+- Use Cases: 6 casos de uso implementados
+- DTOs: Inputs y outputs definidos
 
----
+Características deseadas:
+"Implementar con PostgreSQL para producción y CSV para tests.
+HTTP REST handlers para la API."
 
-Sos el **application-agent** de este proyecto. Tu trabajo es ejecutar **Paso 3** del plan.
-
-## Proyecto
-
-- Repositorio: `C:\PROGRAMACION\garfex-calculadora-filtros`
-- Rama activa: `feature/proyectos`
-- Módulo Go: `github.com/garfex/calculadora-filtros`
-
-## Contexto — qué hizo domain-agent
-
-Ya están creados y testeados:
-- `internal/proyectos/domain/entity/proyecto.go` (Proyecto, IDProyecto)
-- `internal/proyectos/domain/entity/errors.go`
-- `internal/proyectos/domain/repository/proyecto_repository.go`
-
-Los imports correctos que debés usar:
-- Entities: `github.com/garfex/calculadora-filtros/internal/proyectos/domain/entity`
-
-## Tu scope
-
-- `internal/proyectos/application/port/`
-- `internal/proyectos/application/usecase/`
-- `internal/proyectos/application/dto/`
-
-**NO toches:**
-- `internal/proyectos/domain/`
-- `internal/proyectos/infrastructure/`
-- `cmd/api/main.go`
-
-## Plan a ejecutar
-
-`docs/plans/2026-02-20-proyectos-plan.md`
-
-## Instrucciones
-
-1. Leé el plan completo
-2. Creá tus propias tareas con TodoWrite antes de empezar
-3. Ejecutá cada tarea marcando `in_progress` → `completed`
-4. Verificá con `go test ./internal/proyectos/application/...` antes de terminar
-5. Si algo falla, arreglalo antes de seguir
-
-## Al terminar
-
-Reportá:
-- Lista exacta de archivos creados/modificados
-- Output de `go test ./internal/proyectos/application/...`
-- Issues encontrados (si hay)
-
----
-
-## Paso 6: Despachar Infrastructure-Agent
-
-**Comando:**
-```bash
-orchestrate-agents --agent infrastructure --steps "4" --plan docs/plans/2026-02-20-proyectos-plan.md --feature proyectos
+Tu trabajo completo (brainstorm → write → execute)
 ```
 
-**Prompt que se envía:**
+### Brainstorming-Infrastructure
+
+**Infrastructure-Agent → Orquestador:**
+```
+✅ Brainstorming-infrastructure completado
+
+ADAPTERS PROPUESTOS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Driven (implementan ProyectoRepository):
+1. PostgresProyectoRepository
+   - Tabla: proyectos (id, nombre, cliente, fecha_creacion, estado)
+   - Tabla: proyecto_memorias (proyecto_id, memoria_id, fecha_agregada)
+   - pgx/v5 para conexión
+
+2. InMemoryProyectoRepository (para tests)
+   - map[string]Proyecto
+   - thread-safe con sync.RWMutex
+
+Driver (HTTP Handlers):
+1. ProyectoHandler
+   - POST /api/v1/proyectos → CrearProyectoUseCase
+   - GET /api/v1/proyectos/{id} → ObtenerProyectoUseCase
+   - GET /api/v1/proyectos → ListarProyectosUseCase
+   - POST /api/v1/proyectos/{id}/memorias → AgregarMemoriaUseCase
+   - PATCH /api/v1/proyectos/{id}/archivar → ArchivarProyectoUseCase
+   - PATCH /api/v1/proyectos/{id}/nombre → CambiarNombreUseCase
+
+Config:
+- ProyectoConfig con DB_HOST, DB_PORT, DB_NAME, etc.
+
+¿Aprobás este diseño?
+```
+
+**Orquestador → Infrastructure-Agent:**
+```
+✅ Diseño APROBADO
+
+Notas:
+- Usar transacciones para operaciones complejas
+- Manejar errores de DB con wrapping
+
+Continuá.
+```
+
+### Ejecución (resumen)
+
+```
+✅ Infrastructure completo
+
+Archivos:
+- adapter/driven/postgres/
+  ├── proyecto_repository.go
+  └── proyecto_repository_test.go (integración)
+- adapter/driven/memory/
+  └── proyecto_repository.go
+- adapter/driver/http/
+  ├── proyecto_handler.go
+  └── proyecto_handler_test.go
+- config.go
+
+Tests: 18/18 pass ✅
+(Incluye tests de integración con testcontainers)
+
+🎯 LISTO. Orquestador debe hacer wiring.
+```
 
 ---
 
-Sos el **infrastructure-agent** de este proyecto. Tu trabajo es ejecutar **Paso 4** del plan.
+## FASE 5: Orquestador Finaliza
 
-## Proyecto
+### Wiring en main.go
 
-- Repositorio: `C:\PROGRAMACION\garfex-calculadora-filtros`
-- Rama activa: `feature/proyectos`
-- Módulo Go: `github.com/garfex/calculadora-filtros`
+```go
+// cmd/api/main.go
 
-## Contexto — qué hicieron los agentes anteriores
+import (
+    // ... otros imports
+    proyectosapp "github.com/garfex/calculadora-filtros/internal/proyectos/application/usecase"
+    proyectosinfra "github.com/garfex/calculadora-filtros/internal/proyectos/infrastructure/adapter/driven/postgres"
+    proyectoshttp "github.com/garfex/calculadora-filtros/internal/proyectos/infrastructure/adapter/driver/http"
+)
 
-Ya están creados y testeados:
-- Domain completo (entity, repository interface)
-- Application completo (ports, use cases: CrearProyecto, AgregarMemoria, DTOs)
+func main() {
+    // ... repos existentes
+    
+    // Proyectos
+    proyectoRepo := proyectosinfra.NewPostgresProyectoRepository(db)
+    crearProyectoUC := proyectosapp.NewCrearProyectoUseCase(proyectoRepo)
+    agregarMemoriaUC := proyectosapp.NewAgregarMemoriaUseCase(proyectoRepo)
+    // ... otros use cases
+    
+    // Handlers
+    proyectoHandler := proyectoshttp.NewProyectoHandler(
+        crearProyectoUC,
+        agregarMemoriaUC,
+        // ...
+    )
+    
+    // Router
+    router := gin.New()
+    proyectoHandler.RegisterRoutes(router)
+    // ...
+}
+```
 
-Los ports que debés implementar están en:
-- `internal/proyectos/application/port/proyecto_repository.go`
-
-## Tu scope
-
-- `internal/proyectos/infrastructure/adapter/driver/http/`
-- `internal/proyectos/infrastructure/adapter/driven/postgres/`
-
-**NO toches:**
-- `internal/proyectos/domain/`
-- `internal/proyectos/application/`
-- `cmd/api/main.go`
-
-## Plan a ejecutar
-
-`docs/plans/2026-02-20-proyectos-plan.md`
-
-## Instrucciones
-
-1. Leé el plan completo
-2. Creá tus propias tareas con TodoWrite antes de empezar
-3. Ejecutá cada tarea marcando `in_progress` → `completed`
-4. Verificá con `go test ./internal/proyectos/infrastructure/...` antes de terminar
-5. Si algo falla, arreglalo antes de seguir
-
-## Al terminar
-
-Reportá:
-- Lista exacta de archivos creados/modificados
-- Output de `go test ./internal/proyectos/infrastructure/...`
-- Issues encontrados (si hay)
-
----
-
-## Paso 7: Coordinador Finaliza
+### Verificación Final
 
 ```bash
-# Actualizar cmd/api/main.go (coordinador)
-# - Importar nuevos paquetes
-# - Crear instancias de repositorio
-# - Crear use cases
-# - Configurar router
-
-# Verificar todo
 go test ./...
+# ✅ PASS: todos los tests de todas las capas
+
 go build ./...
-go vet ./...
+# ✅ Sin errores
 
-# Commit
 git add -A
-git commit -m "feat: add proyectos feature with CRUD operations
+git commit -m "feat: add proyectos feature with full vertical slices
 
-- Create domain/ with Proyecto entity and repository interface
-- Create application/ with use cases and DTOs
-- Create infrastructure/ with Postgres repo and HTTP handlers
-- Update main.go with dependency wiring
-- All tests passing"
+Domain:
+- Proyecto aggregate with ID, Nombre, Cliente, Estado
+- Value objects: IDProyecto, EstadoProyecto
+- Repository interface
+
+Application:
+- 6 use cases: Crear, AgregarMemoria, Obtener, Listar, Archivar, CambiarNombre
+- DTOs for all operations
+- Ports clearly defined
+
+Infrastructure:
+- PostgresProyectoRepository with migrations
+- InMemory repository for testing
+- HTTP REST handlers with gin
+- Full test coverage including integration tests
+
+All tests passing: 60/60 ✅"
 ```
 
-## Resultado Final
+---
 
-```
-internal/
-  proyectos/
-    domain/
-      entity/
-        proyecto.go
-        errors.go
-      repository/
-        proyecto_repository.go
-    application/
-      port/
-        proyecto_repository.go
-      usecase/
-        crear_proyecto.go
-        agregar_memoria.go
-      dto/
-        proyecto_input.go
-        proyecto_output.go
-    infrastructure/
-      adapter/
-        driver/http/
-          proyecto_handler.go
-        driven/postgres/
-          postgres_proyecto_repository.go
-```
+## Timeline del Proceso
 
-## Checklist para Coordinador
+| Fase | Actor | Duración | Output |
+|------|-------|----------|--------|
+| 1 | Orquestador | 5 min | Rama creada, domain-agent despachado |
+| 2a | Domain-Agent | 15 min | Diseño aprobado |
+| 2b | Domain-Agent | 10 min | Plan de tareas aprobado |
+| 2c | Domain-Agent | 30 min | Domain implementado y testeado ✅ |
+| 3a | Application-Agent | 10 min | Casos de uso diseñados |
+| 3b | Application-Agent | 45 min | Application implementada ✅ |
+| 4a | Infrastructure-Agent | 10 min | Adapters diseñados |
+| 4b | Infrastructure-Agent | 60 min | Infrastructure implementada ✅ |
+| 5 | Orquestador | 15 min | Wiring, tests, commit |
 
-- [ ] Brainstorming completado y diseño aprobado
-- [ ] Plan de implementación escrito
-- [ ] Rama creada (`feature/nombre`)
-- [ ] Domain-agent despachado y reportó éxito
-- [ ] Application-agent despachado y reportó éxito
-- [ ] Infrastructure-agent despachado y reportó éxito
-- [ ] `cmd/api/main.go` actualizado con wiring
-- [ ] `go test ./...` pasa completamente
-- [ ] `go build ./...` sin errores
-- [ ] Commit realizado
+**Total: ~3 horas** para feature completa con 3 capas, testeada.
+
+---
+
+## Lecciones Aprendidas
+
+1. **Los agentes son autónomos** — el orquestador solo aprueba/ajusta
+2. **Brainstorming es crucial** — evita retrabajo posterior
+3. **Tests en cada capa** — asegura calidad antes de pasar al siguiente agente
+4. **Comunicación clara** — el orquestador debe responder rápido a preguntas
+5. **Scope bien definido** — cada agente sabe exactamente qué no tocar
