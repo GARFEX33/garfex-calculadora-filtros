@@ -57,6 +57,83 @@ domain-agent → application-agent → infrastructure-agent
 - Cada agente crea sus propias tareas con TodoWrite antes de ejecutar
 - Cada agente verifica con `go test` antes de entregar
 
+### Flujo del Coordinador (este chat)
+
+El coordinador orquesta TODO el trabajo. Los agentes especializados solo ejecutan su parte.
+
+```
+Usuario pide feature/cambio
+         │
+         ▼
+┌─────────────────────────────────────┐
+│         COORDINADOR                 │
+│  1. Invocar skill `brainstorming`   │
+│  2. Crear diseño + plan             │
+│  3. Crear rama de trabajo           │
+│  4. Despachar agentes en orden      │
+│  5. Hacer wiring en main.go         │
+│  6. Commit final                    │
+└─────────────────────────────────────┘
+         │
+    ┌────┴────┬────────────┐
+    ▼         ▼            ▼
+domain-   application-  infrastructure-
+agent     agent         agent
+    │         │            │
+    ▼         ▼            ▼
+ dominio   aplicación   infraestructura
+ completo  completa     completa
+```
+
+**Qué hace el coordinador:**
+- Brainstorming inicial con el usuario
+- Crear documentos de diseño y plan
+- Crear rama git para el trabajo
+- Despachar cada agente con contexto completo
+- Esperar que cada agente termine antes de despachar el siguiente
+- Hacer el wiring final en `cmd/api/main.go`
+- Actualizar AGENTS.md si cambian reglas
+- Commit y preparar para merge
+
+**Qué hace cada agente especializado:**
+- Leer el plan que le corresponde
+- Crear sus propias tareas con TodoWrite
+- Ejecutar SOLO en su capa (domain, application, o infrastructure)
+- Verificar con `go test` antes de terminar
+- Reportar archivos creados y resultado de tests
+
+**Template para despachar agente:**
+
+```
+Sos el {agente} de este proyecto. Tu trabajo es ejecutar {pasos} del plan.
+
+## Proyecto
+Repositorio: {ruta}
+Rama: {rama}
+Módulo Go: {modulo}
+
+## Contexto — qué hicieron los agentes anteriores
+{resumen de lo que ya existe}
+
+## Tu scope
+{carpetas que puede tocar}
+
+**NO toques** {carpetas prohibidas}
+
+## Plan a ejecutar
+{ruta al plan}
+
+## Instrucciones
+1. Leé el plan y creá tus propias tareas con TodoWrite
+2. Ejecutá cada tarea
+3. Verificá con go test antes de terminar
+
+## Al terminar
+Reportá: archivos creados, output de tests, issues encontrados
+```
+
+> **Skill de referencia:** Ver `.agents/skills/orchestrating-agents/SKILL.md` para el proceso completo.
+
 ## Estructura del Proyecto (Vertical Slices)
 
 ```
