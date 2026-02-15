@@ -15,13 +15,18 @@ import (
 
 // CalculoHandler maneja los endpoints de cálculo.
 type CalculoHandler struct {
-	calcularMemoriaUseCase *usecase.CalcularMemoriaUseCase
+	calcularMemoriaUseCase    *usecase.CalcularMemoriaUseCase
+	calcularAmperajeNominalUC *usecase.CalcularAmperajeNominalUseCase
 }
 
 // NewCalculoHandler crea un nuevo handler de cálculo.
-func NewCalculoHandler(calcularMemoriaUseCase *usecase.CalcularMemoriaUseCase) *CalculoHandler {
+func NewCalculoHandler(
+	calcularMemoriaUC *usecase.CalcularMemoriaUseCase,
+	calcularAmperajeUC *usecase.CalcularAmperajeNominalUseCase,
+) *CalculoHandler {
 	return &CalculoHandler{
-		calcularMemoriaUseCase: calcularMemoriaUseCase,
+		calcularMemoriaUseCase:    calcularMemoriaUC,
+		calcularAmperajeNominalUC: calcularAmperajeUC,
 	}
 }
 
@@ -267,6 +272,112 @@ func (h *CalculoHandler) mapErrorToResponse(err error) (int, CalcularMemoriaResp
 
 	// Por defecto: error interno 500
 	return http.StatusInternalServerError, CalcularMemoriaResponseError{
+		Success: false,
+		Error:   "Error interno del servidor",
+		Code:    "INTERNAL_ERROR",
+		Details: err.Error(),
+	}
+}
+
+// ============================================
+// Endpoint: Calcular Amperaje Nominal
+// ============================================
+
+// CalcularAmperajeRequest representa el body de la petición POST /amperaje.
+type CalcularAmperajeRequest struct {
+	// PotenciaWatts es la potencia activa en Watts (requerido, > 0)
+	PotenciaWatts float64 `json:"potencia_watts" binding:"required,gt=0"`
+
+	// Tension es la tensión del circuito en volts (requerido)
+	Tension int `json:"tension" binding:"required"`
+
+	// TipoCarga indica el tipo de carga eléctrica (requerido)
+	// Valores: "MONOFASICA" | "TRIFASICA"
+	TipoCarga string `json:"tipo_carga" binding:"required"`
+
+	// SistemaElectrico indica el tipo de sistema eléctrico (requerido)
+	// Valores: "ESTRELLA" | "DELTA"
+	SistemaElectrico string `json:"sistema_electrico" binding:"required"`
+
+	// FactorPotencia es el factor de potencia (requerido, > 0 y <= 1)
+	FactorPotencia float64 `json:"factor_potencia" binding:"required,gt=0,lte=1"`
+}
+
+// CalcularAmperajeResponse representa la respuesta exitosa.
+type CalcularAmperajeResponse struct {
+	Success  bool    `json:"success"`
+	Amperaje float64 `json:"amperaje"`
+	Unidad   string  `json:"unidad"`
+}
+
+// CalcularAmperajeResponseError representa la respuesta de error.
+type CalcularAmperajeResponseError struct {
+	Success bool   `json:"success"`
+	Error   string `json:"error"`
+	Code    string `json:"code,omitempty"`
+	Details string `json:"details,omitempty"`
+}
+
+// CalcularAmperaje POST /api/v1/calculos/amperaje
+func (h *CalculoHandler) CalcularAmperaje(c *gin.Context) {
+	var req CalcularAmperajeRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, CalcularAmperajeResponseError{
+			Success: false,
+			Error:   "Error de validación",
+			Code:    "VALIDATION_ERROR",
+			Details: err.Error(),
+		})
+		return
+	}
+
+	// Convertir request a DTO
+	input := dto.AmperajeNominalInput{
+		PotenciaWatts:    req.PotenciaWatts,
+		Tension:          req.Tension,
+		TipoCarga:        dto.TipoCargaDTO(req.TipoCarga),
+		SistemaElectrico: dto.SistemaElectricoDTO(req.SistemaElectrico),
+		FactorPotencia:   req.FactorPotencia,
+	}
+
+	// Ejecutar use case
+	output, err := h.calcularAmperajeNominalUC.Execute(c.Request.Context(), input)
+	if err != nil {
+		status, response := h.mapAmperajeErrorToResponse(err)
+		c.JSON(status, response)
+		return
+	}
+
+	c.JSON(http.StatusOK, CalcularAmperajeResponse{
+		Success:  true,
+		Amperaje: output.Amperaje,
+		Unidad:   output.Unidad,
+	})
+}
+
+// mapAmperajeErrorToResponse mapea errores del dominio a respuestas HTTP.
+func (h *CalculoHandler) mapAmperajeErrorToResponse(err error) (int, CalcularAmperajeResponseError) {
+	// Errores 400 - Bad Request
+	if errors.Is(err, dto.ErrEquipoInputInvalido) {
+		return http.StatusBadRequest, CalcularAmperajeResponseError{
+			Success: false,
+			Error:   "Datos de entrada inválidos",
+			Code:    "INPUT_INVALIDO",
+			Details: err.Error(),
+		}
+	}
+
+	if errors.Is(err, valueobject.ErrVoltajeInvalido) {
+		return http.StatusBadRequest, CalcularAmperajeResponseError{
+			Success: false,
+			Error:   "Tensión fuera de rango permitido",
+			Code:    "TENSION_INVALIDA",
+			Details: err.Error(),
+		}
+	}
+
+	// Por defecto: error interno 500
+	return http.StatusInternalServerError, CalcularAmperajeResponseError{
 		Success: false,
 		Error:   "Error interno del servidor",
 		Code:    "INTERNAL_ERROR",

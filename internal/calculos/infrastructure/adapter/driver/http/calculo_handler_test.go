@@ -93,7 +93,8 @@ func TestCalculoHandler_CalcularMemoria_Success(t *testing.T) {
 	tablaRepo := &mockTablaRepo{}
 	equipoRepo := &mockEquipoRepo{}
 	calcularMemoriaUC := usecase.NewCalcularMemoriaUseCase(tablaRepo, equipoRepo)
-	handler := NewCalculoHandler(calcularMemoriaUC)
+	calcularAmperajeUC := usecase.NewCalcularAmperajeNominalUseCase()
+	handler := NewCalculoHandler(calcularMemoriaUC, calcularAmperajeUC)
 
 	// Crear request
 	reqBody := CalcularMemoriaRequest{
@@ -141,7 +142,8 @@ func TestCalculoHandler_CalcularMemoria_ValidationError(t *testing.T) {
 	tablaRepo := &mockTablaRepo{}
 	equipoRepo := &mockEquipoRepo{}
 	calcularMemoriaUC := usecase.NewCalcularMemoriaUseCase(tablaRepo, equipoRepo)
-	handler := NewCalculoHandler(calcularMemoriaUC)
+	calcularAmperajeUC := usecase.NewCalcularAmperajeNominalUseCase()
+	handler := NewCalculoHandler(calcularMemoriaUC, calcularAmperajeUC)
 
 	// Crear request inválido (falta modo)
 	reqBody := map[string]interface{}{

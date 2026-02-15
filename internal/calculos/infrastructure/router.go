@@ -9,7 +9,10 @@ import (
 )
 
 // NewRouter crea y configura el router Gin.
-func NewRouter(calcularMemoriaUC *usecase.CalcularMemoriaUseCase) *gin.Engine {
+func NewRouter(
+	calcularMemoriaUC *usecase.CalcularMemoriaUseCase,
+	calcularAmperajeUC *usecase.CalcularAmperajeNominalUseCase,
+) *gin.Engine {
 	router := gin.New()
 
 	// Middlewares globales
@@ -28,8 +31,9 @@ func NewRouter(calcularMemoriaUC *usecase.CalcularMemoriaUseCase) *gin.Engine {
 		// Calculos
 		calculos := v1.Group("/calculos")
 		{
-			calculoHandler := http.NewCalculoHandler(calcularMemoriaUC)
+			calculoHandler := http.NewCalculoHandler(calcularMemoriaUC, calcularAmperajeUC)
 			calculos.POST("/memoria", calculoHandler.CalcularMemoria)
+			calculos.POST("/amperaje", calculoHandler.CalcularAmperaje)
 		}
 	}
 

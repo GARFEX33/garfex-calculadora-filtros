@@ -26,11 +26,12 @@ func main() {
 	// TODO: Implementar PostgreSQL repository
 	var equipoRepo calculosport.EquipoRepository
 
-	// Crear use case
+	// Crear use cases
 	calcularMemoriaUC := usecase.NewCalcularMemoriaUseCase(tablaRepo, equipoRepo)
+	calcularAmperajeUC := usecase.NewCalcularAmperajeNominalUseCase()
 
 	// Crear router
-	router := infrastructure.NewRouter(calcularMemoriaUC)
+	router := infrastructure.NewRouter(calcularMemoriaUC, calcularAmperajeUC)
 
 	// Configurar servidor HTTP
 	port := os.Getenv("PORT")
