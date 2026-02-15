@@ -216,64 +216,135 @@ git commit -m "feat: implement {feature} with vertical slices
 4. **Verificación obligatoria** — cada agente debe reportar tests verdes
 5. **No tocar fuera del scope** — cada agente respeta sus límites
 
-## Cómo evitar duplicación de código
+## Cómo evitar duplicación de código — RESPONSABILIDAD DEL ORQUESTADOR
 
-### Checklist ANTES de despachar un agente
+⚠️ **CRÍTICO:** Los agentes especializados (domain, application, infrastructure) **NO SE CONOCEN ENTRE SÍ** por diseño. Cada agente solo ve su propia capa. El **ORQUESTADOR es el único** que tiene visión global y debe:
 
-Antes de pedirle a un agente que cree algo nuevo, el orquestador debe verificar:
+1. **Investigar** — Buscar lo que ya existe en todas las capas
+2. **Decidir** — Estrategia: ¿crear nuevo o extender existente?
+3. **Comunicar** — Informar claramente al subagente qué hacer
+
+### Principio de aislamiento
+
+```
+┌─────────────────────────────────────────────┐
+│              ORQUESTADOR                    │
+│  • Investiga código existente               │
+│  • Toma decisiones arquitectónicas          │
+│  • Comunica estrategia a subagentes         │
+└──────────┬──────────────┬───────────────────┘
+           │              │
+     ┌─────┘              └─────┐
+     ▼                          ▼
+┌──────────────┐          ┌──────────────┐
+│ domain-agent │          │ application- │
+│              │          │    agent     │
+│ NO sabe que  │          │              │
+│ existe app   │          │ NO sabe qué  │
+│              │          │ creó domain  │
+└──────────────┘          └──────────────┘
+```
+
+### Flujo del Orquestador — 3 Pasos
+
+#### Paso 1: Investigar (ANTES de despachar cualquier agente)
 
 ```bash
-# 1. Buscar si ya existe algo similar
-rg -i "concepto|calcular|procesar" internal/{feature} --type go
+# 1. Listar servicios de dominio existentes
+ls internal/{feature}/domain/service/*.go 2>/dev/null || echo "No hay servicios"
 
-# 2. Buscar TODOs sin implementar
-rg "TODO|FIXME|XXX" internal/{feature} --type go
+# 2. Buscar TODOs sin implementar en use cases
+rg "TODO|FIXME|XXX" internal/{feature}/application/usecase --type go
 
-# 3. Buscar por patrones de comportamiento
-rg -i "fórmula|algoritmo|regla" internal/{feature}/domain/service --type go
+# 3. Buscar métodos que calculen/processen algo similar
+rg -i "func.*[Cc]alcular|func.*[Pp]rocesar" internal/{feature} --type go
+
+# 4. Buscar por conceptos del negocio
+rg -i "potencia|corriente|amperaje|tension" internal/{feature}/domain --type go
+```
+
+#### Paso 2: Decidir (El orquestador toma la decisión)
+
+| Situación | Decisión del orquestador |
+|-----------|-------------------------|
+| Ya existe servicio similar en domain | Extender servicio existente, no crear nuevo |
+| Use case tiene TODO que encaja | Implementar TODO, no crear nuevo use case |
+| No existe nada similar | Proceder a crear nuevo |
+
+#### Paso 3: Comunicar (Instrucciones claras al subagente)
+
+**Ejemplo de mal prompt (agente no sabe qué existe):**
+```
+❌ "Creá un servicio para calcular amperaje"
+```
+
+**Ejemplo de buen prompt (orquestador investigó, decidió y comunicó):**
+```
+✅ "Revisé el código y encontré que CalcularCorrienteUseCase tiene 
+    calcularManualPotencia() sin implementar (línea 80). 
+    
+    Tu tarea: Implementar ese método usando el servicio de dominio 
+    CalcularAmperajeNominalCircuito que ya existe. NO crees un use case nuevo."
 ```
 
 ### Regla de oro: Un concepto = Un lugar
 
-| Concepto | ¿Dónde debe vivir? | Ejemplo |
-|----------|-------------------|---------|
-| Cálculo matemático/fórmula | `domain/service/` | `CalcularAmperajeNominalCircuito` |
-| Orquestación de pasos | `application/usecase/` | `CalcularMemoriaUseCase` |
-| Mapeo HTTP/JSON | `infrastructure/adapter/driver/http/` | `CalculoHandler` |
+| Concepto | ¿Dónde debe vivir? | Responsable |
+|----------|-------------------|-------------|
+| Cálculo matemático/fórmula | `domain/service/` | domain-agent |
+| Orquestación de pasos | `application/usecase/` | application-agent |
+| Mapeo HTTP/JSON | `infrastructure/adapter/driver/http/` | infrastructure-agent |
 
-**Señales de alerta de duplicación:**
-- [ ] Dos archivos con "calcular" en el nombre
-- [ ] Un método con `TODO: Implementar...` que nunca se hizo
-- [ ] El agente propone crear un servicio que "calcula X desde Y" cuando ya existe uno similar
-- [ ] Nombres similares: `CalcularCorriente` vs `CalcularAmperaje`
+### Caso de estudio: Error real de duplicación
 
-### Proceso de verificación
+**❌ ERROR:** Orquestador despachó domain-agent para crear `CalcularAmperajeNominalCircuito`, pero NO verificó que `CalcularCorrienteUseCase.calcularManualPotencia()` tenía un TODO sin implementar.
+
+**Resultado:** Duplicación de lógica de cálculo.
+
+**✅ Solución correcta:**
+1. Orquestador debería haber visto el TODO en el use case existente
+2. Orquestador debería haber instruido al application-agent: "Implementá calcularManualPotencia usando el servicio de dominio que ya existe"
+3. NO crear nuevo servicio de dominio si ya hay uno que puede usarse
+
+**Template de contexto para orquestador:**
+
+```
+Sos el application-agent.
+
+## Contexto completo (responsabilidad del orquestador)
+
+Lo que existe en domain (hecho por domain-agent previo):
+- Servicio: CalcularAmperajeNominalCircuito en domain/service/
+- Recibe: potenciaWatts, tension, tipoCarga, sistemaElectrico, factorPotencia
+- Retorna: Corriente
+
+Lo que existe en application (estado actual):
+- Use case: CalcularCorrienteUseCase
+- Método pendiente: calcularManualPotencia() con TODO sin implementar
+
+## Tu tarea
+
+NO crees un nuevo use case. En lugar de eso:
+1. Implementá el método calcularManualPotencia() existente
+2. Usá el servicio de dominio CalcularAmperajeNominalCircuito
+3. Mapeá los parámetros del DTO a los parámetros del servicio
+```
+
+### Checklist del orquestador antes de cada fase
 
 **Antes de despachar domain-agent:**
-```
-¿Ya existe un servicio en domain/service/ que haga cálculos similares?
-  ↓
-Si SÍ → ¿Podemos extenderlo en lugar de crear uno nuevo?
-  ↓
-Si NO → Proceder con domain-agent
-```
+- [ ] ¿Ya existe un servicio en domain/service/ que haga algo similar?
+- [ ] Si SÍ → instruir al agente que extienda, no cree nuevo
+- [ ] Si NO → proceder con domain-agent
 
 **Antes de despachar application-agent:**
-```
-¿El use case existente tiene un método sin implementar (TODO) que encaja?
-  ↓
-Si SÍ → Agente debe implementar usando el servicio de dominio existente
-  ↓
-Si NO → Proceder con application-agent
-```
+- [ ] ¿Hay TODOs en use cases existentes que encajen con lo que necesitamos?
+- [ ] ¿Podemos usar servicios de dominio ya existentes?
+- [ ] En el prompt al agente, incluir lista de servicios de dominio disponibles
 
-### Caso de estudio: Consolidación de cálculo de amperaje
-
-**Problema:** Se creó `CalcularAmperajeNominalCircuito` en domain, pero `CalcularCorrienteUseCase.calcularManualPotencia()` tenía un TODO sin implementar.
-
-**Solución:** Implementar el método del use case usando el servicio de dominio existente en lugar de crear duplicación.
-
-**Aprendizaje:** Siempre buscar TODOs antes de crear código nuevo.
+**Antes de despachar infrastructure-agent:**
+- [ ] ¿Ya existe un handler similar al que necesitamos?
+- [ ] ¿Podemos extender un handler existente en lugar de crear nuevo?
 
 ## Ejemplo completo
 

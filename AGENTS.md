@@ -19,27 +19,44 @@ Orden de prioridad:
 
 Si el skill tiene checklist, crear todos con TodoWrite antes de seguirlo.
 
-## Regla Anti-Duplicación (OBLIGATORIO)
+## Regla Anti-Duplicación (OBLIGATORIO) — RESPONSABILIDAD DEL ORQUESTADOR
 
-**Antes de pedir a un agente que cree código nuevo, verificar que no existe:**
+⚠️ **Los agentes especializados NO se conocen entre sí.** El orquestador es el único con visión global de todas las capas y debe:
 
+1. **Investigar** — Buscar lo que ya existe
+2. **Decidir** — Extender vs crear nuevo
+3. **Comunicar** — Instrucciones claras al subagente
+
+### Flujo del Orquestador (antes de despachar agentes)
+
+**Paso 1: Investigar**
 ```bash
-# Buscar funcionalidad similar
-rg -i "concepto|calcular|procesar" internal/{feature} --type go
-
-# Buscar TODOs sin implementar
-rg "TODO|FIXME|XXX" internal/{feature} --type go
-
-# Listar servicios de dominio existentes
-ls internal/{feature}/domain/service/*.go
+ls internal/{feature}/domain/service/*.go 2>/dev/null
+rg "TODO|FIXME|XXX" internal/{feature}/application/usecase --type go
+rg -i "func.*[Cc]alcular" internal/{feature} --type go
 ```
 
-**Checklist de prevención:**
-- [ ] ¿Ya existe un servicio que haga este cálculo/proceso?
-- [ ] ¿Hay algún método con TODO que debería implementarse primero?
-- [ ] ¿Estoy pidiendo crear duplicación en lugar de reutilizar?
+**Paso 2: Decidir**
+| Situación | Decisión |
+|-----------|----------|
+| Existe servicio similar | Extender, no crear nuevo |
+| Use case tiene TODO | Implementar TODO primero |
+| Nada similar | Crear nuevo |
 
-**Ejemplo real:** El servicio `CalcularAmperajeNominalCircuito` fue creado mientras `CalcularCorrienteUseCase.calcularManualPotencia()` tenía un TODO sin implementar. Resultado: duplicación que tuvo que consolidarse después.
+**Paso 3: Comunicar (en el prompt al agente)**
+
+❌ Mal: "Creá un servicio para calcular amperaje"
+
+✅ Bien: "Implementá el método calcularManualPotencia() que tiene un TODO en 
+          CalcularCorrienteUseCase. Usá el servicio CalcularAmperajeNominalCircuito 
+          que ya existe en domain/service/. NO crees un use case nuevo."
+
+### Checklist (orquestador)
+- [ ] ¿Investigué qué ya existe en domain/ y application/?
+- [ ] ¿Tomé la decisión de extender vs crear?
+- [ ] ¿Comuniqué claramente al agente qué hacer y qué NO hacer?
+
+**Error real:** Orquestador despachó domain-agent para crear servicio nuevo sin verificar que el use case existente tenía un TODO sin implementar. Resultado: duplicación.
 
 ## Workflow de Desarrollo (OBLIGATORIO)
 
