@@ -15,18 +15,18 @@ import (
 
 // CalculoHandler maneja los endpoints de cálculo.
 type CalculoHandler struct {
-	calcularMemoriaUseCase    *usecase.CalcularMemoriaUseCase
-	calcularAmperajeNominalUC *usecase.CalcularAmperajeNominalUseCase
+	calcularMemoriaUseCase   *usecase.CalcularMemoriaUseCase
+	calcularCorrienteUseCase *usecase.CalcularCorrienteUseCase
 }
 
 // NewCalculoHandler crea un nuevo handler de cálculo.
 func NewCalculoHandler(
 	calcularMemoriaUC *usecase.CalcularMemoriaUseCase,
-	calcularAmperajeUC *usecase.CalcularAmperajeNominalUseCase,
+	calcularCorrienteUC *usecase.CalcularCorrienteUseCase,
 ) *CalculoHandler {
 	return &CalculoHandler{
-		calcularMemoriaUseCase:    calcularMemoriaUC,
-		calcularAmperajeNominalUC: calcularAmperajeUC,
+		calcularMemoriaUseCase:   calcularMemoriaUC,
+		calcularCorrienteUseCase: calcularCorrienteUC,
 	}
 }
 
@@ -319,6 +319,7 @@ type CalcularAmperajeResponseError struct {
 }
 
 // CalcularAmperaje POST /api/v1/calculos/amperaje
+// Usa el modo MANUAL_POTENCIA del CalcularCorrienteUseCase existente.
 func (h *CalculoHandler) CalcularAmperaje(c *gin.Context) {
 	var req CalcularAmperajeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -331,17 +332,31 @@ func (h *CalculoHandler) CalcularAmperaje(c *gin.Context) {
 		return
 	}
 
-	// Convertir request a DTO
-	input := dto.AmperajeNominalInput{
-		PotenciaWatts:    req.PotenciaWatts,
-		Tension:          req.Tension,
-		TipoCarga:        dto.TipoCargaDTO(req.TipoCarga),
-		SistemaElectrico: dto.SistemaElectricoDTO(req.SistemaElectrico),
-		FactorPotencia:   req.FactorPotencia,
+	// Crear tensión usando el constructor
+	tension, err := valueobject.NewTension(req.Tension)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, CalcularAmperajeResponseError{
+			Success: false,
+			Error:   "Tensión inválida",
+			Code:    "TENSION_INVALIDA",
+			Details: err.Error(),
+		})
+		return
 	}
 
-	// Ejecutar use case
-	output, err := h.calcularAmperajeNominalUC.Execute(c.Request.Context(), input)
+	// Convertir request a EquipoInput con modo MANUAL_POTENCIA
+	input := dto.EquipoInput{
+		Modo:             dto.ModoManualPotencia,
+		PotenciaNominal:  req.PotenciaWatts,
+		Tension:          tension,
+		SistemaElectrico: dto.SistemaElectrico(req.SistemaElectrico),
+		FactorPotencia:   req.FactorPotencia,
+		ITM:              0, // No requerido para este cálculo
+		Estado:           "default",
+	}
+
+	// Ejecutar use case de corriente en modo MANUAL_POTENCIA
+	output, err := h.calcularCorrienteUseCase.Execute(c.Request.Context(), input)
 	if err != nil {
 		status, response := h.mapAmperajeErrorToResponse(err)
 		c.JSON(status, response)
@@ -350,8 +365,8 @@ func (h *CalculoHandler) CalcularAmperaje(c *gin.Context) {
 
 	c.JSON(http.StatusOK, CalcularAmperajeResponse{
 		Success:  true,
-		Amperaje: output.Amperaje,
-		Unidad:   output.Unidad,
+		Amperaje: output.CorrienteNominal,
+		Unidad:   "A",
 	})
 }
 

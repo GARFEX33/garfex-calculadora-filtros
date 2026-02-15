@@ -28,10 +28,10 @@ func main() {
 
 	// Crear use cases
 	calcularMemoriaUC := usecase.NewCalcularMemoriaUseCase(tablaRepo, equipoRepo)
-	calcularAmperajeUC := usecase.NewCalcularAmperajeNominalUseCase()
+	calcularCorrienteUC := usecase.NewCalcularCorrienteUseCase(equipoRepo)
 
 	// Crear router
-	router := infrastructure.NewRouter(calcularMemoriaUC, calcularAmperajeUC)
+	router := infrastructure.NewRouter(calcularMemoriaUC, calcularCorrienteUC)
 
 	// Configurar servidor HTTP
 	port := os.Getenv("PORT")
