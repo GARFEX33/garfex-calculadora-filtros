@@ -1,140 +1,107 @@
-# Infrastructure Layer - calculos
+# Calculos — Infrastructure Layer
 
-Implementa los ports definidos en `application/port/`.
-Tecnologias: CSV (encoding/csv), HTTP (Gin).
+Implementa los ports definidos en `application/port/`. Tecnologías: CSV (encoding/csv), HTTP (Gin).
 
-> **Skills Reference**:
->
-> - [`golang-patterns`](.agents/skills/golang-patterns/SKILL.md) — error handling, interfaces, convenciones de repositorios
-> - [`golang-pro`](.agents/skills/golang-pro/SKILL.md) — connection pooling, concurrencia en queries
+## Trabajar en esta Capa
 
-### Auto-invoke
+Esta capa es responsabilidad del **`infrastructure-agent`**. El agente ejecuta su ciclo completo:
 
-| Accion                            | Skill             |
-| --------------------------------- | ----------------- |
-| Crear o modificar repositorio     | `golang-patterns` |
-| Configurar cliente HTTP o BD       | `golang-pro`      |
-| Implementar nuevo CSV reader      | `golang-patterns` |
+```
+brainstorming-infrastructure → writing-plans-infrastructure → executing-plans-infrastructure
+```
+
+**NO modificar directamente** — usar el sistema de orquestación.
 
 ## Estructura
 
 ```
-infrastructure/
+internal/calculos/infrastructure/
 ├── adapter/
 │   ├── driven/
-│   │   └── csv/           # CSVTablaNOMRepository, SeleccionarTemperaturaRepository
+│   │   └── csv/              # CSVTablaNOMRepository
 │   └── driver/
 │       └── http/
-│           ├── formatters/  # NombreTablaAmpacidad, GenerarObservaciones
-│           └── middleware/  # CorsMiddleware, RequestLogger
-├── router.go              # Configuración de rutas Gin
-└── AGENTS.md
+│           ├── formatters/   # NombreTablaAmpacidad, GenerarObservaciones
+│           ├── middleware/   # CORS, RequestLogger
+│           └── handler.go    # CalculoHandler
+└── router.go                 # Configuración de rutas Gin
 ```
 
-## Driven Adapters (CSV)
+## Dependencias permitidas
 
-### CSVTablaNOMRepository
+- `internal/shared/kernel/valueobject`
+- `internal/calculos/domain/entity`
+- `internal/calculos/application/port` (interfaces a implementar)
+- `internal/calculos/application/usecase` (para llamar desde handlers)
+- Gin, encoding/csv
 
-Lee tablas NOM desde CSV files con in-memory caching.
+## Dependencias prohibidas
 
-#### Mapeo canalizacion → tabla ampacidad
+- `internal/calculos/domain/service` — usar solo entity y valueobject
+- Lógica de negocio
 
-| TipoCanalizacion                             | Archivo CSV     |
-| -------------------------------------------- | --------------- |
-| TUBERIA_PVC / ALUMINIO / ACERO_PG / ACERO_PD | 310-15-b-16.csv |
-| CHAROLA_CABLE_ESPACIADO                      | 310-15-b-17.csv |
-| CHAROLA_CABLE_TRIANGULAR                     | 310-15-b-20.csv |
+## Cómo modificar esta capa
 
-#### Mapeo canalizacion → columna R (Tabla 9)
+### Para nueva feature
 
-| TipoCanalizacion                                     | Columna resistencia    |
-| ---------------------------------------------------- | ---------------------- |
-| TUBERIA_PVC / CHAROLA_ESPACIADO / CHAROLA_TRIANGULAR | `res_{material}_pvc`   |
-| TUBERIA_ALUMINIO                                     | `res_{material}_al`    |
-| TUBERIA_ACERO_PG / ACERO_PD                          | `res_{material}_acero` |
-
-#### Tabla 250-122 (Conductor de Tierra)
-
-Formato CSV con columnas Cu + Al:
-```csv
-itm_hasta,cu_calibre,cu_seccion_mm2,al_calibre,al_seccion_mm2
+```bash
+# Primero: domain-agent y application-agent completan sus capas
+# Luego:
+orchestrate-agents --agent infrastructure --feature nueva-feature
 ```
 
-### SeleccionarTemperaturaRepository
+### Para cambios en calculos existente
 
-Implementa `SeleccionarTemperaturaPort` delegando al servicio de dominio.
+```bash
+# Orquestador:
+# "infrastructure-agent: agregar handler para exportar resultados a CSV"
+```
 
-## Driver Adapters (HTTP)
+## Adapters
 
-### CalculoHandler
+### Driven (implementan ports)
 
-Maneja los endpoints de cálculo:
-- `POST /api/v1/calculos/memoria` → MemoriaOutput
+- **CSVTablaNOMRepository** — lee tablas NOM desde CSV
+- **CSVSeleccionarTemperatura** — temperaturas por estado
 
-#### Mapeo errores domain → HTTP
+### Driver (HTTP)
 
-| Error domain | HTTP status |
-|--------------|-------------|
+- **CalculoHandler** — endpoints REST
+  - `POST /api/v1/calculos/memoria`
+
+### Formatters
+
+- **NombreTablaAmpacidad** — nombres descriptivos de tablas
+- **GenerarObservaciones** — observaciones del cálculo
+
+## Mapeo de Errores HTTP
+
+| Error domain/application | HTTP status |
+|--------------------------|-------------|
 | ErrModoInvalido | 400 |
-| ErrCanalizacionNoSoportada | 400 |
-| ErrEquipoInputInvalido | 400 |
-| Validacion de input | 400 |
+| ErrCanzacionNoSoportada | 400 |
+| Validación | 400 |
 | ErrConductorNoEncontrado | 422 |
 | ErrCanalizacionNoDisponible | 422 |
 | Error interno | 500 |
 
-### Formatters
+## Reglas de Oro
 
-- `NombreTablaAmpacidad` - Genera nombre descriptivo de tabla NOM
-- `GenerarObservaciones` - Genera observaciones sobre el cálculo
+1. **Implementar exactamente el port** — no agregar métodos
+2. **Sin lógica de negocio** — solo traducción de datos
+3. **Handlers solo coordinan** — bind → use case → response
+4. **Inyección de dependencias** — constructor, no globals
+5. **Context.Context** — primer parámetro en I/O
 
-### Middleware
+## Referencias
 
-- `CorsMiddleware` - CORS para desarrollo
-- `RequestLogger` - Logging de peticiones
+- Agente: `.opencode/agents/infrastructure-agent.md`
+- Comando: `.opencode/commands/orchestrate-agents.md`
+- Skills: `brainstorming-infrastructure`, `writing-plans-infrastructure`, `executing-plans-infrastructure`
 
-## Variables de Entorno
-
-`DATA_PATH` - Path a los archivos CSV de tablas NOM
-
----
-
-## CRITICAL RULES
-
-### General
-- ALWAYS: Implementar exactamente el port definido en `application/port/`
-- ALWAYS: `context.Context` como primer parámetro en todas las operaciones
-- ALWAYS: Inyección de dependencias via constructor — sin globals ni singletons
-- NEVER: Importar `domain/service` — solo `entity` y `valueobject`
-- NEVER: Lógica de negocio en adapters — solo traducción datos <-> domain
-
-### CSV Repository
-- ALWAYS: Validar columnas requeridas al cargar CSV — fallar rápido si falta columna
-- NEVER: Escribir datos NOM hardcodeados en Go — siempre leer del CSV
-
-### HTTP Handler
-- ALWAYS: Handler = bind input → llamar use case → traducir resultado a HTTP. Nada más.
-- ALWAYS: Mapear errores de domain/application a HTTP status
-- NEVER: Lógica de negocio en handlers
-
----
-
-## NAMING CONVENTIONS
-
-| Entidad                | Patrón                         | Ejemplo                         |
-| ---------------------- | ------------------------------ | ------------------------------- |
-| Repositorio CSV        | `CSVPascalCaseRepository`      | `CSVTablaNOMRepository`         |
-| Handler struct        | `PascalCaseHandler`            | `CalculoHandler`                |
-| Archivo handler       | `snake_case_handler.go`        | `calculo_handler.go`            |
-| Middleware            | `PascalCaseMiddleware`         | `CorsMiddleware`                |
-| Formatter             | `PascalCaseFormatter`          | `NombreTablaAmpacidad`          |
-
----
-
-## QA CHECKLIST
+## QA Checklist
 
 - [ ] `go test ./internal/calculos/infrastructure/...` pasa
-- [ ] Nuevo repositorio implementa el port completo
-- [ ] Sin estado global mutable
-- [ ] Tests de handler pasan
-- [ ] Sin lógica de negocio en adapters
+- [ ] Repositorios implementan ports exactamente
+- [ ] Sin estado global
+- [ ] Sin lógica de negocio
