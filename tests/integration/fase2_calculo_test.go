@@ -4,12 +4,12 @@ import (
 	"context"
 	"testing"
 
-	"github.com/garfex/calculadora-filtros/internal/application/dto"
-	"github.com/garfex/calculadora-filtros/internal/application/port"
-	"github.com/garfex/calculadora-filtros/internal/application/usecase"
-	"github.com/garfex/calculadora-filtros/internal/domain/entity"
-	"github.com/garfex/calculadora-filtros/internal/domain/valueobject"
-	"github.com/garfex/calculadora-filtros/internal/infrastructure/repository"
+	"github.com/garfex/calculadora-filtros/internal/calculos/application/dto"
+	"github.com/garfex/calculadora-filtros/internal/calculos/application/port"
+	"github.com/garfex/calculadora-filtros/internal/calculos/application/usecase"
+	"github.com/garfex/calculadora-filtros/internal/calculos/domain/entity"
+	"github.com/garfex/calculadora-filtros/internal/calculos/infrastructure/adapter/driven/csv"
+	"github.com/garfex/calculadora-filtros/internal/shared/kernel/valueobject"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -21,7 +21,7 @@ func (s *stubEquipoRepository) BuscarPorClave(ctx context.Context, clave string)
 }
 
 func TestFase2_CalculoCompleto(t *testing.T) {
-	tablaRepo, err := repository.NewCSVTablaNOMRepository("../../data/tablas_nom")
+	tablaRepo, err := csv.NewCSVTablaNOMRepository("../../data/tablas_nom")
 	require.NoError(t, err)
 
 	equipoRepo := &stubEquipoRepository{}

@@ -5,7 +5,7 @@ Backend API en Go para memorias de calculo de instalaciones electricas segun nor
 ## Como Usar Esta Guia
 
 - Empieza aqui para normas globales del proyecto
-- Cada capa tiene su propio AGENTS.md con guias especificas
+- Cada feature y capa tiene su propio AGENTS.md con guias especificas
 - El AGENTS.md del directorio tiene precedencia sobre este archivo cuando hay conflicto
 
 ## Regla de Skills (OBLIGATORIO)
@@ -13,38 +13,213 @@ Backend API en Go para memorias de calculo de instalaciones electricas segun nor
 **ANTES de cualquier accion, verificar si aplica un skill.** Si hay 1% de probabilidad de que aplique, invocar el skill con la herramienta `Skill`.
 
 Orden de prioridad:
+
 1. **Skills de proceso primero** (brainstorming, debugging) — determinan COMO abordar la tarea
 2. **Skills de implementacion segundo** (golang-patterns, api-design) — guian la ejecucion
 
 Si el skill tiene checklist, crear todos con TodoWrite antes de seguirlo.
 
+## Regla Anti-Duplicación (OBLIGATORIO) — RESPONSABILIDAD DEL ORQUESTADOR
+
+⚠️ **Los agentes especializados NO se conocen entre sí.** El orquestador es el único con visión global de todas las capas y debe:
+
+1. **Investigar** — Buscar lo que ya existe
+2. **Decidir** — Extender vs crear nuevo
+3. **Comunicar** — Instrucciones claras al subagente
+
+### Flujo del Orquestador (antes de despachar agentes)
+
+**Paso 1: Investigar**
+```bash
+ls internal/{feature}/domain/service/*.go 2>/dev/null
+rg "TODO|FIXME|XXX" internal/{feature}/application/usecase --type go
+rg -i "func.*[Cc]alcular" internal/{feature} --type go
+```
+
+**Paso 2: Decidir**
+| Situación | Decisión |
+|-----------|----------|
+| Existe servicio similar | Extender, no crear nuevo |
+| Use case tiene TODO | Implementar TODO primero |
+| Nada similar | Crear nuevo |
+
+**Paso 3: Comunicar (en el prompt al agente)**
+
+❌ Mal: "Creá un servicio para calcular amperaje"
+
+✅ Bien: "Implementá el método calcularManualPotencia() que tiene un TODO en 
+          CalcularCorrienteUseCase. Usá el servicio CalcularAmperajeNominalCircuito 
+          que ya existe en domain/service/. NO crees un use case nuevo."
+
+### Checklist (orquestador)
+- [ ] ¿Investigué qué ya existe en domain/ y application/?
+- [ ] ¿Tomé la decisión de extender vs crear?
+- [ ] ¿Comuniqué claramente al agente qué hacer y qué NO hacer?
+
+**Error real:** Orquestador despachó domain-agent para crear servicio nuevo sin verificar que el use case existente tenía un TODO sin implementar. Resultado: duplicación.
+
 ## Workflow de Desarrollo (OBLIGATORIO)
 
 Para cualquier feature o bugfix, seguir este flujo de skills en orden:
 
-| Paso | Skill | Trigger | Que hace |
-|------|-------|---------|----------|
-| 1 | `brainstorming` | Usuario pide feature/cambio | Refina ideas con preguntas, explora alternativas, presenta diseño por secciones para validar. Guarda documento de diseño. |
-| 2 | `writing-plans` | Diseño aprobado | Divide el trabajo en tareas pequeñas (2-5 min cada una). Cada tarea tiene: rutas exactas, código completo, pasos de verificación. |
-| 3 | `subagent-driven-development` o `executing-plans` | Plan listo | Despacha subagente fresco por tarea con revisión de dos etapas (spec + calidad), o ejecuta en batches con checkpoints humanos. |
-| 4 | `test-driven-development` | Durante implementación | RED-GREEN-REFACTOR: escribir test que falla → verlo fallar → código mínimo → verlo pasar → commit. Borra código escrito antes de tests. |
-| 5 | `requesting-code-review` | Entre tareas | Revisa contra el plan, reporta issues por severidad. Issues críticos bloquean progreso. |
-| 6 | `finishing-a-development-branch` | Tareas completas | Verifica tests, presenta opciones (merge/PR/keep/discard), limpia worktree. |
+| Paso | Skill                    | Trigger                     | Que hace                                                                                                                          |
+| ---- | ------------------------ | --------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| 1    | `brainstorming`          | Usuario pide feature/cambio | Refina ideas con preguntas, explora alternativas, presenta diseño por secciones para validar. Guarda documento de diseño.         |
+| 2    | `writing-plans`          | Diseño aprobado             | Divide el trabajo en tareas pequeñas (2-5 min cada una). Cada tarea tiene: rutas exactas, código completo, pasos de verificación. |
+| 3    | `executing-plans`        | Plan listo                  | Despacha subagente fresco por tarea con revisión de dos etapas (spec + calidad)                                                   |
+| 4    | `requesting-code-review` | Entre tareas                | Revisa contra el plan, reporta issues por severidad. Issues críticos bloquean progreso.                                           |
 
 **IMPORTANTE:** No saltear pasos. Si el usuario dice "agregá X", empezar con `brainstorming`, NO con código.
 
+## Sistema de Agentes Especializados (OBLIGATORIO)
+
+Cada capa tiene su propio agente especializado con su ciclo completo de trabajo. El coordinador delega a los agentes en este orden:
+
+```
+domain-agent → application-agent → infrastructure-agent
+```
+
+### Cuándo invocar cada agente
+
+| Accion | Agente | Skills del agente |
+| ------ | ------ | ----------------- |
+| Crear/modificar entidades, value objects, servicios de dominio | `domain-agent` | `brainstorming-dominio` → `writing-plans-dominio` → `executing-plans-dominio` |
+| Crear/modificar ports, use cases, DTOs | `application-agent` | `brainstorming-application` → `writing-plans-application` → `executing-plans-application` |
+| Crear/modificar adapters, repositorios, handlers HTTP | `infrastructure-agent` | `brainstorming-infrastructure` → `writing-plans-infrastructure` → `executing-plans-infrastructure` |
+
+### Reglas de delegación entre agentes
+
+- **domain-agent** trabaja primero — no sabe que existen los otros agentes
+- **application-agent** toma el output del domain-agent — no toca infraestructura
+- **infrastructure-agent** toma el output del application-agent — implementa ports, no define reglas
+- **Coordinador** es el único que conoce el orden y hace el wiring en `cmd/api/main.go`
+- Cada agente crea sus propias tareas con TodoWrite antes de ejecutar
+- Cada agente verifica con `go test` antes de entregar
+
+### Flujo del Coordinador (este chat)
+
+El coordinador orquesta TODO el trabajo. Los agentes especializados solo ejecutan su parte.
+
+```
+Usuario pide feature/cambio
+         │
+         ▼
+┌─────────────────────────────────────┐
+│         COORDINADOR                 │
+│  1. Invocar skill `brainstorming`   │
+│  2. Crear diseño + plan             │
+│  3. Crear rama de trabajo           │
+│  4. Despachar agentes en orden      │
+│  5. Hacer wiring en main.go         │
+│  6. Commit final                    │
+└─────────────────────────────────────┘
+         │
+    ┌────┴────┬────────────┐
+    ▼         ▼            ▼
+domain-   application-  infrastructure-
+agent     agent         agent
+    │         │            │
+    ▼         ▼            ▼
+ dominio   aplicación   infraestructura
+ completo  completa     completa
+```
+
+**Qué hace el coordinador:**
+- Brainstorming inicial con el usuario
+- Crear documentos de diseño y plan
+- Crear rama git para el trabajo
+- Despachar cada agente con contexto completo
+- Esperar que cada agente termine antes de despachar el siguiente
+- Hacer el wiring final en `cmd/api/main.go`
+- Actualizar AGENTS.md si cambian reglas
+- Commit y preparar para merge
+
+**Qué hace cada agente especializado:**
+- Leer el plan que le corresponde
+- Crear sus propias tareas con TodoWrite
+- Ejecutar SOLO en su capa (domain, application, o infrastructure)
+- Verificar con `go test` antes de terminar
+- Reportar archivos creados y resultado de tests
+
+**Template para despachar agente:**
+
+```
+Sos el {agente} de este proyecto. Tu trabajo es ejecutar {pasos} del plan.
+
+## Proyecto
+Repositorio: {ruta}
+Rama: {rama}
+Módulo Go: {modulo}
+
+## Contexto — qué hicieron los agentes anteriores
+{resumen de lo que ya existe}
+
+## Tu scope
+{carpetas que puede tocar}
+
+**NO toques** {carpetas prohibidas}
+
+## Plan a ejecutar
+{ruta al plan}
+
+## Instrucciones
+1. Leé el plan y creá tus propias tareas con TodoWrite
+2. Ejecutá cada tarea
+3. Verificá con go test antes de terminar
+
+## Al terminar
+Reportá: archivos creados, output de tests, issues encontrados
+```
+
+> **Skill de referencia:** Ver `.agents/skills/orchestrating-agents/SKILL.md` para el proceso completo.
+
+## Estructura del Proyecto (Vertical Slices)
+
+```
+internal/
+  shared/
+    kernel/
+      valueobject/      ← Corriente, Tension, Temperatura, MaterialConductor, Conductor, etc.
+  calculos/             ← feature: memoria de cálculo eléctrico
+    domain/
+      entity/           ← TipoCanalizacion, SistemaElectrico, ITM, MemoriaCalculo, etc.
+      service/          ← 7 servicios de cálculo eléctrico (IEEE-141, NOM)
+    application/
+      port/             ← TablaNOMRepository, EquipoRepository (interfaces)
+      usecase/          ← OrquestadorMemoriaCalculo y micro use cases
+      dto/              ← EquipoInput, MemoriaOutput
+    infrastructure/
+      adapter/
+        driver/http/    ← CalculoHandler, formatters, middleware
+        driven/csv/     ← CSVTablaNOMRepository
+  equipos/              ← feature: catálogo de equipos (placeholder futuro)
+    domain/
+    application/
+    infrastructure/
+cmd/api/main.go         ← único lugar que conoce todas las features, hace wiring
+data/tablas_nom/        ← tablas CSV NOM
+tests/integration/
+```
+
+## Reglas de Aislamiento Entre Features (CRITICO)
+
+- `calculos/` NUNCA importa `equipos/` y viceversa
+- `shared/kernel/` NO importa ninguna feature
+- `cmd/api/main.go` es el ÚNICO archivo que puede importar múltiples features
+- Comunicación entre features en el futuro: solo vía interfaces en `shared/kernel/`
+
 ## Guias por Capa
 
-| Capa                    | Ubicacion                          | AGENTS.md contiene                           |
-| ----------------------- | ---------------------------------- | -------------------------------------------- |
-| Domain                  | `internal/domain/`                 | Orquestador — apunta a entity/, vo/, service/ |
-| Domain — Entity         | `internal/domain/entity/`          | Entidades, TipoEquipo, TipoCanalizacion, MemoriaCalculo |
-| Domain — Value Objects  | `internal/domain/valueobject/`     | Corriente, Tension, Conductor, MaterialConductor |
-| Domain — Services       | `internal/domain/service/`         | 6 servicios de calculo, formula IEEE-141 caida tension |
-| Application             | `internal/application/`            | Ports, use cases, DTOs, orquestacion         |
-| Infrastructure          | `internal/infrastructure/`         | Repos, CSV, PostgreSQL, mapeos, entorno      |
-| Presentation            | `internal/presentation/`           | API REST, handlers, errores HTTP, versionado |
-| Datos NOM               | `data/tablas_nom/`                 | Tablas CSV, formatos, reglas de validacion   |
+| Capa                    | Ubicacion                                                   | AGENTS.md                                          |
+| ----------------------- | ----------------------------------------------------------- | -------------------------------------------------- |
+| Shared Kernel           | `internal/shared/kernel/`                                   | `internal/shared/kernel/AGENTS.md`                 |
+| Feature Calculos        | `internal/calculos/`                                        | ver subcapas abajo                                 |
+| Domain — Entity         | `internal/calculos/domain/entity/`                          | `internal/calculos/domain/AGENTS.md`               |
+| Domain — Services       | `internal/calculos/domain/service/`                         | `internal/calculos/domain/AGENTS.md`               |
+| Application             | `internal/calculos/application/`                            | `internal/calculos/application/AGENTS.md`          |
+| Infrastructure          | `internal/calculos/infrastructure/`                         | `internal/calculos/infrastructure/AGENTS.md`       |
+| Feature Equipos         | `internal/equipos/`                                         | `internal/equipos/AGENTS.md`                       |
+| Datos NOM               | `data/tablas_nom/`                                          | `data/tablas_nom/AGENTS.md`                        |
 
 ## Skills Disponibles
 
@@ -59,33 +234,50 @@ Para cualquier feature o bugfix, seguir este flujo de skills en orden:
 | `skill-sync`            | Sincronizar metadata de skills a tablas Auto-invocacion | [SKILL.md](.agents/skills/skill-sync/SKILL.md)            |
 | `commit-work`           | Commits de calidad: staging, split logico, mensajes     | [SKILL.md](.agents/skills/commit-work/SKILL.md)           |
 
+### Skills de Proceso
+
+| Skill                            | Descripcion                                        | Ruta                                                                   |
+| -------------------------------- | -------------------------------------------------- | ---------------------------------------------------------------------- |
+| `brainstorming`                  | Explorar ideas antes de implementar                | [SKILL.md](.agents/skills/brainstorming/SKILL.md)                      |
+| `brainstorming-dominio`          | Diseñar dominio: entidades, VOs, servicios         | [SKILL.md](.agents/skills/brainstorming-dominio/SKILL.md)              |
+| `brainstorming-application`      | Diseñar application: ports, use cases, DTOs        | [SKILL.md](.agents/skills/brainstorming-application/SKILL.md)          |
+| `brainstorming-infrastructure`   | Diseñar infrastructure: adapters, repos            | [SKILL.md](.agents/skills/brainstorming-infrastructure/SKILL.md)       |
+| `writing-plans-dominio`          | Plan de implementacion de dominio                  | [SKILL.md](.agents/skills/writing-plans-dominio/SKILL.md)              |
+| `writing-plans-application`      | Plan de implementacion de application              | [SKILL.md](.agents/skills/writing-plans-application/SKILL.md)          |
+| `writing-plans-infrastructure`   | Plan de implementacion de infrastructure           | [SKILL.md](.agents/skills/writing-plans-infrastructure/SKILL.md)       |
+| `executing-plans-dominio`        | Ejecutar plan de dominio                           | [SKILL.md](.agents/skills/executing-plans-dominio/SKILL.md)            |
+| `executing-plans-application`    | Ejecutar plan de application                       | [SKILL.md](.agents/skills/executing-plans-application/SKILL.md)        |
+| `executing-plans-infrastructure` | Ejecutar plan de infrastructure                    | [SKILL.md](.agents/skills/executing-plans-infrastructure/SKILL.md)     |
+
 ### Skills de Proyecto
 
-| Skill               | Descripcion                         | Ruta                                                  |
-| ------------------- | ----------------------------------- | ----------------------------------------------------- |
-| `agents-md-manager` | Crear y auditar jerarquia AGENTS.md | [SKILL.md](.agents/skills/agents-md-manager/SKILL.md) |
+| Skill                                       | Descripcion                                                            | Ruta                                                                                          |
+| ------------------------------------------- | ---------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `agents-md-manager`                         | Crear y auditar jerarquia AGENTS.md                                    | [SKILL.md](.agents/skills/agents-md-manager/SKILL.md)                                        |
+| `clean-ddd-hexagonal-vertical-go-enterprise`| Arquitectura Enterprise: Clean + DDD + Hexagonal + Vertical Slices     | [SKILL.md](.agents/skills/clean-ddd-hexagonal-vertical-go-enterprise/SKILL.md)               |
 
 ## Auto-invocacion
 
 Cuando realices estas acciones, LEE el AGENTS.md o skill correspondiente PRIMERO:
 
-| Accion                                    | Referencia                          |
-| ----------------------------------------- | ----------------------------------- |
-| Crear/modificar entidad o value object    | `internal/domain/entity/AGENTS.md` o `internal/domain/valueobject/AGENTS.md` |
-| Crear/modificar servicio de calculo       | `internal/domain/service/AGENTS.md`  |
-| Trabajar con ports o use cases            | `internal/application/AGENTS.md`    |
-| Trabajar con DTOs o flujo de orquestacion | `internal/application/AGENTS.md`    |
-| Modificar repositorios o CSV reader       | `internal/infrastructure/AGENTS.md` |
-| Configurar BD o variables de entorno      | `internal/infrastructure/AGENTS.md` |
-| Crear/modificar endpoints API             | `internal/presentation/AGENTS.md`   |
-| Trabajar con tablas NOM CSV               | `data/tablas_nom/AGENTS.md`         |
-| Agregar nueva tabla NOM                   | `data/tablas_nom/AGENTS.md`         |
-| Aplicar patrones Go idiomaticos           | skill `golang-patterns`             |
-| Crear/auditar AGENTS.md                   | skill `agents-md-manager`           |
-| Disenar API endpoints                     | skill `api-design-principles`       |
-| Crear nuevo skill                         | skill `skill-creator`               |
-| Sincronizar skills a AGENTS.md            | skill `skill-sync`                  |
-| Hacer commits o pull requests             | skill `commit-work`                 |
+| Accion                                        | Agente / Referencia                                          |
+| --------------------------------------------- | ------------------------------------------------------------ |
+| Crear/modificar entidad o value object        | `domain-agent` → `internal/calculos/domain/AGENTS.md`       |
+| Crear/modificar servicio de calculo           | `domain-agent` → `internal/calculos/domain/AGENTS.md`       |
+| Agregar value object al kernel compartido     | `domain-agent` → `internal/shared/kernel/AGENTS.md`         |
+| Trabajar con ports o use cases                | `application-agent` → `internal/calculos/application/AGENTS.md` |
+| Trabajar con DTOs o flujo de orquestacion     | `application-agent` → `internal/calculos/application/AGENTS.md` |
+| Modificar repositorios o CSV reader           | `infrastructure-agent` → `internal/calculos/infrastructure/AGENTS.md` |
+| Crear/modificar endpoints API o handlers      | `infrastructure-agent` → `internal/calculos/infrastructure/AGENTS.md` |
+| Configurar BD o variables de entorno          | `infrastructure-agent` → `internal/calculos/infrastructure/AGENTS.md` |
+| Trabajar con tablas NOM CSV                   | `data/tablas_nom/AGENTS.md`                                  |
+| Agregar nueva tabla NOM                       | `data/tablas_nom/AGENTS.md`                                  |
+| Aplicar patrones Go idiomaticos               | skill `golang-patterns`                                      |
+| Crear/auditar AGENTS.md                       | skill `agents-md-manager`                                    |
+| Disenar API endpoints                         | skill `api-design-principles`                                |
+| Crear nuevo skill                             | skill `skill-creator`                                        |
+| Sincronizar skills a AGENTS.md                | skill `skill-sync`                                           |
+| Hacer commits o pull requests                 | skill `commit-work`                                          |
 
 ## Stack
 
@@ -121,12 +313,14 @@ go run cmd/api/main.go
 ```
 
 **Verificar que el servidor está corriendo:**
+
 ```bash
 curl http://localhost:8080/health
 # Respuesta esperada: {"status":"ok"}
 ```
 
 **Endpoint principal:**
+
 ```bash
 curl -X POST http://localhost:8080/api/v1/calculos/memoria \
   -H "Content-Type: application/json" \
@@ -137,23 +331,7 @@ curl -X POST http://localhost:8080/api/v1/calculos/memoria \
 
 **Campo `material`:** Opcional, valores: `"Cu"` (default) o `"Al"`
 
-## Fases
-
-1. **Fase 1 (actual):** 4 equipos, 6 servicios, 7 tablas NOM, 6 canalizaciones
-2. **Fase 2:** Mas equipos y tablas NOM
-3. **Fase 3:** PDF + frontend (repo separado)
-
-**IMPORTANTE:** No adelantarse. Solo implementar lo necesario para la fase actual.
-
 ## Convenciones Globales
-
-- **Nombres de negocio en espanol** (`MemoriaCalculo`, `CorrienteNominal`)
-- **Codigo Go en ingles idiomatico** (packages, variables internas)
-- **Errores:** `ErrXxx = errors.New(...)`, wrap con `fmt.Errorf("%w: ...", ErrXxx)`
-- **Tests:** table-driven con `t.Run`, testify, `_test.go` en mismo directorio
-- **Sin panic**, sin context en structs, receptores consistentes
-- **Domain sin dependencias externas** — sin Gin, sin pgx, sin CSV; ports en `application/port/`; DI manual en `cmd/api/main.go`
-- **YAGNI** — Fase 1 unicamente: sin PDF, sin auth, sin frontend, sin cache avanzado
 
 ## Actualizacion de Documentacion
 
@@ -170,7 +348,7 @@ Al terminar cada tarea, actualizar: plan si diverge, AGENTS.md si cambia una reg
 - Ports CSV infrastructure: `completed/2026-02-12-ports-csv-infrastructure-design.md`
 - Material Cu/Al conductor tierra: `completed/2026-02-13-material-conductor-tierra-design.md`
 
-### Pendientes (en `docs/plans/`)
+### Refactorizacion Vertical Slices (en `docs/plans/`)
 
-- Canalizacion multi-tubo: `2026-02-13-canalizacion-multi-tubo-plan.md`
-- Fase 2 memoria calculo: `2026-02-13-fase2-memoria-calculo-design.md`
+- Diseño: `2026-02-15-vertical-slices-refactor-design.md`
+- Plan: `2026-02-15-vertical-slices-refactor-plan.md`
