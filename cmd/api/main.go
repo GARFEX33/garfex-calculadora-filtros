@@ -10,27 +10,27 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/garfex/calculadora-filtros/internal/application/port"
-	"github.com/garfex/calculadora-filtros/internal/application/usecase"
-	"github.com/garfex/calculadora-filtros/internal/infrastructure/repository"
-	"github.com/garfex/calculadora-filtros/internal/presentation"
+	calculosport "github.com/garfex/calculadora-filtros/internal/calculos/application/port"
+	"github.com/garfex/calculadora-filtros/internal/calculos/application/usecase"
+	"github.com/garfex/calculadora-filtros/internal/calculos/infrastructure"
+	"github.com/garfex/calculadora-filtros/internal/calculos/infrastructure/adapter/driven/csv"
 )
 
 func main() {
 	// Crear repositorios
-	tablaRepo, err := repository.NewCSVTablaNOMRepository("data/tablas_nom")
+	tablaRepo, err := csv.NewCSVTablaNOMRepository("data/tablas_nom")
 	if err != nil {
 		log.Fatalf("Error cargando tablas NOM: %v", err)
 	}
 
 	// TODO: Implementar PostgreSQL repository
-	var equipoRepo port.EquipoRepository
+	var equipoRepo calculosport.EquipoRepository
 
 	// Crear use case
 	calcularMemoriaUC := usecase.NewCalcularMemoriaUseCase(tablaRepo, equipoRepo)
 
 	// Crear router
-	router := presentation.NewRouter(calcularMemoriaUC)
+	router := infrastructure.NewRouter(calcularMemoriaUC)
 
 	// Configurar servidor HTTP
 	port := os.Getenv("PORT")
