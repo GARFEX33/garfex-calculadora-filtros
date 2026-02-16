@@ -14,18 +14,15 @@ import (
 
 // AjustarCorrienteUseCase executes Step 2: Current Adjustment.
 type AjustarCorrienteUseCase struct {
-	tablaRepo           port.TablaNOMRepository
-	seleccionarTempPort port.SeleccionarTemperaturaPort
+	tablaRepo port.TablaNOMRepository
 }
 
 // NewAjustarCorrienteUseCase creates a new instance.
 func NewAjustarCorrienteUseCase(
 	tablaRepo port.TablaNOMRepository,
-	seleccionarTempPort port.SeleccionarTemperaturaPort,
 ) *AjustarCorrienteUseCase {
 	return &AjustarCorrienteUseCase{
-		tablaRepo:           tablaRepo,
-		seleccionarTempPort: seleccionarTempPort,
+		tablaRepo: tablaRepo,
 	}
 }
 
@@ -55,9 +52,9 @@ func (uc *AjustarCorrienteUseCase) Execute(
 		return dto.ResultadoAjusteCorriente{}, fmt.Errorf("obtener temperatura: %w", err)
 	}
 
-	// Select temperature using the port (delegates to domain service)
+	// Select temperature using domain service (pure logic, no I/O)
 	// No override for this use case
-	temperatura := uc.seleccionarTempPort.SeleccionarTemperatura(
+	temperatura := service.SeleccionarTemperatura(
 		corrienteNominal,
 		tipoCanalizacion,
 		nil,

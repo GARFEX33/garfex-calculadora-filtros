@@ -117,8 +117,7 @@ func TestOrquestadorMemoriaCalculo_Execute(t *testing.T) {
 
 	// Create micro use cases
 	calcularCorrienteUC := NewCalcularCorrienteUseCase(nil)
-	seleccionarTempMock := &mockSeleccionarTemperatura{}
-	ajustarCorrienteUC := NewAjustarCorrienteUseCase(repo, seleccionarTempMock)
+	ajustarCorrienteUC := NewAjustarCorrienteUseCase(repo)
 	seleccionarConductorUC := NewSeleccionarConductorUseCase(repo)
 	dimensionarCanalizacionUC := NewDimensionarCanalizacionUseCase(repo)
 	calcularCaidaTensionUC := NewCalcularCaidaTensionUseCase(repo)

@@ -143,11 +143,7 @@ func (h *CalculoHandler) mapRequestToDTO(req CalcularMemoriaRequest) (dto.Equipo
 	// Sistema eléctrico (DTO string)
 	sistemaElectrico := dto.SistemaElectrico(req.SistemaElectrico)
 
-	// Validar sistema eléctrico
-	if err := entity.ValidarSistemaElectrico(sistemaElectrico.ToEntity()); err != nil {
-		return dto.EquipoInput{}, fmt.Errorf("sistema eléctrico inválido: %w", err)
-	}
-
+	// Validar sistema eléctrico - delegated to DTO.Validate() in use case
 	// Parsear material desde string usando ParseMaterialConductor del dominio
 	material := valueobject.MaterialCobre
 	if req.Material != "" {

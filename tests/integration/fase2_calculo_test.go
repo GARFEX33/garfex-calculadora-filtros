@@ -20,37 +20,17 @@ func (s *stubEquipoRepository) BuscarPorClave(ctx context.Context, clave string)
 	return nil, nil
 }
 
-// stubSeleccionarTemperatura implements port.SeleccionarTemperaturaPort for integration tests
-type stubSeleccionarTemperatura struct{}
-
-func (s *stubSeleccionarTemperatura) SeleccionarTemperatura(
-	corriente valueobject.Corriente,
-	tipoCanalizacion entity.TipoCanalizacion,
-	override *valueobject.Temperatura,
-) valueobject.Temperatura {
-	// Match real implementation: <= 100A → 60°C, > 100A → 75°C
-	if override != nil {
-		return *override
-	}
-	if corriente.Valor() <= 100 {
-		return valueobject.Temp60
-	}
-	return valueobject.Temp75
-}
-
 var _ port.EquipoRepository = (*stubEquipoRepository)(nil)
-var _ port.SeleccionarTemperaturaPort = (*stubSeleccionarTemperatura)(nil)
 
 func TestFase2_CalculoCompleto(t *testing.T) {
 	tablaRepo, err := csv.NewCSVTablaNOMRepository("../../data/tablas_nom")
 	require.NoError(t, err)
 
 	equipoRepo := &stubEquipoRepository{}
-	seleccionarTempRepo := &stubSeleccionarTemperatura{}
 
 	// Create micro use cases
 	calcularCorrienteUC := usecase.NewCalcularCorrienteUseCase(equipoRepo)
-	ajustarCorrienteUC := usecase.NewAjustarCorrienteUseCase(tablaRepo, seleccionarTempRepo)
+	ajustarCorrienteUC := usecase.NewAjustarCorrienteUseCase(tablaRepo)
 	seleccionarConductorUC := usecase.NewSeleccionarConductorUseCase(tablaRepo)
 	dimensionarCanalizacionUC := usecase.NewDimensionarCanalizacionUseCase(tablaRepo)
 	calcularCaidaTensionUC := usecase.NewCalcularCaidaTensionUseCase(tablaRepo)

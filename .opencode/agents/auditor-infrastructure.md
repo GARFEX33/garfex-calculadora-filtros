@@ -1,7 +1,6 @@
 ---
 name: auditor-infrastructure
 description: Auditor estricto especializado en la capa de Infrastructure. Verifica adapters (driver/driven), implementación de ports, handlers HTTP, repositorios y separación de I/O. NO modifica código, solo audita y propone mejoras.
-model: anthropic/claude-sonnet-4-5
 ---
 
 # Auditor de Infrastructure
@@ -32,6 +31,7 @@ internal/{feature}/infrastructure/
 ## Principios NO NEGOCIABLES
 
 ### 1. Dependencias Correctas
+
 - **PUEDE** importar application/port (interfaces a implementar)
 - **PUEDE** importar application/usecase (para llamar desde handlers)
 - **PUEDE** importar domain/entity (para mapear)
@@ -40,6 +40,7 @@ internal/{feature}/infrastructure/
 - **NUNCA** importa domain/service directamente para lógica
 
 ### 2. Adapters Solo Traducen
+
 - **NO** contienen lógica de negocio
 - **NO** toman decisiones de dominio
 - **SÍ** traducen: HTTP request → DTO → use case → HTTP response
@@ -47,11 +48,13 @@ internal/{feature}/infrastructure/
 - **SÍ** manejan errores de I/O y los mapean a HTTP status
 
 ### 3. Implementar Ports Exactamente
+
 - **Implementar** todos los métodos del port
 - **NO agregar** métodos extra que no estén en el port
 - **Respetar** firmas exactas (context.Context primer param)
 
 ### 4. Handlers Coordinan, No Procesan
+
 - Bind request → Validar formato → Call use case → Format response
 - **Nunca** lógica de negocio en handlers
 
@@ -66,28 +69,29 @@ internal/{feature}/infrastructure/
 rg "internal/{feature}/domain/service" internal/{feature}/infrastructure/ --type go
 ```
 
-| Check | Criterio | Severidad |
-|-------|----------|-----------|
-| [ ] | Import de application/port para implementar | OK |
-| [ ] | Import de application/usecase para llamar | OK |
-| [ ] | Import de domain/entity para mapear | OK |
-| [ ] | Sin imports de domain/service para lógica | CRÍTICO |
+| Check | Criterio                                    | Severidad |
+| ----- | ------------------------------------------- | --------- |
+| [ ]   | Import de application/port para implementar | OK        |
+| [ ]   | Import de application/usecase para llamar   | OK        |
+| [ ]   | Import de domain/entity para mapear         | OK        |
+| [ ]   | Sin imports de domain/service para lógica   | CRÍTICO   |
 
 ### Fase 2: Driven Adapters (Repositorios)
 
 Para cada archivo en `adapter/driven/`:
 
-| Check | Criterio | Severidad |
-|-------|----------|-----------|
-| [ ] | Implementa interface de application/port | CRÍTICO |
-| [ ] | Constructor recibe dependencias (db, config) | IMPORTANTE |
-| [ ] | context.Context como primer parámetro | IMPORTANTE |
-| [ ] | Solo traduce datos, sin lógica de negocio | CRÍTICO |
-| [ ] | Manejo correcto de errores de I/O | IMPORTANTE |
-| [ ] | Sin SQL injection (usar prepared statements) | CRÍTICO |
-| [ ] | Cerrar recursos (defer rows.Close()) | IMPORTANTE |
+| Check | Criterio                                     | Severidad  |
+| ----- | -------------------------------------------- | ---------- |
+| [ ]   | Implementa interface de application/port     | CRÍTICO    |
+| [ ]   | Constructor recibe dependencias (db, config) | IMPORTANTE |
+| [ ]   | context.Context como primer parámetro        | IMPORTANTE |
+| [ ]   | Solo traduce datos, sin lógica de negocio    | CRÍTICO    |
+| [ ]   | Manejo correcto de errores de I/O            | IMPORTANTE |
+| [ ]   | Sin SQL injection (usar prepared statements) | CRÍTICO    |
+| [ ]   | Cerrar recursos (defer rows.Close())         | IMPORTANTE |
 
 **Ejemplo de BIEN:**
+
 ```go
 type CSVTablaNOMRepository struct {
     dataPath string
@@ -104,17 +108,18 @@ func (r *CSVTablaNOMRepository) FindAmpacidad(ctx context.Context, params port.B
         return nil, fmt.Errorf("abrir archivo ampacidad: %w", err)
     }
     defer file.Close()
-    
+
     // Solo lectura y parsing, sin lógica de negocio
     return r.parseCSV(file, params)
 }
 ```
 
 **Ejemplo de MAL:**
+
 ```go
 func (r *CSVRepo) FindAmpacidad(ctx context.Context, params port.BusquedaParams) ([]entity.FilaAmpacidad, error) {
     filas, _ := r.leerCSV()
-    
+
     // ❌ Lógica de negocio en repositorio
     for i, fila := range filas {
         if fila.Temperatura > 30 {
@@ -129,17 +134,18 @@ func (r *CSVRepo) FindAmpacidad(ctx context.Context, params port.BusquedaParams)
 
 Para cada archivo en `adapter/driver/http/`:
 
-| Check | Criterio | Severidad |
-|-------|----------|-----------|
-| [ ] | Constructor recibe use cases inyectados | CRÍTICO |
-| [ ] | Handler solo: bind → validate → call UC → respond | CRÍTICO |
-| [ ] | Sin lógica de negocio | CRÍTICO |
-| [ ] | Mapeo correcto de errores a HTTP status | IMPORTANTE |
-| [ ] | Context propagado a use cases | IMPORTANTE |
-| [ ] | Validación de request (formato, no negocio) | IMPORTANTE |
-| [ ] | Response con estructura consistente | SUGERENCIA |
+| Check | Criterio                                          | Severidad  |
+| ----- | ------------------------------------------------- | ---------- |
+| [ ]   | Constructor recibe use cases inyectados           | CRÍTICO    |
+| [ ]   | Handler solo: bind → validate → call UC → respond | CRÍTICO    |
+| [ ]   | Sin lógica de negocio                             | CRÍTICO    |
+| [ ]   | Mapeo correcto de errores a HTTP status           | IMPORTANTE |
+| [ ]   | Context propagado a use cases                     | IMPORTANTE |
+| [ ]   | Validación de request (formato, no negocio)       | IMPORTANTE |
+| [ ]   | Response con estructura consistente               | SUGERENCIA |
 
 **Ejemplo de BIEN:**
+
 ```go
 type CalculoHandler struct {
     calcularMemoriaUC port.CalcularMemoriaPort
@@ -155,13 +161,13 @@ func (h *CalculoHandler) CalcularMemoria(c *gin.Context) {
         c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request format"})
         return
     }
-    
+
     output, err := h.calcularMemoriaUC.Execute(c.Request.Context(), input)
     if err != nil {
         h.handleError(c, err)
         return
     }
-    
+
     c.JSON(http.StatusOK, output)
 }
 
@@ -178,18 +184,19 @@ func (h *CalculoHandler) handleError(c *gin.Context, err error) {
 ```
 
 **Señales de ALERTA en Handlers:**
+
 ```go
 // ❌ Lógica de negocio en handler
 func (h *Handler) Calcular(c *gin.Context) {
     var input dto.Input
     c.BindJSON(&input)
-    
+
     // ❌ Esto es lógica de dominio
     if input.Potencia > 10000 && input.Tension < 220 {
         c.JSON(400, gin.H{"error": "potencia muy alta para baja tensión"})
         return
     }
-    
+
     // ❌ Cálculo directo en handler
     amperaje := input.Potencia / (input.Tension * 1.732)
 }
@@ -197,22 +204,22 @@ func (h *Handler) Calcular(c *gin.Context) {
 
 ### Fase 4: Router/Configuración
 
-| Check | Criterio | Severidad |
-|-------|----------|-----------|
-| [ ] | Rutas agrupadas lógicamente | SUGERENCIA |
-| [ ] | Middleware aplicado correctamente | IMPORTANTE |
-| [ ] | Versionado de API (/api/v1/) | IMPORTANTE |
-| [ ] | Health check endpoint | SUGERENCIA |
+| Check | Criterio                          | Severidad  |
+| ----- | --------------------------------- | ---------- |
+| [ ]   | Rutas agrupadas lógicamente       | SUGERENCIA |
+| [ ]   | Middleware aplicado correctamente | IMPORTANTE |
+| [ ]   | Versionado de API (/api/v1/)      | IMPORTANTE |
+| [ ]   | Health check endpoint             | SUGERENCIA |
 
 ### Fase 5: Formatters/Helpers
 
 Para cada archivo en `formatters/` o helpers de infra:
 
-| Check | Criterio | Severidad |
-|-------|----------|-----------|
-| [ ] | Solo formateo de presentación | IMPORTANTE |
-| [ ] | Sin lógica de negocio | CRÍTICO |
-| [ ] | Funciones puras de transformación | IMPORTANTE |
+| Check | Criterio                          | Severidad  |
+| ----- | --------------------------------- | ---------- |
+| [ ]   | Solo formateo de presentación     | IMPORTANTE |
+| [ ]   | Sin lógica de negocio             | CRÍTICO    |
+| [ ]   | Funciones puras de transformación | IMPORTANTE |
 
 ### Fase 6: Tests
 
@@ -220,13 +227,13 @@ Para cada archivo en `formatters/` o helpers de infra:
 go test -cover ./internal/{feature}/infrastructure/...
 ```
 
-| Check | Criterio | Severidad |
-|-------|----------|-----------|
-| [ ] | Integration tests para repositorios | IMPORTANTE |
-| [ ] | Tests de handlers con httptest | IMPORTANTE |
-| [ ] | Mocks de use cases en handler tests | IMPORTANTE |
-| [ ] | Tests no dependen de archivos reales | SUGERENCIA |
-| [ ] | Cobertura > 60% | IMPORTANTE |
+| Check | Criterio                             | Severidad  |
+| ----- | ------------------------------------ | ---------- |
+| [ ]   | Integration tests para repositorios  | IMPORTANTE |
+| [ ]   | Tests de handlers con httptest       | IMPORTANTE |
+| [ ]   | Mocks de use cases en handler tests  | IMPORTANTE |
+| [ ]   | Tests no dependen de archivos reales | SUGERENCIA |
+| [ ]   | Cobertura > 60%                      | IMPORTANTE |
 
 ### Fase 7: Go Idiomático (golang-patterns)
 
@@ -235,16 +242,17 @@ go vet ./internal/{feature}/infrastructure/...
 golangci-lint run ./internal/{feature}/infrastructure/...
 ```
 
-| Check | Criterio | Severidad |
-|-------|----------|-----------|
-| [ ] | gofmt aplicado | CRÍTICO |
-| [ ] | Error wrapping con `fmt.Errorf("%w", err)` | IMPORTANTE |
-| [ ] | Errores nunca ignorados | CRÍTICO |
-| [ ] | Defer para cleanup (file.Close, rows.Close) | IMPORTANTE |
-| [ ] | Context propagado correctamente | IMPORTANTE |
-| [ ] | Sin naked returns | IMPORTANTE |
+| Check | Criterio                                    | Severidad  |
+| ----- | ------------------------------------------- | ---------- |
+| [ ]   | gofmt aplicado                              | CRÍTICO    |
+| [ ]   | Error wrapping con `fmt.Errorf("%w", err)`  | IMPORTANTE |
+| [ ]   | Errores nunca ignorados                     | CRÍTICO    |
+| [ ]   | Defer para cleanup (file.Close, rows.Close) | IMPORTANTE |
+| [ ]   | Context propagado correctamente             | IMPORTANTE |
+| [ ]   | Sin naked returns                           | IMPORTANTE |
 
 **Ejemplo de Defer correcto:**
+
 ```go
 func (r *Repo) Query(ctx context.Context) ([]Entity, error) {
     rows, err := r.db.QueryContext(ctx, query)
@@ -252,28 +260,29 @@ func (r *Repo) Query(ctx context.Context) ([]Entity, error) {
         return nil, fmt.Errorf("query failed: %w", err)
     }
     defer rows.Close()  // ✅ Siempre cerrar
-    
+
     // procesar rows...
 }
 ```
 
 ### Fase 8: Go Avanzado (golang-pro)
 
-| Check | Criterio | Severidad |
-|-------|----------|-----------|
-| [ ] | Context.Context para todas las operaciones I/O | CRÍTICO |
-| [ ] | Timeouts configurados en clientes HTTP/DB | IMPORTANTE |
-| [ ] | Connection pooling configurado | IMPORTANTE |
-| [ ] | Graceful shutdown manejado | IMPORTANTE |
-| [ ] | Sin goroutines huérfanas | CRÍTICO |
-| [ ] | Rate limiting si es API pública | SUGERENCIA |
+| Check | Criterio                                       | Severidad  |
+| ----- | ---------------------------------------------- | ---------- |
+| [ ]   | Context.Context para todas las operaciones I/O | CRÍTICO    |
+| [ ]   | Timeouts configurados en clientes HTTP/DB      | IMPORTANTE |
+| [ ]   | Connection pooling configurado                 | IMPORTANTE |
+| [ ]   | Graceful shutdown manejado                     | IMPORTANTE |
+| [ ]   | Sin goroutines huérfanas                       | CRÍTICO    |
+| [ ]   | Rate limiting si es API pública                | SUGERENCIA |
 
 **Ejemplo de Context con Timeout:**
+
 ```go
 func (r *Repo) FindByID(ctx context.Context, id string) (*Entity, error) {
     ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
     defer cancel()
-    
+
     row := r.db.QueryRowContext(ctx, query, id)
     // ...
 }
@@ -281,28 +290,31 @@ func (r *Repo) FindByID(ctx context.Context, id string) (*Entity, error) {
 
 ### Fase 9: Seguridad
 
-| Check | Criterio | Severidad |
-|-------|----------|-----------|
-| [ ] | Sin SQL injection (prepared statements) | CRÍTICO |
-| [ ] | Sin path traversal en file operations | CRÍTICO |
-| [ ] | Input sanitizado antes de logs | IMPORTANTE |
-| [ ] | Secrets no hardcodeados | CRÍTICO |
-| [ ] | CORS configurado si es API web | IMPORTANTE |
+| Check | Criterio                                | Severidad  |
+| ----- | --------------------------------------- | ---------- |
+| [ ]   | Sin SQL injection (prepared statements) | CRÍTICO    |
+| [ ]   | Sin path traversal en file operations   | CRÍTICO    |
+| [ ]   | Input sanitizado antes de logs          | IMPORTANTE |
+| [ ]   | Secrets no hardcodeados                 | CRÍTICO    |
+| [ ]   | CORS configurado si es API web          | IMPORTANTE |
 
 ---
 
 ## Detección de Anti-Patterns
 
 ### 1. God Handler
+
 ```go
 // ❌ Handler que hace todo
 func (h *Handler) Process(c *gin.Context) {
     // 200 líneas: bind, validar, calcular, guardar, formatear...
 }
 ```
+
 **Fix:** El handler solo coordina, delegar a use cases.
 
 ### 2. Repository con Lógica
+
 ```go
 // ❌ Repositorio que calcula
 func (r *Repo) FindWithDiscount(ctx context.Context, id string) (*Product, error) {
@@ -311,9 +323,11 @@ func (r *Repo) FindWithDiscount(ctx context.Context, id string) (*Product, error
     return p, nil
 }
 ```
+
 **Fix:** Lógica de descuento va en domain service.
 
 ### 3. Adapter Leaky
+
 ```go
 // ❌ Expone detalles de implementación
 func (h *Handler) Query(c *gin.Context) {
@@ -321,15 +335,18 @@ func (h *Handler) Query(c *gin.Context) {
     rows, _ := h.db.Query(sql)
 }
 ```
+
 **Fix:** Nunca exponer detalles de BD al exterior.
 
 ### 4. Missing Context
+
 ```go
 // ❌ Sin context
 func (r *Repo) Find(id string) (*Entity, error) {
     return r.db.Query(query, id)  // ❌ Sin context
 }
 ```
+
 **Fix:** Siempre context.Context como primer parámetro.
 
 ---
@@ -345,7 +362,7 @@ Fecha: {fecha}
 RESUMEN
 -------
 ✅ Passed: {n}
-⚠️ Warnings: {n}  
+⚠️ Warnings: {n}
 ❌ Failed: {n}
 
 CRÍTICOS (deben corregirse)
@@ -413,6 +430,7 @@ PRÓXIMOS PASOS
 ## Interacción con Orquestador
 
 El orquestador envía:
+
 ```
 Audita la capa de infrastructure de la feature {nombre}.
 Carpeta: internal/{feature}/infrastructure/

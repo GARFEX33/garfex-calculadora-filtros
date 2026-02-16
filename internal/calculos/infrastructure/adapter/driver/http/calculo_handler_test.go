@@ -101,7 +101,7 @@ func (m *mockSeleccionarTemperatura) SeleccionarTemperatura(
 
 func newOrquestadorParaTest(tablaRepo *mockTablaRepo, equipoRepo *mockEquipoRepo, seleccionarTempRepo *mockSeleccionarTemperatura) *usecase.OrquestadorMemoriaCalculo {
 	calcularCorrienteUC := usecase.NewCalcularCorrienteUseCase(equipoRepo)
-	ajustarCorrienteUC := usecase.NewAjustarCorrienteUseCase(tablaRepo, seleccionarTempRepo)
+	ajustarCorrienteUC := usecase.NewAjustarCorrienteUseCase(tablaRepo)
 	seleccionarConductorUC := usecase.NewSeleccionarConductorUseCase(tablaRepo)
 	dimensionarCanalizacionUC := usecase.NewDimensionarCanalizacionUseCase(tablaRepo)
 	calcularCaidaTensionUC := usecase.NewCalcularCaidaTensionUseCase(tablaRepo)
@@ -124,7 +124,7 @@ func TestCalculoHandler_CalcularMemoria_Success(t *testing.T) {
 	seleccionarTempRepo := &mockSeleccionarTemperatura{}
 	calcularMemoriaUC := newOrquestadorParaTest(tablaRepo, equipoRepo, seleccionarTempRepo)
 	calcularCorrienteUC := usecase.NewCalcularCorrienteUseCase(equipoRepo)
-	ajustarCorrienteUC := usecase.NewAjustarCorrienteUseCase(tablaRepo, seleccionarTempRepo)
+	ajustarCorrienteUC := usecase.NewAjustarCorrienteUseCase(tablaRepo)
 	handler := NewCalculoHandler(calcularMemoriaUC, calcularCorrienteUC, ajustarCorrienteUC)
 
 	// Crear request
@@ -176,7 +176,7 @@ func TestCalculoHandler_CalcularMemoria_ValidationError(t *testing.T) {
 	seleccionarTempRepo := &mockSeleccionarTemperatura{}
 	orquestador := newOrquestadorParaTest(tablaRepo, equipoRepo, seleccionarTempRepo)
 	calcularCorrienteUC := usecase.NewCalcularCorrienteUseCase(equipoRepo)
-	ajustarCorrienteUC := usecase.NewAjustarCorrienteUseCase(tablaRepo, seleccionarTempRepo)
+	ajustarCorrienteUC := usecase.NewAjustarCorrienteUseCase(tablaRepo)
 	handler := NewCalculoHandler(orquestador, calcularCorrienteUC, ajustarCorrienteUC)
 
 	// Crear request inválido (falta modo)

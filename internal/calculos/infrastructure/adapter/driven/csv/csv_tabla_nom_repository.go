@@ -11,9 +11,22 @@ import (
 	"strconv"
 
 	"github.com/garfex/calculadora-filtros/internal/calculos/domain/entity"
-	"github.com/garfex/calculadora-filtros/internal/calculos/domain/service"
 	"github.com/garfex/calculadora-filtros/internal/shared/kernel/valueobject"
 )
+
+// Local types to avoid importing domain/service (infrastructure should not contain business logic)
+type factorTemperaturaEntry struct {
+	rangoTempC string
+	factor60C  float64
+	factor75C  float64
+	factor90C  float64
+}
+
+type factorAgrupamientoEntry struct {
+	cantidadMin int
+	cantidadMax int
+	factor      float64
+}
 
 // impedanciaEntry holds all impedance values for a given calibre from Tabla 9.
 type impedanciaEntry struct {
@@ -43,8 +56,8 @@ type CSVTablaNOMRepository struct {
 	tablaConduit         []valueobject.EntradaTablaCanalizacion
 	tablasCharola        map[entity.TipoCanalizacion][]valueobject.EntradaTablaCanalizacion
 	estadosTemperatura   map[string]int
-	factoresTemperatura  []service.EntradaTablaFactorTemperatura
-	factoresAgrupamiento []service.EntradaTablaFactorAgrupamiento
+	factoresTemperatura  []factorTemperaturaEntry
+	factoresAgrupamiento []factorAgrupamientoEntry
 	tablaDiametros       map[string]diametroConductorEntry
 }
 
@@ -318,13 +331,61 @@ func (r *CSVTablaNOMRepository) ObtenerTemperaturaPorEstado(ctx context.Context,
 }
 
 // ObtenerFactorTemperatura returns the temperature correction factor based on ambient temperature and conductor temperature.
+// Simple table lookup - no business logic here.
 func (r *CSVTablaNOMRepository) ObtenerFactorTemperatura(ctx context.Context, tempAmbiente int, tempConductor valueobject.Temperatura) (float64, error) {
-	return service.CalcularFactorTemperatura(tempAmbiente, tempConductor, r.factoresTemperatura)
+	if tempAmbiente < -10 {
+		return 0, fmt.Errorf("temperatura ambiente inválida: %d°C", tempAmbiente)
+	}
+
+	for _, entrada := range r.factoresTemperatura {
+		if rangoContiene(entrada.rangoTempC, tempAmbiente) {
+			switch tempConductor {
+			case valueobject.Temp60:
+				return entrada.factor60C, nil
+			case valueobject.Temp75:
+				return entrada.factor75C, nil
+			case valueobject.Temp90:
+				return entrada.factor90C, nil
+			default:
+				return 0, fmt.Errorf("temperatura de conductor no soportada: %v", tempConductor)
+			}
+		}
+	}
+	return 0, fmt.Errorf("no se encontró factor para temperatura ambiente %d°C", tempAmbiente)
 }
 
 // ObtenerFactorAgrupamiento returns the grouping factor based on the number of conductors.
+// Simple table lookup - no business logic here.
 func (r *CSVTablaNOMRepository) ObtenerFactorAgrupamiento(ctx context.Context, cantidadConductores int) (float64, error) {
-	return service.CalcularFactorAgrupamiento(cantidadConductores, r.factoresAgrupamiento)
+	if cantidadConductores <= 0 {
+		return 0, fmt.Errorf("cantidad de conductores debe ser mayor que cero: %d", cantidadConductores)
+	}
+
+	for _, entrada := range r.factoresAgrupamiento {
+		if entrada.cantidadMax == -1 {
+			if cantidadConductores >= entrada.cantidadMin {
+				return entrada.factor, nil
+			}
+		} else {
+			if cantidadConductores >= entrada.cantidadMin && cantidadConductores <= entrada.cantidadMax {
+				return entrada.factor, nil
+			}
+		}
+	}
+	// Default fallback per NOM
+	return 0.30, nil
+}
+
+// rangoContiene checks if a temperature range contains the given temperature.
+func rangoContiene(rango string, temp int) bool {
+	var min, max int
+	if _, err := fmt.Sscanf(rango, "%d-%d", &min, &max); err == nil {
+		return temp >= min && temp <= max
+	}
+	if _, err := fmt.Sscanf(rango, "%d+", &min); err == nil {
+		return temp >= min
+	}
+	return false
 }
 
 // ObtenerDiametroConductor returns the diameter in mm for a given calibre, material, and insulation type.
@@ -766,7 +827,7 @@ func (r *CSVTablaNOMRepository) loadEstadosTemperatura() (map[string]int, error)
 	return result, nil
 }
 
-func (r *CSVTablaNOMRepository) loadFactoresTemperatura() ([]service.EntradaTablaFactorTemperatura, error) {
+func (r *CSVTablaNOMRepository) loadFactoresTemperatura() ([]factorTemperaturaEntry, error) {
 	filePath := filepath.Join(r.basePath, "310-15-b-2-a.csv")
 	file, err := os.Open(filePath)
 	if err != nil {
@@ -784,7 +845,7 @@ func (r *CSVTablaNOMRepository) loadFactoresTemperatura() ([]service.EntradaTabl
 		return nil, fmt.Errorf("310-15-b-2-a.csv is empty or missing header")
 	}
 
-	var result []service.EntradaTablaFactorTemperatura
+	var result []factorTemperaturaEntry
 	for _, record := range records[1:] {
 		if len(record) < 4 {
 			continue
@@ -794,18 +855,18 @@ func (r *CSVTablaNOMRepository) loadFactoresTemperatura() ([]service.EntradaTabl
 		f75, _ := strconv.ParseFloat(record[2], 64)
 		f90, _ := strconv.ParseFloat(record[3], 64)
 
-		result = append(result, service.EntradaTablaFactorTemperatura{
-			RangoTempC: record[0],
-			Factor60C:  f60,
-			Factor75C:  f75,
-			Factor90C:  f90,
+		result = append(result, factorTemperaturaEntry{
+			rangoTempC: record[0],
+			factor60C:  f60,
+			factor75C:  f75,
+			factor90C:  f90,
 		})
 	}
 
 	return result, nil
 }
 
-func (r *CSVTablaNOMRepository) loadFactoresAgrupamiento() ([]service.EntradaTablaFactorAgrupamiento, error) {
+func (r *CSVTablaNOMRepository) loadFactoresAgrupamiento() ([]factorAgrupamientoEntry, error) {
 	filePath := filepath.Join(r.basePath, "310-15-b-3-a.csv")
 	file, err := os.Open(filePath)
 	if err != nil {
@@ -823,7 +884,7 @@ func (r *CSVTablaNOMRepository) loadFactoresAgrupamiento() ([]service.EntradaTab
 		return nil, fmt.Errorf("310-15-b-3-a.csv is empty or missing header")
 	}
 
-	var result []service.EntradaTablaFactorAgrupamiento
+	var result []factorAgrupamientoEntry
 	for _, record := range records[1:] {
 		if len(record) < 2 {
 			continue
@@ -833,10 +894,10 @@ func (r *CSVTablaNOMRepository) loadFactoresAgrupamiento() ([]service.EntradaTab
 
 		min, max := parseCantidadConductores(record[0])
 
-		result = append(result, service.EntradaTablaFactorAgrupamiento{
-			CantidadMin: min,
-			CantidadMax: max,
-			Factor:      factor,
+		result = append(result, factorAgrupamientoEntry{
+			cantidadMin: min,
+			cantidadMax: max,
+			factor:      factor,
 		})
 	}
 

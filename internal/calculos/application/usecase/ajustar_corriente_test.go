@@ -76,8 +76,7 @@ func TestAjustarCorrienteUseCase_Execute_FiltroActivo(t *testing.T) {
 		factorTemp:         0.88,
 		factorAgrupamiento: 0.70,
 	}
-	mockPort := &mockSeleccionarTempPort{temperatura: valueobject.Temp75}
-	uc := NewAjustarCorrienteUseCase(mockRepo, mockPort)
+	uc := NewAjustarCorrienteUseCase(mockRepo)
 
 	ctx := context.Background()
 	corrienteNominal, _ := valueobject.NewCorriente(50.0)
@@ -104,7 +103,8 @@ func TestAjustarCorrienteUseCase_Execute_FiltroActivo(t *testing.T) {
 	assert.Equal(t, 3, result.ConductoresPorTubo)
 	assert.Equal(t, 3, result.CantidadConductoresTotal)
 	assert.Equal(t, 40, result.TemperaturaAmbiente)
-	assert.Equal(t, 75, result.Temperatura)
+	// Domain service returns 60°C for current <= 100A (non-triangular charola)
+	assert.Equal(t, 60, result.Temperatura)
 }
 
 func TestAjustarCorrienteUseCase_Execute_Transformador(t *testing.T) {
@@ -114,8 +114,7 @@ func TestAjustarCorrienteUseCase_Execute_Transformador(t *testing.T) {
 		factorTemp:         0.94,
 		factorAgrupamiento: 0.65,
 	}
-	mockPort := &mockSeleccionarTempPort{temperatura: valueobject.Temp75}
-	uc := NewAjustarCorrienteUseCase(mockRepo, mockPort)
+	uc := NewAjustarCorrienteUseCase(mockRepo)
 
 	ctx := context.Background()
 	corrienteNominal, _ := valueobject.NewCorriente(100.0)
@@ -147,8 +146,7 @@ func TestAjustarCorrienteUseCase_Execute_Carga(t *testing.T) {
 		factorTemp:         1.0,
 		factorAgrupamiento: 0.80,
 	}
-	mockPort := &mockSeleccionarTempPort{temperatura: valueobject.Temp60}
-	uc := NewAjustarCorrienteUseCase(mockRepo, mockPort)
+	uc := NewAjustarCorrienteUseCase(mockRepo)
 
 	ctx := context.Background()
 	corrienteNominal, _ := valueobject.NewCorriente(30.0)
@@ -179,8 +177,7 @@ func TestAjustarCorrienteUseCase_Execute_FiltroRechazo(t *testing.T) {
 		factorTemp:         0.91,
 		factorAgrupamiento: 0.70,
 	}
-	mockPort := &mockSeleccionarTempPort{temperatura: valueobject.Temp75}
-	uc := NewAjustarCorrienteUseCase(mockRepo, mockPort)
+	uc := NewAjustarCorrienteUseCase(mockRepo)
 
 	ctx := context.Background()
 	corrienteNominal, _ := valueobject.NewCorriente(75.0)
@@ -209,8 +206,7 @@ func TestAjustarCorrienteUseCase_Execute_TipoEquipoInvalido(t *testing.T) {
 		factorTemp:         0.88,
 		factorAgrupamiento: 0.70,
 	}
-	mockPort := &mockSeleccionarTempPort{temperatura: valueobject.Temp75}
-	uc := NewAjustarCorrienteUseCase(mockRepo, mockPort)
+	uc := NewAjustarCorrienteUseCase(mockRepo)
 
 	ctx := context.Background()
 	corrienteNominal, _ := valueobject.NewCorriente(50.0)
@@ -234,8 +230,7 @@ func TestAjustarCorrienteUseCase_Execute_DistribucionNoDivisible(t *testing.T) {
 		tempAmbiente: 40,
 		factorTemp:   0.88,
 	}
-	mockPort := &mockSeleccionarTempPort{temperatura: valueobject.Temp75}
-	uc := NewAjustarCorrienteUseCase(mockRepo, mockPort)
+	uc := NewAjustarCorrienteUseCase(mockRepo)
 
 	ctx := context.Background()
 	corrienteNominal, _ := valueobject.NewCorriente(50.0)
@@ -260,8 +255,7 @@ func TestAjustarCorrienteUseCase_Execute_Defaults(t *testing.T) {
 		factorTemp:         0.88,
 		factorAgrupamiento: 0.70,
 	}
-	mockPort := &mockSeleccionarTempPort{temperatura: valueobject.Temp75}
-	uc := NewAjustarCorrienteUseCase(mockRepo, mockPort)
+	uc := NewAjustarCorrienteUseCase(mockRepo)
 
 	ctx := context.Background()
 	corrienteNominal, _ := valueobject.NewCorriente(50.0)
@@ -286,8 +280,7 @@ func TestAjustarCorrienteUseCase_Execute_RepositoryError(t *testing.T) {
 	mockRepo := &mockTablaRepo{
 		tempAmbienteErr: errors.New("estado no encontrado"),
 	}
-	mockPort := &mockSeleccionarTempPort{temperatura: valueobject.Temp75}
-	uc := NewAjustarCorrienteUseCase(mockRepo, mockPort)
+	uc := NewAjustarCorrienteUseCase(mockRepo)
 
 	ctx := context.Background()
 	corrienteNominal, _ := valueobject.NewCorriente(50.0)
@@ -311,8 +304,7 @@ func TestAjustarCorrienteUseCase_Execute_FactorTemperaturaError(t *testing.T) {
 		tempAmbiente:  40,
 		factorTempErr: errors.New("factor no encontrado"),
 	}
-	mockPort := &mockSeleccionarTempPort{temperatura: valueobject.Temp90}
-	uc := NewAjustarCorrienteUseCase(mockRepo, mockPort)
+	uc := NewAjustarCorrienteUseCase(mockRepo)
 
 	ctx := context.Background()
 	corrienteNominal, _ := valueobject.NewCorriente(50.0)
@@ -337,8 +329,7 @@ func TestAjustarCorrienteUseCase_Execute_FactorAgrupamientoError(t *testing.T) {
 		factorTemp:            0.88,
 		factorAgrupamientoErr: errors.New("factor no encontrado"),
 	}
-	mockPort := &mockSeleccionarTempPort{temperatura: valueobject.Temp75}
-	uc := NewAjustarCorrienteUseCase(mockRepo, mockPort)
+	uc := NewAjustarCorrienteUseCase(mockRepo)
 
 	ctx := context.Background()
 	corrienteNominal, _ := valueobject.NewCorriente(50.0)

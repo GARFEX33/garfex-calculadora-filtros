@@ -14,7 +14,6 @@ import (
 	"github.com/garfex/calculadora-filtros/internal/calculos/application/usecase"
 	"github.com/garfex/calculadora-filtros/internal/calculos/infrastructure"
 	"github.com/garfex/calculadora-filtros/internal/calculos/infrastructure/adapter/driven/csv"
-	csvadapter "github.com/garfex/calculadora-filtros/internal/calculos/infrastructure/adapter/driven/csv"
 )
 
 func main() {
@@ -24,15 +23,12 @@ func main() {
 		log.Fatalf("Error cargando tablas NOM: %v", err)
 	}
 
-	// Puerto para selección de temperatura
-	seleccionarTempRepo := csvadapter.NewSeleccionarTemperaturaRepository()
-
 	// TODO: Implementar PostgreSQL repository
 	var equipoRepo calculosport.EquipoRepository
 
 	// Crear micro use cases
 	calcularCorrienteUC := usecase.NewCalcularCorrienteUseCase(equipoRepo)
-	ajustarCorrienteUC := usecase.NewAjustarCorrienteUseCase(tablaRepo, seleccionarTempRepo)
+	ajustarCorrienteUC := usecase.NewAjustarCorrienteUseCase(tablaRepo)
 	seleccionarConductorUC := usecase.NewSeleccionarConductorUseCase(tablaRepo)
 	dimensionarCanalizacionUC := usecase.NewDimensionarCanalizacionUseCase(tablaRepo)
 	calcularCaidaTensionUC := usecase.NewCalcularCaidaTensionUseCase(tablaRepo)
