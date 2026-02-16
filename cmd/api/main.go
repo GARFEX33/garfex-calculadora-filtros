@@ -14,6 +14,7 @@ import (
 	"github.com/garfex/calculadora-filtros/internal/calculos/application/usecase"
 	"github.com/garfex/calculadora-filtros/internal/calculos/infrastructure"
 	"github.com/garfex/calculadora-filtros/internal/calculos/infrastructure/adapter/driven/csv"
+	csvadapter "github.com/garfex/calculadora-filtros/internal/calculos/infrastructure/adapter/driven/csv"
 )
 
 func main() {
@@ -23,15 +24,19 @@ func main() {
 		log.Fatalf("Error cargando tablas NOM: %v", err)
 	}
 
+	// Puerto para selección de temperatura
+	seleccionarTempRepo := csvadapter.NewSeleccionarTemperaturaRepository()
+
 	// TODO: Implementar PostgreSQL repository
 	var equipoRepo calculosport.EquipoRepository
 
 	// Crear use cases
 	calcularMemoriaUC := usecase.NewCalcularMemoriaUseCase(tablaRepo, equipoRepo)
 	calcularCorrienteUC := usecase.NewCalcularCorrienteUseCase(equipoRepo)
+	ajustarCorrienteUC := usecase.NewAjustarCorrienteUseCase(tablaRepo, seleccionarTempRepo)
 
 	// Crear router
-	router := infrastructure.NewRouter(calcularMemoriaUC, calcularCorrienteUC)
+	router := infrastructure.NewRouter(calcularMemoriaUC, calcularCorrienteUC, ajustarCorrienteUC)
 
 	// Configurar servidor HTTP
 	port := os.Getenv("PORT")
