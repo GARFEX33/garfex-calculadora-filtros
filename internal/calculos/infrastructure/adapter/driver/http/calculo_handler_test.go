@@ -33,6 +33,7 @@ func (m *mockTablaRepo) ObtenerTablaAmpacidad(ctx context.Context, canalizacion 
 	return []valueobject.EntradaTablaConductor{
 		{Capacidad: 30, Conductor: valueobject.ConductorParams{Calibre: "10 AWG", Material: valueobject.MaterialCobre, SeccionMM2: 5.26}},
 		{Capacidad: 55, Conductor: valueobject.ConductorParams{Calibre: "8 AWG", Material: valueobject.MaterialCobre, SeccionMM2: 8.37}},
+		{Capacidad: 75, Conductor: valueobject.ConductorParams{Calibre: "6 AWG", Material: valueobject.MaterialCobre, SeccionMM2: 13.3}},
 	}, nil
 }
 
@@ -98,6 +99,22 @@ func (m *mockSeleccionarTemperatura) SeleccionarTemperatura(
 	return valueobject.Temp75
 }
 
+func newOrquestadorParaTest(tablaRepo *mockTablaRepo, equipoRepo *mockEquipoRepo, seleccionarTempRepo *mockSeleccionarTemperatura) *usecase.OrquestadorMemoriaCalculo {
+	calcularCorrienteUC := usecase.NewCalcularCorrienteUseCase(equipoRepo)
+	ajustarCorrienteUC := usecase.NewAjustarCorrienteUseCase(tablaRepo, seleccionarTempRepo)
+	seleccionarConductorUC := usecase.NewSeleccionarConductorUseCase(tablaRepo)
+	dimensionarCanalizacionUC := usecase.NewDimensionarCanalizacionUseCase(tablaRepo)
+	calcularCaidaTensionUC := usecase.NewCalcularCaidaTensionUseCase(tablaRepo)
+	return usecase.NewOrquestadorMemoriaCalculo(
+		calcularCorrienteUC,
+		ajustarCorrienteUC,
+		seleccionarConductorUC,
+		dimensionarCanalizacionUC,
+		calcularCaidaTensionUC,
+		tablaRepo,
+	)
+}
+
 func TestCalculoHandler_CalcularMemoria_Success(t *testing.T) {
 	// Setup
 	gin.SetMode(gin.TestMode)
@@ -105,7 +122,7 @@ func TestCalculoHandler_CalcularMemoria_Success(t *testing.T) {
 	tablaRepo := &mockTablaRepo{}
 	equipoRepo := &mockEquipoRepo{}
 	seleccionarTempRepo := &mockSeleccionarTemperatura{}
-	calcularMemoriaUC := usecase.NewCalcularMemoriaUseCase(tablaRepo, equipoRepo)
+	calcularMemoriaUC := newOrquestadorParaTest(tablaRepo, equipoRepo, seleccionarTempRepo)
 	calcularCorrienteUC := usecase.NewCalcularCorrienteUseCase(equipoRepo)
 	ajustarCorrienteUC := usecase.NewAjustarCorrienteUseCase(tablaRepo, seleccionarTempRepo)
 	handler := NewCalculoHandler(calcularMemoriaUC, calcularCorrienteUC, ajustarCorrienteUC)
@@ -122,6 +139,7 @@ func TestCalculoHandler_CalcularMemoria_Success(t *testing.T) {
 		PorcentajeCaidaMax: 3.0,
 		Estado:             "INTERIOR",
 		SistemaElectrico:   "MONOFASICO",
+		TipoEquipo:         "TRANSFORMADOR",
 	}
 
 	jsonData, _ := json.Marshal(reqBody)
@@ -156,10 +174,10 @@ func TestCalculoHandler_CalcularMemoria_ValidationError(t *testing.T) {
 	tablaRepo := &mockTablaRepo{}
 	equipoRepo := &mockEquipoRepo{}
 	seleccionarTempRepo := &mockSeleccionarTemperatura{}
-	calcularMemoriaUC := usecase.NewCalcularMemoriaUseCase(tablaRepo, equipoRepo)
+	orquestador := newOrquestadorParaTest(tablaRepo, equipoRepo, seleccionarTempRepo)
 	calcularCorrienteUC := usecase.NewCalcularCorrienteUseCase(equipoRepo)
 	ajustarCorrienteUC := usecase.NewAjustarCorrienteUseCase(tablaRepo, seleccionarTempRepo)
-	handler := NewCalculoHandler(calcularMemoriaUC, calcularCorrienteUC, ajustarCorrienteUC)
+	handler := NewCalculoHandler(orquestador, calcularCorrienteUC, ajustarCorrienteUC)
 
 	// Crear request inválido (falta modo)
 	reqBody := map[string]interface{}{

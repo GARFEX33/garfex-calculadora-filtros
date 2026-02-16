@@ -10,7 +10,7 @@ import (
 
 // NewRouter crea y configura el router Gin.
 func NewRouter(
-	calcularMemoriaUC *usecase.CalcularMemoriaUseCase,
+	calcularMemoriaUC *usecase.OrquestadorMemoriaCalculo,
 	calcularCorrienteUC *usecase.CalcularCorrienteUseCase,
 	ajustarCorrienteUC *usecase.AjustarCorrienteUseCase,
 ) *gin.Engine {

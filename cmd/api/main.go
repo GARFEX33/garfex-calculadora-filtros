@@ -30,10 +30,22 @@ func main() {
 	// TODO: Implementar PostgreSQL repository
 	var equipoRepo calculosport.EquipoRepository
 
-	// Crear use cases
-	calcularMemoriaUC := usecase.NewCalcularMemoriaUseCase(tablaRepo, equipoRepo)
+	// Crear micro use cases
 	calcularCorrienteUC := usecase.NewCalcularCorrienteUseCase(equipoRepo)
 	ajustarCorrienteUC := usecase.NewAjustarCorrienteUseCase(tablaRepo, seleccionarTempRepo)
+	seleccionarConductorUC := usecase.NewSeleccionarConductorUseCase(tablaRepo)
+	dimensionarCanalizacionUC := usecase.NewDimensionarCanalizacionUseCase(tablaRepo)
+	calcularCaidaTensionUC := usecase.NewCalcularCaidaTensionUseCase(tablaRepo)
+
+	// Orquestador principal
+	calcularMemoriaUC := usecase.NewOrquestadorMemoriaCalculo(
+		calcularCorrienteUC,
+		ajustarCorrienteUC,
+		seleccionarConductorUC,
+		dimensionarCanalizacionUC,
+		calcularCaidaTensionUC,
+		tablaRepo,
+	)
 
 	// Crear router
 	router := infrastructure.NewRouter(calcularMemoriaUC, calcularCorrienteUC, ajustarCorrienteUC)

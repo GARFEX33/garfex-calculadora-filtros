@@ -15,14 +15,14 @@ import (
 
 // CalculoHandler maneja los endpoints de cálculo.
 type CalculoHandler struct {
-	calcularMemoriaUseCase   *usecase.CalcularMemoriaUseCase
+	calcularMemoriaUseCase   *usecase.OrquestadorMemoriaCalculo
 	calcularCorrienteUseCase *usecase.CalcularCorrienteUseCase
 	ajustarCorrienteUseCase  *usecase.AjustarCorrienteUseCase
 }
 
 // NewCalculoHandler crea un nuevo handler de cálculo.
 func NewCalculoHandler(
-	calcularMemoriaUC *usecase.CalcularMemoriaUseCase,
+	calcularMemoriaUC *usecase.OrquestadorMemoriaCalculo,
 	calcularCorrienteUC *usecase.CalcularCorrienteUseCase,
 	ajustarCorrienteUC *usecase.AjustarCorrienteUseCase,
 ) *CalculoHandler {
