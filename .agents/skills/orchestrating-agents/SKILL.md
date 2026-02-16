@@ -19,21 +19,64 @@ Orquestación de agentes especializados por capa para proyectos con arquitectura
 Usuario pide feature/cambio
          │
          ▼
-┌─────────────────────────────────────┐
-│         COORDINADOR                 │
-│  1. Invocar skill `brainstorming`   │
-│  2. Crear diseño + plan             │
-│  3. Crear rama de trabajo           │
-│  4. Despachar agentes en orden      │
-│  5. Hacer wiring en main.go         │
-│  6. Commit final                    │
-└─────────────────────────────────────┘
+┌─────────────────────────────────────────────┐
+│         ORQUESTADOR (Coordinador)           │
+│  1. Invocar skill `brainstorming`           │
+│  2. Crear diseño + plan                     │
+│  3. Crear rama de trabajo                   │
+│  4. Despachar agentes en orden              │
+│  5. Hacer wiring en main.go                 │
+│  6. Auditar AGENTS.md con agents-md-curator │
+│  7. Commit final                            │
+└─────────────────────────────────────────────┘
          │
     ┌────┴────┬────────────┐
     ▼         ▼            ▼
 domain-   application-  infrastructure-
 agent     agent         agent
 ```
+
+---
+
+## 🔄 Workflow Completo: Desde Idea hasta Merge
+
+### Fase 1: Diseño (Orquestador)
+```
+Usuario pide feature
+    │
+    ▼
+brainstorming → writing-plans → Crear rama
+```
+
+### Fase 2: Implementación (Agentes especializados en orden)
+```
+domain-agent → application-agent → infrastructure-agent
+    │                │                    │
+    ▼                ▼                    ▼
+ tests green    tests green         tests green
+```
+
+### Fase 3: Integración (Orquestador)
+```
+Wiring en main.go → go test ./... → ✅ Todo pasa
+```
+
+### Fase 4: Documentación PRE-merge (OBLIGATORIO)
+```
+Auditar AGENTS.md con agents-md-curator
+    │
+    ▼
+¿Hay drift? ──Si──→ Aplicar correcciones → Commit
+    │
+   No
+    │
+    ▼
+Merge feature a main
+```
+
+**⚠️ Importante:** La documentación es parte de la "definition of done". Los cambios a AGENTS.md van en el mismo PR/feature, nunca post-merge.
+
+---
 
 ## Paso 1: Brainstorming inicial
 
@@ -192,10 +235,22 @@ Después de que todos los agentes terminen, el coordinador:
 1. **Actualiza `cmd/api/main.go`** — wiring de dependencias
 2. **Crea placeholders** para otras features si aplica
 3. **Elimina carpetas viejas** si fue refactorización
-4. **Actualiza AGENTS.md** raíz y de cada capa
-5. **Verifica todo:** `go test ./... && go build ./... && go vet ./...`
+4. **Verifica todo:** `go test ./... && go build ./... && go vet ./...`
 
-## Paso 6: Commit
+## Paso 6: Auditar AGENTS.md PRE-merge (OBLIGATORIO)
+
+**NUNCA mergear sin sincronizar la documentación.**
+
+Antes del commit final, el orquestador debe:
+
+1. **Invocar `agents-md-curator`** para auditar todos los AGENTS.md
+2. **Revisar propuestas** de corrección (drift entre código y docs)
+3. **Aplicar correcciones** si hay discrepancias
+4. **Commit de documentación** separado o junto al feature
+
+> **Regla de oro:** Los cambios a AGENTS.md son parte de la "definition of done". Van en el mismo PR/feature, no después del merge.
+
+## Paso 7: Commit
 
 ```bash
 git add -A
@@ -215,6 +270,7 @@ git commit -m "feat: implement {feature} with vertical slices
 3. **Un agente a la vez** — domain termina → application empieza
 4. **Verificación obligatoria** — cada agente debe reportar tests verdes
 5. **No tocar fuera del scope** — cada agente respeta sus límites
+6. **Auditar AGENTS.md PRE-merge** — nunca mergear sin sincronizar documentación
 
 ## Cómo evitar duplicación de código — RESPONSABILIDAD DEL ORQUESTADOR
 
@@ -368,6 +424,8 @@ Ver referencia en: `docs/examples/orchestrating-agents-example.md`
 
 ## Ver también
 
+- `AGENTS.md` (raíz del proyecto) — **fuente de verdad actualizada sobre el flujo completo**
 - `brainstorming` skill — paso 1 del flujo
 - `writing-plans` skill — paso 2 del flujo
+- `agents-md-curator` — auditoría PRE-merge de documentación
 - `domain-agent`, `application-agent`, `infrastructure-agent` — prompts en `.opencode/agents/`
