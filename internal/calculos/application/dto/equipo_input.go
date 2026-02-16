@@ -30,20 +30,6 @@ func (s SistemaElectrico) ToEntity() entity.SistemaElectrico {
 	return entity.SistemaElectrico(s)
 }
 
-// CantidadConductores returns el número de conductores según el sistema.
-func (s SistemaElectrico) CantidadConductores() int {
-	switch s {
-	case SistemaElectricoDelta, SistemaElectricoBifasico:
-		return 3
-	case SistemaElectricoEstrella:
-		return 4
-	case SistemaElectricoMonofasico:
-		return 2
-	default:
-		return 3
-	}
-}
-
 // EquipoInput contiene todos los datos necesarios para calcular una memoria.
 // Es el DTO de entrada para el use case CalcularMemoria.
 type EquipoInput struct {

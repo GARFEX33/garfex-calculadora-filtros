@@ -85,8 +85,8 @@ func (o *OrquestadorMemoriaCalculo) Execute(ctx context.Context, input dto.Equip
 	}
 	output.TemperaturaAmbiente = tempAmbiente
 
-	// Obtener cantidad de conductores
-	cantidadConductores := input.SistemaElectrico.CantidadConductores()
+	// Obtener cantidad de conductores usando dominio
+	cantidadConductores := input.SistemaElectrico.ToEntity().CantidadConductores()
 	output.CantidadConductores = cantidadConductores
 
 	// Paso 1: Corriente Nominal
@@ -150,26 +150,27 @@ func (o *OrquestadorMemoriaCalculo) Execute(ctx context.Context, input dto.Equip
 	if err != nil {
 		return dto.MemoriaOutput{}, fmt.Errorf("pasos 4-5 - seleccionar conductores: %w", err)
 	}
-	output.ConductorAlimentacion = dto.ResultadoConductor{
-		Calibre:         resultadoConductores.Alimentacion.Calibre(),
-		Material:        resultadoConductores.Alimentacion.Material().String(),
-		SeccionMM2:      resultadoConductores.Alimentacion.SeccionMM2(),
-		TipoAislamiento: resultadoConductores.Alimentacion.TipoAislamiento(),
-		Capacidad:       resultadoConductores.Capacidad,
-	}
+	// Map DTO flat fields to output (no domain objects exposed)
+	output.ConductorAlimentacion = resultadoConductores.Alimentacion
 	output.TablaAmpacidadUsada = resultadoConductores.TablaUsada
+	output.ConductorTierra = resultadoConductores.Tierra
 
-	output.ConductorTierra = dto.ResultadoConductor{
-		Calibre:    resultadoConductores.Tierra.Calibre(),
-		Material:   resultadoConductores.Tierra.Material().String(),
-		SeccionMM2: resultadoConductores.Tierra.SeccionMM2(),
+	// Reconstruct valueobject.Conductor for subsequent use cases
+	conductorAlimentacionVO, err := valueobject.NewConductor(valueobject.ConductorParams{
+		Calibre:         resultadoConductores.Alimentacion.Calibre,
+		Material:        material,
+		SeccionMM2:      resultadoConductores.Alimentacion.SeccionMM2,
+		TipoAislamiento: resultadoConductores.Alimentacion.TipoAislamiento,
+	})
+	if err != nil {
+		return dto.MemoriaOutput{}, fmt.Errorf("reconstruir conductor alimentación: %w", err)
 	}
 
 	// Paso 6: Dimensionar Canalización
 	resultadoCanalizacion, err := o.dimensionarCanalizacion.Execute(
 		ctx,
-		resultadoConductores.Alimentacion.SeccionMM2(),
-		resultadoConductores.Tierra.SeccionMM2(),
+		resultadoConductores.Alimentacion.SeccionMM2,
+		resultadoConductores.Tierra.SeccionMM2,
 		hilosPorFase,
 		input.ToEntityTipoCanalizacion(),
 	)
@@ -186,7 +187,7 @@ func (o *OrquestadorMemoriaCalculo) Execute(ctx context.Context, input dto.Equip
 	// Paso 7: Caída de Tensión
 	resultadoCaida, err := o.calcularCaidaTension.Execute(
 		ctx,
-		resultadoConductores.Alimentacion,
+		conductorAlimentacionVO,
 		corrienteAjustadaVO,
 		input.LongitudCircuito,
 		input.Tension,

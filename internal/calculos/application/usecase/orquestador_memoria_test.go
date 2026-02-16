@@ -103,9 +103,6 @@ func (m *mockSeleccionarTemperatura) SeleccionarTemperatura(
 	return valueobject.Temp75
 }
 
-// mockAjustarCorriente implements AjustarCorrientePort for testing
-type mockAjustarCorriente struct{}
-
 func (m *mockRepoForIntegration) ObtenerDiametroConductor(ctx context.Context, calibre string, material string, conAislamiento bool) (float64, error) {
 	return 3.5, nil
 }

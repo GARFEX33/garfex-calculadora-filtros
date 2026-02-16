@@ -18,6 +18,14 @@ type ResultadoConductor struct {
 	Capacidad       float64 // Ampacidad de la tabla
 }
 
+// ResultadoConductores contiene los conductores seleccionados por SeleccionarConductorUseCase.
+// Usa tipos primitivos para evitar domain bleeding hacia la capa de application.
+type ResultadoConductores struct {
+	Alimentacion ResultadoConductor
+	Tierra       ResultadoConductor
+	TablaUsada   string
+}
+
 // ResultadoCanalizacion contiene la información de la canalización.
 type ResultadoCanalizacion struct {
 	Tamano           string

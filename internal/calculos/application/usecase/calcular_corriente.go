@@ -69,7 +69,7 @@ func (uc *CalcularCorrienteUseCase) calcularManualAmperaje(input dto.EquipoInput
 
 	corriente, err := valueobject.NewCorriente(input.AmperajeNominal)
 	if err != nil {
-		return dto.ResultadoCorriente{}, err
+		return dto.ResultadoCorriente{}, fmt.Errorf("crear corriente desde amperaje: %w", err)
 	}
 
 	return dto.ResultadoCorriente{CorrienteNominal: corriente.Valor()}, nil
