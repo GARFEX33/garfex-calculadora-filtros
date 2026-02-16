@@ -92,9 +92,8 @@ if valor > 100 {  // esto va en domain
 
 ## Referencias
 
-- Agente: `.opencode/agents/application-agent.md`
-- Comando: `.opencode/commands/orchestrate-agents.md`
-- Skills: `brainstorming-application`, `writing-plans-application`, `executing-plans-application`
+- Agente: `application-agent`
+- Skill: `.agents/skills/orchestrating-agents/SKILL.md`
 
 ## QA Checklist
 

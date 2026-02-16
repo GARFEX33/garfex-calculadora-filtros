@@ -100,9 +100,8 @@ orchestrate-agents --agent infrastructure --feature nueva-feature
 
 ## Referencias
 
-- Agente: `.opencode/agents/infrastructure-agent.md`
-- Comando: `.opencode/commands/orchestrate-agents.md`
-- Skills: `brainstorming-infrastructure`, `writing-plans-infrastructure`, `executing-plans-infrastructure`
+- Agente: `infrastructure-agent`
+- Skill: `.agents/skills/orchestrating-agents/SKILL.md`
 
 ## QA Checklist
 

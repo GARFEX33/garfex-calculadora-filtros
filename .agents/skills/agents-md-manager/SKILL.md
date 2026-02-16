@@ -1,34 +1,46 @@
 ---
 name: agents-md-manager
-description: Gestionar archivos AGENTS.md jerárquicos para proyectos Go con arquitectura hexagonal. Trigger: Crear/auditar AGENTS.md, agregar capas, registrar skills, después de features.
+description: Gestionar archivos AGENTS.md y README.md jerárquicos para proyectos Go con arquitectura hexagonal. Trigger: Crear/auditar documentación, agregar capas, registrar skills, después de features.
 license: Apache-2.0
 metadata:
   author: garfex
-  version: "2.0"
+  version: "3.0"
   agent: agents-md-curator
 ---
 
-# AGENTS.md Manager
+# AGENTS.md & README.md Manager
 
-Gestiona la estructura jerárquica de AGENTS.md para proyectos Go con arquitectura hexagonal + vertical slices. Optimizado para eficiencia de tokens y coordinación con sistema de agentes especializados.
+Gestiona la estructura jerárquica de AGENTS.md y README.md para proyectos Go con arquitectura hexagonal + vertical slices. Optimizado para eficiencia de tokens y coordinación con sistema de agentes especializados.
 
 ## Cuándo Usar
 
-- Crear AGENTS.md para nuevo proyecto Go
-- Auditar AGENTS.md existentes
+- Crear AGENTS.md o README.md para nuevo proyecto Go
+- Auditar documentación existente (AGENTS.md y README.md)
 - Agregar nueva capa o feature
 - Antes de mergear una feature (PRE-merge) — **definition of done**
 - Después de 10+ commits desde última auditoría
+- Cuando el código cambia y la documentación queda desactualizada
 
 ## Agente Asociado
 
 Este skill es usado por el **`agents-md-curator`** — un agente especializado que:
 
 - Solo lee código y documentación, nunca modifica código
+- Audita y actualiza AGENTS.md (instrucciones para agentes) y README.md (documentación técnica)
 - Propone cambios uno a uno, esperando confirmación
 - Se invoca ANTES de merges (PRE-merge) para sincronizar documentación
 
 Ver: `.opencode/agents/agents-md-curator.md`
+
+## Diferencia entre AGENTS.md y README.md
+
+| Archivo | Propósito | Audiencia |
+|---------|-----------|-----------|
+| `AGENTS.md` | Instrucciones para agentes AI | Agentes de desarrollo |
+| `README.md` | Documentación técnica | Desarrolladores humanos |
+
+**AGENTS.md** contiene: reglas de arquitectura, dependencias, skills asociados, QA checklists.
+**README.md** contiene: descripción del módulo, API pública, ejemplos de uso, notas técnicas.
 
 ---
 
@@ -36,13 +48,16 @@ Ver: `.opencode/agents/agents-md-curator.md`
 
 ### Eficiencia de Tokens
 
-| Archivo         | Propósito             | Límite        |
-| --------------- | --------------------- | ------------- |
-| Root AGENTS.md  | Índice de navegación  | ~150 líneas   |
-| Layer AGENTS.md | Reglas de la capa     | ~150 líneas   |
-| Skills          | Patrones con ejemplos | Autocontenido |
+| Archivo         | Propósito                  | Límite        |
+| --------------- | -------------------------- | ------------- |
+| Root AGENTS.md  | Índice de navegación       | ~150 líneas   |
+| Layer AGENTS.md | Reglas de la capa          | ~150 líneas   |
+| Layer README.md | Documentación técnica      | ~100 líneas   |
+| Skills          | Patrones con ejemplos      | Autocontenido |
 
-**Carga por acción:** root (~50 líneas) + 1 layer (~50 líneas) + 1 skill (~100 líneas) = ~200 líneas total
+**Carga por acción:** root (~50 líneas) + 1 layer AGENTS (~50 líneas) + 1 skill (~100 líneas) = ~200 líneas total
+
+**README.md no se carga automáticamente** — solo bajo demanda del agente o humano.
 
 ### Jerarquía de Precedencia
 
@@ -76,13 +91,15 @@ Generar jerarquía completa desde cero.
 
 ### `/agents-md-manager audit`
 
-Revisar AGENTS.md existentes y proponer correcciones.
+Revisar AGENTS.md y README.md existentes y proponer correcciones.
 
 **Output:**
 
 ```
-=== AUDITORÍA AGENTS.md ===
+=== AUDITORÍA DOCUMENTACIÓN ===
 
+AGENTS.md
+---------
 Root AGENTS.md: {OK|WARN|FAIL}
   Estructura: {OK|FAIL} — secciones faltantes: {lista}
   Contenido: {OK|WARN|FAIL} — {advertencias}
@@ -93,6 +110,16 @@ Root AGENTS.md: {OK|WARN|FAIL}
 
 Skills: {n} advertencias
 Agentes: {OK|WARN} — {verificación de referencias}
+
+README.md
+---------
+Root README.md: {OK|WARN|FAIL}
+  Descripción: {OK|WARN} — {actualizada/desactualizada}
+  Comandos: {OK|FAIL} — {funcionan/obsoletos}
+
+{layer}/README.md: {OK|WARN|FAIL}
+  API pública: {OK|WARN} — {sincronizada con código}
+  Ejemplos: {OK|WARN} — {válidos/desactualizados}
 
 === PROPUESTAS ({n}) ===
 
@@ -135,6 +162,32 @@ Agentes: {OK|WARN} — {verificación de referencias}
 | `## QA Checklist`            | Sí        | Checkboxes de verificación                         |
 
 **Límite:** ~150 líneas (warn a 120)
+
+### Root README.md
+
+| Sección                | Requerida | Regla                                        |
+| ---------------------- | --------- | -------------------------------------------- |
+| Título + descripción   | Sí        | Nombre del proyecto + una línea de propósito |
+| `## Instalación`       | Sí        | Pasos para instalar y configurar             |
+| `## Uso`               | Sí        | Comandos básicos o ejemplo rápido            |
+| `## API / Endpoints`   | Opcional  | Si es un servicio, documentar endpoints      |
+| `## Arquitectura`      | Opcional  | Diagrama o descripción de alto nivel         |
+| `## Desarrollo`        | Sí        | Comandos de desarrollo (test, lint, build)   |
+| `## Licencia`          | Opcional  | Tipo de licencia                             |
+
+**Límite:** ~200 líneas
+
+### Layer README.md
+
+| Sección              | Requerida | Regla                                       |
+| -------------------- | --------- | ------------------------------------------- |
+| Título               | Sí        | Nombre del módulo/capa                      |
+| Descripción          | Sí        | Qué hace este módulo (1-2 párrafos)         |
+| `## API Pública`     | Sí        | Funciones/tipos exportados principales      |
+| `## Ejemplos`        | Opcional  | Código de ejemplo de uso                    |
+| `## Notas Técnicas`  | Opcional  | Consideraciones de implementación           |
+
+**Límite:** ~100 líneas
 
 ### Consistencia de Skills
 
@@ -245,12 +298,17 @@ Disparar advertencia si:
 - Skill referenciado en commits pero no registrado
 - Nuevo patrón no documentado en layer AGENTS.md
 - Nuevo agente no registrado en root
+- README.md con ejemplos que no compilan
+- README.md sin reflejar API pública actual
+- Funciones exportadas nuevas sin documentar en README.md
 
 Si hay drift → WARN, proponer actualización.
 
 ---
 
 ## Reglas de Ubicación
+
+### AGENTS.md (instrucciones para agentes)
 
 | Tipo               | Ubicación                                   | Naming            |
 | ------------------ | ------------------------------------------- | ----------------- |
@@ -262,13 +320,24 @@ Si hay drift → WARN, proponer actualización.
 | Skills de proyecto | `.agents/skills/{project}-{scope}/SKILL.md` | Con prefijo       |
 | Agentes            | `.opencode/agents/{name}.md`                | Por rol           |
 
+### README.md (documentación técnica)
+
+| Tipo               | Ubicación                                   | Contenido principal           |
+| ------------------ | ------------------------------------------- | ----------------------------- |
+| Root README.md     | `README.md`                                 | Instalación, uso, desarrollo  |
+| Layer README.md    | `internal/{feature}/{layer}/README.md`      | API pública, ejemplos         |
+| Subdirectorio      | `internal/{feature}/{layer}/{sub}/README.md`| Documentación específica      |
+| Skills README      | `.agents/skills/README.md`                  | Índice de skills disponibles  |
+
 ---
 
 ## Comandos
 
 ```bash
-/agents-md-manager create   # Generar jerarquía completa
-/agents-md-manager audit    # Auditar y proponer correcciones
+/agents-md-manager create          # Generar jerarquía completa (AGENTS.md + README.md)
+/agents-md-manager audit           # Auditar toda la documentación
+/agents-md-manager audit agents    # Auditar solo AGENTS.md
+/agents-md-manager audit readme    # Auditar solo README.md
 ```
 
 ---
@@ -277,6 +346,7 @@ Si hay drift → WARN, proponer actualización.
 
 - **Root AGENTS.md**: [assets/ROOT-AGENTS-TEMPLATE.md](assets/ROOT-AGENTS-TEMPLATE.md)
 - **Layer AGENTS.md**: [assets/LAYER-AGENTS-TEMPLATE.md](assets/LAYER-AGENTS-TEMPLATE.md)
+- **Layer README.md**: [assets/LAYER-README-TEMPLATE.md](assets/LAYER-README-TEMPLATE.md)
 
 ---
 

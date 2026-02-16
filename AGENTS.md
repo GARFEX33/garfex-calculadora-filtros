@@ -67,7 +67,6 @@ Para cualquier feature o bugfix, seguir este flujo de skills en orden:
 | 1    | `brainstorming`          | Usuario pide feature/cambio | Refina ideas con preguntas, explora alternativas, presenta diseño por secciones para validar. Guarda documento de diseño.         |
 | 2    | `writing-plans`          | Diseño aprobado             | Divide el trabajo en tareas pequeñas (2-5 min cada una). Cada tarea tiene: rutas exactas, código completo, pasos de verificación. |
 | 3    | `executing-plans`        | Plan listo                  | Despacha subagente fresco por tarea con revisión de dos etapas (spec + calidad)                                                   |
-| 4    | `requesting-code-review` | Entre tareas                | Revisa contra el plan, reporta issues por severidad. Issues críticos bloquean progreso.                                           |
 
 **IMPORTANTE:** No saltear pasos. Si el usuario dice "agregá X", empezar con `brainstorming`, NO con código.
 
@@ -86,7 +85,10 @@ domain-agent → application-agent → infrastructure-agent
 | Crear/modificar entidades, value objects, servicios de dominio | `domain-agent` | `brainstorming-dominio` → `writing-plans-dominio` → `executing-plans-dominio` |
 | Crear/modificar ports, use cases, DTOs | `application-agent` | `brainstorming-application` → `writing-plans-application` → `executing-plans-application` |
 | Crear/modificar adapters, repositorios, handlers HTTP | `infrastructure-agent` | `brainstorming-infrastructure` → `writing-plans-infrastructure` → `executing-plans-infrastructure` |
-| Actualizar/auditar archivos AGENTS.md | `agents-md-curator` | `agents-md-manager` |
+| Actualizar/auditar archivos AGENTS.md y README.md | `agents-md-curator` | `agents-md-manager` |
+| Auditar capa de dominio (DDD, pureza, Go idiomático) | `auditor-domain` | `golang-patterns`, `golang-pro`, `enforce-domain-boundary` |
+| Auditar capa de application (ports, use cases, DTOs) | `auditor-application` | `golang-patterns`, `golang-pro` |
+| Auditar capa de infrastructure (adapters, I/O, seguridad) | `auditor-infrastructure` | `golang-patterns`, `golang-pro`, `api-design-principles` |
 
 ### Reglas de delegación entre agentes
 
@@ -329,12 +331,16 @@ tests/integration/
 | `brainstorming-dominio`          | Diseñar dominio: entidades, VOs, servicios         | [SKILL.md](.agents/skills/brainstorming-dominio/SKILL.md)              |
 | `brainstorming-application`      | Diseñar application: ports, use cases, DTOs        | [SKILL.md](.agents/skills/brainstorming-application/SKILL.md)          |
 | `brainstorming-infrastructure`   | Diseñar infrastructure: adapters, repos            | [SKILL.md](.agents/skills/brainstorming-infrastructure/SKILL.md)       |
+| `writing-plans`                  | Plan de implementacion general                     | [SKILL.md](.agents/skills/writing-plans/SKILL.md)                      |
 | `writing-plans-dominio`          | Plan de implementacion de dominio                  | [SKILL.md](.agents/skills/writing-plans-dominio/SKILL.md)              |
 | `writing-plans-application`      | Plan de implementacion de application              | [SKILL.md](.agents/skills/writing-plans-application/SKILL.md)          |
 | `writing-plans-infrastructure`   | Plan de implementacion de infrastructure           | [SKILL.md](.agents/skills/writing-plans-infrastructure/SKILL.md)       |
+| `executing-plans`                | Ejecutar plan general                              | [SKILL.md](.agents/skills/executing-plans/SKILL.md)                    |
 | `executing-plans-dominio`        | Ejecutar plan de dominio                           | [SKILL.md](.agents/skills/executing-plans-dominio/SKILL.md)            |
 | `executing-plans-application`    | Ejecutar plan de application                       | [SKILL.md](.agents/skills/executing-plans-application/SKILL.md)        |
 | `executing-plans-infrastructure` | Ejecutar plan de infrastructure                    | [SKILL.md](.agents/skills/executing-plans-infrastructure/SKILL.md)     |
+| `systematic-debugging`           | Debugging sistemático antes de proponer fixes       | [SKILL.md](.agents/skills/systematic-debugging/SKILL.md)               |
+| `verification-before-completion` | Verificar que todo pasa antes de claim completion   | [SKILL.md](.agents/skills/verification-before-completion/SKILL.md)     |
 
 ### Skills de Proyecto
 
@@ -342,6 +348,9 @@ tests/integration/
 | ------------------------------------------- | ---------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
 | `agents-md-manager`                         | Crear y auditar jerarquia AGENTS.md                                    | [SKILL.md](.agents/skills/agents-md-manager/SKILL.md)                                        |
 | `clean-ddd-hexagonal-vertical-go-enterprise`| Arquitectura Enterprise: Clean + DDD + Hexagonal + Vertical Slices     | [SKILL.md](.agents/skills/clean-ddd-hexagonal-vertical-go-enterprise/SKILL.md)               |
+| `enforce-domain-boundary`                  | Garantiza que dominio solo genere entidades, VOs y lógica de negocio  | [SKILL.md](.agents/skills/enforce-domain-boundary/SKILL.md)                                   |
+| `orchestrating-agents`                     | Orquestación de agentes por capa en arquitectura hexagonal            | [SKILL.md](.agents/skills/orchestrating-agents/SKILL.md)                                     |
+| `finishing-a-development-branch`           | Finalización de branch: merge, PR o descarte                           | [SKILL.md](.agents/skills/finishing-a-development-branch/SKILL.md)                          |
 
 ## Auto-invocacion
 
@@ -360,11 +369,14 @@ Cuando realices estas acciones, LEE el AGENTS.md o skill correspondiente PRIMERO
 | Trabajar con tablas NOM CSV                   | `data/tablas_nom/AGENTS.md`                                  |
 | Agregar nueva tabla NOM                       | `data/tablas_nom/AGENTS.md`                                  |
 | Aplicar patrones Go idiomaticos               | skill `golang-patterns`                                      |
-| Crear/auditar AGENTS.md                       | `agents-md-curator` → skill `agents-md-manager`              |
+| Crear/auditar AGENTS.md y README.md           | `agents-md-curator` → skill `agents-md-manager`              |
 | Disenar API endpoints                         | skill `api-design-principles`                                |
 | Crear nuevo skill                             | skill `skill-creator`                                        |
 | Sincronizar skills a AGENTS.md                | skill `skill-sync`                                           |
 | Hacer commits o pull requests                 | skill `commit-work`                                          |
+| Auditar capa de dominio                       | `auditor-domain`                                             |
+| Auditar capa de application                   | `auditor-application`                                        |
+| Auditar capa de infrastructure                | `auditor-infrastructure`                                     |
 
 ## Stack
 

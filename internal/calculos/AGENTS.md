@@ -12,7 +12,7 @@ conductor de tierra → dimensionamiento de canalización → caída de tensión
 internal/calculos/
 ├── domain/          ← entidades y servicios de cálculo puro
 │   ├── entity/      ← Proyecto, TipoCanalizacion, SistemaElectrico, etc.
-│           └── service/     ← 12 servicios de cálculo NOM + IEEE-141
+│           └── service/     ← 13 servicios de cálculo NOM + IEEE-141
 ├── application/     ← ports, use cases, DTOs
 │   ├── port/        ← TablaNOMRepository, EquipoRepository
 │   ├── usecase/     ← OrquestadorMemoriaCalculo y micro use cases
@@ -67,6 +67,5 @@ orchestrate-agents --agent infrastructure --feature calculos
 
 ## Referencias
 
-- Comando: `.opencode/commands/orchestrate-agents.md`
-- Ejemplo: `.opencode/commands/orchestrate-agents-example.md`
+- Skill: `orchestrating-agents` (ver `.agents/skills/orchestrating-agents/SKILL.md`)
 - Sistema: `AGENTS.md` (raíz)

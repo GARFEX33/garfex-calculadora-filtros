@@ -62,13 +62,12 @@ El agente ejecuta solo la fase de executing-plans-dominio (si no hay diseño nue
 | Subdirectorio | Contenido |
 |---------------|-----------|
 | `entity/` | Entidades: TipoEquipo, TipoCanalizacion, SistemaElectrico, MemoriaCalculo, etc. |
-| `service/` | 12 servicios de cálculo NOM + IEEE-141 |
+| `service/` | 13 servicios de cálculo NOM + IEEE-141 |
 
 ## Referencias
 
-- Agente: `.opencode/agents/domain-agent.md`
-- Comando: `.opencode/commands/orchestrate-agents.md`
-- Skill: `.agents/skills/brainstorming-dominio/SKILL.md`
+- Agente: `domain-agent`
+- Skill: `.agents/skills/orchestrating-agents/SKILL.md`
 
 ## Reglas de Oro
 
