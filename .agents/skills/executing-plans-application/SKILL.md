@@ -32,6 +32,10 @@ Para cada tarea de aplicación:
 2. Seguir cada paso exactamente (el plan tiene pasos detallados de aplicación)
 3. **Verificar criterios de aplicación antes de continuar (fail-fast, Design by Contract, testeo incremental). Si la verificación falla, detenerse y pedir aclaración.**
 4. Marcar como `completed`
+5. **Después de CADA tarea completada:**
+   - Anunciar: "Estoy usando la skill finishing-a-development-branch para completar esta tarea de aplicación."
+   - **SUB-SKILL REQUERIDA:** superpowers:finishing-a-development-branch
+   - Seguir esa skill para: verificar tests → auditar AGENTS.md → hacer commit de la tarea
 
 ### Paso 3: Reportar
 
@@ -51,11 +55,10 @@ Basado en feedback:
 
 ### Paso 5: Finalizar
 
-Después de completar todas las tareas de aplicación y verificarlas:
+Después de completar todas las tareas de aplicación:
 
-- Anunciar: "Estoy usando la skill finishing-a-development-branch para completar este trabajo de aplicación."
-- **SUB-SKILL REQUERIDA:** superpowers:finishing-a-development-branch
-- Seguir esa skill para verificar tests, presentar opciones y ejecutar elección
+- Verificar que todas las tareas estén commiteadas
+- Anunciar: "Trabajo de aplicación completado. Todas las tareas fueron verificadas y commiteadas individualmente."
 
 ## Cuándo Detenerse y Pedir Ayuda
 
