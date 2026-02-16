@@ -92,3 +92,15 @@ func ParseTipoCanalizacion(s string) (TipoCanalizacion, error) {
 		return "", fmt.Errorf("%w: %q", ErrTipoCanalizacionInvalido, s)
 	}
 }
+
+// EsCharola returns true if the canalization type is a charola (tray).
+// Charola does NOT apply grouping factor - cables are separated.
+func (tc TipoCanalizacion) EsCharola() bool {
+	switch tc {
+	case TipoCanalizacionCharolaCableEspaciado,
+		TipoCanalizacionCharolaCableTriangular:
+		return true
+	default:
+		return false
+	}
+}

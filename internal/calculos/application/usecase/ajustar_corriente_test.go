@@ -92,8 +92,10 @@ func TestAjustarCorrienteUseCase_Execute_FiltroActivo(t *testing.T) {
 
 	// Assert
 	assert.NoError(t, err)
-	expectedFactorTotal := 0.88 * 0.70 * 1.35 // factorTemp * factorAgrupamiento * factorUso
-	expectedCorrienteAjustada := 50.0 * expectedFactorTotal
+	// Fórmula: corrienteAjustada = corrienteNominal * factorUso / (factorTemp * factorAgr)
+	// 50 * 1.35 / (0.88 * 0.70) = 50 * 1.35 / 0.616 = 109.63
+	expectedFactorTotal := 1.35 / (0.88 * 0.70) // factorUso / (factorTemp * factorAgr)
+	expectedCorrienteAjustada := 50.0 * 1.35 / (0.88 * 0.70)
 	assert.InDelta(t, expectedCorrienteAjustada, result.CorrienteAjustada, 0.001)
 	assert.Equal(t, 0.88, result.FactorTemperatura)
 	assert.Equal(t, 0.70, result.FactorAgrupamiento)
@@ -131,7 +133,8 @@ func TestAjustarCorrienteUseCase_Execute_Transformador(t *testing.T) {
 	assert.Equal(t, 0.94, result.FactorTemperatura)
 	assert.Equal(t, 0.65, result.FactorAgrupamiento)
 	assert.Equal(t, 1.25, result.FactorUso) // Transformador = 1.25
-	assert.InDelta(t, 0.94*0.65*1.25, result.FactorTotal, 0.001)
+	// Nueva fórmula: factorTotal = factorUso / (factorTemp * factorAgr)
+	assert.InDelta(t, 1.25/(0.94*0.65), result.FactorTotal, 0.001)
 	assert.Equal(t, 4, result.ConductoresPorTubo)       // (4 conductores × 2 hilos) / 2 tuberías = 4
 	assert.Equal(t, 8, result.CantidadConductoresTotal) // 4 conductores × 2 hilos
 	assert.Equal(t, 35, result.TemperaturaAmbiente)
@@ -163,7 +166,8 @@ func TestAjustarCorrienteUseCase_Execute_Carga(t *testing.T) {
 	assert.Equal(t, 1.0, result.FactorTemperatura)
 	assert.Equal(t, 0.80, result.FactorAgrupamiento)
 	assert.Equal(t, 1.25, result.FactorUso) // Carga = 1.25
-	assert.InDelta(t, 1.0*0.80*1.25, result.FactorTotal, 0.001)
+	// Nueva fórmula: factorTotal = factorUso / (factorTemp * factorAgr)
+	assert.InDelta(t, 1.25/(1.0*0.80), result.FactorTotal, 0.001)
 	assert.Equal(t, 2, result.ConductoresPorTubo)
 	assert.Equal(t, 2, result.CantidadConductoresTotal)
 }

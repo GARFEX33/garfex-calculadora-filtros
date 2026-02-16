@@ -74,20 +74,34 @@ func (uc *AjustarCorrienteUseCase) Execute(
 	fases := sistemaElectrico.CantidadConductores()
 	cantidadTotal := fases * hilosPorFase
 
-	// Validate that conductors can be evenly distributed
-	if cantidadTotal%numTuberias != 0 {
-		return dto.ResultadoAjusteCorriente{}, fmt.Errorf(
-			"cantidad total de conductores (%d) no es divisible por número de tuberías (%d)",
-			cantidadTotal, numTuberias,
-		)
+	// Determine if grouping factor applies
+	// CHAROLA: no aplica factor de agrupamiento (cables separados o en configuración triangular)
+	// TUBERIA: aplica factor de agrupamiento
+	esCharola := tipoCanalizacion.EsCharola()
+
+	if !esCharola {
+		// Validate that conductors can be evenly distributed (only for tuberia)
+		if cantidadTotal%numTuberias != 0 {
+			return dto.ResultadoAjusteCorriente{}, fmt.Errorf(
+				"cantidad total de conductores (%d) no es divisible por número de tuberías (%d)",
+				cantidadTotal, numTuberias,
+			)
+		}
 	}
 
 	conductoresPorTubo := cantidadTotal / numTuberias
 
-	// Get grouping factor based on conductors per tube (not total)
-	factorAgr, err := uc.tablaRepo.ObtenerFactorAgrupamiento(ctx, conductoresPorTubo)
-	if err != nil {
-		return dto.ResultadoAjusteCorriente{}, fmt.Errorf("calcular factor agrupamiento: %w", err)
+	// Get grouping factor - ONLY for tuberia, not for charola
+	var factorAgr float64
+	if esCharola {
+		// Charola: no aplica factor de agrupamiento
+		factorAgr = 1.0
+	} else {
+		// Tubería: aplica factor de agrupamiento basado en conductores por tubo
+		factorAgr, err = uc.tablaRepo.ObtenerFactorAgrupamiento(ctx, conductoresPorTubo)
+		if err != nil {
+			return dto.ResultadoAjusteCorriente{}, fmt.Errorf("calcular factor agrupamiento: %w", err)
+		}
 	}
 
 	// Get usage factor based on equipment type
@@ -96,11 +110,15 @@ func (uc *AjustarCorrienteUseCase) Execute(
 		return dto.ResultadoAjusteCorriente{}, fmt.Errorf("calcular factor uso: %w", err)
 	}
 
-	// Calculate total correction factor
-	factorTotal := factorTemp * factorAgr * factorUso
-
 	// Calculate adjusted current
-	corrienteAjustada := corrienteNominal.Valor() * factorTotal
+	// Fórmula: corrienteAjustada = corrienteNominal * factorUso / (factorTemp * factorAgr)
+	// - factorUso (1.25-1.35) AUMENTA la corriente de diseño (multiplicar)
+	// - factorTemp (<1) y factorAgr (<1) REDUCEN la capacidad del conductor (dividir)
+	// Ejemplo: 20A * 1.25 / 0.91 = 27.47A
+	corrienteAjustada := (corrienteNominal.Valor() * factorUso) / (factorTemp * factorAgr)
+
+	// Factor total para reporting (cómo afecta en conjunto)
+	factorTotal := factorUso / (factorTemp * factorAgr)
 
 	// Return DTO with primitive types (no domain objects exposed)
 	return dto.ResultadoAjusteCorriente{
