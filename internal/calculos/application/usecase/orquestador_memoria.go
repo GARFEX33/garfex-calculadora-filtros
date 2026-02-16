@@ -53,6 +53,11 @@ func (o *OrquestadorMemoriaCalculo) Execute(ctx context.Context, input dto.Equip
 		hilosPorFase = 1
 	}
 
+	numTuberias := input.NumTuberias
+	if numTuberias <= 0 {
+		numTuberias = 1
+	}
+
 	limiteCaida := input.PorcentajeCaidaMaximo
 	if limiteCaida <= 0 {
 		limiteCaida = 3.0
@@ -104,7 +109,9 @@ func (o *OrquestadorMemoriaCalculo) Execute(ctx context.Context, input dto.Equip
 		input.Estado,
 		input.ToEntityTipoCanalizacion(),
 		input.SistemaElectrico.ToEntity(),
-		input.TemperaturaOverride,
+		input.ToEntityTipoEquipo(),
+		hilosPorFase,
+		numTuberias,
 	)
 	if err != nil {
 		return dto.MemoriaOutput{}, fmt.Errorf("paso 2 - ajustar corriente: %w", err)

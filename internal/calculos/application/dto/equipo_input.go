@@ -65,6 +65,7 @@ type EquipoInput struct {
 	TipoCanalizacion      string                        // "TUBERIA_PVC", "CHAROLA_CABLE_ESPACIADO", etc.
 	TemperaturaOverride   *valueobject.Temperatura      // nil = usar lógica por defecto
 	HilosPorFase          int                           // default: 1
+	NumTuberias           int                           // default: 1, para distribución de conductores
 	Material              valueobject.MaterialConductor `json:"material"` // "Cu" o "Al"; si vacío, default Cu
 	LongitudCircuito      float64                       // metros, para caída de tensión
 	PorcentajeCaidaMaximo float64                       // default: 3.0%

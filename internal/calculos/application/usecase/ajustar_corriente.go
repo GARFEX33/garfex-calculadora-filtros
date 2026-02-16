@@ -30,14 +30,25 @@ func NewAjustarCorrienteUseCase(
 }
 
 // Execute applies correction factors to the nominal current.
+// Accepts tipoEquipo for usage factor, hilosPorFase and numTuberias for grouping calculation.
 func (uc *AjustarCorrienteUseCase) Execute(
 	ctx context.Context,
 	corrienteNominal valueobject.Corriente,
 	estado string,
 	tipoCanalizacion entity.TipoCanalizacion,
 	sistemaElectrico entity.SistemaElectrico,
-	temperaturaOverride *valueobject.Temperatura,
+	tipoEquipo entity.TipoEquipo,
+	hilosPorFase int,
+	numTuberias int,
 ) (dto.ResultadoAjusteCorriente, error) {
+	// Validate inputs
+	if hilosPorFase < 1 {
+		hilosPorFase = 1
+	}
+	if numTuberias < 1 {
+		numTuberias = 1
+	}
+
 	// Get ambient temperature
 	tempAmbiente, err := uc.tablaRepo.ObtenerTemperaturaPorEstado(ctx, estado)
 	if err != nil {
@@ -45,10 +56,11 @@ func (uc *AjustarCorrienteUseCase) Execute(
 	}
 
 	// Select temperature using the port (delegates to domain service)
+	// No override for this use case
 	temperatura := uc.seleccionarTempPort.SeleccionarTemperatura(
 		corrienteNominal,
 		tipoCanalizacion,
-		temperaturaOverride,
+		nil,
 	)
 
 	// Get temperature factor from repository
@@ -57,32 +69,49 @@ func (uc *AjustarCorrienteUseCase) Execute(
 		return dto.ResultadoAjusteCorriente{}, fmt.Errorf("calcular factor temperatura: %w", err)
 	}
 
-	// Get conductors count from electrical system
-	cantidadConductores := sistemaElectrico.CantidadConductores()
+	// Calculate conductor distribution
+	// fases = number of energized conductors based on electrical system
+	fases := sistemaElectrico.CantidadConductores()
+	cantidadTotal := fases * hilosPorFase
 
-	// Get grouping factor from repository
-	factorAgr, err := uc.tablaRepo.ObtenerFactorAgrupamiento(ctx, cantidadConductores)
+	// Validate that conductors can be evenly distributed
+	if cantidadTotal%numTuberias != 0 {
+		return dto.ResultadoAjusteCorriente{}, fmt.Errorf(
+			"cantidad total de conductores (%d) no es divisible por número de tuberías (%d)",
+			cantidadTotal, numTuberias,
+		)
+	}
+
+	conductoresPorTubo := cantidadTotal / numTuberias
+
+	// Get grouping factor based on conductors per tube (not total)
+	factorAgr, err := uc.tablaRepo.ObtenerFactorAgrupamiento(ctx, conductoresPorTubo)
 	if err != nil {
 		return dto.ResultadoAjusteCorriente{}, fmt.Errorf("calcular factor agrupamiento: %w", err)
 	}
 
-	// Apply adjustment using domain service (application CAN depend on domain)
-	factores := map[string]float64{
-		"agrupamiento": factorAgr,
-		"temperatura":  factorTemp,
+	// Get usage factor based on equipment type
+	factorUso, err := service.CalcularFactorUso(tipoEquipo)
+	if err != nil {
+		return dto.ResultadoAjusteCorriente{}, fmt.Errorf("calcular factor uso: %w", err)
 	}
 
-	resultadoAjuste, err := service.AjustarCorriente(corrienteNominal, factores)
-	if err != nil {
-		return dto.ResultadoAjusteCorriente{}, fmt.Errorf("ajustar corriente: %w", err)
-	}
+	// Calculate total correction factor
+	factorTotal := factorTemp * factorAgr * factorUso
+
+	// Calculate adjusted current
+	corrienteAjustada := corrienteNominal.Valor() * factorTotal
 
 	// Return DTO with primitive types (no domain objects exposed)
 	return dto.ResultadoAjusteCorriente{
-		CorrienteAjustada:  resultadoAjuste.CorrienteAjustada.Valor(),
-		FactorTemperatura:  factorTemp,
-		FactorAgrupamiento: factorAgr,
-		FactorTotal:        resultadoAjuste.FactorTotal,
-		Temperatura:        temperatura.Valor(),
+		CorrienteAjustada:        corrienteAjustada,
+		FactorTemperatura:        factorTemp,
+		FactorAgrupamiento:       factorAgr,
+		FactorUso:                factorUso,
+		FactorTotal:              factorTotal,
+		Temperatura:              temperatura.Valor(),
+		ConductoresPorTubo:       conductoresPorTubo,
+		CantidadConductoresTotal: cantidadTotal,
+		TemperaturaAmbiente:      tempAmbiente,
 	}, nil
 }

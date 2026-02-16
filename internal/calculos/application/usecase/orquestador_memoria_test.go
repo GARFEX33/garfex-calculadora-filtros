@@ -140,11 +140,13 @@ func TestOrquestadorMemoriaCalculo_Execute(t *testing.T) {
 	input := dto.EquipoInput{
 		Modo:             dto.ModoManualAmperaje,
 		AmperajeNominal:  50,
+		TipoEquipo:       string(entity.TipoEquipoFiltroActivo),
 		Tension:          tension,
 		FactorPotencia:   0.9,
 		ITM:              100,
 		TipoCanalizacion: "TUBERIA_PVC",
 		HilosPorFase:     1,
+		NumTuberias:      1,
 		Material:         valueobject.MaterialCobre,
 		LongitudCircuito: 10,
 		Estado:           "Sonora",
@@ -157,7 +159,9 @@ func TestOrquestadorMemoriaCalculo_Execute(t *testing.T) {
 
 	// Verify basic fields
 	assert.Equal(t, 50.0, output.CorrienteNominal)
-	assert.Equal(t, 50.0, output.CorrienteAjustada) // Factor = 1.0
+	// Corriente ajustada = nominal × factor_temp × factor_agrupamiento × factor_uso
+	// 50 × 1.0 × 1.0 × 1.35 (filtro activo) = 67.5
+	assert.InDelta(t, 67.5, output.CorrienteAjustada, 0.1)
 	assert.Equal(t, 220, output.Tension)
 	assert.Equal(t, 100, output.ITM)
 	assert.Equal(t, "Sonora", output.Estado)

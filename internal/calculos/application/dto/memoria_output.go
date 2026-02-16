@@ -45,11 +45,15 @@ type EntradaDimensionarCanalizacion struct {
 
 // ResultadoAjusteCorriente contiene el resultado del ajuste de corriente.
 type ResultadoAjusteCorriente struct {
-	CorrienteAjustada  float64 `json:"corriente_ajustada"`
-	FactorTemperatura  float64 `json:"factor_temperatura"`
-	FactorAgrupamiento float64 `json:"factor_agrupamiento"`
-	FactorTotal        float64 `json:"factor_total"`
-	Temperatura        int     `json:"temperatura"` // 60 o 75
+	CorrienteAjustada        float64 `json:"corriente_ajustada"`
+	FactorTemperatura        float64 `json:"factor_temperatura"`
+	FactorAgrupamiento       float64 `json:"factor_agrupamiento"`
+	FactorUso                float64 `json:"factor_uso"`
+	FactorTotal              float64 `json:"factor_total"`
+	Temperatura              int     `json:"temperatura"` // 60 o 75
+	ConductoresPorTubo       int     `json:"conductores_por_tubo"`
+	CantidadConductoresTotal int     `json:"cantidad_conductores_total"`
+	TemperaturaAmbiente      int     `json:"temperatura_ambiente"`
 }
 
 // ResultadoCorriente contains the result of the current calculation.
