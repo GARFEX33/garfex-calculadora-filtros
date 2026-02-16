@@ -45,9 +45,10 @@ Based on feedback:
 ### Step 5: Complete Development
 
 After all tasks complete and verified:
+- Run final verification: `go test ./... && go build ./... && go vet ./...`
 - Announce: "I'm using the finishing-a-development-branch skill to complete this work."
 - **REQUIRED SUB-SKILL:** Use superpowers:finishing-a-development-branch
-- Follow that skill to verify tests, present options, execute choice
+- Follow that skill to: verify tests → audit AGENTS.md → present options → execute choice
 
 ## When to Stop and Ask for Help
 
@@ -79,6 +80,8 @@ After all tasks complete and verified:
 ## Integration
 
 **Required workflow skills:**
-- **superpowers:using-git-worktrees** - REQUIRED: Set up isolated workspace before starting
 - **superpowers:writing-plans** - Creates the plan this skill executes
-- **superpowers:finishing-a-development-branch** - Complete development after all tasks
+- **superpowers:finishing-a-development-branch** - Complete development after all tasks (includes AGENTS.md audit PRE-merge)
+
+**Prohibited:**
+- No usar `.worktree`, `git worktree` ni estrategias basadas en múltiples worktrees bajo ninguna circunstancia.

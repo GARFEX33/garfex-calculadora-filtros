@@ -17,7 +17,7 @@ Gestiona la estructura jerárquica de AGENTS.md para proyectos Go con arquitectu
 - Crear AGENTS.md para nuevo proyecto Go
 - Auditar AGENTS.md existentes
 - Agregar nueva capa o feature
-- Después de completar una feature (post-merge)
+- Antes de mergear una feature (PRE-merge) — **definition of done**
 - Después de 10+ commits desde última auditoría
 
 ## Agente Asociado
@@ -26,7 +26,7 @@ Este skill es usado por el **`agents-md-curator`** — un agente especializado q
 
 - Solo lee código y documentación, nunca modifica código
 - Propone cambios uno a uno, esperando confirmación
-- Se invoca después de merges o cambios significativos
+- Se invoca ANTES de merges (PRE-merge) para sincronizar documentación
 
 Ver: `.opencode/agents/agents-md-curator.md`
 

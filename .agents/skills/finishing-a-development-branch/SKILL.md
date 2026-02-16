@@ -9,7 +9,7 @@ description: Usar cuando la implementación esté completa, todos los tests pase
 
 Guiar la finalización del trabajo presentando opciones claras y ejecutando el flujo elegido.
 
-**Principio central:** Verificar tests → Presentar opciones → Ejecutar elección → Limpieza.
+**Principio central:** Verificar tests → Auditar documentación → Presentar opciones → Ejecutar elección → Limpieza.
 
 **Anunciar al inicio:** "Estoy usando la skill finishing-a-development-branch para completar este trabajo."
 
@@ -38,7 +38,22 @@ Detenerse. No continuar al Paso 2.
 
 **Si los tests pasan:** Continuar al Paso 2.
 
-### Paso 2: Determinar Rama Base
+### Paso 2: Auditar AGENTS.md (PRE-merge OBLIGATORIO)
+
+**Antes de mergear, verificar que la documentación esté sincronizada:**
+
+1. **Invocar `agents-md-curator`** para auditar todos los AGENTS.md
+2. **Revisar propuestas** de corrección (drift entre código y docs)
+3. **Aplicar correcciones** si hay discrepancias
+4. **Commit de documentación** si hubo cambios
+
+> **Regla de oro:** La documentación es parte de la "definition of done". Los cambios a AGENTS.md van en el mismo PR/feature, nunca post-merge.
+
+**Si hay correcciones aplicadas:** Hacer commit de documentación antes de continuar.
+
+**Si no hay correcciones o ya están aplicadas:** Continuar al Paso 3.
+
+### Paso 3: Determinar Rama Base
 
 ```bash
 # Intentar ramas base comunes
@@ -47,12 +62,12 @@ git merge-base HEAD main 2>/dev/null || git merge-base HEAD master 2>/dev/null
 
 O preguntar: "Esta rama se creó desde main — ¿es correcto?"
 
-### Paso 3: Presentar Opciones
+### Paso 4: Presentar Opciones
 
 Presentar exactamente estas 4 opciones:
 
 ```
-Implementación completa. ¿Qué deseas hacer?
+Implementación completa y documentación sincronizada. ¿Qué deseas hacer?
 
 1. Hacer merge local a <rama-base>
 2. Hacer push y crear un Pull Request
@@ -64,7 +79,7 @@ Implementación completa. ¿Qué deseas hacer?
 
 **No agregar explicación adicional.**
 
-### Paso 4: Ejecutar la Elección
+### Paso 5: Ejecutar la Elección
 
 #### Opción 1: Merge Local
 
@@ -165,6 +180,7 @@ git branch -D <rama-feature>
 **Siempre:**
 
 - Verificar tests antes de ofrecer opciones
+- **Auditar AGENTS.md antes de mergear (PRE-merge)**
 - Presentar exactamente 4 opciones
 - Obtener confirmación escrita para Opción 4
 
