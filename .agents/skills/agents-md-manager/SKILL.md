@@ -1,8 +1,6 @@
 ---
 name: agents-md-manager
-description: >
-  Create and audit hierarchical AGENTS.md files for Go hexagonal projects.
-  Trigger: When creating/auditing AGENTS.md files, adding new layers, or registering new skills.
+description: Create and audit hierarchical AGENTS.md files for Go hexagonal projects. Trigger: When creating/auditing AGENTS.md files, adding new layers, or registering new skills.
 license: Apache-2.0
 metadata:
   author: garfex
@@ -36,48 +34,59 @@ Generate the full AGENTS.md hierarchy from scratch.
 2. **Evaluate granularity** per directory (see Granularity Algorithm below)
 
 3. **Generate root AGENTS.md** as pure orchestrator with these sections only:
+
    ```
    # {Project Name}
    {One-line description}
 
    ## Como Usar Esta Guia
    - 3 bullet points: start here, layer docs, precedence rule
+   ```
 
 ## Guias por Capa
+
 | Capa | Ubicacion | AGENTS.md contiene |
-    {one row per directory with AGENTS.md}
+{one row per directory with AGENTS.md}
 
-   ## Skills Disponibles
-   ### Skills Genericos
-   | Skill | Descripcion | Ruta |
-   {one row per generic skill}
+## Skills Disponibles
 
-   ### Skills de Proyecto
-   | Skill | Descripcion | Ruta |
-   {one row per project skill}
+### Skills Genericos
+
+| Skill | Descripcion | Ruta |
+{one row per generic skill}
+
+### Skills de Proyecto
+
+| Skill | Descripcion | Ruta |
+{one row per project skill}
 
     ## Auto-invocacion
     | Accion | Referencia |
     {maps actions to AGENTS.md files AND skills}
 
-   ## Stack
-   {one line}
+## Stack
 
-   ## Comandos
-   {build, test, lint commands}
+{one line}
 
-   ## Fases
-   {numbered list, current phase marked}
+## Comandos
 
-   ## Convenciones Globales
-   {5-6 bullet points max}
-   ```
+{build, test, lint commands}
+
+## Fases
+
+{numbered list, current phase marked}
+
+## Convenciones Globales
+
+{5-6 bullet points max}
+
+```
 
 4. **Generate layer AGENTS.md** for each detected layer:
-   - Max ~300 lines (warn at 250, propose skill extraction if over 300)
-   - Only rules specific to that layer
-   - Reference relevant skills: "Para patrones Go, usa skill `golang-patterns`"
-   - Never duplicate root content (no stack, no conventions, no commands)
+- Max ~300 lines (warn at 250, propose skill extraction if over 300)
+- Only rules specific to that layer
+- Reference relevant skills: "Para patrones Go, usa skill `golang-patterns`"
+- Never duplicate root content (no stack, no conventions, no commands)
 
 5. **Present each file** to user for confirmation before writing
 
@@ -155,27 +164,30 @@ Run the Granularity Algorithm on each directory with an AGENTS.md.
 **Output format:**
 
 ```
+
 === AUDIT AGENTS.md ===
 
 Root AGENTS.md: {OK|WARN|FAIL} ({n}/{total} checks)
-  Structure: {OK|FAIL} — missing sections: {list or "none"}
-  Content:   {OK|WARN|FAIL} — {list warnings/failures}
+Structure: {OK|FAIL} — missing sections: {list or "none"}
+Content: {OK|WARN|FAIL} — {list warnings/failures}
 
 {layer}/AGENTS.md: {OK|WARN|FAIL} ({n}/{total} checks)
-  Structure: {OK|FAIL} — missing sections: {list or "none"}
-  Content:   {OK|WARN|FAIL} — {list warnings/failures}
+Structure: {OK|FAIL} — missing sections: {list or "none"}
+Content: {OK|WARN|FAIL} — {list warnings/failures}
 
 Skills: {n} advertencias
-  {list warnings}
+{list warnings}
 
 Granularidad: {OK|action needed}
-  {list recommendations}
+{list recommendations}
 
 === PROPUESTAS ({n}) ===
+
 1. {description}
 2. {description}
 
 Aplicar propuesta 1? [si/no]
+
 ```
 
 Apply proposals one at a time, waiting for user confirmation each time.
@@ -194,10 +206,12 @@ Evaluate 3 metrics per directory:
 **Decision:**
 
 ```
+
 0 of 3 thresholds exceeded → keep current AGENTS.md
 1 of 3 thresholds exceeded → warn, suggest future review
 2+ of 3 thresholds exceeded → propose split into sub-directory AGENTS.md files
-```
+
+````
 
 When proposing a split:
 - Suggest which sub-directories need their own AGENTS.md
@@ -240,7 +254,7 @@ This skill is optimized for:
 ```bash
 /claude-md-manager create   # Generate full AGENTS.md hierarchy from scratch
 /claude-md-manager audit    # Review existing AGENTS.md files and propose fixes
-```
+````
 
 ---
 

@@ -86,6 +86,7 @@ domain-agent → application-agent → infrastructure-agent
 | Crear/modificar entidades, value objects, servicios de dominio | `domain-agent` | `brainstorming-dominio` → `writing-plans-dominio` → `executing-plans-dominio` |
 | Crear/modificar ports, use cases, DTOs | `application-agent` | `brainstorming-application` → `writing-plans-application` → `executing-plans-application` |
 | Crear/modificar adapters, repositorios, handlers HTTP | `infrastructure-agent` | `brainstorming-infrastructure` → `writing-plans-infrastructure` → `executing-plans-infrastructure` |
+| Actualizar/auditar archivos AGENTS.md | `agents-md-curator` | `agents-md-manager` |
 
 ### Reglas de delegación entre agentes
 
@@ -183,7 +184,7 @@ internal/
   calculos/             ← feature: memoria de cálculo eléctrico
     domain/
       entity/           ← TipoCanalizacion, SistemaElectrico, ITM, MemoriaCalculo, etc.
-      service/          ← 7 servicios de cálculo eléctrico (IEEE-141, NOM)
+      service/          ← 8 servicios de cálculo eléctrico (IEEE-141, NOM)
     application/
       port/             ← TablaNOMRepository, EquipoRepository (interfaces)
       usecase/          ← OrquestadorMemoriaCalculo y micro use cases
@@ -273,7 +274,7 @@ Cuando realices estas acciones, LEE el AGENTS.md o skill correspondiente PRIMERO
 | Trabajar con tablas NOM CSV                   | `data/tablas_nom/AGENTS.md`                                  |
 | Agregar nueva tabla NOM                       | `data/tablas_nom/AGENTS.md`                                  |
 | Aplicar patrones Go idiomaticos               | skill `golang-patterns`                                      |
-| Crear/auditar AGENTS.md                       | skill `agents-md-manager`                                    |
+| Crear/auditar AGENTS.md                       | `agents-md-curator` → skill `agents-md-manager`              |
 | Disenar API endpoints                         | skill `api-design-principles`                                |
 | Crear nuevo skill                             | skill `skill-creator`                                        |
 | Sincronizar skills a AGENTS.md                | skill `skill-sync`                                           |
