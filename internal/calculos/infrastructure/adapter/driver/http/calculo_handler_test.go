@@ -86,15 +86,28 @@ func (m *mockCalculador) CalcularCorrienteNominal() (valueobject.Corriente, erro
 	return valueobject.NewCorriente(m.corriente)
 }
 
+// mockSeleccionarTemperatura implements port.SeleccionarTemperaturaPort
+type mockSeleccionarTemperatura struct{}
+
+func (m *mockSeleccionarTemperatura) SeleccionarTemperatura(
+	corriente valueobject.Corriente,
+	tipoCanalizacion entity.TipoCanalizacion,
+	override *valueobject.Temperatura,
+) valueobject.Temperatura {
+	return valueobject.Temp75
+}
+
 func TestCalculoHandler_CalcularMemoria_Success(t *testing.T) {
 	// Setup
 	gin.SetMode(gin.TestMode)
 
 	tablaRepo := &mockTablaRepo{}
 	equipoRepo := &mockEquipoRepo{}
+	seleccionarTempRepo := &mockSeleccionarTemperatura{}
 	calcularMemoriaUC := usecase.NewCalcularMemoriaUseCase(tablaRepo, equipoRepo)
 	calcularCorrienteUC := usecase.NewCalcularCorrienteUseCase(equipoRepo)
-	handler := NewCalculoHandler(calcularMemoriaUC, calcularCorrienteUC)
+	ajustarCorrienteUC := usecase.NewAjustarCorrienteUseCase(tablaRepo, seleccionarTempRepo)
+	handler := NewCalculoHandler(calcularMemoriaUC, calcularCorrienteUC, ajustarCorrienteUC)
 
 	// Crear request
 	reqBody := CalcularMemoriaRequest{
@@ -141,9 +154,11 @@ func TestCalculoHandler_CalcularMemoria_ValidationError(t *testing.T) {
 
 	tablaRepo := &mockTablaRepo{}
 	equipoRepo := &mockEquipoRepo{}
+	seleccionarTempRepo := &mockSeleccionarTemperatura{}
 	calcularMemoriaUC := usecase.NewCalcularMemoriaUseCase(tablaRepo, equipoRepo)
 	calcularCorrienteUC := usecase.NewCalcularCorrienteUseCase(equipoRepo)
-	handler := NewCalculoHandler(calcularMemoriaUC, calcularCorrienteUC)
+	ajustarCorrienteUC := usecase.NewAjustarCorrienteUseCase(tablaRepo, seleccionarTempRepo)
+	handler := NewCalculoHandler(calcularMemoriaUC, calcularCorrienteUC, ajustarCorrienteUC)
 
 	// Crear request inválido (falta modo)
 	reqBody := map[string]interface{}{

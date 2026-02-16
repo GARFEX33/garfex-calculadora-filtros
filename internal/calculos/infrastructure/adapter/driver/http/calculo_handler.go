@@ -17,16 +17,19 @@ import (
 type CalculoHandler struct {
 	calcularMemoriaUseCase   *usecase.CalcularMemoriaUseCase
 	calcularCorrienteUseCase *usecase.CalcularCorrienteUseCase
+	ajustarCorrienteUseCase  *usecase.AjustarCorrienteUseCase
 }
 
 // NewCalculoHandler crea un nuevo handler de cálculo.
 func NewCalculoHandler(
 	calcularMemoriaUC *usecase.CalcularMemoriaUseCase,
 	calcularCorrienteUC *usecase.CalcularCorrienteUseCase,
+	ajustarCorrienteUC *usecase.AjustarCorrienteUseCase,
 ) *CalculoHandler {
 	return &CalculoHandler{
 		calcularMemoriaUseCase:   calcularMemoriaUC,
 		calcularCorrienteUseCase: calcularCorrienteUC,
+		ajustarCorrienteUseCase:  ajustarCorrienteUC,
 	}
 }
 
@@ -393,6 +396,179 @@ func (h *CalculoHandler) mapAmperajeErrorToResponse(err error) (int, CalcularAmp
 
 	// Por defecto: error interno 500
 	return http.StatusInternalServerError, CalcularAmperajeResponseError{
+		Success: false,
+		Error:   "Error interno del servidor",
+		Code:    "INTERNAL_ERROR",
+		Details: err.Error(),
+	}
+}
+
+// ============================================
+// Endpoint: Calcular Corriente Ajustada
+// ============================================
+
+// CorrienteAjustadaRequest representa el body de la petición POST /corriente-ajustada.
+type CorrienteAjustadaRequest struct {
+	CorrienteNominal float64 `json:"corriente_nominal" binding:"required,gt=0"`
+	Estado           string  `json:"estado" binding:"required"`
+	TipoCanalizacion string  `json:"tipo_canalizacion" binding:"required"`
+	SistemaElectrico string  `json:"sistema_electrico" binding:"required"`
+	TipoEquipo       string  `json:"tipo_equipo" binding:"required"`
+	HilosPorFase     int     `json:"hilos_por_fase" binding:"gte=1"`
+	NumTuberias      int     `json:"num_tuberias" binding:"gte=1"`
+}
+
+// CorrienteAjustadaResponse representa la respuesta exitosa.
+type CorrienteAjustadaResponse struct {
+	Success bool                         `json:"success"`
+	Data    dto.ResultadoAjusteCorriente `json:"data"`
+}
+
+// CorrienteAjustadaResponseError representa la respuesta de error.
+type CorrienteAjustadaResponseError struct {
+	Success bool   `json:"success"`
+	Error   string `json:"error"`
+	Code    string `json:"code,omitempty"`
+	Details string `json:"details,omitempty"`
+}
+
+// CalcularCorrienteAjustada POST /api/v1/calculos/corriente-ajustada
+func (h *CalculoHandler) CalcularCorrienteAjustada(c *gin.Context) {
+	var req CorrienteAjustadaRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, CorrienteAjustadaResponseError{
+			Success: false,
+			Error:   "Error de validación",
+			Code:    "VALIDATION_ERROR",
+			Details: err.Error(),
+		})
+		return
+	}
+
+	// Parsear tipo de canalización
+	tipoCanalizacion, err := entity.ParseTipoCanalizacion(req.TipoCanalizacion)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, CorrienteAjustadaResponseError{
+			Success: false,
+			Error:   "Tipo de canalización inválido",
+			Code:    "TIPO_CANALIZACION_INVALIDO",
+			Details: err.Error(),
+		})
+		return
+	}
+
+	// Parsear sistema eléctrico
+	sistemaElectrico, err := entity.ParseSistemaElectrico(req.SistemaElectrico)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, CorrienteAjustadaResponseError{
+			Success: false,
+			Error:   "Sistema eléctrico inválido",
+			Code:    "SISTEMA_ELECTRICO_INVALIDO",
+			Details: err.Error(),
+		})
+		return
+	}
+
+	// Parsear tipo de equipo
+	tipoEquipo, err := entity.ParseTipoEquipo(req.TipoEquipo)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, CorrienteAjustadaResponseError{
+			Success: false,
+			Error:   "Tipo de equipo inválido",
+			Code:    "TIPO_EQUIPO_INVALIDO",
+			Details: err.Error(),
+		})
+		return
+	}
+
+	// Crear corriente nominal
+	corrienteNominal, err := valueobject.NewCorriente(req.CorrienteNominal)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, CorrienteAjustadaResponseError{
+			Success: false,
+			Error:   "Corriente nominal inválida",
+			Code:    "CORRIENTE_INVALIDA",
+			Details: err.Error(),
+		})
+		return
+	}
+
+	// Valores por defecto
+	hilosPorFase := req.HilosPorFase
+	if hilosPorFase == 0 {
+		hilosPorFase = 1
+	}
+	numTuberias := req.NumTuberias
+	if numTuberias == 0 {
+		numTuberias = 1
+	}
+
+	// Ejecutar use case
+	resultado, err := h.ajustarCorrienteUseCase.Execute(
+		c.Request.Context(),
+		corrienteNominal,
+		req.Estado,
+		tipoCanalizacion,
+		sistemaElectrico,
+		tipoEquipo,
+		hilosPorFase,
+		numTuberias,
+	)
+	if err != nil {
+		status, response := h.mapCorrienteAjustadaErrorToResponse(err)
+		c.JSON(status, response)
+		return
+	}
+
+	c.JSON(http.StatusOK, CorrienteAjustadaResponse{
+		Success: true,
+		Data:    resultado,
+	})
+}
+
+// mapCorrienteAjustadaErrorToResponse mapea errores del dominio a respuestas HTTP.
+func (h *CalculoHandler) mapCorrienteAjustadaErrorToResponse(err error) (int, CorrienteAjustadaResponseError) {
+	// Errores 400 - Bad Request
+	if errors.Is(err, entity.ErrTipoEquipoInvalido) {
+		return http.StatusBadRequest, CorrienteAjustadaResponseError{
+			Success: false,
+			Error:   "Tipo de equipo inválido",
+			Code:    "TIPO_EQUIPO_INVALIDO",
+			Details: err.Error(),
+		}
+	}
+
+	if errors.Is(err, entity.ErrTipoCanalizacionInvalido) {
+		return http.StatusBadRequest, CorrienteAjustadaResponseError{
+			Success: false,
+			Error:   "Tipo de canalización inválido",
+			Code:    "TIPO_CANALIZACION_INVALIDO",
+			Details: err.Error(),
+		}
+	}
+
+	if errors.Is(err, entity.ErrSistemaElectricoInvalido) {
+		return http.StatusBadRequest, CorrienteAjustadaResponseError{
+			Success: false,
+			Error:   "Sistema eléctrico inválido",
+			Code:    "SISTEMA_ELECTRICO_INVALIDO",
+			Details: err.Error(),
+		}
+	}
+
+	// Errores 422 - Unprocessable Entity
+	if errors.Is(err, dto.ErrConductorNoEncontrado) ||
+		errors.Is(err, dto.ErrCanalizacionNoDisponible) {
+		return http.StatusUnprocessableEntity, CorrienteAjustadaResponseError{
+			Success: false,
+			Error:   "No se pudo calcular el ajuste de corriente",
+			Code:    "CALCULO_NO_POSIBLE",
+			Details: err.Error(),
+		}
+	}
+
+	// Por defecto: error interno 500
+	return http.StatusInternalServerError, CorrienteAjustadaResponseError{
 		Success: false,
 		Error:   "Error interno del servidor",
 		Code:    "INTERNAL_ERROR",
