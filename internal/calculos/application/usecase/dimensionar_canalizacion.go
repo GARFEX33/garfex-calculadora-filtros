@@ -43,7 +43,7 @@ func (uc *DimensionarCanalizacionUseCase) Execute(
 		{Cantidad: 1, SeccionMM2: conductorTierraSeccionMM2},                      // Tierra
 	}
 
-	resultado, err := service.CalcularCanalizacion(conductores, string(tipoCanalizacion), tablaCanalizacion, hilosPorFase)
+	resultado, err := service.CalcularCanalizacion(conductores, tipoCanalizacion, tablaCanalizacion, hilosPorFase)
 	if err != nil {
 		return dto.ResultadoCanalizacion{}, fmt.Errorf("calcular canalización: %w", err)
 	}

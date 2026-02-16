@@ -9,6 +9,57 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestParseTipoCanalizacion_validos(t *testing.T) {
+	casos := []struct {
+		input    string
+		expected entity.TipoCanalizacion
+	}{
+		{"TUBERIA_PVC", entity.TipoCanalizacionTuberiaPVC},
+		{"TUBERIA_ALUMINIO", entity.TipoCanalizacionTuberiaAluminio},
+		{"TUBERIA_ACERO_PG", entity.TipoCanalizacionTuberiaAceroPG},
+		{"TUBERIA_ACERO_PD", entity.TipoCanalizacionTuberiaAceroPD},
+		{"CHAROLA_CABLE_ESPACIADO", entity.TipoCanalizacionCharolaCableEspaciado},
+		{"CHAROLA_CABLE_TRIANGULAR", entity.TipoCanalizacionCharolaCableTriangular},
+	}
+	for _, c := range casos {
+		t.Run(c.input, func(t *testing.T) {
+			got, err := entity.ParseTipoCanalizacion(c.input)
+			require.NoError(t, err)
+			assert.Equal(t, c.expected, got)
+		})
+	}
+}
+
+func TestParseTipoCanalizacion_invalido(t *testing.T) {
+	_, err := entity.ParseTipoCanalizacion("TUBERIA_MADERA")
+	require.Error(t, err)
+	assert.ErrorIs(t, err, entity.ErrTipoCanalizacionInvalido)
+}
+
+func TestTipoCanalizacion_EsCharola(t *testing.T) {
+	charolas := []entity.TipoCanalizacion{
+		entity.TipoCanalizacionCharolaCableEspaciado,
+		entity.TipoCanalizacionCharolaCableTriangular,
+	}
+	for _, tc := range charolas {
+		t.Run(string(tc), func(t *testing.T) {
+			assert.True(t, tc.EsCharola())
+		})
+	}
+
+	tuberias := []entity.TipoCanalizacion{
+		entity.TipoCanalizacionTuberiaPVC,
+		entity.TipoCanalizacionTuberiaAluminio,
+		entity.TipoCanalizacionTuberiaAceroPG,
+		entity.TipoCanalizacionTuberiaAceroPD,
+	}
+	for _, tc := range tuberias {
+		t.Run(string(tc), func(t *testing.T) {
+			assert.False(t, tc.EsCharola())
+		})
+	}
+}
+
 func TestValidarTipoCanalizacion_validos(t *testing.T) {
 	casos := []struct {
 		nombre string

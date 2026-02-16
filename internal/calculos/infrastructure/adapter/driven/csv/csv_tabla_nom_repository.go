@@ -282,10 +282,7 @@ func (r *CSVTablaNOMRepository) ObtenerImpedancia(
 		}
 	}
 
-	return valueobject.ResistenciaReactancia{
-		R: res,
-		X: x,
-	}, nil
+	return valueobject.NewResistenciaReactancia(res, x)
 }
 
 // ObtenerTablaCanalizacion returns conduit sizing table entries.

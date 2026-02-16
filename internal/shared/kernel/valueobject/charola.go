@@ -49,7 +49,8 @@ type ConductorCharolaParams struct {
 	DiametroMM float64
 }
 
-// NewConductorCharola crea un ConductorCharola value object.
+// NewConductorCharola crea un ConductorCharola value object validando que el
+// diámetro exterior sea mayor que cero. Retorna ErrConductorInvalido si DiametroMM ≤ 0.
 func NewConductorCharola(p ConductorCharolaParams) (ConductorCharola, error) {
 	if p.DiametroMM <= 0 {
 		return ConductorCharola{}, fmt.Errorf("%w: diámetro debe ser mayor que cero", ErrConductorInvalido)

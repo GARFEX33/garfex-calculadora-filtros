@@ -37,7 +37,10 @@ func newMockRepoForIntegration() *mockRepoForIntegration {
 			{Tamano: "3/4", AreaInteriorMM2: 122},
 			{Tamano: "1", AreaInteriorMM2: 188},
 		},
-		impedancia:  valueobject.ResistenciaReactancia{R: 3.9, X: 0.164},
+		impedancia: func() valueobject.ResistenciaReactancia {
+			rr, _ := valueobject.NewResistenciaReactancia(3.9, 0.164)
+			return rr
+		}(),
 		estadosTemp: map[string]int{"Sonora": 25},
 	}
 }

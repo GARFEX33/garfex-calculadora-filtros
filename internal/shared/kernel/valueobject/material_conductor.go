@@ -6,6 +6,9 @@ import (
 	"strings"
 )
 
+// ErrMaterialConductorInvalido is returned when an unknown material string is provided.
+var ErrMaterialConductorInvalido = fmt.Errorf("material conductor inválido (esperado Cu o Al)")
+
 // MaterialConductor represents the conductor material (Cu or Al).
 type MaterialConductor int
 
@@ -26,30 +29,16 @@ func (m MaterialConductor) String() string {
 	}
 }
 
-// MarshalJSON serializes MaterialConductor as JSON string.
-func (m MaterialConductor) MarshalJSON() ([]byte, error) {
-	return []byte(fmt.Sprintf("%q", m.String())), nil
-}
-
-// UnmarshalJSON parses JSON string into MaterialConductor.
-// Accepts: "Cu", "CU", "cu", "cobre", "Al", "AL", "al", "aluminio"
-func (m *MaterialConductor) UnmarshalJSON(data []byte) error {
-	// Remove quotes
-	s := string(data)
-	if len(s) >= 2 && s[0] == '"' && s[len(s)-1] == '"' {
-		s = s[1 : len(s)-1]
-	}
-
-	// Case-insensitive comparison
-	s = strings.ToUpper(s)
-
-	switch s {
-	case "CU", "COBRE", "0":
-		*m = MaterialCobre
-	case "AL", "ALUMINIO", "1":
-		*m = MaterialAluminio
+// ParseMaterialConductor converts a string to MaterialConductor.
+// Accepts case-insensitive: "Cu", "CU", "cu", "cobre", "Al", "AL", "al", "aluminio".
+// Returns ErrMaterialConductorInvalido if the value is unrecognized.
+func ParseMaterialConductor(s string) (MaterialConductor, error) {
+	switch strings.ToUpper(s) {
+	case "CU", "COBRE":
+		return MaterialCobre, nil
+	case "AL", "ALUMINIO":
+		return MaterialAluminio, nil
 	default:
-		return fmt.Errorf("invalid material: %s (expected Cu or Al)", s)
+		return MaterialCobre, fmt.Errorf("%w: %q", ErrMaterialConductorInvalido, s)
 	}
-	return nil
 }

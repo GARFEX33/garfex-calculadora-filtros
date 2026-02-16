@@ -6,6 +6,7 @@ import (
 
 	"github.com/garfex/calculadora-filtros/internal/calculos/domain/entity"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestSistemaElectrico_CantidadConductores(t *testing.T) {
@@ -24,6 +25,27 @@ func TestSistemaElectrico_CantidadConductores(t *testing.T) {
 			assert.Equal(t, tt.expected, tt.sistema.CantidadConductores())
 		})
 	}
+}
+
+func TestValidarSistemaElectrico(t *testing.T) {
+	validos := []entity.SistemaElectrico{
+		entity.SistemaElectricoDelta,
+		entity.SistemaElectricoEstrella,
+		entity.SistemaElectricoBifasico,
+		entity.SistemaElectricoMonofasico,
+	}
+	for _, se := range validos {
+		t.Run(string(se), func(t *testing.T) {
+			err := entity.ValidarSistemaElectrico(se)
+			assert.NoError(t, err)
+		})
+	}
+
+	t.Run("invalido", func(t *testing.T) {
+		err := entity.ValidarSistemaElectrico("TRIFASICO")
+		require.Error(t, err)
+		assert.ErrorIs(t, err, entity.ErrSistemaElectricoInvalido)
+	})
 }
 
 func TestParseSistemaElectrico(t *testing.T) {

@@ -191,7 +191,7 @@ func (uc *CalcularMemoriaUseCase) Execute(ctx context.Context, input dto.EquipoI
 		{Cantidad: 1, SeccionMM2: conductorTierra.SeccionMM2()},          // Tierra
 	}
 
-	canalizacion, err := service.CalcularCanalizacion(conductores, string(input.TipoCanalizacion), tablaCanalizacion, hilosPorFase)
+	canalizacion, err := service.CalcularCanalizacion(conductores, input.ToEntityTipoCanalizacion(), tablaCanalizacion, hilosPorFase)
 	if err != nil {
 		return dto.MemoriaOutput{}, fmt.Errorf("paso 6 - calcular canalización: %w", err)
 	}
@@ -212,8 +212,8 @@ func (uc *CalcularMemoriaUseCase) Execute(ctx context.Context, input dto.EquipoI
 	}
 
 	entradaCaida := service.EntradaCalculoCaidaTension{
-		ResistenciaOhmPorKm: impedancia.R,
-		ReactanciaOhmPorKm:  impedancia.X,
+		ResistenciaOhmPorKm: impedancia.R(),
+		ReactanciaOhmPorKm:  impedancia.X(),
 		TipoCanalizacion:    input.ToEntityTipoCanalizacion(),
 		HilosPorFase:        hilosPorFase,
 		FactorPotencia:      input.FactorPotencia,

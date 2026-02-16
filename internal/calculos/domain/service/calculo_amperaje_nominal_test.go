@@ -4,6 +4,7 @@ package service_test
 import (
 	"testing"
 
+	"github.com/garfex/calculadora-filtros/internal/calculos/domain/entity"
 	"github.com/garfex/calculadora-filtros/internal/calculos/domain/service"
 	"github.com/garfex/calculadora-filtros/internal/shared/kernel/valueobject"
 	"github.com/stretchr/testify/assert"
@@ -18,8 +19,7 @@ func TestCalcularAmperajeNominalCircuito_Monofasico(t *testing.T) {
 	corriente, err := service.CalcularAmperajeNominalCircuito(
 		1000,
 		tension,
-		service.TipoCargaMonofasica,
-		service.SistemaElectricoEstrella,
+		entity.SistemaElectricoMonofasico,
 		0.9,
 	)
 	require.NoError(t, err)
@@ -35,8 +35,7 @@ func TestCalcularAmperajeNominalCircuito_Trifasico(t *testing.T) {
 	corriente, err := service.CalcularAmperajeNominalCircuito(
 		50000,
 		tension,
-		service.TipoCargaTrifasica,
-		service.SistemaElectricoDelta,
+		entity.SistemaElectricoDelta,
 		0.85,
 	)
 	require.NoError(t, err)
@@ -53,8 +52,7 @@ func TestCalcularAmperajeNominalCircuito_127V_Monofasico(t *testing.T) {
 	corriente, err := service.CalcularAmperajeNominalCircuito(
 		2000,
 		tension,
-		service.TipoCargaMonofasica,
-		service.SistemaElectricoEstrella,
+		entity.SistemaElectricoMonofasico,
 		0.95,
 	)
 	require.NoError(t, err)
@@ -70,8 +68,7 @@ func TestCalcularAmperajeNominalCircuito_Errores(t *testing.T) {
 		_, err := service.CalcularAmperajeNominalCircuito(
 			-100,
 			tension,
-			service.TipoCargaMonofasica,
-			service.SistemaElectricoEstrella,
+			entity.SistemaElectricoMonofasico,
 			0.9,
 		)
 		require.Error(t, err)
@@ -82,8 +79,7 @@ func TestCalcularAmperajeNominalCircuito_Errores(t *testing.T) {
 		_, err := service.CalcularAmperajeNominalCircuito(
 			0,
 			tension,
-			service.TipoCargaMonofasica,
-			service.SistemaElectricoEstrella,
+			entity.SistemaElectricoMonofasico,
 			0.9,
 		)
 		require.Error(t, err)
@@ -94,8 +90,7 @@ func TestCalcularAmperajeNominalCircuito_Errores(t *testing.T) {
 		_, err := service.CalcularAmperajeNominalCircuito(
 			1000,
 			tension,
-			service.TipoCargaMonofasica,
-			service.SistemaElectricoEstrella,
+			entity.SistemaElectricoMonofasico,
 			0,
 		)
 		require.Error(t, err)
@@ -106,46 +101,10 @@ func TestCalcularAmperajeNominalCircuito_Errores(t *testing.T) {
 		_, err := service.CalcularAmperajeNominalCircuito(
 			1000,
 			tension,
-			service.TipoCargaMonofasica,
-			service.SistemaElectricoEstrella,
+			entity.SistemaElectricoMonofasico,
 			1.5,
 		)
 		require.Error(t, err)
 		assert.ErrorIs(t, err, service.ErrFactorPotenciaInvalido)
 	})
-}
-
-func TestCalcularAmperajeNominalComplejo_Monofasico(t *testing.T) {
-	// Verifica que la función compleja calcula correctamente
-	// usando potencia aparente y reactiva
-	tension, err := valueobject.NewTension(220)
-	require.NoError(t, err)
-
-	corriente, err := service.CalcularAmperajeNominalComplejo(
-		1000,
-		tension,
-		service.TipoCargaMonofasica,
-		0.9,
-	)
-	require.NoError(t, err)
-
-	// La corriente compleja debe ser mayor o igual que la simple
-	// porque considera la componente reactiva
-	assert.Greater(t, corriente.Valor(), 0.0)
-}
-
-func TestCalcularAmperajeNominalComplejo_Trifasico(t *testing.T) {
-	tension, err := valueobject.NewTension(480)
-	require.NoError(t, err)
-
-	corriente, err := service.CalcularAmperajeNominalComplejo(
-		50000,
-		tension,
-		service.TipoCargaTrifasica,
-		0.85,
-	)
-	require.NoError(t, err)
-
-	// La versión compleja considera potencia reactiva, debe dar ~70.75A
-	assert.InDelta(t, 70.75, corriente.Valor(), 0.5)
 }

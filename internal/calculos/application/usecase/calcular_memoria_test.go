@@ -116,7 +116,7 @@ func TestCalcularMemoriaUseCase_Execute_ManualAmperaje(t *testing.T) {
 		{Tamano: "3/4", AreaInteriorMM2: 122},
 	}
 
-	impedancia := valueobject.ResistenciaReactancia{R: 3.9, X: 0.164}
+	impedancia, _ := valueobject.NewResistenciaReactancia(3.9, 0.164)
 
 	mockTabla := &mockTablaNOMRepository{
 		tablaTierra:       tablaTierra,

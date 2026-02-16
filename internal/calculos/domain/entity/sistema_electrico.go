@@ -1,7 +1,10 @@
 // internal/calculos/domain/entity/sistema_electrico.go
 package entity
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+)
 
 // SistemaElectrico represents the type of electrical system configuration.
 // It determines the number of conductors needed for the installation:
@@ -32,7 +35,7 @@ func ParseSistemaElectrico(s string) (SistemaElectrico, error) {
 	case string(SistemaElectricoMonofasico):
 		return SistemaElectricoMonofasico, nil
 	default:
-		return "", errors.New("sistema eléctrico no válido: " + s)
+		return "", fmt.Errorf("%w: %q", ErrSistemaElectricoInvalido, s)
 	}
 }
 

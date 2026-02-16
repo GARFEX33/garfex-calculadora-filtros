@@ -23,7 +23,7 @@ func CalcularCharolaEspaciado(
 	cablesControl []valueobject.CableControl,
 ) (entity.Canalizacion, error) {
 	if hilosPorFase < 1 {
-		return entity.Canalizacion{}, fmt.Errorf("CalcularCharolaEspaciado: %w", errors.New("hilos por fase debe ser >= 1"))
+		return entity.Canalizacion{}, fmt.Errorf("CalcularCharolaEspaciado: %w", ErrHilosPorFaseInvalido)
 	}
 
 	// Determinar numero de fases segun el tipo de sistema
@@ -88,7 +88,7 @@ func CalcularCharolaEspaciado(
 		anchoCharolaMM := entrada.AreaInteriorMM2 / alturaCharolaMM
 		if anchoCharolaMM >= anchoRequerido {
 			return entity.Canalizacion{
-				Tipo:           string(entity.TipoCanalizacionCharolaCableEspaciado),
+				Tipo:           entity.TipoCanalizacionCharolaCableEspaciado,
 				Tamano:         entrada.Tamano,
 				AnchoRequerido: anchoRequerido,
 			}, nil

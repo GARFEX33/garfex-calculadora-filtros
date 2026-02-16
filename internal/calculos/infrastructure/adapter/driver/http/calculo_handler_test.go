@@ -37,7 +37,8 @@ func (m *mockTablaRepo) ObtenerTablaAmpacidad(ctx context.Context, canalizacion 
 }
 
 func (m *mockTablaRepo) ObtenerImpedancia(ctx context.Context, calibre string, canalizacion entity.TipoCanalizacion, material valueobject.MaterialConductor) (valueobject.ResistenciaReactancia, error) {
-	return valueobject.ResistenciaReactancia{R: 3.9, X: 0.164}, nil
+	rr, _ := valueobject.NewResistenciaReactancia(3.9, 0.164)
+	return rr, nil
 }
 
 func (m *mockTablaRepo) ObtenerTablaCanalizacion(ctx context.Context, canalizacion entity.TipoCanalizacion) ([]valueobject.EntradaTablaCanalizacion, error) {

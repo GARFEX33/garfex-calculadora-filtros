@@ -53,7 +53,6 @@ func (uc *CalcularCorrienteUseCase) calcularDesdeListado(ctx context.Context, in
 		return dto.ResultadoCorriente{}, fmt.Errorf("buscar equipo: %w", err)
 	}
 
-	// Use domain service to calculate current
 	corriente, err := service.CalcularCorrienteNominal(equipo)
 	if err != nil {
 		return dto.ResultadoCorriente{}, fmt.Errorf("calcular corriente: %w", err)
@@ -76,34 +75,20 @@ func (uc *CalcularCorrienteUseCase) calcularManualAmperaje(input dto.EquipoInput
 	return dto.ResultadoCorriente{CorrienteNominal: corriente.Valor()}, nil
 }
 
-// calcularManualPotencia calculates current from manual power.
-// Uses domain service CalcularAmperajeNominalCircuito to avoid duplication.
+// calcularManualPotencia calculates current from manual power using entity.SistemaElectrico.
+// The DTO SistemaElectrico converts directly to entity via ToEntity().
 func (uc *CalcularCorrienteUseCase) calcularManualPotencia(input dto.EquipoInput) (dto.ResultadoCorriente, error) {
 	if input.PotenciaNominal <= 0 {
 		return dto.ResultadoCorriente{}, dto.ErrEquipoInputInvalido
 	}
 
-	// Inferir tipo de carga del sistema eléctrico
-	tipoCarga := inferirTipoCarga(input.SistemaElectrico)
+	// Convertir DTO a entity — los valores son idénticos (DELTA, ESTRELLA, etc.)
+	sistema := input.SistemaElectrico.ToEntity()
 
-	// Convertir sistema eléctrico DTO a domain
-	var sistemaElectrico service.SistemaElectrico
-	switch input.SistemaElectrico {
-	case dto.SistemaElectricoEstrella:
-		sistemaElectrico = service.SistemaElectricoEstrella
-	case dto.SistemaElectricoDelta:
-		sistemaElectrico = service.SistemaElectricoDelta
-	default:
-		// Por defecto usar estrella
-		sistemaElectrico = service.SistemaElectricoEstrella
-	}
-
-	// Calcular amperaje usando el servicio de dominio
 	corriente, err := service.CalcularAmperajeNominalCircuito(
 		input.PotenciaNominal,
 		input.Tension,
-		tipoCarga,
-		sistemaElectrico,
+		sistema,
 		input.FactorPotencia,
 	)
 	if err != nil {
@@ -111,18 +96,4 @@ func (uc *CalcularCorrienteUseCase) calcularManualPotencia(input dto.EquipoInput
 	}
 
 	return dto.ResultadoCorriente{CorrienteNominal: corriente.Valor()}, nil
-}
-
-// inferirTipoCarga determina si la carga es monofásica o trifásica
-// basándose en el sistema eléctrico.
-func inferirTipoCarga(sistema dto.SistemaElectrico) service.TipoCarga {
-	switch sistema {
-	case dto.SistemaElectricoMonofasico:
-		return service.TipoCargaMonofasica
-	case dto.SistemaElectricoDelta, dto.SistemaElectricoEstrella, dto.SistemaElectricoBifasico:
-		return service.TipoCargaTrifasica
-	default:
-		// Por defecto asumir trifásico (caso más común en instalaciones industriales)
-		return service.TipoCargaTrifasica
-	}
 }

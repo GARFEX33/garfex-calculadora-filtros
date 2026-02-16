@@ -148,11 +148,13 @@ func (h *CalculoHandler) mapRequestToDTO(req CalcularMemoriaRequest) (dto.Equipo
 		return dto.EquipoInput{}, fmt.Errorf("sistema eléctrico inválido: %w", err)
 	}
 
-	// Parsear material usando UnmarshalJSON del valueobject (DRY)
+	// Parsear material desde string usando ParseMaterialConductor del dominio
 	material := valueobject.MaterialCobre
 	if req.Material != "" {
-		if err := material.UnmarshalJSON([]byte(fmt.Sprintf("%q", req.Material))); err != nil {
-			return dto.EquipoInput{}, fmt.Errorf("material inválido: %s (esperado Cu o Al)", req.Material)
+		var err error
+		material, err = valueobject.ParseMaterialConductor(req.Material)
+		if err != nil {
+			return dto.EquipoInput{}, fmt.Errorf("material inválido: %w", err)
 		}
 	}
 

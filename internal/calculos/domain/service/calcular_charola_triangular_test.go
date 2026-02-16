@@ -74,7 +74,7 @@ func TestCalcularCharolaTriangular(t *testing.T) {
 		)
 
 		require.Error(t, err)
-		assert.Contains(t, err.Error(), "hilos por fase debe ser >= 1")
+		assert.ErrorIs(t, err, service.ErrHilosPorFaseInvalido)
 	})
 
 	t.Run("error: tabla vacía", func(t *testing.T) {
@@ -90,7 +90,7 @@ func TestCalcularCharolaTriangular(t *testing.T) {
 		)
 
 		require.Error(t, err)
-		assert.Contains(t, err.Error(), "tabla vacía")
+		assert.ErrorIs(t, err, service.ErrTablaCharolaVacia)
 	})
 
 	t.Run("error: ninguna charola suficiente", func(t *testing.T) {

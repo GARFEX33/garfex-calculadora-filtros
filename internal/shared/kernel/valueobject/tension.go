@@ -2,7 +2,6 @@
 package valueobject
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 )
@@ -25,6 +24,9 @@ type Tension struct {
 	unidad string
 }
 
+// NewTension crea un value object Tension validando que el voltaje sea uno de los
+// valores normalizados por NOM: 127, 220, 240, 277, 440, 480 o 600 V.
+// Retorna ErrVoltajeInvalido si el valor no está en la lista.
 func NewTension(valor int) (Tension, error) {
 	if !voltajesValidos[valor] {
 		return Tension{}, fmt.Errorf("%w: %d", ErrVoltajeInvalido, valor)
@@ -34,18 +36,6 @@ func NewTension(valor int) (Tension, error) {
 
 func (t Tension) Valor() int     { return t.valor }
 func (t Tension) Unidad() string { return t.unidad }
-
-// MarshalJSON serializa Tension a JSON.
-func (t Tension) MarshalJSON() ([]byte, error) {
-	type alias Tension
-	return json.Marshal(&struct {
-		Valor  int    `json:"valor"`
-		Unidad string `json:"unidad"`
-	}{
-		Valor:  t.valor,
-		Unidad: t.unidad,
-	})
-}
 
 func (t Tension) EnKilovoltios() float64 {
 	return float64(t.valor) / 1000.0

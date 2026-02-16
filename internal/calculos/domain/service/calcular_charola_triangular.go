@@ -11,6 +11,9 @@ import (
 
 var ErrCharolaTriangularNoEncontrada = errors.New("no se encontró charola triangular suficiente")
 
+// ErrTablaCharolaVacia is returned when the charola sizing table is empty.
+var ErrTablaCharolaVacia = errors.New("tabla de charola vacía")
+
 func CalcularCharolaTriangular(
 	hilosPorFase int,
 	conductorFase valueobject.ConductorCharola,
@@ -19,10 +22,10 @@ func CalcularCharolaTriangular(
 	cablesControl []valueobject.CableControl,
 ) (entity.Canalizacion, error) {
 	if hilosPorFase < 1 {
-		return entity.Canalizacion{}, fmt.Errorf("CalcularCharolaTriangular: %w", errors.New("hilos por fase debe ser >= 1"))
+		return entity.Canalizacion{}, fmt.Errorf("CalcularCharolaTriangular: %w", ErrHilosPorFaseInvalido)
 	}
 	if len(tablaCharola) == 0 {
-		return entity.Canalizacion{}, fmt.Errorf("CalcularCharolaTriangular: %w", errors.New("tabla vacía"))
+		return entity.Canalizacion{}, fmt.Errorf("CalcularCharolaTriangular: %w", ErrTablaCharolaVacia)
 	}
 
 	// factorTriangular: factor de espaciado NOM-001-SEDE para disposición triangular de cables en charola.
@@ -47,7 +50,7 @@ func CalcularCharolaTriangular(
 	for _, entrada := range tablaCharola {
 		if entrada.AreaInteriorMM2 >= anchoRequerido {
 			return entity.Canalizacion{
-				Tipo:           string(entity.TipoCanalizacionCharolaCableTriangular),
+				Tipo:           entity.TipoCanalizacionCharolaCableTriangular,
 				Tamano:         entrada.Tamano,
 				AnchoRequerido: anchoRequerido,
 			}, nil

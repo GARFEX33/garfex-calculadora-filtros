@@ -95,8 +95,8 @@ func TestCSVTablaNOMRepository_ObtenerImpedancia(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			imp, err := repo.ObtenerImpedancia(ctx, tt.calibre, tt.canalizacion, tt.material)
 			require.NoError(t, err)
-			assert.InDelta(t, tt.wantR, imp.R, 0.01, "R mismatch")
-			assert.InDelta(t, tt.wantX, imp.X, 0.01, "X mismatch")
+			assert.InDelta(t, tt.wantR, imp.R(), 0.01, "R mismatch")
+			assert.InDelta(t, tt.wantX, imp.X(), 0.01, "X mismatch")
 		})
 	}
 }

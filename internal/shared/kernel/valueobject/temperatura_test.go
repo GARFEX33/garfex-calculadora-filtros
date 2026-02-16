@@ -23,3 +23,29 @@ func TestTemperatura_Valor(t *testing.T) {
 		})
 	}
 }
+
+func TestValidarTemperatura(t *testing.T) {
+	tests := []struct {
+		name    string
+		temp    Temperatura
+		wantErr bool
+	}{
+		{"60C válida", Temp60, false},
+		{"75C válida", Temp75, false},
+		{"90C válida", Temp90, false},
+		{"0C inválida", 0, true},
+		{"45C inválida", 45, true},
+		{"999C inválida", 999, true},
+		{"-10C inválida", -10, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := ValidarTemperatura(tt.temp)
+			if tt.wantErr {
+				assert.ErrorIs(t, err, ErrTemperaturaInvalida)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}

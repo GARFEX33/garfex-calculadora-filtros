@@ -12,6 +12,12 @@ import (
 // ErrCanalizacionNoDisponible is returned when no conduit size fits the required area.
 var ErrCanalizacionNoDisponible = errors.New("no se encontró canalización con área suficiente")
 
+// ErrNumeroDeTubosInvalido is returned when numeroDeTubos is less than 1.
+var ErrNumeroDeTubosInvalido = errors.New("numeroDeTubos debe ser mayor a cero")
+
+// ErrListaConductoresVacia is returned when the conductors list is empty.
+var ErrListaConductoresVacia = errors.New("lista de conductores vacía")
+
 func determinarFillFactor(cantidad int) float64 {
 	switch cantidad {
 	case 1:
@@ -32,21 +38,20 @@ type ConductorParaCanalizacion struct {
 
 // CalcularCanalizacion selects the smallest conduit whose usable area
 // (interior area × fill factor) accommodates all conductors.
-// tipo should be a TipoCanalizacion string value (e.g., "TUBERIA_CONDUIT").
 // numeroDeTubos indicates how many parallel conduits to use (must be >= 1).
 // When numeroDeTubos > 1, the total conductor area and count are divided evenly
 // among the tubes; fill factor is determined per-tube conductor count.
 func CalcularCanalizacion(
 	conductores []ConductorParaCanalizacion,
-	tipo string,
+	tipo entity.TipoCanalizacion,
 	tabla []valueobject.EntradaTablaCanalizacion,
 	numeroDeTubos int,
 ) (entity.Canalizacion, error) {
 	if numeroDeTubos < 1 {
-		return entity.Canalizacion{}, fmt.Errorf("numeroDeTubos debe ser mayor a cero")
+		return entity.Canalizacion{}, fmt.Errorf("CalcularCanalizacion: %w", ErrNumeroDeTubosInvalido)
 	}
 	if len(conductores) == 0 {
-		return entity.Canalizacion{}, fmt.Errorf("lista de conductores vacía")
+		return entity.Canalizacion{}, fmt.Errorf("CalcularCanalizacion: %w", ErrListaConductoresVacia)
 	}
 	if len(tabla) == 0 {
 		return entity.Canalizacion{}, fmt.Errorf("%w: tabla vacía", ErrCanalizacionNoDisponible)
@@ -71,7 +76,7 @@ func CalcularCanalizacion(
 				Tamano:         entrada.Tamano,
 				AnchoRequerido: areaTotal,
 				NumeroDeTubos:  numeroDeTubos,
-			}, nil
+			}, nil // Canalizacion is constructed directly as a result struct (no invariants to validate beyond what the service guarantees)
 		}
 	}
 

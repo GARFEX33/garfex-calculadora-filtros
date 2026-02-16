@@ -1,10 +1,10 @@
 // internal/shared/kernel/valueobject/material_conductor_test.go
-package valueobject
+package valueobject_test
 
 import (
-	"encoding/json"
 	"testing"
 
+	"github.com/garfex/calculadora-filtros/internal/shared/kernel/valueobject"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -12,11 +12,11 @@ import (
 func TestMaterialConductor_String(t *testing.T) {
 	tests := []struct {
 		name     string
-		material MaterialConductor
+		material valueobject.MaterialConductor
 		want     string
 	}{
-		{"cobre", MaterialCobre, "CU"},
-		{"aluminio", MaterialAluminio, "AL"},
+		{"cobre", valueobject.MaterialCobre, "CU"},
+		{"aluminio", valueobject.MaterialAluminio, "AL"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -25,31 +25,34 @@ func TestMaterialConductor_String(t *testing.T) {
 	}
 }
 
-func TestMaterialConductor_UnmarshalJSON(t *testing.T) {
-	type Input struct {
-		Material MaterialConductor `json:"material"`
-	}
-
+func TestParseMaterialConductor_validos(t *testing.T) {
 	tests := []struct {
 		name     string
-		json     string
-		expected MaterialConductor
+		input    string
+		expected valueobject.MaterialConductor
 	}{
-		{"empty", `{}`, MaterialCobre},
-		{"Cu uppercase", `{"material":"Cu"}`, MaterialCobre},
-		{"Cu lower", `{"material":"cu"}`, MaterialCobre},
-		{"Al uppercase", `{"material":"Al"}`, MaterialAluminio},
-		{"Al lower", `{"material":"al"}`, MaterialAluminio},
-		{"number 0", `{"material":"0"}`, MaterialCobre},
-		{"number 1", `{"material":"1"}`, MaterialAluminio},
+		{"Cu", "Cu", valueobject.MaterialCobre},
+		{"CU", "CU", valueobject.MaterialCobre},
+		{"cu", "cu", valueobject.MaterialCobre},
+		{"cobre", "cobre", valueobject.MaterialCobre},
+		{"COBRE", "COBRE", valueobject.MaterialCobre},
+		{"Al", "Al", valueobject.MaterialAluminio},
+		{"AL", "AL", valueobject.MaterialAluminio},
+		{"al", "al", valueobject.MaterialAluminio},
+		{"aluminio", "aluminio", valueobject.MaterialAluminio},
+		{"ALUMINIO", "ALUMINIO", valueobject.MaterialAluminio},
 	}
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			var input Input
-			err := json.Unmarshal([]byte(tt.json), &input)
+			got, err := valueobject.ParseMaterialConductor(tt.input)
 			require.NoError(t, err)
-			assert.Equal(t, tt.expected, input.Material)
+			assert.Equal(t, tt.expected, got)
 		})
 	}
+}
+
+func TestParseMaterialConductor_invalido(t *testing.T) {
+	_, err := valueobject.ParseMaterialConductor("HIERRO")
+	require.Error(t, err)
+	assert.ErrorIs(t, err, valueobject.ErrMaterialConductorInvalido)
 }

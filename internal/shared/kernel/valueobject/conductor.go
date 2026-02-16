@@ -2,7 +2,6 @@
 package valueobject
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 )
@@ -110,32 +109,3 @@ func (c Conductor) ResistenciaPVCPorKm() float64   { return c.resistenciaPVCPorK
 func (c Conductor) ResistenciaAlPorKm() float64    { return c.resistenciaAlPorKm }
 func (c Conductor) ResistenciaAceroPorKm() float64 { return c.resistenciaAceroPorKm }
 func (c Conductor) ReactanciaPorKm() float64       { return c.reactanciaPorKm }
-
-// MarshalJSON serializa Conductor a JSON.
-func (c Conductor) MarshalJSON() ([]byte, error) {
-	return json.Marshal(&struct {
-		Calibre               string  `json:"calibre"`
-		Material              string  `json:"material"`
-		TipoAislamiento       string  `json:"tipo_aislamiento"`
-		SeccionMM2            float64 `json:"seccion_mm2"`
-		AreaConAislamientoMM2 float64 `json:"area_con_aislamiento_mm2,omitempty"`
-		DiametroMM            float64 `json:"diametro_mm,omitempty"`
-		NumeroHilos           int     `json:"numero_hilos,omitempty"`
-		ResistenciaPVCPorKm   float64 `json:"resistencia_pvc_por_km,omitempty"`
-		ResistenciaAlPorKm    float64 `json:"resistencia_al_por_km,omitempty"`
-		ResistenciaAceroPorKm float64 `json:"resistencia_acero_por_km,omitempty"`
-		ReactanciaPorKm       float64 `json:"reactancia_por_km,omitempty"`
-	}{
-		Calibre:               c.calibre,
-		Material:              c.material.String(),
-		TipoAislamiento:       c.tipoAislamiento,
-		SeccionMM2:            c.seccionMM2,
-		AreaConAislamientoMM2: c.areaConAislamientoMM2,
-		DiametroMM:            c.diametroMM,
-		NumeroHilos:           c.numeroHilos,
-		ResistenciaPVCPorKm:   c.resistenciaPVCPorKm,
-		ResistenciaAlPorKm:    c.resistenciaAlPorKm,
-		ResistenciaAceroPorKm: c.resistenciaAceroPorKm,
-		ReactanciaPorKm:       c.reactanciaPorKm,
-	})
-}

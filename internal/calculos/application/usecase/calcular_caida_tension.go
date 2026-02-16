@@ -48,8 +48,8 @@ func (uc *CalcularCaidaTensionUseCase) Execute(
 	}
 
 	entradaCaida := service.EntradaCalculoCaidaTension{
-		ResistenciaOhmPorKm: impedancia.R,
-		ReactanciaOhmPorKm:  impedancia.X,
+		ResistenciaOhmPorKm: impedancia.R(),
+		ReactanciaOhmPorKm:  impedancia.X(),
 		TipoCanalizacion:    tipoCanalizacion,
 		HilosPorFase:        hilosPorFase,
 		FactorPotencia:      factorPotencia,
