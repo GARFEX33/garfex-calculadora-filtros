@@ -182,6 +182,7 @@ rg -i "func.*[Cc]alcular" internal/{feature} --type go
 - [ ] ¿Investigué qué ya existe en domain/ y application/?
 - [ ] ¿Tomé la decisión de extender vs crear?
 - [ ] ¿Comuniqué claramente al agente qué hacer y qué NO hacer?
+- [ ] ¿Verifiqué si el cambio requiere actualizar AGENTS.md? (nuevo endpoint, nueva regla, nuevo agent, nuevo skill)
 
 **Error real:** Orquestador despachó domain-agent para crear servicio nuevo sin verificar que el use case existente tenía un TODO sin implementar. Resultado: duplicación.
 
@@ -429,7 +430,15 @@ curl -X POST http://localhost:8080/api/v1/calculos/amperaje \
 
 ## Actualizacion de Documentacion
 
-Al terminar cada tarea, actualizar: plan si diverge, AGENTS.md si cambia una regla, MEMORY.md si debe persistir entre sesiones.
+⚠️ **REGLA OBLIGATORIA:** Al terminar cada tarea, ANTES de hacer commit:
+1. Ejecutar `git status` para ver archivos modificados
+2. Si hay cambios en código (domain/application/infrastructure), verificar si corresponde actualizar:
+   - AGENTS.md de la capa afectada
+   - AGENTS.md raíz (si hay nuevos skills o agentes)
+3. Actualizar AGENTS.md si es necesario
+4. Luego hacer commit (incluyendo cambios de AGENTS.md)
+
+** Esta regla es parte de la definition of done. NO hacer commit sin verificar AGENTS.md.**
 
 ## Documentacion
 

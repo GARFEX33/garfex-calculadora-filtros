@@ -37,6 +37,14 @@ Para cada tarea de infraestructura:
    - **SUB-SKILL REQUERIDA:** superpowers:finishing-a-development-branch
    - Seguir esa skill para: verificar tests → auditar AGENTS.md → hacer commit de la tarea
 
+**⚠️ VERIFICACIÓN OBLIGATORIA ANTES DEL COMMIT:**
+- Ejecutar `git status` para ver archivos modificados
+- **Si hay cambios en código de infraestructura**, verificar si corresponde actualizar:
+  - `internal/{feature}/infrastructure/AGENTS.md` (reglas de infraestructura, endpoints)
+  - `internal/{feature}/AGENTS.md` (si es feature nueva)
+  - `AGENTS.md` raíz (si hay nuevos skills o agentes)
+- Si requiere actualización, actualizar ANTES de hacer commit
+
 ### Paso 3: Reportar
 
 Al terminar el lote:
