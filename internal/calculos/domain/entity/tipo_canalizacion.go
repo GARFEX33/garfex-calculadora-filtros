@@ -72,3 +72,23 @@ func ValidarTipoCanalizacion(tc TipoCanalizacion) error {
 		return fmt.Errorf("%w: %q", ErrTipoCanalizacionInvalido, tc)
 	}
 }
+
+// ParseTipoCanalizacion converts a string to a TipoCanalizacion.
+func ParseTipoCanalizacion(s string) (TipoCanalizacion, error) {
+	switch s {
+	case string(TipoCanalizacionTuberiaPVC):
+		return TipoCanalizacionTuberiaPVC, nil
+	case string(TipoCanalizacionTuberiaAluminio):
+		return TipoCanalizacionTuberiaAluminio, nil
+	case string(TipoCanalizacionTuberiaAceroPG):
+		return TipoCanalizacionTuberiaAceroPG, nil
+	case string(TipoCanalizacionTuberiaAceroPD):
+		return TipoCanalizacionTuberiaAceroPD, nil
+	case string(TipoCanalizacionCharolaCableEspaciado):
+		return TipoCanalizacionCharolaCableEspaciado, nil
+	case string(TipoCanalizacionCharolaCableTriangular):
+		return TipoCanalizacionCharolaCableTriangular, nil
+	default:
+		return "", fmt.Errorf("%w: %q", ErrTipoCanalizacionInvalido, s)
+	}
+}
