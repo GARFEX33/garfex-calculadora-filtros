@@ -62,7 +62,7 @@ El agente ejecuta solo la fase de executing-plans-dominio (si no hay diseño nue
 | Subdirectorio | Contenido |
 |---------------|-----------|
 | `entity/` | Entidades: TipoEquipo, TipoCanalizacion, SistemaElectrico, MemoriaCalculo, etc. |
-| `service/` | 8 servicios de cálculo NOM + IEEE-141 |
+| `service/` | 12 servicios de cálculo NOM + IEEE-141 |
 
 ## Referencias
 

@@ -67,7 +67,8 @@ orchestrate-agents --agent infrastructure --feature nueva-feature
 ### Driver (HTTP)
 
 - **CalculoHandler** — endpoints REST
-  - `POST /api/v1/calculos/memoria`
+  - `POST /api/v1/calculos/memoria` — memoria de cálculo completa
+  - `POST /api/v1/calculos/amperaje` — calcular amperaje nominal sin memoria completa
 
 ### Formatters
 

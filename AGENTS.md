@@ -184,7 +184,7 @@ internal/
   calculos/             ← feature: memoria de cálculo eléctrico
     domain/
       entity/           ← TipoCanalizacion, SistemaElectrico, ITM, MemoriaCalculo, etc.
-      service/          ← 8 servicios de cálculo eléctrico (IEEE-141, NOM)
+      service/          ← 12 servicios de cálculo eléctrico (IEEE-141, NOM)
     application/
       port/             ← TablaNOMRepository, EquipoRepository (interfaces)
       usecase/          ← OrquestadorMemoriaCalculo y micro use cases
@@ -326,6 +326,14 @@ curl http://localhost:8080/health
 curl -X POST http://localhost:8080/api/v1/calculos/memoria \
   -H "Content-Type: application/json" \
   -d '{"modo":"MANUAL_AMPERAJE","amperaje_nominal":50,"tension":220,"tipo_canalizacion":"TUBERIA_PVC","hilos_por_fase":1,"longitud_circuito":10,"itm":100,"factor_potencia":0.9,"estado":"Sonora","sistema_electrico":"DELTA","material":"Cu"}'
+```
+
+**Endpoint amperaje (cálculo rápido):**
+
+```bash
+curl -X POST http://localhost:8080/api/v1/calculos/amperaje \
+  -H "Content-Type: application/json" \
+  -d '{"potencia_watts":5000,"tension":220,"sistema_electrico":"MONOFASICO","factor_potencia":0.9}'
 ```
 
 **Campos obligatorios:** `modo`, `tension`, `tipo_canalizacion`, `itm`, `longitud_circuito`, `estado`, `sistema_electrico`
