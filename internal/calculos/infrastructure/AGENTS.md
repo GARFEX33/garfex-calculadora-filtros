@@ -69,6 +69,7 @@ orchestrate-agents --agent infrastructure --feature nueva-feature
 - **CalculoHandler** — endpoints REST
   - `POST /api/v1/calculos/memoria` — memoria de cálculo completa
   - `POST /api/v1/calculos/amperaje` — calcular amperaje nominal sin memoria completa
+  - `POST /api/v1/calculos/corriente-ajustada` — calcular corriente ajustada con factores NOM
 
 ### Formatters
 
@@ -80,10 +81,13 @@ orchestrate-agents --agent infrastructure --feature nueva-feature
 | Error domain/application | HTTP status |
 |--------------------------|-------------|
 | ErrModoInvalido | 400 |
-| ErrCanzacionNoSoportada | 400 |
+| ErrTipoCanalizacionInvalido | 400 |
+| ErrSistemaElectricoInvalido | 400 |
+| ErrTipoEquipoInvalido | 400 |
 | Validación | 400 |
 | ErrConductorNoEncontrado | 422 |
 | ErrCanalizacionNoDisponible | 422 |
+| CALCULO_NO_POSIBLE | 422 |
 | Error interno | 500 |
 
 ## Reglas de Oro
