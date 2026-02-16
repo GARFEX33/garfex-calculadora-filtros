@@ -105,15 +105,16 @@ El coordinador orquesta TODO el trabajo. Los agentes especializados solo ejecuta
 Usuario pide feature/cambio
          │
          ▼
-┌─────────────────────────────────────┐
-│         COORDINADOR                 │
-│  1. Invocar skill `brainstorming`   │
-│  2. Crear diseño + plan             │
-│  3. Crear rama de trabajo           │
-│  4. Despachar agentes en orden      │
-│  5. Hacer wiring en main.go         │
-│  6. Commit final                    │
-└─────────────────────────────────────┘
+┌─────────────────────────────────────────────┐
+│         ORQUESTADOR (Coordinador)           │
+│  1. Invocar skill `brainstorming`           │
+│  2. Crear diseño + plan                     │
+│  3. Crear rama de trabajo                   │
+│  4. Despachar agentes en orden              │
+│  5. Hacer wiring en main.go                 │
+│  6. Auditar AGENTS.md con agents-md-curator │
+│  7. Commit final                            │
+└─────────────────────────────────────────────┘
          │
     ┌────┴────┬────────────┐
     ▼         ▼            ▼
@@ -125,15 +126,18 @@ agent     agent         agent
  completo  completa     completa
 ```
 
-**Qué hace el coordinador:**
+**Qué hace el orquestador (coordinador):**
 - Brainstorming inicial con el usuario
 - Crear documentos de diseño y plan
 - Crear rama git para el trabajo
 - Despachar cada agente con contexto completo
 - Esperar que cada agente termine antes de despachar el siguiente
 - Hacer el wiring final en `cmd/api/main.go`
-- Actualizar AGENTS.md si cambian reglas
+- **Auditar AGENTS.md con agents-md-curator PRE-merge**
+- Aplicar correcciones de documentación antes de mergear
 - Commit y preparar para merge
+
+> **Nota:** La documentación es parte de la "definition of done". Los cambios a AGENTS.md van en el mismo PR/feature, no después.
 
 **Qué hace cada agente especializado:**
 - Leer el plan que le corresponde
@@ -141,6 +145,45 @@ agent     agent         agent
 - Ejecutar SOLO en su capa (domain, application, o infrastructure)
 - Verificar con `go test` antes de terminar
 - Reportar archivos creados y resultado de tests
+
+### Regla Anti-Duplicación (OBLIGATORIO) — RESPONSABILIDAD DEL ORQUESTADOR
+
+⚠️ **Los agentes especializados NO se conocen entre sí.** El orquestador es el único con visión global de todas las capas y debe:
+
+1. **Investigar** — Buscar lo que ya existe
+2. **Decidir** — Extender vs crear nuevo
+3. **Comunicar** — Instrucciones claras al subagente
+
+### Flujo del Orquestador (antes de despachar agentes)
+
+**Paso 1: Investigar**
+```bash
+ls internal/{feature}/domain/service/*.go 2>/dev/null
+rg "TODO|FIXME|XXX" internal/{feature}/application/usecase --type go
+rg -i "func.*[Cc]alcular" internal/{feature} --type go
+```
+
+**Paso 2: Decidir**
+| Situación | Decisión |
+|-----------|----------|
+| Existe servicio similar | Extender, no crear nuevo |
+| Use case tiene TODO | Implementar TODO primero |
+| Nada similar | Crear nuevo |
+
+**Paso 3: Comunicar (en el prompt al agente)**
+
+❌ Mal: "Creá un servicio para calcular amperaje"
+
+✅ Bien: "Implementá el método calcularManualPotencia() que tiene un TODO en 
+          CalcularCorrienteUseCase. Usá el servicio CalcularAmperajeNominalCircuito 
+          que ya existe en domain/service/. NO crees un use case nuevo."
+
+### Checklist (orquestador)
+- [ ] ¿Investigué qué ya existe en domain/ y application/?
+- [ ] ¿Tomé la decisión de extender vs crear?
+- [ ] ¿Comuniqué claramente al agente qué hacer y qué NO hacer?
+
+**Error real:** Orquestador despachó domain-agent para crear servicio nuevo sin verificar que el use case existente tenía un TODO sin implementar. Resultado: duplicación.
 
 **Template para despachar agente:**
 
@@ -173,6 +216,48 @@ Reportá: archivos creados, output de tests, issues encontrados
 ```
 
 > **Skill de referencia:** Ver `.agents/skills/orchestrating-agents/SKILL.md` para el proceso completo.
+
+---
+
+## 🔄 Workflow Completo: Desde Idea hasta Merge
+
+### Fase 1: Diseño (Orquestador)
+```
+Usuario pide feature
+    │
+    ▼
+brainstorming → writing-plans → Crear rama
+```
+
+### Fase 2: Implementación (Agentes especializados en orden)
+```
+domain-agent → application-agent → infrastructure-agent
+    │                │                    │
+    ▼                ▼                    ▼
+ tests green    tests green         tests green
+```
+
+### Fase 3: Integración (Orquestador)
+```
+Wiring en main.go → go test ./... → ✅ Todo pasa
+```
+
+### Fase 4: Documentación PRE-merge (OBLIGATORIO)
+```
+Auditar AGENTS.md con agents-md-curator
+    │
+    ▼
+¿Hay drift? ──Si──→ Aplicar correcciones → Commit
+    │
+   No
+    │
+    ▼
+Merge feature a main
+```
+
+**⚠️ Importante:** Los cambios a AGENTS.md son parte del mismo PR/feature. NUNCA mergear sin sincronizar la documentación.
+
+---
 
 ## Estructura del Proyecto (Vertical Slices)
 
