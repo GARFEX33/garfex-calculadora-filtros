@@ -13,6 +13,7 @@ func NewRouter(
 	calcularMemoriaUC *usecase.OrquestadorMemoriaCalculo,
 	calcularCorrienteUC *usecase.CalcularCorrienteUseCase,
 	ajustarCorrienteUC *usecase.AjustarCorrienteUseCase,
+	seleccionarConductorAlimentacionUC *usecase.SeleccionarConductorAlimentacionUseCase,
 ) *gin.Engine {
 	router := gin.New()
 
@@ -36,6 +37,10 @@ func NewRouter(
 			calculos.POST("/memoria", calculoHandler.CalcularMemoria)
 			calculos.POST("/amperaje", calculoHandler.CalcularAmperaje)
 			calculos.POST("/corriente-ajustada", calculoHandler.CalcularCorrienteAjustada)
+
+			// Conductor de alimentacion
+			conductorAlimentacionHandler := http.NewConductorAlimentacionHandler(seleccionarConductorAlimentacionUC)
+			calculos.POST("/conductor-alimentacion", conductorAlimentacionHandler.SeleccionarConductorAlimentacion)
 		}
 	}
 

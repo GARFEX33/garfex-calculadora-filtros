@@ -86,9 +86,60 @@ if valor > 100 {  // esto va en domain
 
 ### DTOs
 
-- Structs planos sin métodos
-- Nunca exponer entidades de domain
-- Mapping explícito `domain ↔ DTO`
+- **Structs con tipos PRIMITIVOS** (string, int, float64)
+- Nunca exponer value objects ni entities de domain
+- Métodos helper permitidos: `Validate()`, `ToDomain*()`
+- Mapping explícito `domain ↔ DTO` dentro del use case
+
+```go
+// ✅ CORRECTO — DTO con primitivos
+type MiInput struct {
+    Corriente        float64  // primitivo
+    TipoCanalizacion string   // primitivo
+    Material         string   // primitivo
+    Temperatura      *int     // primitivo opcional
+}
+
+func (i MiInput) Validate() error { ... }
+func (i MiInput) ToDomainMaterial() valueobject.MaterialConductor { ... }
+
+// ❌ INCORRECTO — DTO con value objects
+type MiInput struct {
+    Corriente valueobject.Corriente  // NO — esto es domain bleeding
+}
+```
+
+### Use Case como Puente DTO ↔ Domain
+
+El use case es responsable de la conversión:
+
+```go
+func (uc *MiUseCase) Execute(ctx context.Context, input dto.MiInput) (dto.MiOutput, error) {
+    // 1. Validar DTO
+    if err := input.Validate(); err != nil { return ..., err }
+    
+    // 2. Convertir primitivos → value objects
+    corriente, err := valueobject.NewCorriente(input.Corriente)
+    tipoCanalizacion, err := entity.ParseTipoCanalizacion(input.TipoCanalizacion)
+    material := input.ToDomainMaterial()
+    
+    // 3. Llamar servicio de dominio
+    resultado, err := service.MiServicio(corriente, material, ...)
+    
+    // 4. Convertir domain → DTO output
+    return dto.MiOutput{
+        Calibre:    resultado.Calibre(),
+        Material:   resultado.Material().String(),
+        SeccionMM2: resultado.SeccionMM2(),
+    }, nil
+}
+```
+
+### Single Responsibility
+
+- **Un use case = una responsabilidad**
+- Si un use case hace 2+ cosas distintas → separar
+- El orquestador coordina múltiples use cases
 
 ## Referencias
 
@@ -102,3 +153,7 @@ if valor > 100 {  // esto va en domain
 - [ ] Sin lógica de negocio (fórmulas, validaciones complejas)
 - [ ] Sin imports de infrastructure
 - [ ] Error wrapping con `%w`
+- [ ] DTOs usan SOLO primitivos (string, int, float64)
+- [ ] Use case convierte DTO → value objects antes de llamar a domain
+- [ ] Use case convierte resultado domain → DTO antes de retornar
+- [ ] Un use case = una responsabilidad (no combinar funcionalidades)
