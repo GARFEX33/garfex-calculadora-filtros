@@ -38,22 +38,7 @@ Detenerse. No continuar al Paso 2.
 
 **Si los tests pasan:** Continuar al Paso 2.
 
-### Paso 2: Auditar AGENTS.md (PRE-merge OBLIGATORIO)
-
-**Antes de mergear, verificar que la documentación esté sincronizada:**
-
-1. **Invocar `agents-md-curator`** para auditar todos los AGENTS.md
-2. **Revisar propuestas** de corrección (drift entre código y docs)
-3. **Aplicar correcciones** si hay discrepancias
-4. **Commit de documentación** si hubo cambios
-
-> **Regla de oro:** La documentación es parte de la "definition of done". Los cambios a AGENTS.md van en el mismo PR/feature, nunca post-merge.
-
-**Si hay correcciones aplicadas:** Hacer commit de documentación antes de continuar.
-
-**Si no hay correcciones o ya están aplicadas:** Continuar al Paso 3.
-
-### Paso 3: Determinar Rama Base
+### Paso 2: Determinar Rama Base
 
 ```bash
 # Intentar ramas base comunes
@@ -62,7 +47,7 @@ git merge-base HEAD main 2>/dev/null || git merge-base HEAD master 2>/dev/null
 
 O preguntar: "Esta rama se creó desde main — ¿es correcto?"
 
-### Paso 4: Presentar Opciones
+### Paso 3: Presentar Opciones
 
 Presentar exactamente estas 4 opciones:
 
@@ -79,7 +64,7 @@ Implementación completa y documentación sincronizada. ¿Qué deseas hacer?
 
 **No agregar explicación adicional.**
 
-### Paso 5: Ejecutar la Elección
+### Paso 4: Ejecutar la Elección
 
 #### Opción 1: Merge Local
 
