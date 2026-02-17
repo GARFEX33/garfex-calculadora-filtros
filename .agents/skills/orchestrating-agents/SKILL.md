@@ -23,6 +23,27 @@ Usuario pide feature/cambio
 │         ORQUESTADOR (Coordinador)           │
 │  1. Invocar skill `brainstorming`          │
 │  2. Crear diseño + plan                   │
+│  3. Crear rama de trabajo                 │
+│  4. Despachar agentes en orden             │
+│  5. Hacer wiring en main.go                │
+│  6. Pruebas manuales del endpoint          │
+│  7. Auditoría de código (OBLIGATORIO)     │
+│  8. Mover planes completados a completed/  │
+│  9. Invocar skill `finishing-a-development`│
+└─────────────────────────────────────────────┘
+         │
+     ┌────┴────┬────────────┐
+     ▼         ▼            ▼
+domain-   application-  infrastructure-
+agent     agent         agent
+```
+Usuario pide feature/cambio
+         │
+         ▼
+┌─────────────────────────────────────────────┐
+│         ORQUESTADOR (Coordinador)           │
+│  1. Invocar skill `brainstorming`          │
+│  2. Crear diseño + plan                   │
 │  3. Crear rama de trabajo                  │
 │  4. Despachar agentes en orden             │
 │  5. Hacer wiring en main.go                │

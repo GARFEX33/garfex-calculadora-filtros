@@ -54,9 +54,8 @@ mandatory_skills:
 8. **Verificación post-wiring**: `go build ./...` + `go test ./...`
 9. **Pruebas manuales del endpoint** (si es API)
 10. **Auditoría de código** (OBLIGATORIO) - Invocar auditores por capa
-11. Auditar AGENTS.md con agents-md-curator
-12. **Mover planes completados** a `docs/plans/completed/`
-13. Commit final
+11. **Mover planes completados** a `docs/plans/completed/`
+12. Invocar skill `finishing-a-development-branch`
 
 ## Reglas
 
@@ -65,7 +64,7 @@ mandatory_skills:
 - Nunca hacer wiring antes de terminar infraestructura
 - Siempre ejecutar verificación post-wiring
 - Siempre hacer pruebas manuales para APIs
-- **Siempre hacer auditoría de código antes del commit**
-- **Siempre mover planes completados a `completed/` al final**
-- Siempre auditar AGENTS.md antes del commit
+- **Siempre hacer auditoría de código antes de finalizar**
+- Siempre mover planes completados a `completed/` al final
+- **finishing-a-development-branch аудит AGENTS.md** (no duplicar)
 - Mantener separación estricta de capas

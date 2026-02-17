@@ -15,7 +15,7 @@ Coordinador central que orquesta el desarrollo de features completas siguiendo a
 Este agente ejecuta el ciclo completo:
 
 ```
-brainstorming → writing-plans → crear rama → domain-agent → application-agent → infrastructure-agent → wiring → pruebas → auditoría código → auditoría docs → mover planes → finishing-a-development-branch
+brainstorming → writing-plans → crear rama → domain-agent → application-agent → infrastructure-agent → wiring → pruebas → auditoría código → mover planes → finishing-a-development-branch
 ```
 
 ### Paso 1: Brainstorming
@@ -101,13 +101,7 @@ curl -X POST http://localhost:8080/api/v1/...
 - Diferentes canalizaciones
 - Temperaturas override vs automática
 
-### Paso 6: Auditoría AGENTS.md
-
-- Invocar skill: `agents-md-manager`
-- Verificar drift entre código y documentación
-- Aplicar correcciones si es necesario
-
-### Paso 6.1: Auditoría de Código (OBLIGATORIO ANTES DEL COMMIT)
+### Paso 6: Auditoría de Código (OBLIGATORIO)
 
 **Importante:** Después de las pruebas manuales y antes del commit, el orquestador DEBE auditar el código creado.
 
@@ -183,7 +177,7 @@ Corregir   Continuar
 Revalidar
 ``` 
 
-### Paso 8.5: Mover planes completados a completed/
+### Paso 7: Mover planes completados a completed/
 
 Después de que todo está verificado y antes del commit:
 
