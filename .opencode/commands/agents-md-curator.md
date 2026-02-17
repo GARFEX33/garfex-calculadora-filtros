@@ -1,6 +1,6 @@
 ---
 description: "Audit, create, update or sync AGENTS.md documentation files. Automatically detects intent from user message."
-disable-model-invocation: true
+disable-model-invocation: false
 ---
 
 Utiliza el agente agents-md-curator para auditar todos los AGENTS.md del proyecto. Verifica:

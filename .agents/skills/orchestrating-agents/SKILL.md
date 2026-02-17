@@ -21,6 +21,27 @@ Usuario pide feature/cambio
          ▼
 ┌─────────────────────────────────────────────┐
 │         ORQUESTADOR (Coordinador)           │
+│  1. Invocar skill `brainstorming`          │
+│  2. Crear diseño + plan                     │
+│  3. Crear rama de trabajo                   │
+│  4. Despachar agentes en orden              │
+│  5. Hacer wiring en main.go                 │
+│  6. Pruebas manuales del endpoint           │
+│  7. Auditoría de código (OBLIGATORIO)       │
+│  8. Auditar AGENTS.md con agents-md-curator │
+│  9. Commit final                            │
+└─────────────────────────────────────────────┘
+         │
+     ┌────┴────┬────────────┐
+     ▼         ▼            ▼
+domain-   application-  infrastructure-
+agent     agent         agent
+```
+Usuario pide feature/cambio
+         │
+         ▼
+┌─────────────────────────────────────────────┐
+│         ORQUESTADOR (Coordinador)           │
 │  1. Invocar skill `brainstorming`           │
 │  2. Crear diseño + plan                     │
 │  3. Crear rama de trabajo                   │
@@ -58,7 +79,7 @@ domain-agent → application-agent → infrastructure-agent
 
 ### Fase 3: Integración (Orquestador)
 ```
-Wiring en main.go → go test ./... → ✅ Todo pasa
+Wiring en main.go → go test ./... → Pruebas manuales → Auditoría código → ✅ Todo listo
 ```
 
 ### Fase 4: Documentación PRE-merge (OBLIGATORIO)
@@ -84,11 +105,36 @@ Invocar `brainstorming` skill. El coordinador (este chat) refina la idea con el 
 
 **Output:** `docs/plans/YYYY-MM-DD-<feature>-design.md`
 
+### Paso 1.1: Revisar Planes Pendientes (AL INICIO DE CADA SESIÓN)
+
+Al comenzar una nueva sesión de trabajo, SIEMPRE revisar si hay planes pendientes:
+
+```bash
+# Ver qué planes existen
+ls docs/plans/*.md
+
+# Ver qué planes están completados
+ls docs/plans/completed/*.md
+```
+
+Si hay planes en `docs/plans/` que ya están implementados, MOVERLOS a `completed/`.
+
 ## Paso 2: Writing plans
 
 Invocar `writing-plans` skill. El coordinador crea plan detallado con tareas para cada agente.
 
 **Output:** `docs/plans/YYYY-MM-DD-<feature>-plan.md`
+
+### Paso 2.1: Mover planes a completed/ (AL COMPLETAR)
+
+**Importante:** Al completar una feature, MOVER los planes a `docs/plans/completed/`:
+
+```bash
+mv "docs/plans/YYYY-MM-DD-*-design.md" "docs/plans/completed/"
+mv "docs/plans/YYYY-MM-DD-*-plan.md" "docs/plans/completed/"
+```
+
+Mantener la raíz `docs/plans/` limpia.
 
 ## Paso 3: Crear rama de trabajo
 
@@ -237,6 +283,39 @@ Después de que todos los agentes terminen, el coordinador:
 3. **Elimina carpetas viejas** si fue refactorización
 4. **Verifica todo:** `go test ./... && go build ./... && go vet ./...`
 
+### Paso 5.1: Verificación Post-Wiring (OBLIGATORIO)
+
+Después del wiring, SIEMPRE ejecutar:
+
+```bash
+go build ./...
+go test ./...
+```
+
+Si no compila o los tests fallan, ARREGLAR antes de continuar.
+
+### Paso 5.2: Pruebas Manuales del Endpoint
+
+Para APIs y features visibles, ejecutar pruebas manuales:
+
+```bash
+# Iniciar servidor
+go run cmd/api/main.go &
+
+# Probar endpoint
+curl -X POST http://localhost:8080/api/v1/...
+
+# Verificar respuesta
+# Matar servidor al terminar
+```
+
+**Casos a probar:**
+- Happy path (caso correcto)
+- Casos de error (validación, no encontrado)
+- Diferentes materiales (Cu/Al)
+- Diferentes configuraciones
+- Casos edge
+
 ## Paso 6: Auditar AGENTS.md PRE-merge (OBLIGATORIO)
 
 **NUNCA mergear sin sincronizar la documentación.**
@@ -271,6 +350,8 @@ git commit -m "feat: implement {feature} with vertical slices
 4. **Verificación obligatoria** — cada agente debe reportar tests verdes
 5. **No tocar fuera del scope** — cada agente respeta sus límites
 6. **Auditar AGENTS.md PRE-merge** — nunca mergear sin sincronizar documentación
+7. **DTOs con primitivos** — nunca exponer value objects fuera de application
+8. **Single Responsibility** — un use case = una responsabilidad
 
 ## Cómo evitar duplicación de código — RESPONSABILIDAD DEL ORQUESTADOR
 
@@ -405,6 +486,19 @@ NO crees un nuevo use case. En lugar de eso:
 ## Ejemplo completo
 
 Ver referencia en: `docs/examples/orchestrating-agents-example.md`
+
+## Output Esperado
+
+- Rama de feature creada
+- Diseño: `docs/plans/YYYY-MM-DD-<feature>-design.md` → luego a `completed/`
+- Plan: `docs/plans/YYYY-MM-DD-<feature>-plan.md` → luego a `completed/`
+- Código en las 3 capas (vía subagentes)
+- Wiring en `main.go`
+- Verificación: `go build ./...` + `go test ./...` pasan
+- Pruebas manuales del endpoint (si aplica)
+- Documentación sincronizada
+- Tests verdes: `go test ./...`
+- Commit listo para merge
 
 ## Troubleshooting
 

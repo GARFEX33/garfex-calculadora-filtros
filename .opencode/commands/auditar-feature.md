@@ -30,6 +30,7 @@ Cada auditor genera un reporte independiente con severidades.
 ## Qué verifican los auditores
 
 ### auditor-domain
+
 - Pureza del dominio (sin imports externos)
 - Value Objects inmutables con validación
 - Entidades con identidad e invariantes
@@ -37,6 +38,7 @@ Cada auditor genera un reporte independiente con severidades.
 - Go idiomático
 
 ### auditor-application
+
 - Use cases que solo orquestan
 - Ports como interfaces
 - DTOs con mapping explícito
@@ -44,6 +46,7 @@ Cada auditor genera un reporte independiente con severidades.
 - Go idiomático
 
 ### auditor-infrastructure
+
 - Adapters que implementan ports exactamente
 - Handlers que solo coordinan
 - Repositorios sin lógica de negocio
@@ -53,25 +56,26 @@ Cada auditor genera un reporte independiente con severidades.
 ## Output
 
 Reporte consolidado con:
+
 ```
 === AUDITORÍA COMPLETA: {feature} ===
 
 DOMAIN LAYER
 ------------
 ✅ Passed: {n}
-⚠️ Warnings: {n}  
+⚠️ Warnings: {n}
 ❌ Failed: {n}
 
 APPLICATION LAYER
 -----------------
 ✅ Passed: {n}
-⚠️ Warnings: {n}  
+⚠️ Warnings: {n}
 ❌ Failed: {n}
 
 INFRASTRUCTURE LAYER
 --------------------
 ✅ Passed: {n}
-⚠️ Warnings: {n}  
+⚠️ Warnings: {n}
 ❌ Failed: {n}
 
 RESUMEN TOTAL

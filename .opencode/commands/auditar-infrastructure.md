@@ -1,7 +1,7 @@
 ---
 description: "Audita la capa de infrastructure de una feature verificando adapters, handlers, repositorios, seguridad y Go idiomático."
 agent: auditor-infrastructure
-disable-model-invocation: true
+disable-model-invocation: false
 ---
 
 # Auditoría de Capa de Infrastructure
@@ -11,12 +11,14 @@ Invoca al agente `auditor-infrastructure` para realizar una auditoría estricta 
 ## Qué verifica
 
 ### Arquitectura Hexagonal
+
 - [ ] Import de application/port para implementar
 - [ ] Import de application/usecase para llamar
 - [ ] Import de domain/entity para mapear
 - [ ] Sin imports de domain/service para lógica
 
 ### Driven Adapters (Repositorios)
+
 - [ ] Implementa interface de application/port
 - [ ] Constructor recibe dependencias (db, config)
 - [ ] context.Context como primer parámetro
@@ -25,6 +27,7 @@ Invoca al agente `auditor-infrastructure` para realizar una auditoría estricta 
 - [ ] Cerrar recursos (defer rows.Close())
 
 ### Driver Adapters (HTTP Handlers)
+
 - [ ] Constructor recibe use cases inyectados
 - [ ] Handler solo: bind → validate → call UC → respond
 - [ ] Sin lógica de negocio
@@ -32,12 +35,14 @@ Invoca al agente `auditor-infrastructure` para realizar una auditoría estricta 
 - [ ] Context propagado a use cases
 
 ### Anti-Patterns a detectar
+
 - [ ] God Handler (handler que hace todo)
 - [ ] Repository con Lógica (calcula en repo)
 - [ ] Adapter Leaky (expone detalles de BD)
 - [ ] Missing Context (sin context.Context)
 
 ### Go Idiomático (golang-patterns + golang-pro)
+
 - [ ] gofmt aplicado
 - [ ] Error wrapping con `%w`
 - [ ] Defer para cleanup (file.Close, rows.Close)
@@ -47,6 +52,7 @@ Invoca al agente `auditor-infrastructure` para realizar una auditoría estricta 
 - [ ] Sin goroutines huérfanas
 
 ### Seguridad
+
 - [ ] Sin SQL injection (prepared statements)
 - [ ] Sin path traversal en file operations
 - [ ] Input sanitizado antes de logs
@@ -64,6 +70,7 @@ Invoca al agente `auditor-infrastructure` para realizar una auditoría estricta 
 ## Output
 
 Reporte estructurado con severidades:
+
 - **CRÍTICO** — debe corregirse antes de merge
 - **IMPORTANTE** — debería corregirse pronto
 - **SUGERENCIA** — nice to have
@@ -71,6 +78,7 @@ Reporte estructurado con severidades:
 ## Sección especial: Seguridad
 
 El reporte incluye una sección dedicada a seguridad:
+
 ```
 SEGURIDAD
 ---------

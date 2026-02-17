@@ -1,6 +1,7 @@
 ---
 name: auditor-infrastructure
 description: Auditor estricto especializado en la capa de Infrastructure. Verifica adapters (driver/driven), implementación de ports, handlers HTTP, repositorios y separación de I/O. NO modifica código, solo audita y propone mejoras.
+model: opencode/minimax-m2.5-free
 ---
 
 # Auditor de Infrastructure

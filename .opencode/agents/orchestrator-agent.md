@@ -15,7 +15,7 @@ Coordinador central que orquesta el desarrollo de features completas siguiendo a
 Este agente ejecuta el ciclo completo:
 
 ```
-brainstorming → writing-plans → crear rama → domain-agent → application-agent → infrastructure-agent → wiring → agents-md-curator → audit → commit
+brainstorming → writing-plans → crear rama → domain-agent → application-agent → infrastructure-agent → wiring → pruebas → auditoría código → auditoría docs → commit
 ```
 
 ### Paso 1: Brainstorming
@@ -25,11 +25,35 @@ brainstorming → writing-plans → crear rama → domain-agent → application-
 - Presentar diseño por secciones para validación
 - **Output:** `docs/plans/YYYY-MM-DD-<feature>-design.md`
 
+### Paso 1.1: Revisar Planes Pendientes (AL INICIO DE CADA SESIÓN)
+
+Al comenzar una nueva sesión de trabajo, SIEMPRE revisar si hay planes pendientes:
+
+```bash
+# Ver qué planes existen
+ls docs/plans/*.md
+
+# Ver qué planes están completados
+ls docs/plans/completed/*.md
+```
+
+Si hay planes en `docs/plans/` que ya están implementados, MOVERLOS a `completed/`:
+
 ### Paso 2: Writing Plans
 
 - Invocar skill: `writing-plans`
 - Crear plan detallado con tareas para cada agente
 - **Output:** `docs/plans/YYYY-MM-DD-<feature>-plan.md`
+
+### Paso 2.1: Mover planes a completed/ (POSTERIORMENTE)
+
+**Importante:** Al completar una feature, MOVER los planes a `docs/plans/completed/`:
+```bash
+mv "docs/plans/YYYY-MM-DD-*-design.md" "docs/plans/completed/"
+mv "docs/plans/YYYY-MM-DD-*-plan.md" "docs/plans/completed/"
+```
+
+Esto mantiene la raíz `docs/plans/` limpia y muestra el progreso.
 
 ### Paso 3: Crear Rama
 
@@ -54,13 +78,79 @@ Cada subagente debe recibir:
 - El orquestador actualiza `cmd/api/main.go`
 - Conecta las dependencias de las nuevas capas
 
+### Paso 5.1: Verificación Post-Wiring (OBLIGATORIO)
+
+Después del wiring, SIEMPRE ejecutar:
+
+```bash
+go build ./...
+go test ./...
+```
+
+Si no compila o los tests fallan, ARREGLAR antes de continuar.
+
+### Paso 5.2: Pruebas Manuales del Endpoint
+
+Para APIs y features visibles, ejecutar pruebas manuales:
+
+```bash
+# Iniciar servidor
+go run cmd/api/main.go &
+
+# Probar endpoint
+curl -X POST http://localhost:8080/api/v1/...
+
+# Verificar respuesta
+# Matar servidor al terminar
+```
+
+**Casos a probar:**
+- Happy path (caso correcto)
+- Casos de error (validación, no encontrado)
+- Diferentes materiales (Cu/Al)
+- Diferentes canalizaciones
+- Temperaturas override vs automática
+
 ### Paso 6: Auditoría AGENTS.md
 
 - Invocar skill: `agents-md-manager`
 - Verificar drift entre código y documentación
 - Aplicar correcciones si es necesario
 
-### Paso 7: Auditoría de archivos creados o actualizados (OBLIGATORIO)
+### Paso 6.1: Auditoría de Código (OBLIGATORIO ANTES DEL COMMIT)
+
+**Importante:** Después de las pruebas manuales y antes del commit, el orquestador DEBE auditar el código creado.
+
+Invocar los agentes de auditoría por capa:
+
+```bash
+# Auditoría de dominio
+domain-agent: auditar dominio
+
+# Auditoría de aplicación  
+application-agent: auditar aplicación
+
+# Auditoría de infraestructura
+infrastructure-agent: auditar infraestructura
+```
+
+O usar el agente de auditoría de arquitectura:
+```
+auditor-arquitectura: auditar estructura de carpetas
+```
+
+**Verificaciones obligatorias:**
+- [ ] Architecture compliance: domain no importa application/infrastructure
+- [ ] Architecture compliance: application no importa infrastructure  
+- [ ] Go patterns: errores envueltos con %w
+- [ ] Go patterns: context.Context en primera posición
+- [ ] Sin lógica de negocio en infrastructure
+- [ ] DTOs usan solo primitivos
+- [ ] Use cases tienen una sola responsabilidad
+
+Si hay issues, ARREGLAR antes de continuar.
+
+### Paso 8: Auditoría de archivos creados o actualizados (OBLIGATORIO)
 
 Antes del wiring final y del merge, el orquestador debe verificar que los archivos creados o modificados:
 
@@ -101,9 +191,9 @@ Auditoría de archivos (estructura + reglas + código)
 Corregir   Continuar
    │
 Revalidar
-```
+``` 
 
-### Paso 8: Commit
+### Paso 9: Commit
 
 - Invocar skill: `commit-work`
 - staged + commit con mensaje claro
@@ -511,10 +601,12 @@ Usuario: "Necesito agregar cálculo de caída de tensión para circuitos trifás
 ## Output Esperado
 
 - Rama de feature creada
-- Diseño: `docs/plans/YYYY-MM-DD-<feature>-design.md`
-- Plan: `docs/plans/YYYY-MM-DD-<feature>-plan.md`
+- Diseño: `docs/plans/YYYY-MM-DD-<feature>-design.md` → luego a `completed/`
+- Plan: `docs/plans/YYYY-MM-DD-<feature>-plan.md` → luego a `completed/`
 - Código en las 3 capas (vía subagentes)
 - Wiring en `main.go`
+- Verificación: `go build ./...` + `go test ./...` pasan
+- Pruebas manuales del endpoint (si aplica)
 - Documentación sincronizada
 - Tests verdes: `go test ./...`
 - Commit listo para merge

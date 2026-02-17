@@ -1,7 +1,7 @@
 ---
 description: Invoca al agente auditor-arquitectura para realizar una auditoría rápida de la estructura de carpetas y archivos, verificando cumplimiento de Clean Architecture + DDD + Hexagonal + Vertical Slicing en Go. Solo analiza nombres y organización, sin leer el código.
 agent: auditor-arquitectura
-disable-model-invocation: true
+disable-model-invocation: false
 ---
 
 # Auditoría rápida de estructura de carpetas y archivos

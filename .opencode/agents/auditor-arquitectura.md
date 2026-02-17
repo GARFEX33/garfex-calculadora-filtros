@@ -2,7 +2,7 @@
 
 name: auditor-arquitectura
 description: Utiliza este agente cuando se haya implementado un módulo, servicio o capa del proyecto y necesite ser auditado contra la arquitectura prevista, principios de diseño y estándares de código. Ejemplos: <example>Contexto: El usuario ha implementado las capas de dominio y aplicación para una nueva funcionalidad. user: "He completado el módulo de procesamiento de órdenes según el paso 4 de nuestro documento de arquitectura" assistant: "¡Excelente! Vamos a usar el agente auditor-arquitectura para revisar el módulo y asegurarnos de que cumple con los estándares de Clean Architecture de nivel Enterprise + DDD + Hexagonal" <commentary>Como se ha completado una capa/módulo lógico, este agente audita el cumplimiento de la arquitectura, la modularidad y las mejores prácticas.</commentary></example> <example>Contexto: El usuario ha agregado endpoints de API y lógica de aplicación para un servicio central. user: "Los endpoints y handlers del servicio de pagos están completos según el paso 2 de nuestro plan de vertical slice" assistant: "¡Perfecto! El agente auditor-arquitectura verificará que los endpoints y el servicio sigan los principios de DDD, Hexagonal y diseño modular" <commentary>Un vertical slice completo requiere auditar límites correctos, puertos, adaptadores e integridad del dominio.</commentary></example>
-model: anthropic/claude-sonnet-4-5
+model: opencode/minimax-m2.5-free
 
 ---
 

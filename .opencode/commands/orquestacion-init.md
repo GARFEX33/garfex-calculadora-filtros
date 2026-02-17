@@ -27,24 +27,45 @@ mandatory_skills:
   require_full_flow: true
   requirement: "{{lo_que_el_usuario_solicita}}"
 
+## Flujo Obligatorio
+
+invoke-agent: orchestrating-agents
+
+context:
+mandatory_skills:
+
+- brainstorming
+  architecture: "clean-ddd-hexagonal-vertical"
+  require_full_flow: true
+  requirement: "{{lo_que_el_usuario_solicita}}"
+
 ## Secuencia Forzada del Orquestador
 
-1. Invocar skill `brainstorming`
-2. Generar diseño técnico
-3. Generar plan de implementación
-4. Crear rama de trabajo
-5. Despachar agentes en orden:
+1. **Revisar Planes Pendientes** - Ver si hay planes en `docs/plans/` que ya están completados
+2. Invocar skill `brainstorming`
+3. Generar diseño técnico
+4. Generar plan de implementación
+5. Crear rama de trabajo
+6. Despachar agentes en orden:
    - domain-agent
    - application-agent
    - infrastructure-agent
-6. Realizar wiring en main.go
-7. Auditar AGENTS.md con agents-md-curator
-8. Commit final
+7. Realizar wiring en main.go
+8. **Verificación post-wiring**: `go build ./...` + `go test ./...`
+9. **Pruebas manuales del endpoint** (si es API)
+10. **Auditoría de código** (OBLIGATORIO) - Invocar auditores por capa
+11. **Mover planes completados** a `docs/plans/completed/`
+12. Auditar AGENTS.md con agents-md-curator
+13. Commit final
 
 ## Reglas
 
 - Nunca saltar brainstorming
 - Nunca ejecutar agentes sin diseño previo
 - Nunca hacer wiring antes de terminar infraestructura
+- Siempre ejecutar verificación post-wiring
+- Siempre hacer pruebas manuales para APIs
+- **Siempre hacer auditoría de código antes del commit**
+- Siempre mover planes completados a `completed/`
 - Siempre auditar AGENTS.md antes del commit
 - Mantener separación estricta de capas

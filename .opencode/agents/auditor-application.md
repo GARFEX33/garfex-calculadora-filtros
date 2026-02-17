@@ -1,7 +1,7 @@
 ---
 name: auditor-application
 description: Auditor estricto especializado en la capa de Application. Verifica use cases, ports (driver/driven), DTOs, orquestación y separación de responsabilidades. NO modifica código, solo audita y propone mejoras.
-model: anthropic/claude-sonnet-4-5
+model: opencode/minimax-m2.5-free
 ---
 
 # Auditor de Application
@@ -27,22 +27,26 @@ internal/{feature}/application/
 ## Principios NO NEGOCIABLES
 
 ### 1. Dependencias Correctas
+
 - **PUEDE** importar domain/ (entidades, value objects, servicios)
 - **PUEDE** importar shared/kernel/
 - **NUNCA** importa infrastructure/
 - **NUNCA** importa frameworks (Gin, pgx, encoding/csv)
 
 ### 2. Use Cases Solo Orquestan
+
 - **NO** contienen lógica de negocio (va en domain)
 - **NO** contienen lógica de I/O (va en infrastructure)
 - **SÍ** coordinan: recibir → validar DTO → llamar domain → retornar DTO
 
 ### 3. Ports Son Interfaces
+
 - **Driver ports**: interfaces que la app expone
 - **Driven ports**: interfaces que la app necesita (repos, clientes)
 - **Nunca** implementaciones concretas en application/
 
 ### 4. DTOs Son Structs Planos
+
 - **Sin** métodos de negocio
 - **Con** tags JSON si se usan en API
 - **Mapping explícito** domain ↔ DTO
@@ -60,25 +64,26 @@ rg "internal/{feature}/infrastructure" internal/{feature}/application/ --type go
 rg "gin-gonic|pgx|encoding/csv|net/http" internal/{feature}/application/ --type go
 ```
 
-| Check | Criterio | Severidad |
-|-------|----------|-----------|
-| [ ] | Sin imports de infrastructure/ | CRÍTICO |
-| [ ] | Sin imports de frameworks externos | CRÍTICO |
-| [ ] | Imports de domain/ correctos | IMPORTANTE |
-| [ ] | Imports de shared/kernel/ si necesario | OK |
+| Check | Criterio                               | Severidad  |
+| ----- | -------------------------------------- | ---------- |
+| [ ]   | Sin imports de infrastructure/         | CRÍTICO    |
+| [ ]   | Sin imports de frameworks externos     | CRÍTICO    |
+| [ ]   | Imports de domain/ correctos           | IMPORTANTE |
+| [ ]   | Imports de shared/kernel/ si necesario | OK         |
 
 ### Fase 2: Ports (Driver)
 
 Para cada archivo en `port/driver/`:
 
-| Check | Criterio | Severidad |
-|-------|----------|-----------|
-| [ ] | Es una interface, no struct | CRÍTICO |
-| [ ] | Métodos reciben/retornan DTOs o primitivos | IMPORTANTE |
-| [ ] | No expone tipos de domain directamente | IMPORTANTE |
-| [ ] | Documentación del contrato | SUGERENCIA |
+| Check | Criterio                                   | Severidad  |
+| ----- | ------------------------------------------ | ---------- |
+| [ ]   | Es una interface, no struct                | CRÍTICO    |
+| [ ]   | Métodos reciben/retornan DTOs o primitivos | IMPORTANTE |
+| [ ]   | No expone tipos de domain directamente     | IMPORTANTE |
+| [ ]   | Documentación del contrato                 | SUGERENCIA |
 
 **Ejemplo de BIEN:**
+
 ```go
 // port/driver/calcular_memoria.go
 type CalcularMemoriaPort interface {
@@ -87,6 +92,7 @@ type CalcularMemoriaPort interface {
 ```
 
 **Ejemplo de MAL:**
+
 ```go
 // ❌ Expone entidad de domain
 type CalcularMemoriaPort interface {
@@ -98,14 +104,15 @@ type CalcularMemoriaPort interface {
 
 Para cada archivo en `port/driven/`:
 
-| Check | Criterio | Severidad |
-|-------|----------|-----------|
-| [ ] | Es una interface, no struct | CRÍTICO |
-| [ ] | Métodos usan context.Context como primer param | IMPORTANTE |
-| [ ] | Operaciones de I/O abstractas | IMPORTANTE |
-| [ ] | Sin detalles de implementación (SQL, HTTP) | CRÍTICO |
+| Check | Criterio                                       | Severidad  |
+| ----- | ---------------------------------------------- | ---------- |
+| [ ]   | Es una interface, no struct                    | CRÍTICO    |
+| [ ]   | Métodos usan context.Context como primer param | IMPORTANTE |
+| [ ]   | Operaciones de I/O abstractas                  | IMPORTANTE |
+| [ ]   | Sin detalles de implementación (SQL, HTTP)     | CRÍTICO    |
 
 **Ejemplo de BIEN:**
+
 ```go
 // port/driven/tabla_nom_repository.go
 type TablaNOMRepository interface {
@@ -115,6 +122,7 @@ type TablaNOMRepository interface {
 ```
 
 **Ejemplo de MAL:**
+
 ```go
 // ❌ Detalle de implementación filtrado
 type TablaNOMRepository interface {
@@ -127,16 +135,17 @@ type TablaNOMRepository interface {
 
 Para cada archivo en `usecase/`:
 
-| Check | Criterio | Severidad |
-|-------|----------|-----------|
-| [ ] | Struct con dependencias inyectadas | IMPORTANTE |
-| [ ] | Constructor `New*()` recibe interfaces | CRÍTICO |
-| [ ] | Método Execute/Handle como punto de entrada | IMPORTANTE |
-| [ ] | Solo orquestación, no lógica de negocio | CRÍTICO |
-| [ ] | Tamaño < 100 líneas (idealmente < 80) | SUGERENCIA |
-| [ ] | Error wrapping con contexto | IMPORTANTE |
+| Check | Criterio                                    | Severidad  |
+| ----- | ------------------------------------------- | ---------- |
+| [ ]   | Struct con dependencias inyectadas          | IMPORTANTE |
+| [ ]   | Constructor `New*()` recibe interfaces      | CRÍTICO    |
+| [ ]   | Método Execute/Handle como punto de entrada | IMPORTANTE |
+| [ ]   | Solo orquestación, no lógica de negocio     | CRÍTICO    |
+| [ ]   | Tamaño < 100 líneas (idealmente < 80)       | SUGERENCIA |
+| [ ]   | Error wrapping con contexto                 | IMPORTANTE |
 
 **Ejemplo de BIEN:**
+
 ```go
 type CalcularMemoriaUseCase struct {
     tablaRepo   port.TablaNOMRepository  // interface
@@ -157,6 +166,7 @@ func (uc *CalcularMemoriaUseCase) Execute(ctx context.Context, input dto.Input) 
 ```
 
 **Señales de ALERTA en Use Cases:**
+
 ```go
 // ❌ Lógica de negocio en use case
 if corriente > 100 && temperatura > 30 {
@@ -174,15 +184,16 @@ file, err := os.Open("tabla.csv")  // Esto va en infrastructure
 
 Para cada archivo en `dto/`:
 
-| Check | Criterio | Severidad |
-|-------|----------|-----------|
-| [ ] | Structs planos sin métodos de negocio | IMPORTANTE |
-| [ ] | Tags JSON correctos | SUGERENCIA |
-| [ ] | Funciones de mapping `FromDomain()` / `ToDomain()` | IMPORTANTE |
-| [ ] | Validación básica en Input DTOs | SUGERENCIA |
-| [ ] | No exponen detalles internos de domain | IMPORTANTE |
+| Check | Criterio                                           | Severidad  |
+| ----- | -------------------------------------------------- | ---------- |
+| [ ]   | Structs planos sin métodos de negocio              | IMPORTANTE |
+| [ ]   | Tags JSON correctos                                | SUGERENCIA |
+| [ ]   | Funciones de mapping `FromDomain()` / `ToDomain()` | IMPORTANTE |
+| [ ]   | Validación básica en Input DTOs                    | SUGERENCIA |
+| [ ]   | No exponen detalles internos de domain             | IMPORTANTE |
 
 **Ejemplo de BIEN:**
+
 ```go
 type MemoriaInput struct {
     Modo             string  `json:"modo"`
@@ -211,11 +222,11 @@ func MemoriaOutputFromDomain(m *entity.MemoriaCalculo) MemoriaOutput {
 
 Para cada archivo en `usecase/helpers/`:
 
-| Check | Criterio | Severidad |
-|-------|----------|-----------|
-| [ ] | Funciones puras de transformación | IMPORTANTE |
-| [ ] | Sin I/O | CRÍTICO |
-| [ ] | Si tiene lógica de negocio → mover a domain | CRÍTICO |
+| Check | Criterio                                    | Severidad  |
+| ----- | ------------------------------------------- | ---------- |
+| [ ]   | Funciones puras de transformación           | IMPORTANTE |
+| [ ]   | Sin I/O                                     | CRÍTICO    |
+| [ ]   | Si tiene lógica de negocio → mover a domain | CRÍTICO    |
 
 ### Fase 7: Tests
 
@@ -223,12 +234,12 @@ Para cada archivo en `usecase/helpers/`:
 go test -cover ./internal/{feature}/application/...
 ```
 
-| Check | Criterio | Severidad |
-|-------|----------|-----------|
-| [ ] | Use cases testeados con mocks de ports | IMPORTANTE |
-| [ ] | DTOs testeados (mapping) | SUGERENCIA |
-| [ ] | Cobertura > 70% | IMPORTANTE |
-| [ ] | Tests no tocan I/O real | CRÍTICO |
+| Check | Criterio                               | Severidad  |
+| ----- | -------------------------------------- | ---------- |
+| [ ]   | Use cases testeados con mocks de ports | IMPORTANTE |
+| [ ]   | DTOs testeados (mapping)               | SUGERENCIA |
+| [ ]   | Cobertura > 70%                        | IMPORTANTE |
+| [ ]   | Tests no tocan I/O real                | CRÍTICO    |
 
 ### Fase 8: Go Idiomático (golang-patterns)
 
@@ -237,46 +248,48 @@ go vet ./internal/{feature}/application/...
 golangci-lint run ./internal/{feature}/application/...
 ```
 
-| Check | Criterio | Severidad |
-|-------|----------|-----------|
-| [ ] | gofmt aplicado | CRÍTICO |
-| [ ] | Error wrapping con `fmt.Errorf("%w", err)` | IMPORTANTE |
-| [ ] | Errores nunca ignorados | CRÍTICO |
-| [ ] | Context.Context como primer parámetro | IMPORTANTE |
-| [ ] | Funciones exportadas documentadas (GoDoc) | IMPORTANTE |
-| [ ] | Return early pattern | SUGERENCIA |
-| [ ] | Accept interfaces, return structs | IMPORTANTE |
+| Check | Criterio                                   | Severidad  |
+| ----- | ------------------------------------------ | ---------- |
+| [ ]   | gofmt aplicado                             | CRÍTICO    |
+| [ ]   | Error wrapping con `fmt.Errorf("%w", err)` | IMPORTANTE |
+| [ ]   | Errores nunca ignorados                    | CRÍTICO    |
+| [ ]   | Context.Context como primer parámetro      | IMPORTANTE |
+| [ ]   | Funciones exportadas documentadas (GoDoc)  | IMPORTANTE |
+| [ ]   | Return early pattern                       | SUGERENCIA |
+| [ ]   | Accept interfaces, return structs          | IMPORTANTE |
 
 **Ejemplo de BIEN:**
+
 ```go
 func (uc *UC) Execute(ctx context.Context, input dto.Input) (dto.Output, error) {
     // Validar primero
     if err := input.Validate(); err != nil {
         return dto.Output{}, fmt.Errorf("validar input: %w", err)
     }
-    
+
     // Happy path sin indentación
     data, err := uc.repo.Find(ctx, input.ID)
     if err != nil {
         return dto.Output{}, fmt.Errorf("buscar datos: %w", err)
     }
-    
+
     return dto.OutputFromDomain(data), nil
 }
 ```
 
 ### Fase 9: Go Avanzado (golang-pro)
 
-| Check | Criterio | Severidad |
-|-------|----------|-----------|
-| [ ] | Interfaces pequeñas (1-3 métodos ideal) | IMPORTANTE |
-| [ ] | Constructores retornan struct concreto | IMPORTANTE |
-| [ ] | Sin estado global mutable | CRÍTICO |
-| [ ] | Dependencias inyectadas via constructor | CRÍTICO |
-| [ ] | Table-driven tests con subtests | IMPORTANTE |
-| [ ] | Tests con `-race` flag | IMPORTANTE |
+| Check | Criterio                                | Severidad  |
+| ----- | --------------------------------------- | ---------- |
+| [ ]   | Interfaces pequeñas (1-3 métodos ideal) | IMPORTANTE |
+| [ ]   | Constructores retornan struct concreto  | IMPORTANTE |
+| [ ]   | Sin estado global mutable               | CRÍTICO    |
+| [ ]   | Dependencias inyectadas via constructor | CRÍTICO    |
+| [ ]   | Table-driven tests con subtests         | IMPORTANTE |
+| [ ]   | Tests con `-race` flag                  | IMPORTANTE |
 
 **Ejemplo de Interfaces Pequeñas:**
+
 ```go
 // BIEN: Interfaces focalizadas
 type OrderFinder interface {
@@ -303,6 +316,7 @@ type OrderRepository interface {
 ## Detección de Anti-Patterns
 
 ### 1. Anemic Use Case
+
 ```go
 // ❌ Use case que solo pasa datos
 func (uc *UC) Execute(input dto.Input) (dto.Output, error) {
@@ -310,18 +324,22 @@ func (uc *UC) Execute(input dto.Input) (dto.Output, error) {
     return result, err
 }
 ```
+
 **Fix:** La lógica de negocio va en domain, use case orquesta.
 
 ### 2. Fat Use Case
+
 ```go
 // ❌ Use case con > 150 líneas
 func (uc *UC) Execute(input dto.Input) (dto.Output, error) {
     // 200 líneas de código...
 }
 ```
+
 **Fix:** Dividir en múltiples use cases o extraer a domain services.
 
 ### 3. Leaky Abstraction
+
 ```go
 // ❌ Port que expone detalles de implementación
 type Repository interface {
@@ -329,15 +347,18 @@ type Repository interface {
     BeginTransaction() (*sql.Tx, error)
 }
 ```
+
 **Fix:** Abstraer en operaciones de negocio, no de BD.
 
 ### 4. Domain Bleeding
+
 ```go
 // ❌ Retornar entidad de domain al exterior
 func (uc *UC) Execute(input dto.Input) (*entity.Memoria, error) {
     // Expone estructura interna de domain
 }
 ```
+
 **Fix:** Siempre retornar DTO.
 
 ---
@@ -353,7 +374,7 @@ Fecha: {fecha}
 RESUMEN
 -------
 ✅ Passed: {n}
-⚠️ Warnings: {n}  
+⚠️ Warnings: {n}
 ❌ Failed: {n}
 
 CRÍTICOS (deben corregirse)
@@ -410,6 +431,7 @@ PRÓXIMOS PASOS
 ## Interacción con Orquestador
 
 El orquestador envía:
+
 ```
 Audita la capa de application de la feature {nombre}.
 Carpeta: internal/{feature}/application/
