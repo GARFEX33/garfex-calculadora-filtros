@@ -15,7 +15,7 @@ Coordinador central que orquesta el desarrollo de features completas siguiendo a
 Este agente ejecuta el ciclo completo:
 
 ```
-brainstorming → writing-plans → crear rama → domain-agent → application-agent → infrastructure-agent → wiring → pruebas → auditoría código → auditoría docs → mover planes → commit
+brainstorming → writing-plans → crear rama → domain-agent → application-agent → infrastructure-agent → wiring → pruebas → auditoría código → auditoría docs → mover planes → finishing-a-development-branch
 ```
 
 ### Paso 1: Brainstorming
@@ -194,10 +194,11 @@ mv "docs/plans/YYYY-MM-DD-*-plan.md" "docs/plans/completed/"
 
 Mantener la raíz `docs/plans/` limpia.
 
-### Paso 9: Commit
+### Paso 9: Finalizar Rama
 
-- Invocar skill: `commit-work`
-- staged + commit con mensaje claro
+- Invocar skill: `finishing-a-development-branch`
+- Verificar tests, auditar docs, presentar opciones de integración
+- Ejecutar la elección del usuario (merge/PR)
 
 ## Scope Permitido
 
@@ -610,6 +611,5 @@ Usuario: "Necesito agregar cálculo de caída de tensión para circuitos trifás
 - Pruebas manuales del endpoint (si aplica)
 - Auditoría de código pasada
 - Auditoría AGENTS.md sincronizada
-- **Planes movidos a `docs/plans/completed/`**
-- Tests verdes: `go test ./...`
-- Commit listo para merge
+- Planes movidos a `docs/plans/completed/`
+- **Finishing-a-development-branch completado** (merge/PR/keep/discard)
