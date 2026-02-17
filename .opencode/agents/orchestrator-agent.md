@@ -15,7 +15,7 @@ Coordinador central que orquesta el desarrollo de features completas siguiendo a
 Este agente ejecuta el ciclo completo:
 
 ```
-brainstorming → writing-plans → crear rama → domain-agent → application-agent → infrastructure-agent → wiring → pruebas → auditoría código → auditoría docs → commit
+brainstorming → writing-plans → crear rama → domain-agent → application-agent → infrastructure-agent → wiring → pruebas → auditoría código → auditoría docs → mover planes → commit
 ```
 
 ### Paso 1: Brainstorming
@@ -44,16 +44,6 @@ Si hay planes en `docs/plans/` que ya están implementados, MOVERLOS a `complete
 - Invocar skill: `writing-plans`
 - Crear plan detallado con tareas para cada agente
 - **Output:** `docs/plans/YYYY-MM-DD-<feature>-plan.md`
-
-### Paso 2.1: Mover planes a completed/ (POSTERIORMENTE)
-
-**Importante:** Al completar una feature, MOVER los planes a `docs/plans/completed/`:
-```bash
-mv "docs/plans/YYYY-MM-DD-*-design.md" "docs/plans/completed/"
-mv "docs/plans/YYYY-MM-DD-*-plan.md" "docs/plans/completed/"
-```
-
-Esto mantiene la raíz `docs/plans/` limpia y muestra el progreso.
 
 ### Paso 3: Crear Rama
 
@@ -192,6 +182,17 @@ Corregir   Continuar
    │
 Revalidar
 ``` 
+
+### Paso 8.5: Mover planes completados a completed/
+
+Después de que todo está verificado y antes del commit:
+
+```bash
+mv "docs/plans/YYYY-MM-DD-*-design.md" "docs/plans/completed/"
+mv "docs/plans/YYYY-MM-DD-*-plan.md" "docs/plans/completed/"
+```
+
+Mantener la raíz `docs/plans/` limpia.
 
 ### Paso 9: Commit
 
@@ -601,12 +602,14 @@ Usuario: "Necesito agregar cálculo de caída de tensión para circuitos trifás
 ## Output Esperado
 
 - Rama de feature creada
-- Diseño: `docs/plans/YYYY-MM-DD-<feature>-design.md` → luego a `completed/`
-- Plan: `docs/plans/YYYY-MM-DD-<feature>-plan.md` → luego a `completed/`
+- Diseño: `docs/plans/YYYY-MM-DD-<feature>-design.md`
+- Plan: `docs/plans/YYYY-MM-DD-<feature>-plan.md`
 - Código en las 3 capas (vía subagentes)
 - Wiring en `main.go`
 - Verificación: `go build ./...` + `go test ./...` pasan
 - Pruebas manuales del endpoint (si aplica)
-- Documentación sincronizada
+- Auditoría de código pasada
+- Auditoría AGENTS.md sincronizada
+- **Planes movidos a `docs/plans/completed/`**
 - Tests verdes: `go test ./...`
 - Commit listo para merge
