@@ -51,7 +51,7 @@ internal/equipos/
 
 ## Referencias
 
-- Comando: `.opencode/commands/orchestrate-agents.md`
-- Agente domain: `.opencode/agents/domain-agent.md`
-- Agente application: `.opencode/agents/application-agent.md`
-- Agente infrastructure: `.opencode/agents/infrastructure-agent.md`
+- Orquestación: Skill `.agents/skills/orchestrating-agents/SKILL.md`
+- Skill domain: `.agents/skills/brainstorming-dominio/SKILL.md`
+- Skill application: `.agents/skills/brainstorming-application/SKILL.md`
+- Skill infrastructure: `.agents/skills/brainstorming-infrastructure/SKILL.md`

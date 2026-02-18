@@ -19,45 +19,6 @@ Orden de prioridad:
 
 Si el skill tiene checklist, crear todos con TodoWrite antes de seguirlo.
 
-## Regla Anti-Duplicación (OBLIGATORIO) — RESPONSABILIDAD DEL ORQUESTADOR
-
-⚠️ **Los agentes especializados NO se conocen entre sí.** El orquestador es el único con visión global de todas las capas y debe:
-
-1. **Investigar** — Buscar lo que ya existe
-2. **Decidir** — Extender vs crear nuevo
-3. **Comunicar** — Instrucciones claras al subagente
-
-### Flujo del Orquestador (antes de despachar agentes)
-
-**Paso 1: Investigar**
-```bash
-ls internal/{feature}/domain/service/*.go 2>/dev/null
-rg "TODO|FIXME|XXX" internal/{feature}/application/usecase --type go
-rg -i "func.*[Cc]alcular" internal/{feature} --type go
-```
-
-**Paso 2: Decidir**
-| Situación | Decisión |
-|-----------|----------|
-| Existe servicio similar | Extender, no crear nuevo |
-| Use case tiene TODO | Implementar TODO primero |
-| Nada similar | Crear nuevo |
-
-**Paso 3: Comunicar (en el prompt al agente)**
-
-❌ Mal: "Creá un servicio para calcular amperaje"
-
-✅ Bien: "Implementá el método calcularManualPotencia() que tiene un TODO en 
-          CalcularCorrienteUseCase. Usá el servicio CalcularAmperajeNominalCircuito 
-          que ya existe en domain/service/. NO crees un use case nuevo."
-
-### Checklist (orquestador)
-- [ ] ¿Investigué qué ya existe en domain/ y application/?
-- [ ] ¿Tomé la decisión de extender vs crear?
-- [ ] ¿Comuniqué claramente al agente qué hacer y qué NO hacer?
-
-**Error real:** Orquestador despachó domain-agent para crear servicio nuevo sin verificar que el use case existente tenía un TODO sin implementar. Resultado: duplicación.
-
 ## Workflow de Desarrollo (OBLIGATORIO)
 
 Para cualquier feature o bugfix, seguir este flujo de skills en orden:
@@ -272,7 +233,7 @@ internal/
   calculos/             ← feature: memoria de cálculo eléctrico
     domain/
       entity/           ← TipoCanalizacion, SistemaElectrico, ITM, MemoriaCalculo, etc.
-      service/          ← 12 servicios de cálculo eléctrico (IEEE-141, NOM)
+      service/          ← 13 servicios de cálculo eléctrico (IEEE-141, NOM)
     application/
       port/             ← TablaNOMRepository, EquipoRepository (interfaces)
       usecase/          ← OrquestadorMemoriaCalculo y micro use cases
@@ -437,8 +398,6 @@ curl -X POST http://localhost:8080/api/v1/calculos/amperaje \
 **Campos obligatorios:** `modo`, `tension`, `tipo_canalizacion`, `itm`, `longitud_circuito`, `estado`, `sistema_electrico`
 
 **Campo `material`:** Opcional, valores: `"Cu"` (default) o `"Al"`
-
-## Convenciones Globales
 
 ## Actualizacion de Documentacion
 
