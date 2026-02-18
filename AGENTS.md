@@ -344,10 +344,8 @@ Cuando realices estas acciones, LEE el AGENTS.md o skill correspondiente PRIMERO
 | Auditar capa de dominio                       | `auditor-domain`                                             |
 | Auditar capa de application                   | `auditor-application`                                        |
 | Auditar capa de infrastructure                | `auditor-infrastructure`                                     |
-| Auditar estructura de carpetas y archivos      | `auditor-arquitectura`                                       |
 | Auditar documentación AGENTS.md               | `auditor-agents-md-architecture`                             |
 | Auditar sistema de agentes y skills           | `auditor-skills-commands-agent`                              |
-| Revisión general de código completado        | `code-reviewer`                                              |
 
 ## Stack
 
