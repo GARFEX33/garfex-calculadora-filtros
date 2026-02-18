@@ -71,12 +71,17 @@ func CalcularCanalizacion(
 
 	for _, entrada := range tabla {
 		if entrada.AreaInteriorMM2 >= areaRequerida {
-			return entity.Canalizacion{
-				Tipo:           tipo,
-				Tamano:         entrada.Tamano,
-				AnchoRequerido: areaTotal,
-				NumeroDeTubos:  numeroDeTubos,
-			}, nil // Canalizacion is constructed directly as a result struct (no invariants to validate beyond what the service guarantees)
+			resultado, err := entity.NewCanalizacion(
+				tipo,
+				entrada.Tamano,
+				areaTotal,
+				numeroDeTubos,
+				factorRelleno,
+			)
+			if err != nil {
+				return entity.Canalizacion{}, fmt.Errorf("crear canalización: %w", err)
+			}
+			return resultado, nil
 		}
 	}
 
