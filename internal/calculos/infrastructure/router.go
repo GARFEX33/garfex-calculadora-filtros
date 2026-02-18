@@ -14,6 +14,7 @@ func NewRouter(
 	calcularCorrienteUC *usecase.CalcularCorrienteUseCase,
 	ajustarCorrienteUC *usecase.AjustarCorrienteUseCase,
 	seleccionarConductorAlimentacionUC *usecase.SeleccionarConductorAlimentacionUseCase,
+	seleccionarConductorTierraUC *usecase.SeleccionarConductorTierraUseCase,
 ) *gin.Engine {
 	router := gin.New()
 
@@ -41,6 +42,10 @@ func NewRouter(
 			// Conductor de alimentacion
 			conductorAlimentacionHandler := http.NewConductorAlimentacionHandler(seleccionarConductorAlimentacionUC)
 			calculos.POST("/conductor-alimentacion", conductorAlimentacionHandler.SeleccionarConductorAlimentacion)
+
+			// Conductor de tierra
+			conductorTierraHandler := http.NewConductorTierraHandler(seleccionarConductorTierraUC)
+			calculos.POST("/conductor-tierra", conductorTierraHandler.SeleccionarConductorTierra)
 		}
 	}
 
