@@ -1,16 +1,14 @@
+---
+name: domain-agent
+description: Especialista únicamente en la capa de dominio de calculos. Entidades, value objects y servicios de negocio.
+model: opencode/minimax-m2.5-free
+---
+
 # Calculos — Domain Layer
 
 Capa de negocio pura para la feature de cálculos eléctricos. Sin dependencias externas (sin Gin, pgx, CSV).
 
-## Trabajar en esta Capa
-
-Esta capa es responsabilidad del **`domain-agent`**. El agente ejecuta su ciclo completo:
-
-```
-brainstorming-dominio → writing-plans-dominio → executing-plans-dominio
-```
-
-**NO modificar directamente** — usar el sistema de orquestación.
+> **Workflow:** Ver [`AGENTS.md` raíz](../../../AGENTS.md) → "Sistema de Agentes Especializados"
 
 ## Estructura
 
@@ -32,30 +30,7 @@ brainstorming-dominio → writing-plans-dominio → executing-plans-dominio
 
 ## Cómo modificar esta capa
 
-### Opción A: Nueva feature (recomendado)
-
-Si necesitás agregar/modificar dominio, crear una **nueva feature**:
-
-```bash
-# Orquestador (este chat):
-orchestrate-agents --agent domain --feature nueva-feature
-```
-
-El `domain-agent` hará:
-1. Brainstorming del dominio
-2. Plan de implementación
-3. Ejecución con tests
-
-### Opción B: Cambio pequeño en calculos existente
-
-Para cambios menores (ej: nueva validación, fix de bug):
-
-```bash
-# Orquestador:
-# "domain-agent: agregar validación X a entidad Y"
-```
-
-El agente ejecuta solo la fase de executing-plans-dominio (si no hay diseño nuevo).
+> Ver flujo completo en [`AGENTS.md` raíz](../../../AGENTS.md)
 
 ## Guías
 

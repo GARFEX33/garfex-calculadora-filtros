@@ -1,16 +1,14 @@
+---
+name: application-agent
+description: Especialista únicamente en la capa de aplicación de calculos. Ports, use cases y DTOs.
+model: opencode/minimax-m2.5-free
+---
+
 # Calculos — Application Layer
 
 Orquesta domain services. Define contratos (ports), no implementaciones.
 
-## Trabajar en esta Capa
-
-Esta capa es responsabilidad del **`application-agent`**. El agente ejecuta su ciclo completo:
-
-```
-brainstorming-application → writing-plans-application → executing-plans-application
-```
-
-**NO modificar directamente** — usar el sistema de orquestación.
+> **Workflow:** Ver [`AGENTS.md` raíz](../../../AGENTS.md) → "Sistema de Agentes Especializados"
 
 ## Estructura
 
@@ -38,20 +36,7 @@ internal/calculos/application/
 
 ## Cómo modificar esta capa
 
-### Para nueva feature
-
-```bash
-# Primero: domain-agent completa el dominio
-# Luego:
-orchestrate-agents --agent application --feature nueva-feature
-```
-
-### Para cambios en calculos existente
-
-```bash
-# Orquestador:
-# "application-agent: agregar use case para exportar memoria a PDF"
-```
+> Ver flujo completo en [`AGENTS.md` raíz](../../../AGENTS.md)
 
 ## Flujo de Use Cases (orden obligatorio)
 

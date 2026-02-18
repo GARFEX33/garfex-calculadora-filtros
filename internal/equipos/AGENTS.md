@@ -1,3 +1,9 @@
+---
+name: feature-equipos
+description: Feature placeholder para catálogo de equipos (futuro).
+model: opencode/minimax-m2.5-free
+---
+
 # Feature: equipos
 
 Catálogo de equipos Garfex — PLACEHOLDER FUTURO.

@@ -1,3 +1,9 @@
+---
+name: shared-kernel
+description: Value objects y utilidades compartidas entre todas las features.
+model: opencode/minimax-m2.5-free
+---
+
 # Shared Kernel
 
 Value objects y utilidades compartidas entre todas las features.

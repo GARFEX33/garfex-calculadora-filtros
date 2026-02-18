@@ -1,3 +1,9 @@
+---
+name: feature-calculos
+description: Feature completa de memoria de cálculo eléctrico según normativa NOM.
+model: opencode/minimax-m2.5-free
+---
+
 # Feature: calculos
 
 Memoria de cálculo eléctrico según normativa NOM (México).
@@ -33,39 +39,9 @@ internal/calculos/
 
 **NUNCA modificar directamente.** Usar el sistema de orquestación.
 
-### Para cambios en calculos:
-
-```bash
-# Según la capa que necesites modificar:
-
-# Capa domain:
-orchestrate-agents --agent domain --feature calculos
-
-# Capa application:
-orchestrate-agents --agent application --feature calculos
-
-# Capa infrastructure:
-orchestrate-agents --agent infrastructure --feature calculos
-```
-
-### Flujo típico para nueva funcionalidad:
-
-```
-1. domain-agent implementa entidades/servicios
-2. application-agent implementa use cases
-3. infrastructure-agent implementa adapters
-4. Orquestador actualiza main.go
-```
-
-## Agente por Capa
-
-| Capa | Agente | AGENTS.md | Flujo |
-|------|--------|-----------|-------|
-| domain/ | `domain-agent` | [`domain/AGENTS.md`](domain/AGENTS.md) | `brainstorming-dominio → writing-plans-dominio → executing-plans-dominio` |
-| application/ | `application-agent` | [`application/AGENTS.md`](application/AGENTS.md) | `brainstorming-application → writing-plans-application → executing-plans-application` |
-| infrastructure/ | `infrastructure-agent` | [`infrastructure/AGENTS.md`](infrastructure/AGENTS.md) | `brainstorming-infrastructure → writing-plans-infrastructure → executing-plans-infrastructure` |
+> Ver flujo completo en [`AGENTS.md` raíz](../../../AGENTS.md)
 
 ## Referencias
 
-- Skill: `orchestrating-agents` (ver `.agents/skills/orchestrating-agents/SKILL.md`)
-- Sistema: `AGENTS.md` (raíz)
+- Workflow: [`AGENTS.md` raíz](../../../AGENTS.md) → "Sistema de Agentes Especializados"
+- Skill: [`orchestrating-agents`](.agents/skills/orchestrating-agents/SKILL.md)

@@ -1,3 +1,9 @@
+---
+name: orchestrator-root
+description: Orquestador principal del proyecto. Coordina agentes especializados y define reglas globales de arquitectura.
+model: opencode/minimax-m2.5-free
+---
+
 # Garfex Calculadora Filtros
 
 Backend API en Go para memorias de calculo de instalaciones electricas segun normativa NOM (Mexico).

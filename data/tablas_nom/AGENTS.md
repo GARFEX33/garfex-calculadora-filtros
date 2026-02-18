@@ -1,3 +1,9 @@
+---
+name: data-tablas-nom
+description: Datos de normativa NOM en formato CSV.
+model: opencode/minimax-m2.5-free
+---
+
 # Tablas NOM (CSV)
 
 Datos de normativa NOM en formato CSV. Leidos por `infrastructure/repository/`.

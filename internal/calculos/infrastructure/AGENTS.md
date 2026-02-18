@@ -1,16 +1,14 @@
+---
+name: infrastructure-agent
+description: Especialista únicamente en la capa de infraestructura de calculos. Adapters HTTP y CSV.
+model: opencode/minimax-m2.5-free
+---
+
 # Calculos — Infrastructure Layer
 
 Implementa los ports definidos en `application/port/`. Tecnologías: CSV (encoding/csv), HTTP (Gin).
 
-## Trabajar en esta Capa
-
-Esta capa es responsabilidad del **`infrastructure-agent`**. El agente ejecuta su ciclo completo:
-
-```
-brainstorming-infrastructure → writing-plans-infrastructure → executing-plans-infrastructure
-```
-
-**NO modificar directamente** — usar el sistema de orquestación.
+> **Workflow:** Ver [`AGENTS.md` raíz](../../../AGENTS.md) → "Sistema de Agentes Especializados"
 
 ## Estructura
 
@@ -42,20 +40,7 @@ internal/calculos/infrastructure/
 
 ## Cómo modificar esta capa
 
-### Para nueva feature
-
-```bash
-# Primero: domain-agent y application-agent completan sus capas
-# Luego:
-orchestrate-agents --agent infrastructure --feature nueva-feature
-```
-
-### Para cambios en calculos existente
-
-```bash
-# Orquestador:
-# "infrastructure-agent: agregar handler para exportar resultados a CSV"
-```
+> Ver flujo completo en [`AGENTS.md` raíz](../../../AGENTS.md)
 
 ## Adapters
 
