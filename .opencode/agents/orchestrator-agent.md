@@ -51,17 +51,24 @@ Si hay planes en `docs/plans/` que ya están implementados, MOVERLOS a `complete
 git checkout -b feature/nombre-de-la-feature
 ```
 
+**IMPORTANTE:** Todos los agentes deben trabajar en ESTA MISMA rama. No crear nuevas ramas.
+
 ### Paso 4: Despachar Agentes en Orden
 
 **Orden obligatorio:** domain → application → infrastructure
 
-Cada subagente debe recibir:
+**Después de cada agente, el orquestador debe hacer commit:**
 
-- Contexto completo de lo que ya existe
-- Scope específico de su capa
-- Lista de carpetas PROHIBIDAS
-- Ruta al plan de implementación
-- Instrucciones claras sobre qué hacer y qué NO hacer
+```bash
+# Después de que cada agente termina
+git add -A
+git commit -m "feat(capa): descripción breve del cambio"
+
+# Verificar que los cambios quedaron commiteados
+git status
+```
+
+Esto asegura que los cambios de cada agente queden persistidos.
 
 ### Paso 5: Wiring en main.go
 
@@ -261,7 +268,7 @@ Sos el domain-agent. Ejecutá los Pasos 1-2 del plan.
 
 ## Proyecto
 Repositorio: {ruta absoluta}
-Rama: {nombre de rama}
+Rama: {nombre de rama}  ← **TRABAJA EN ESTA MISMA RAMA, NO CREES OTRA**
 Módulo Go: {github.com/usuario/proyecto}
 
 ## Contexto
@@ -293,7 +300,9 @@ docs/plans/2026-02-15-mi-feature-plan.md
 Sos el application-agent. Ejecutá el Paso 3 del plan.
 
 ## Proyecto
-...
+Repositorio: {ruta absoluta}
+Rama: {nombre de rama}  ← **TRABAJA EN ESTA MISMA RAMA, NO CREES OTRA**
+Módulo Go: {github.com/usuario/proyecto}
 
 ## Contexto — qué hizo domain-agent
 Ya están creados y testeados:
@@ -323,7 +332,9 @@ Los imports correctos que debés usar:
 Sos el infrastructure-agent. Ejecutá el Paso 4 del plan.
 
 ## Proyecto
-...
+Repositorio: {ruta absoluta}
+Rama: {nombre de rama}  ← **TRABAJA EN ESTA MISMA RAMA, NO CREES OTRA**
+Módulo Go: {github.com/usuario/proyecto}
 
 ## Contexto — qué hicieron los agentes anteriores
 Ya están creados y testeados:
