@@ -10,7 +10,6 @@ import (
 
 // NewRouter crea y configura el router Gin.
 func NewRouter(
-	calcularMemoriaUC *usecase.OrquestadorMemoriaCalculo,
 	calcularCorrienteUC *usecase.CalcularCorrienteUseCase,
 	ajustarCorrienteUC *usecase.AjustarCorrienteUseCase,
 	seleccionarConductorAlimentacionUC *usecase.SeleccionarConductorAlimentacionUseCase,
@@ -34,8 +33,7 @@ func NewRouter(
 		// Calculos
 		calculos := v1.Group("/calculos")
 		{
-			calculoHandler := http.NewCalculoHandler(calcularMemoriaUC, calcularCorrienteUC, ajustarCorrienteUC)
-			calculos.POST("/memoria", calculoHandler.CalcularMemoria)
+			calculoHandler := http.NewCalculoHandler(calcularCorrienteUC, ajustarCorrienteUC)
 			calculos.POST("/amperaje", calculoHandler.CalcularAmperaje)
 			calculos.POST("/corriente-ajustada", calculoHandler.CalcularCorrienteAjustada)
 

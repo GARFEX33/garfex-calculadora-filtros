@@ -29,24 +29,11 @@ func main() {
 	// Crear micro use cases
 	calcularCorrienteUC := usecase.NewCalcularCorrienteUseCase(equipoRepo)
 	ajustarCorrienteUC := usecase.NewAjustarCorrienteUseCase(tablaRepo)
-	seleccionarConductorUC := usecase.NewSeleccionarConductorUseCase(tablaRepo)
 	seleccionarConductorAlimentacionUC := usecase.NewSeleccionarConductorAlimentacionUseCase(tablaRepo)
 	seleccionarConductorTierraUC := usecase.NewSeleccionarConductorTierraUseCase(tablaRepo)
-	dimensionarCanalizacionUC := usecase.NewDimensionarCanalizacionUseCase(tablaRepo)
-	calcularCaidaTensionUC := usecase.NewCalcularCaidaTensionUseCase(tablaRepo)
-
-	// Orquestador principal
-	calcularMemoriaUC := usecase.NewOrquestadorMemoriaCalculo(
-		calcularCorrienteUC,
-		ajustarCorrienteUC,
-		seleccionarConductorUC,
-		dimensionarCanalizacionUC,
-		calcularCaidaTensionUC,
-		tablaRepo,
-	)
 
 	// Crear router
-	router := infrastructure.NewRouter(calcularMemoriaUC, calcularCorrienteUC, ajustarCorrienteUC, seleccionarConductorAlimentacionUC, seleccionarConductorTierraUC)
+	router := infrastructure.NewRouter(calcularCorrienteUC, ajustarCorrienteUC, seleccionarConductorAlimentacionUC, seleccionarConductorTierraUC)
 
 	// Configurar servidor HTTP
 	port := os.Getenv("PORT")
