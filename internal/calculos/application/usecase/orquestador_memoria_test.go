@@ -132,21 +132,18 @@ func TestOrquestadorMemoriaCalculo_Execute(t *testing.T) {
 		repo,
 	)
 
-	// Input
-	tension, err := valueobject.NewTension(220)
-	require.NoError(t, err)
-
+	// Input - usando tipos primitivos para el DTO
 	input := dto.EquipoInput{
 		Modo:             dto.ModoManualAmperaje,
 		AmperajeNominal:  50,
 		TipoEquipo:       string(entity.TipoEquipoFiltroActivo),
-		Tension:          tension,
+		Tension:          220.0,
 		FactorPotencia:   0.9,
 		ITM:              100,
 		TipoCanalizacion: "TUBERIA_PVC",
 		HilosPorFase:     1,
 		NumTuberias:      1,
-		Material:         valueobject.MaterialCobre,
+		Material:         "Cu",
 		LongitudCircuito: 10,
 		Estado:           "Sonora",
 		SistemaElectrico: dto.SistemaElectricoDelta,

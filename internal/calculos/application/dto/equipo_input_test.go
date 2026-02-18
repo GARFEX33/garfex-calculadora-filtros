@@ -6,16 +6,13 @@ import (
 
 	"github.com/garfex/calculadora-filtros/internal/calculos/application/dto"
 	"github.com/garfex/calculadora-filtros/internal/calculos/domain/entity"
-	"github.com/garfex/calculadora-filtros/internal/shared/kernel/valueobject"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
-func tension220(t *testing.T) valueobject.Tension {
+func tension220(t *testing.T) float64 {
 	t.Helper()
-	v, err := valueobject.NewTension(220)
-	require.NoError(t, err)
-	return v
+	// 220 es un valor NOM válido
+	return 220.0
 }
 
 func inputBase(t *testing.T) dto.EquipoInput {
@@ -92,7 +89,7 @@ func TestEquipoInput_Validate_ModoInvalido(t *testing.T) {
 
 func TestEquipoInput_Validate_TensionCero(t *testing.T) {
 	input := inputBase(t)
-	input.Tension = valueobject.Tension{} // zero value → Valor() == 0
+	input.Tension = 0.0 // zero value → error
 	assert.ErrorIs(t, input.Validate(), dto.ErrEquipoInputInvalido)
 }
 

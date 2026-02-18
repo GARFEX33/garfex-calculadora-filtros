@@ -85,9 +85,15 @@ func (uc *CalcularCorrienteUseCase) calcularManualPotencia(input dto.EquipoInput
 	// Convertir DTO a entity — los valores son idénticos (DELTA, ESTRELLA, etc.)
 	sistema := input.SistemaElectrico.ToEntity()
 
+	// Convertir DTO primitivo a value object
+	tension, err := input.ToDomainTension()
+	if err != nil {
+		return dto.ResultadoCorriente{}, fmt.Errorf("tensión inválida: %w", err)
+	}
+
 	corriente, err := service.CalcularAmperajeNominalCircuito(
 		input.PotenciaNominal,
-		input.Tension,
+		tension,
 		sistema,
 		input.FactorPotencia,
 	)

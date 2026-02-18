@@ -121,10 +121,10 @@ func (h *CalculoHandler) mapRequestToDTO(req CalcularMemoriaRequest) (dto.Equipo
 		return dto.EquipoInput{}, dto.ErrModoInvalido
 	}
 
-	// Crear tensión
-	tension, err := valueobject.NewTension(int(req.Tension))
-	if err != nil {
-		return dto.EquipoInput{}, err
+	// Validar tensión - debe ser valor NOM válido
+	// El DTO guarda como float64, la validación ocurre en ToDomainTension()
+	if req.Tension <= 0 {
+		return dto.EquipoInput{}, fmt.Errorf("tensión inválida: %v", req.Tension)
 	}
 
 	// Tipo de canalización (string para el DTO)
@@ -133,25 +133,19 @@ func (h *CalculoHandler) mapRequestToDTO(req CalcularMemoriaRequest) (dto.Equipo
 	// Tipo de equipo (string para el DTO)
 	tipoEquipo := req.TipoEquipo
 
-	// Temperatura override
-	var tempOverride *valueobject.Temperatura
+	// Temperatura override - el DTO usa *int
+	var tempOverride *int
 	if req.Temperatura != nil {
-		temp := valueobject.Temperatura(*req.Temperatura)
-		tempOverride = &temp
+		tempOverride = req.Temperatura
 	}
 
 	// Sistema eléctrico (DTO string)
 	sistemaElectrico := dto.SistemaElectrico(req.SistemaElectrico)
 
-	// Validar sistema eléctrico - delegated to DTO.Validate() in use case
-	// Parsear material desde string usando ParseMaterialConductor del dominio
-	material := valueobject.MaterialCobre
-	if req.Material != "" {
-		var err error
-		material, err = valueobject.ParseMaterialConductor(req.Material)
-		if err != nil {
-			return dto.EquipoInput{}, fmt.Errorf("material inválido: %w", err)
-		}
+	// Material - el DTO usa string directamente
+	material := req.Material
+	if material == "" {
+		material = "Cu" // default
 	}
 
 	input := dto.EquipoInput{
@@ -160,7 +154,7 @@ func (h *CalculoHandler) mapRequestToDTO(req CalcularMemoriaRequest) (dto.Equipo
 		TipoEquipo:            tipoEquipo,
 		AmperajeNominal:       req.AmperajeNominal,
 		PotenciaNominal:       req.PotenciaNominal,
-		Tension:               tension,
+		Tension:               req.Tension,
 		FactorPotencia:        req.FactorPotencia,
 		ITM:                   req.ITM,
 		TipoCanalizacion:      tipoCanalizacion,
@@ -333,14 +327,13 @@ func (h *CalculoHandler) CalcularAmperaje(c *gin.Context) {
 		return
 	}
 
-	// Crear tensión usando el constructor
-	tension, err := valueobject.NewTension(req.Tension)
-	if err != nil {
+	// Validar tensión - debe ser valor NOM válido
+	if req.Tension <= 0 {
 		c.JSON(http.StatusBadRequest, CalcularAmperajeResponseError{
 			Success: false,
 			Error:   "Tensión inválida",
 			Code:    "TENSION_INVALIDA",
-			Details: err.Error(),
+			Details: "La tensión debe ser un valor positivo",
 		})
 		return
 	}
@@ -349,7 +342,7 @@ func (h *CalculoHandler) CalcularAmperaje(c *gin.Context) {
 	input := dto.EquipoInput{
 		Modo:             dto.ModoManualPotencia,
 		PotenciaNominal:  req.PotenciaWatts,
-		Tension:          tension,
+		Tension:          float64(req.Tension),
 		SistemaElectrico: dto.SistemaElectrico(req.SistemaElectrico),
 		FactorPotencia:   req.FactorPotencia,
 		ITM:              0, // No requerido para este cálculo

@@ -43,18 +43,18 @@ type EquipoInput struct {
 	TipoEquipo      string  // Solo para MANUAL_AMPERAJE / MANUAL_POTENCIA
 	AmperajeNominal float64 // Solo para MANUAL_AMPERAJE
 	PotenciaNominal float64 // Solo para MANUAL_POTENCIA (KVAR o KVA)
-	Tension         valueobject.Tension
+	Tension         float64 // Voltaje (ej: 220, 480)
 	FactorPotencia  float64 // Solo para CARGA en MANUAL_POTENCIA
 	ITM             int
 
 	// Parámetros de instalación
-	TipoCanalizacion      string                        // "TUBERIA_PVC", "CHAROLA_CABLE_ESPACIADO", etc.
-	TemperaturaOverride   *valueobject.Temperatura      // nil = usar lógica por defecto
-	HilosPorFase          int                           // default: 1
-	NumTuberias           int                           // default: 1, para distribución de conductores
-	Material              valueobject.MaterialConductor `json:"material"` // "Cu" o "Al"; si vacío, default Cu
-	LongitudCircuito      float64                       // metros, para caída de tensión
-	PorcentajeCaidaMaximo float64                       // default: 3.0%
+	TipoCanalizacion      string  // "TUBERIA_PVC", "CHAROLA_CABLE_ESPACIADO", etc.
+	TemperaturaOverride   *int    // nil = usar lógica por defecto, o valor override (60, 75, 90)
+	HilosPorFase          int     // default: 1
+	NumTuberias           int     // default: 1, para distribución de conductores
+	Material              string  // "Cu" o "Al"; si vacío, default Cu
+	LongitudCircuito      float64 // metros, para caída de tensión
+	PorcentajeCaidaMaximo float64 // default: 3.0%
 
 	// Sistema eléctrico (DTO con tipos primitivos, no entity)
 	SistemaElectrico SistemaElectrico `json:"sistema_electrico" binding:"required"`
@@ -80,7 +80,7 @@ func (e EquipoInput) Validate() error {
 		return ErrModoInvalido
 	}
 
-	if e.Tension.Valor() <= 0 {
+	if e.Tension <= 0 {
 		return ErrEquipoInputInvalido
 	}
 
@@ -109,4 +109,54 @@ func (e EquipoInput) ToEntityTipoEquipo() entity.TipoEquipo {
 // ToEntityTipoCanalizacion convierte el DTO string a entity.TipoCanalizacion.
 func (e EquipoInput) ToEntityTipoCanalizacion() entity.TipoCanalizacion {
 	return entity.TipoCanalizacion(e.TipoCanalizacion)
+}
+
+// ToDomainTension convierte el primitivo float64 a valueobject.Tension.
+// Requiere que el valor sea uno de los valores NOM válidos (127, 220, 240, 277, 440, 480, 600).
+func (e EquipoInput) ToDomainTension() (valueobject.Tension, error) {
+	// Convertir float64 a int para validación NOM
+	tensionInt := int(e.Tension)
+	return valueobject.NewTension(tensionInt)
+}
+
+// ToDomainTemperaturaOverride convierte el primitivo *int a valueobject.Temperatura.
+func (e EquipoInput) ToDomainTemperaturaOverride() (valueobject.Temperatura, error) {
+	if e.TemperaturaOverride == nil {
+		return 0, nil
+	}
+	temp := valueobject.Temperatura(*e.TemperaturaOverride)
+	if err := valueobject.ValidarTemperatura(temp); err != nil {
+		return 0, err
+	}
+	return temp, nil
+}
+
+// ToDomainMaterial convierte el string a valueobject.MaterialConductor.
+func (e EquipoInput) ToDomainMaterial() (valueobject.MaterialConductor, error) {
+	if e.Material == "" {
+		// Default a cobre
+		return valueobject.ParseMaterialConductor("Cu")
+	}
+	return valueobject.ParseMaterialConductor(e.Material)
+}
+
+// roundToNearest finds the nearest value in the valid list.
+func roundToNearest(val float64, valid []int) int {
+	nearest := valid[0]
+	minDiff := abs(float64(nearest) - val)
+	for _, v := range valid[1:] {
+		diff := abs(float64(v) - val)
+		if diff < minDiff {
+			minDiff = diff
+			nearest = v
+		}
+	}
+	return nearest
+}
+
+func abs(x float64) float64 {
+	if x < 0 {
+		return -x
+	}
+	return x
 }

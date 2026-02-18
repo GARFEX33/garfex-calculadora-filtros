@@ -107,23 +107,28 @@ func (uc *AjustarCorrienteUseCase) Execute(
 		return dto.ResultadoAjusteCorriente{}, fmt.Errorf("calcular factor uso: %w", err)
 	}
 
-	// Calculate adjusted current
+	// Calculate adjusted current using domain service
 	// Fórmula: corrienteAjustada = corrienteNominal * factorUso / (factorTemp * factorAgr)
-	// - factorUso (1.25-1.35) AUMENTA la corriente de diseño (multiplicar)
-	// - factorTemp (<1) y factorAgr (<1) REDUCEN la capacidad del conductor (dividir)
-	// Ejemplo: 20A * 1.25 / 0.91 = 27.47A
-	corrienteAjustada := (corrienteNominal.Valor() * factorUso) / (factorTemp * factorAgr)
+	// El servicio multiplica todos los factores, entonces pasamos las inversas
+	// para temperatura y agrupamiento
+	factores := map[string]float64{
+		"uso":          factorUso,
+		"temperatura":  1.0 / factorTemp,
+		"agrupamiento": 1.0 / factorAgr,
+	}
 
-	// Factor total para reporting (cómo afecta en conjunto)
-	factorTotal := factorUso / (factorTemp * factorAgr)
+	resultado, err := service.AjustarCorriente(corrienteNominal, factores)
+	if err != nil {
+		return dto.ResultadoAjusteCorriente{}, fmt.Errorf("ajustar corriente: %w", err)
+	}
 
 	// Return DTO with primitive types (no domain objects exposed)
 	return dto.ResultadoAjusteCorriente{
-		CorrienteAjustada:        corrienteAjustada,
+		CorrienteAjustada:        resultado.CorrienteAjustada.Valor(),
 		FactorTemperatura:        factorTemp,
 		FactorAgrupamiento:       factorAgr,
 		FactorUso:                factorUso,
-		FactorTotal:              factorTotal,
+		FactorTotal:              resultado.FactorTotal,
 		Temperatura:              temperatura.Valor(),
 		ConductoresPorTubo:       conductoresPorTubo,
 		CantidadConductoresTotal: cantidadTotal,

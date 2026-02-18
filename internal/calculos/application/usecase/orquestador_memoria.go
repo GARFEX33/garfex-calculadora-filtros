@@ -63,11 +63,22 @@ func (o *OrquestadorMemoriaCalculo) Execute(ctx context.Context, input dto.Equip
 		limiteCaida = 3.0
 	}
 
+	// Convert DTO primitives to domain objects
+	tensionVO, err := input.ToDomainTension()
+	if err != nil {
+		return dto.MemoriaOutput{}, fmt.Errorf("tensión inválida: %w", err)
+	}
+
+	materialVO, err := input.ToDomainMaterial()
+	if err != nil {
+		return dto.MemoriaOutput{}, fmt.Errorf("material inválido: %w", err)
+	}
+
 	// Inicializar output
 	output := dto.MemoriaOutput{
 		TipoEquipo:       input.TipoEquipo,
 		Clave:            input.Clave,
-		Tension:          input.Tension.Valor(),
+		Tension:          tensionVO.Valor(),
 		FactorPotencia:   input.FactorPotencia,
 		TipoCanalizacion: input.TipoCanalizacion,
 		ITM:              input.ITM,
@@ -134,8 +145,7 @@ func (o *OrquestadorMemoriaCalculo) Execute(ctx context.Context, input dto.Equip
 	output.TemperaturaUsada = resultadoAjuste.Temperatura
 
 	// Material
-	material := input.Material
-	output.Material = material.String()
+	output.Material = materialVO.String()
 
 	// Pasos 4-5: Seleccionar Conductores
 	resultadoConductores, err := o.seleccionarConductor.Execute(
@@ -143,7 +153,7 @@ func (o *OrquestadorMemoriaCalculo) Execute(ctx context.Context, input dto.Equip
 		corrienteAjustadaVO,
 		hilosPorFase,
 		input.ITM,
-		material,
+		materialVO,
 		temperaturaVO,
 		input.ToEntityTipoCanalizacion(),
 	)
@@ -158,7 +168,7 @@ func (o *OrquestadorMemoriaCalculo) Execute(ctx context.Context, input dto.Equip
 	// Reconstruct valueobject.Conductor for subsequent use cases
 	conductorAlimentacionVO, err := valueobject.NewConductor(valueobject.ConductorParams{
 		Calibre:         resultadoConductores.Alimentacion.Calibre,
-		Material:        material,
+		Material:        materialVO,
 		SeccionMM2:      resultadoConductores.Alimentacion.SeccionMM2,
 		TipoAislamiento: resultadoConductores.Alimentacion.TipoAislamiento,
 	})
@@ -190,7 +200,7 @@ func (o *OrquestadorMemoriaCalculo) Execute(ctx context.Context, input dto.Equip
 		conductorAlimentacionVO,
 		corrienteAjustadaVO,
 		input.LongitudCircuito,
-		input.Tension,
+		tensionVO,
 		limiteCaida,
 		input.ToEntityTipoCanalizacion(),
 		input.FactorPotencia,
