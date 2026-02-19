@@ -32,9 +32,19 @@ func main() {
 	seleccionarConductorAlimentacionUC := usecase.NewSeleccionarConductorAlimentacionUseCase(tablaRepo)
 	seleccionarConductorTierraUC := usecase.NewSeleccionarConductorTierraUseCase(tablaRepo)
 	calcularTamanioTuberiaUC := usecase.NewCalcularTamanioTuberiaUseCase(tablaRepo)
+	calcularCharolaEspaciadoUC := usecase.NewCalcularCharolaEspaciadoUseCase(tablaRepo)
+	calcularCharolaTriangularUC := usecase.NewCalcularCharolaTriangularUseCase(tablaRepo)
 
 	// Crear router
-	router := infrastructure.NewRouter(calcularCorrienteUC, ajustarCorrienteUC, seleccionarConductorAlimentacionUC, seleccionarConductorTierraUC, calcularTamanioTuberiaUC)
+	router := infrastructure.NewRouter(
+		calcularCorrienteUC,
+		ajustarCorrienteUC,
+		seleccionarConductorAlimentacionUC,
+		seleccionarConductorTierraUC,
+		calcularTamanioTuberiaUC,
+		calcularCharolaEspaciadoUC,
+		calcularCharolaTriangularUC,
+	)
 
 	// Configurar servidor HTTP
 	port := os.Getenv("PORT")
