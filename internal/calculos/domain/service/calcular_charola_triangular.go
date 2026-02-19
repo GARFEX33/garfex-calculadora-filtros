@@ -45,7 +45,8 @@ func CalcularCharolaTriangular(
 	// factorTriangular: factor de espaciado NOM-001-SEDE para disposición triangular de cables en charola.
 	const factorTriangular = 2.15
 	// Calcular ancho requerido para charola triangular
-	anchoPotencia := 2.0 * conductorFase.DiametroMM()
+	// AP = 2 * Ø_fase * hilosPorFase
+	anchoPotencia := 2.0 * conductorFase.DiametroMM() * float64(hilosPorFase)
 	espacioFuerza := float64(hilosPorFase-1) * factorTriangular * conductorFase.DiametroMM()
 
 	// Espacio y ancho de control (a ambos lados)

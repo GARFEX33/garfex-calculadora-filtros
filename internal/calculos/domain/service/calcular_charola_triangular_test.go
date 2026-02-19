@@ -19,10 +19,10 @@ func TestCalcularCharolaTriangular(t *testing.T) {
 
 	t.Run("2 hilos por fase - conductor 500 KCM (25.48mm) + tierra 2 AWG (7.42mm)", func(t *testing.T) {
 		// Formula: anchoPotencia + espacioFuerza + tierra
-		// anchoPotencia = 2 * 25.48 = 50.96mm
+		// anchoPotencia = 2 * 25.48 * 2 = 101.92mm
 		// espacioFuerza = (2-1) * 2.15 * 25.48 = 54.78mm
-		// Total = 50.96 + 54.78 + 7.42 = 113.16mm
-		// Charola 6" (152.4mm) es suficiente
+		// Total = 101.92 + 54.78 + 7.42 = 164.12mm
+		// Charola 9" (228.6mm) es suficiente
 
 		conductorFase, _ := valueobject.NewConductorCharola(valueobject.ConductorCharolaParams{DiametroMM: 25.48})
 		conductorTierra, _ := valueobject.NewConductorCharola(valueobject.ConductorCharolaParams{DiametroMM: 7.42})
@@ -36,14 +36,14 @@ func TestCalcularCharolaTriangular(t *testing.T) {
 		)
 
 		require.NoError(t, err)
-		assert.Equal(t, "6", result.Tamano)
+		assert.Equal(t, "9", result.Tamano)
 	})
 
 	t.Run("1 hilo por fase - conductor pequeño", func(t *testing.T) {
 		// Formula: anchoPotencia + espacioFuerza + tierra
-		// anchoPotencia = 2 * 1 * 2.15 * 10 = 43mm
+		// anchoPotencia = 2 * 10 * 1 = 20mm
 		// espacioFuerza = (1-1) * 2.15 * 10 = 0mm
-		// Total = 43 + 0 + 5 = 48mm
+		// Total = 20 + 0 + 5 = 25mm
 		// Requiere charola de 6"
 
 		conductorFase, _ := valueobject.NewConductorCharola(valueobject.ConductorCharolaParams{DiametroMM: 10.0})

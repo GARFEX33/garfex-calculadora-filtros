@@ -53,12 +53,12 @@ func TestCalcularCharolaTriangularUseCase_Execute(t *testing.T) {
 		{
 			name: "happy path - con cable de control",
 			// triangular con 2 hilos por fase y cable de control:
-			// anchoPotencia = 2 * 25.4 = 50.8
+			// anchoPotencia = 2 * 25.4 * 2 = 101.6
 			// espacioFuerza = (2-1) * 2.15 * 25.4 = 54.61
 			// espacioControl = 2.15 * 10 = 21.5
 			// anchoControl = 10
-			// anchoRequerido = 50.8 + 54.61 + 21.5 + 10 + 8.5 = 145.41 mm
-			// 7500 (150mm) > 145.41 -> 150mm
+			// anchoRequerido = 101.6 + 54.61 + 21.5 + 10 + 8.5 = 196.21 mm
+			// 10000 (200mm) > 196.21 -> 200mm
 			input: dto.CharolaTriangularInput{
 				HilosPorFase:      2,
 				DiametroFaseMM:    25.4,
@@ -68,8 +68,8 @@ func TestCalcularCharolaTriangularUseCase_Execute(t *testing.T) {
 			mockTabla: tablaCharola,
 			wantOutput: dto.CharolaTriangularOutput{
 				Tipo:           "CHAROLA_CABLE_TRIANGULAR",
-				Tamano:         "150mm",
-				TamanoPulgadas: "5.91\"",
+				Tamano:         "200mm",
+				TamanoPulgadas: "7.87\"",
 			},
 			wantErr: false,
 		},
