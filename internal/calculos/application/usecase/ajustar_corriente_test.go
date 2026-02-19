@@ -61,6 +61,10 @@ func (m *mockTablaRepo) ObtenerCharolaPorAncho(ctx context.Context, anchoRequeri
 	return valueobject.EntradaTablaCanalizacion{}, nil
 }
 
+func (m *mockTablaRepo) ObtenerTablaCharola(ctx context.Context, tipo entity.TipoCanalizacion) ([]valueobject.EntradaTablaCanalizacion, error) {
+	return nil, nil
+}
+
 func (m *mockTablaRepo) ObtenerAreaConductor(ctx context.Context, calibre string) (float64, error) {
 	return 0, nil
 }

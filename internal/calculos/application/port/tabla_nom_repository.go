@@ -53,6 +53,9 @@ type TablaNOMRepository interface {
 	ObtenerDiametroConductor(ctx context.Context, calibre string, material string, conAislamiento bool) (float64, error)
 	ObtenerCharolaPorAncho(ctx context.Context, anchoRequeridoMM float64) (valueobject.EntradaTablaCanalizacion, error)
 
+	// ObtenerTablaCharola returns the complete charola sizing table for the given type.
+	ObtenerTablaCharola(ctx context.Context, tipo entity.TipoCanalizacion) ([]valueobject.EntradaTablaCanalizacion, error)
+
 	// Área de conductores para cálculo de tubería
 	// ObtenerAreaConductor returns the area with insulation (area_tw_thw) for a given calibre.
 	ObtenerAreaConductor(ctx context.Context, calibre string) (float64, error)
