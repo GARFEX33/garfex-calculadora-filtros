@@ -365,6 +365,23 @@ func (uc *UC) Execute(input dto.Input) (*entity.Memoria, error) {
 
 ## Output de Auditoría
 
+**REGLA OBLIGATORIA:** Al finalizar la auditoría, DEBES decidir:
+
+1. **CRÍTICO** → DETENER y PREGUNTAR:
+   - Violación de arquitectura hexagonal
+   - Puerto expone tipos de domain
+   - Use case tiene lógica de negocio
+   - Código que no compila
+   - Tests fallando
+   - **acción:** Decir "¿Corregimos esto o continuamos?"
+
+2. **WARNING** → REPORTAR pero continuar:
+   - Code smells
+   - Sugerencias de mejora
+   - Observaciones de diseño
+
+3. **LIMPIO** → APROBAR directamente
+
 ```
 === AUDITORÍA APPLICATION LAYER ===
 Feature: {nombre}
@@ -377,40 +394,16 @@ RESUMEN
 ⚠️ Warnings: {n}
 ❌ Failed: {n}
 
-CRÍTICOS (deben corregirse)
----------------------------
-1. [usecase/calcular_memoria.go:78] Import de infrastructure/
-   → Usar driven port en su lugar
+[Si hay CRÍTICOS]
+⚠️ CRÍTICOS ENCONTRADOS: {n}
+[Lista de issues críticos]
 
-2. [usecase/calcular_memoria.go:45] Lógica de negocio en use case
-   → Mover cálculo de factor de ajuste a domain service
+[Si hay WARNINGS]
+⚠️ WARNINGS: {n}
+[Lista de warnings]
 
-IMPORTANTES (deberían corregirse)
----------------------------------
-1. [port/driven/repository.go:12] Método expone *sql.Rows
-   → Abstraer en tipos de dominio
-
-2. [dto/output.go] Sin función FromDomain()
-   → Agregar mapping explícito
-
-SUGERENCIAS
------------
-1. [usecase/calcular_memoria.go] 95 líneas, considerar dividir
-
-MÉTRICAS
---------
-- Use cases: {n}
-- Ports driver: {n}
-- Ports driven: {n}
-- DTOs: {n}
-- Tamaño promedio use case: {n} líneas
-
-PRÓXIMOS PASOS
---------------
-1. Corregir {n} issues críticos
-2. Ejecutar: go test ./internal/{feature}/application/...
-3. Re-auditar después de correcciones
-```
+[Si está limpio]
+✅ AUDITORÍA APROBADA - Código limpio
 
 ---
 

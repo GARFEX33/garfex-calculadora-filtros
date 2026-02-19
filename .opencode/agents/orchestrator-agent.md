@@ -112,6 +112,14 @@ curl -X POST http://localhost:8080/api/v1/...
 
 **Importante:** Después de las pruebas manuales y antes del commit, el orquestador DEBE auditar el código creado.
 
+**Al invocar auditores, SIEMPRE incluir esta instrucción:**
+```
+Después de tu auditoría:
+- Si hay CRÍTICO (arquitectura violada, security, no compila, tests fallando) → DETENTE y PREGUNTAME: "¿Corregimos esto o continuamos?"
+- Si hay WARNING → Reportalo pero continuamos
+- Si está limpio → Apruebalos directamente
+```
+
 Invocar los agentes de auditoría por capa:
 
 ```bash

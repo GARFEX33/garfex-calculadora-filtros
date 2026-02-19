@@ -354,6 +354,23 @@ func (r *Repo) Find(id string) (*Entity, error) {
 
 ## Output de Auditoría
 
+**REGLA OBLIGATORIA:** Al finalizar la auditoría, DEBES decidir:
+
+1. **CRÍTICO** → DETENER y PREGUNTAR:
+   - Violación de arquitectura hexagonal
+   - Lógica de negocio en infrastructure
+   - Security issues (SQL injection, hardcoded secrets)
+   - Código que no compila
+   - Tests fallando
+   - **acción:** Decir "¿Corregimos esto o continuamos?"
+
+2. **WARNING** → REPORTAR pero continuar:
+   - Code smells
+   - Sugerencias de mejora
+   - Observaciones de diseño
+
+3. **LIMPIO** → APROBAR directamente
+
 ```
 === AUDITORÍA INFRASTRUCTURE LAYER ===
 Feature: {nombre}
@@ -366,49 +383,16 @@ RESUMEN
 ⚠️ Warnings: {n}
 ❌ Failed: {n}
 
-CRÍTICOS (deben corregirse)
----------------------------
-1. [adapter/driven/csv/repository.go:78] Lógica de negocio en repositorio
-   → Mover cálculo de factor de ajuste a domain service
+[Si hay CRÍTICOS]
+⚠️ CRÍTICOS ENCONTRADOS: {n}
+[Lista de issues críticos]
 
-2. [adapter/driver/http/handler.go:45] SQL injection potencial
-   → Usar prepared statements
+[Si hay WARNINGS]
+⚠️ WARNINGS: {n}
+[Lista de warnings]
 
-3. [adapter/driver/http/handler.go:23] Context no propagado
-   → Usar c.Request.Context() y pasarlo a use case
-
-IMPORTANTES (deberían corregirse)
----------------------------------
-1. [adapter/driven/csv/repository.go:90] Sin defer para cerrar archivo
-   → Agregar defer file.Close()
-
-2. [handler.go:56] Error no wrapeado
-   → Usar fmt.Errorf("context: %w", err)
-
-SUGERENCIAS
------------
-1. [router.go] Agregar health check endpoint
-
-MÉTRICAS
---------
-- Handlers: {n}
-- Repositorios: {n}
-- Middleware: {n}
-- Cobertura tests: {n}%
-
-SEGURIDAD
----------
-- SQL injection: {OK|WARN}
-- Path traversal: {OK|WARN}
-- Secrets: {OK|WARN}
-
-PRÓXIMOS PASOS
---------------
-1. Corregir {n} issues críticos
-2. Ejecutar: go test ./internal/{feature}/infrastructure/...
-3. Ejecutar: golangci-lint run ./internal/{feature}/infrastructure/...
-4. Re-auditar después de correcciones
-```
+[Si está limpio]
+✅ AUDITORÍA APROBADA - Código limpio
 
 ---
 

@@ -243,6 +243,23 @@ type Calculador struct {
 
 ## Output de Auditoría
 
+**REGLA OBLIGATORIA:** Al finalizar la auditoría, DEBES decidir:
+
+1. **CRÍTICO** → DETENER y PREGUNTAR:
+   - Violación de arquitectura hexagonal
+   - Dependencia circular
+   - Security issue
+   - Código que no compila
+   - Tests fallando
+   - **acción:** Decir "¿Corregimos esto o continuamos?"
+
+2. **WARNING** → REPORTAR pero continuar:
+   - Code smells
+   - Sugerencias de mejora
+   - Observaciones de diseño
+
+3. **LIMPIO** → APROBAR directamente
+
 ```
 === AUDITORÍA DOMAIN LAYER ===
 Feature: {nombre}
@@ -255,30 +272,16 @@ RESUMEN
 ⚠️ Warnings: {n}
 ❌ Failed: {n}
 
-CRÍTICOS (deben corregirse)
----------------------------
-1. [entity/memoria_calculo.go:45] Import prohibido de application/
-   → Mover lógica de orquestación a application layer
+[Si hay CRÍTICOS]
+⚠️ CRÍTICOS ENCONTRADOS: {n}
+[Lista de issues críticos]
 
-2. [valueobject/corriente.go:12] Constructor no valida
-   → Agregar validación en NewCorriente()
+[Si hay WARNINGS]
+⚠️ WARNINGS: {n}
+[Lista de warnings]
 
-IMPORTANTES (deberían corregirse)
----------------------------------
-1. [service/calcular_amperaje.go] Sin tests unitarios
-   → Agregar tests para casos límite
-
-SUGERENCIAS
------------
-1. [entity/tipo_canalizacion.go] Documentar valores del enum
-   → Agregar comentarios GoDoc
-
-PRÓXIMOS PASOS
---------------
-1. Corregir {n} issues críticos
-2. Ejecutar: go test ./internal/{feature}/domain/...
-3. Re-auditar después de correcciones
-```
+[Si está limpio]
+✅ AUDITORÍA APROBADA - Código limpio
 
 ---
 

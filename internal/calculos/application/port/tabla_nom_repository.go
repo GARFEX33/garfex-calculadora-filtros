@@ -52,4 +52,14 @@ type TablaNOMRepository interface {
 	// Dimensiones para canalización
 	ObtenerDiametroConductor(ctx context.Context, calibre string, material string, conAislamiento bool) (float64, error)
 	ObtenerCharolaPorAncho(ctx context.Context, anchoRequeridoMM float64) (valueobject.EntradaTablaCanalizacion, error)
+
+	// Área de conductores para cálculo de tubería
+	// ObtenerAreaConductor returns the area with insulation (area_tw_thw) for a given calibre.
+	ObtenerAreaConductor(ctx context.Context, calibre string) (float64, error)
+
+	// ObtenerAreaConductorDesnudo returns the area for bare conductor (Tabla 8) - used for ground conductors.
+	ObtenerAreaConductorDesnudo(ctx context.Context, calibre string) (float64, error)
+
+	// ObtenerTablaOcupacionTuberia returns the conduit occupancy table for 40% fill.
+	ObtenerTablaOcupacionTuberia(ctx context.Context, canalizacion entity.TipoCanalizacion) ([]valueobject.EntradaTablaOcupacion, error)
 }

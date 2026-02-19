@@ -31,9 +31,10 @@ func main() {
 	ajustarCorrienteUC := usecase.NewAjustarCorrienteUseCase(tablaRepo)
 	seleccionarConductorAlimentacionUC := usecase.NewSeleccionarConductorAlimentacionUseCase(tablaRepo)
 	seleccionarConductorTierraUC := usecase.NewSeleccionarConductorTierraUseCase(tablaRepo)
+	calcularTamanioTuberiaUC := usecase.NewCalcularTamanioTuberiaUseCase(tablaRepo)
 
 	// Crear router
-	router := infrastructure.NewRouter(calcularCorrienteUC, ajustarCorrienteUC, seleccionarConductorAlimentacionUC, seleccionarConductorTierraUC)
+	router := infrastructure.NewRouter(calcularCorrienteUC, ajustarCorrienteUC, seleccionarConductorAlimentacionUC, seleccionarConductorTierraUC, calcularTamanioTuberiaUC)
 
 	// Configurar servidor HTTP
 	port := os.Getenv("PORT")

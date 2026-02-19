@@ -57,6 +57,14 @@ domain-agent → application-agent → infrastructure-agent
 | Auditar capa de application (ports, use cases, DTOs) | `auditor-application` | `golang-patterns`, `golang-pro` |
 | Auditar capa de infrastructure (adapters, I/O, seguridad) | `auditor-infrastructure` | `golang-patterns`, `golang-pro`, `api-design-principles` |
 
+> **Regla de Auditoría:** Al invocar auditores, el coordinador DEBE incluir estas instrucciones en el prompt:
+> ```
+> Después de tu auditoría:
+> - Si hay CRÍTICO (arquitectura violada, security, no compila, tests fallando) → DETENTE y PREGUNTAME: "¿Corregimos esto o continuamos?"
+> - Si hay WARNING → Reportalo pero continuamos
+> - Si está limpio → Apruebalos directamente
+> ```
+
 ### Reglas de delegación entre agentes
 
 - **domain-agent** trabaja primero — no sabe que existen los otros agentes

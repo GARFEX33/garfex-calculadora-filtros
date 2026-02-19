@@ -61,6 +61,18 @@ func (m *mockTablaRepo) ObtenerCharolaPorAncho(ctx context.Context, anchoRequeri
 	return valueobject.EntradaTablaCanalizacion{}, nil
 }
 
+func (m *mockTablaRepo) ObtenerAreaConductor(ctx context.Context, calibre string) (float64, error) {
+	return 0, nil
+}
+
+func (m *mockTablaRepo) ObtenerAreaConductorDesnudo(ctx context.Context, calibre string) (float64, error) {
+	return 0, nil
+}
+
+func (m *mockTablaRepo) ObtenerTablaOcupacionTuberia(ctx context.Context, canalizacion entity.TipoCanalizacion) ([]valueobject.EntradaTablaOcupacion, error) {
+	return nil, nil
+}
+
 type mockSeleccionarTempPort struct {
 	temperatura valueobject.Temperatura
 }

@@ -8,7 +8,6 @@ import (
 	"github.com/garfex/calculadora-filtros/internal/calculos/application/dto"
 	"github.com/garfex/calculadora-filtros/internal/calculos/application/usecase"
 	"github.com/garfex/calculadora-filtros/internal/calculos/domain/entity"
-	"github.com/garfex/calculadora-filtros/internal/calculos/domain/service"
 	"github.com/garfex/calculadora-filtros/internal/shared/kernel/valueobject"
 	"github.com/gin-gonic/gin"
 )
@@ -115,7 +114,7 @@ func (h *ConductorAlimentacionHandler) mapErrorToResponse(err error) (int, Condu
 	}
 
 	// Errores 422 - Unprocessable Entity
-	if errors.Is(err, service.ErrConductorNoEncontrado) {
+	if errors.Is(err, dto.ErrConductorNoEncontrado) {
 		return http.StatusUnprocessableEntity, ConductorAlimentacionResponseError{
 			Success: false,
 			Error:   "No se encontro conductor adecuado",

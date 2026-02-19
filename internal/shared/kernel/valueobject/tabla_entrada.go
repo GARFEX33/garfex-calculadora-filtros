@@ -24,3 +24,12 @@ type EntradaTablaCanalizacion struct {
 	Tamano          string
 	AreaInteriorMM2 float64
 }
+
+// EntradaTablaOcupacion represents one row from a conduit occupation table (40% fill).
+// Must be sorted by AreaOcupacionMM2 ascending.
+type EntradaTablaOcupacion struct {
+	Tamano             string  // Trade size (e.g., "1/2", "3/4", "1")
+	AreaOcupacionMM2   float64 // Usable area = interior area × 0.40 (40% fill)
+	AreaInteriorMM2    float64 // Total interior area in mm²
+	DesignacionMetrica string  // Metric designation (e.g., "16", "21", "27")
+}

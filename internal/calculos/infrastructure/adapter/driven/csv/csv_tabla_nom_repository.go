@@ -45,20 +45,39 @@ type diametroConductorEntry struct {
 	DiamTWTHW   float64
 	DiamRHH_RHW float64
 	DiamXHHW    float64
+	AreaTWTHW   float64
+}
+
+// conductorDesnudoEntry holds values for bare conductors from Tabla 8.
+type conductorDesnudoEntry struct {
+	SeccionMM2          float64
+	AreaConductorTierra float64
+	DiametroMM          float64
+	NumeroHilos         int
+}
+
+// tuboOcupacionEntry holds occupation table entries for conduits (40% fill).
+type tuboOcupacionEntry struct {
+	Tamano             string
+	AreaOcupacionMM2   float64
+	AreaInteriorMM2    float64
+	DesignacionMetrica string
 }
 
 // CSVTablaNOMRepository reads NOM tables from CSV files with in-memory caching.
 type CSVTablaNOMRepository struct {
-	basePath             string
-	tablaTierra          []valueobject.EntradaTablaTierra
-	tablasAmpacidad      map[entity.TipoCanalizacion]map[valueobject.MaterialConductor]map[valueobject.Temperatura][]valueobject.EntradaTablaConductor
-	tablaImpedancia      map[string]impedanciaEntry // key: calibre
-	tablaConduit         []valueobject.EntradaTablaCanalizacion
-	tablasCharola        map[entity.TipoCanalizacion][]valueobject.EntradaTablaCanalizacion
-	estadosTemperatura   map[string]int
-	factoresTemperatura  []factorTemperaturaEntry
-	factoresAgrupamiento []factorAgrupamientoEntry
-	tablaDiametros       map[string]diametroConductorEntry
+	basePath               string
+	tablaTierra            []valueobject.EntradaTablaTierra
+	tablasAmpacidad        map[entity.TipoCanalizacion]map[valueobject.MaterialConductor]map[valueobject.Temperatura][]valueobject.EntradaTablaConductor
+	tablaImpedancia        map[string]impedanciaEntry // key: calibre
+	tablaConduit           []valueobject.EntradaTablaCanalizacion
+	tablasCharola          map[entity.TipoCanalizacion][]valueobject.EntradaTablaCanalizacion
+	estadosTemperatura     map[string]int
+	factoresTemperatura    []factorTemperaturaEntry
+	factoresAgrupamiento   []factorAgrupamientoEntry
+	tablaDiametros         map[string]diametroConductorEntry
+	tablaConductorDesnudo  map[string]conductorDesnudoEntry // Tabla 8 - conductores desnudos
+	tablasOcupacionTuberia map[entity.TipoCanalizacion][]valueobject.EntradaTablaOcupacion
 }
 
 // NewCSVTablaNOMRepository creates a new repository and loads all tables into memory.
@@ -196,6 +215,20 @@ func NewCSVTablaNOMRepository(basePath string) (*CSVTablaNOMRepository, error) {
 		return nil, fmt.Errorf("failed to load tabla diametros: %w", err)
 	}
 	repo.tablaDiametros = tablaDiam
+
+	// Load tabla conductors desenudos (tabla-8-conductor-desnudo.csv) - para conductor de tierra
+	tablaDesnudo, err := repo.loadTablaConductorDesnudo()
+	if err != nil {
+		return nil, fmt.Errorf("failed to load tabla conductor desnudo: %w", err)
+	}
+	repo.tablaConductorDesnudo = tablaDesnudo
+
+	// Load conduit occupation tables (40% fill)
+	tablasOcupacion, err := repo.loadTablasOcupacionTuberia()
+	if err != nil {
+		return nil, fmt.Errorf("failed to load tablas ocupacion tuberia: %w", err)
+	}
+	repo.tablasOcupacionTuberia = tablasOcupacion
 
 	return repo, nil
 }
@@ -416,6 +449,44 @@ func (r *CSVTablaNOMRepository) ObtenerCharolaPorAncho(ctx context.Context, anch
 	}
 
 	return valueobject.EntradaTablaCanalizacion{}, fmt.Errorf("no se encontró charola para ancho requerido: %.2f mm", anchoRequeridoMM)
+}
+
+// ObtenerAreaConductor returns the area with insulation (area_tw_thw) for a given calibre.
+func (r *CSVTablaNOMRepository) ObtenerAreaConductor(ctx context.Context, calibre string) (float64, error) {
+	entry, ok := r.tablaDiametros[calibre]
+	if !ok {
+		return 0, fmt.Errorf("calibre no encontrado en tabla de áreas: %s", calibre)
+	}
+
+	if entry.AreaTWTHW <= 0 {
+		return 0, fmt.Errorf("área no disponible para calibre: %s", calibre)
+	}
+
+	return entry.AreaTWTHW, nil
+}
+
+// ObtenerAreaConductorDesnudo returns the area for bare conductor (Tabla 8) - used for ground conductors.
+func (r *CSVTablaNOMRepository) ObtenerAreaConductorDesnudo(ctx context.Context, calibre string) (float64, error) {
+	entry, ok := r.tablaConductorDesnudo[calibre]
+	if !ok {
+		return 0, fmt.Errorf("calibre no encontrado en tabla de conductor desnudo: %s", calibre)
+	}
+
+	if entry.AreaConductorTierra <= 0 {
+		return 0, fmt.Errorf("área no disponible para calibre desnudo: %s", calibre)
+	}
+
+	return entry.AreaConductorTierra, nil
+}
+
+// ObtenerTablaOcupacionTuberia returns the conduit occupancy table for 40% fill.
+func (r *CSVTablaNOMRepository) ObtenerTablaOcupacionTuberia(ctx context.Context, canalizacion entity.TipoCanalizacion) ([]valueobject.EntradaTablaOcupacion, error) {
+	tabla, ok := r.tablasOcupacionTuberia[canalizacion]
+	if !ok {
+		return nil, fmt.Errorf("tabla de ocupación no disponible para tipo de canalización: %s", canalizacion)
+	}
+
+	return tabla, nil
 }
 
 func parseAnchoCharola(tamano string) float64 {
@@ -962,6 +1033,65 @@ func (r *CSVTablaNOMRepository) loadTablaDiametros() (map[string]diametroConduct
 			entry.DiamXHHW = v
 		}
 
+		// Parse area_tw_thw column
+		areaTWTHWIdx, ok := colIdx["area_tw_thw"]
+		if ok && areaTWTHWIdx < len(record) {
+			if v, err := strconv.ParseFloat(record[areaTWTHWIdx], 64); err == nil {
+				entry.AreaTWTHW = v
+			}
+		}
+
+		result[record[calibreIdx]] = entry
+	}
+
+	return result, nil
+}
+
+// loadTablaConductorDesnudo loads bare conductor table (Tabla 8) for ground conductor area.
+func (r *CSVTablaNOMRepository) loadTablaConductorDesnudo() (map[string]conductorDesnudoEntry, error) {
+	filePath := filepath.Join(r.basePath, "tabla-8-conductor-desnudo.csv")
+	file, err := os.Open(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("cannot open tabla-8-conductor-desnudo.csv: %w", err)
+	}
+	defer file.Close()
+
+	reader := csv.NewReader(file)
+	records, err := reader.ReadAll()
+	if err != nil {
+		return nil, fmt.Errorf("cannot read tabla-8-conductor-desnudo.csv: %w", err)
+	}
+
+	if len(records) < 2 {
+		return nil, fmt.Errorf("tabla-8-conductor-desnudo.csv is empty or missing header")
+	}
+
+	header := records[0]
+	colIdx := make(map[string]int)
+	for i, col := range header {
+		colIdx[col] = i
+	}
+
+	calibreIdx, ok := colIdx["calibre"]
+	if !ok {
+		return nil, fmt.Errorf("tabla-8-conductor-desnudo.csv: missing column calibre")
+	}
+	areaTierraIdx, ok := colIdx["area_conductor_tierra"]
+	if !ok {
+		return nil, fmt.Errorf("tabla-8-conductor-desnudo.csv: missing column area_conductor_tierra")
+	}
+
+	result := make(map[string]conductorDesnudoEntry)
+	for _, record := range records[1:] {
+		if len(record) < len(header) {
+			continue
+		}
+
+		entry := conductorDesnudoEntry{}
+		if v, err := strconv.ParseFloat(record[areaTierraIdx], 64); err == nil {
+			entry.AreaConductorTierra = v
+		}
+
 		result[record[calibreIdx]] = entry
 	}
 
@@ -982,4 +1112,90 @@ func parseCantidadConductores(s string) (min, max int) {
 		return min, min
 	}
 	return 0, 0
+}
+
+// loadTablasOcupacionTuberia loads the conduit occupation tables for 40% fill.
+func (r *CSVTablaNOMRepository) loadTablasOcupacionTuberia() (map[entity.TipoCanalizacion][]valueobject.EntradaTablaOcupacion, error) {
+	result := make(map[entity.TipoCanalizacion][]valueobject.EntradaTablaOcupacion)
+
+	// Define mapping from canalizacion to CSV file
+	files := map[entity.TipoCanalizacion]string{
+		entity.TipoCanalizacionTuberiaPVC:     "tubo-ocupacion-pvc-40.csv",
+		entity.TipoCanalizacionTuberiaAceroPG: "tubo-ocupacion-acero-pg-40.csv",
+		entity.TipoCanalizacionTuberiaAceroPD: "tubo-ocupacion-acero-pd-40.csv",
+	}
+
+	for canalizacion, filename := range files {
+		tabla, err := r.loadTablaOcupacionTuberia(filename)
+		if err != nil {
+			return nil, fmt.Errorf("failed to load %s: %w", filename, err)
+		}
+		result[canalizacion] = tabla
+	}
+
+	return result, nil
+}
+
+// loadTablaOcupacionTuberia loads a single conduit occupation table.
+func (r *CSVTablaNOMRepository) loadTablaOcupacionTuberia(filename string) ([]valueobject.EntradaTablaOcupacion, error) {
+	filePath := filepath.Join(r.basePath, filename)
+	file, err := os.Open(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("cannot open %s: %w", filename, err)
+	}
+	defer file.Close()
+
+	reader := csv.NewReader(file)
+	records, err := reader.ReadAll()
+	if err != nil {
+		return nil, fmt.Errorf("cannot read %s: %w", filename, err)
+	}
+
+	if len(records) < 2 {
+		return nil, fmt.Errorf("%s is empty or missing header", filename)
+	}
+
+	// Find column indices
+	header := records[0]
+	colIdx := make(map[string]int)
+	for i, col := range header {
+		colIdx[col] = i
+	}
+
+	tamanoIdx, ok := colIdx["tamano"]
+	if !ok {
+		return nil, fmt.Errorf("%s: missing column tamano", filename)
+	}
+	areaOcupIdx, ok := colIdx["area_ocupacion_mm2"]
+	if !ok {
+		return nil, fmt.Errorf("%s: missing column area_ocupacion_mm2", filename)
+	}
+	designIdx, ok := colIdx["designacion_metrica"]
+	if !ok {
+		return nil, fmt.Errorf("%s: missing column designacion_metrica", filename)
+	}
+
+	var result []valueobject.EntradaTablaOcupacion
+	for _, record := range records[1:] {
+		if len(record) < len(header) {
+			continue
+		}
+
+		areaOcup, err := strconv.ParseFloat(record[areaOcupIdx], 64)
+		if err != nil {
+			return nil, fmt.Errorf("%s line: invalid area_ocupacion_mm2: %w", filename, err)
+		}
+
+		// Area interior is calculated from area_ocupacion / 0.40 (since area_ocupacion is 40% fill)
+		areaInterior := areaOcup / 0.40
+
+		result = append(result, valueobject.EntradaTablaOcupacion{
+			Tamano:             record[tamanoIdx],
+			AreaOcupacionMM2:   areaOcup,
+			AreaInteriorMM2:    areaInterior,
+			DesignacionMetrica: record[designIdx],
+		})
+	}
+
+	return result, nil
 }
