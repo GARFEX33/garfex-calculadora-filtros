@@ -489,6 +489,26 @@ func (r *CSVTablaNOMRepository) ObtenerTablaOcupacionTuberia(ctx context.Context
 	return tabla, nil
 }
 
+// ObtenerTablaCharola returns the complete charola sizing table for the given type.
+func (r *CSVTablaNOMRepository) ObtenerTablaCharola(ctx context.Context, tipo entity.TipoCanalizacion) ([]valueobject.EntradaTablaCanalizacion, error) {
+	switch tipo {
+	case entity.TipoCanalizacionCharolaCableEspaciado:
+		tabla, ok := r.tablasCharola[entity.TipoCanalizacionCharolaCableEspaciado]
+		if !ok {
+			return nil, fmt.Errorf("tabla de charola espaciado no cargada")
+		}
+		return tabla, nil
+	case entity.TipoCanalizacionCharolaCableTriangular:
+		tabla, ok := r.tablasCharola[entity.TipoCanalizacionCharolaCableTriangular]
+		if !ok {
+			return nil, fmt.Errorf("tabla de charola triangular no cargada")
+		}
+		return tabla, nil
+	default:
+		return nil, fmt.Errorf("tipo de canalización no válido para charola: %s", tipo)
+	}
+}
+
 func parseAnchoCharola(tamano string) float64 {
 	var ancho float64
 	if _, err := fmt.Sscanf(tamano, "%fmm", &ancho); err == nil {

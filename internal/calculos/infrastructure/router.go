@@ -15,6 +15,8 @@ func NewRouter(
 	seleccionarConductorAlimentacionUC *usecase.SeleccionarConductorAlimentacionUseCase,
 	seleccionarConductorTierraUC *usecase.SeleccionarConductorTierraUseCase,
 	calcularTamanioTuberiaUC *usecase.CalcularTamanioTuberiaUseCase,
+	calcularCharolaEspaciadoUC *usecase.CalcularCharolaEspaciadoUseCase,
+	calcularCharolaTriangularUC *usecase.CalcularCharolaTriangularUseCase,
 ) *gin.Engine {
 	router := gin.New()
 
@@ -49,6 +51,11 @@ func NewRouter(
 			// Tamaño de tubería
 			tuberiaHandler := http.NewTuberiaHandler(calcularTamanioTuberiaUC)
 			calculos.POST("/tuberia", tuberiaHandler.CalcularTuberia)
+
+			// Charolas
+			charolaHandler := http.NewCharolaHandler(calcularCharolaEspaciadoUC, calcularCharolaTriangularUC)
+			calculos.POST("/charola/espaciado", charolaHandler.PostCharolaEspaciado)
+			calculos.POST("/charola/triangular", charolaHandler.PostCharolaTriangular)
 		}
 	}
 
