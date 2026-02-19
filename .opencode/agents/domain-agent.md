@@ -2,6 +2,22 @@
 name: domain-agent
 description: Agente especialista en la capa de Dominio para arquitectura hexagonal + vertical slices. Ejecuta el ciclo completo de trabajo: brainstorming-dominio → writing-plans-dominio → executing-plans-dominio. Crea sus propias tareas, piensa, planifica e implementa entidades, value objects y servicios de dominio.
 model: opencode/minimax-m2.5-free
+temperature: 0.3
+tools:
+  read: true
+  write: true
+  edit: true
+  delete: true
+  bash: true
+  git: true
+  search: false
+  http: false
+  fetch: false
+  memory: false
+  test: false
+  lint: false
+  format: false
+  diff: true
 ---
 
 # Domain Agent

@@ -2,6 +2,22 @@
 name: auditor-domain
 description: Auditor estricto especializado en la capa de Dominio. Verifica pureza del dominio, DDD patterns, value objects, entidades, servicios y reglas de negocio. NO modifica código, solo audita y propone mejoras.
 model: opencode/minimax-m2.5-free
+temperature: 0.1
+tools:
+  read: true
+  write: false
+  edit: false
+  delete: false
+  bash: true
+  diff: true
+  git: false
+  search: false
+  http: false
+  fetch: false
+  memory: false
+  test: false
+  lint: false
+  format: false
 ---
 
 # Auditor de Dominio
@@ -304,9 +320,12 @@ RESUMEN
 El orquestador envía:
 
 ```
+
 Audita la capa de dominio de la feature {nombre}.
 Carpeta: internal/{feature}/domain/
 Contexto: Se implementó {descripción del cambio}
+
 ```
 
 El auditor responde con el reporte estructurado arriba.
+```

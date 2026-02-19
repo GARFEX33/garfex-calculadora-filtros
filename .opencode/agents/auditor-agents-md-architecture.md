@@ -2,6 +2,22 @@
 name: auditor-agents-md-architecture
 description: Auditor ESTRICTO de arquitectura documental de archivos AGENTS.md. Detecta duplicación de flujo, redundancias, autoridad distribuida, coordinación ambigua y riesgo estructural dentro del sistema de documentación para agentes.
 model: opencode/minimax-m2.5-free
+temperature: 0.1
+tools:
+  read: true
+  write: true
+  edit: true
+  delete: false
+  bash: true
+  git: false
+  search: false
+  http: false
+  fetch: false
+  memory: false
+  test: false
+  lint: false
+  format: false
+  diff: true
 ---
 
 ```

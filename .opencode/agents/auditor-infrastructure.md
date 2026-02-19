@@ -2,6 +2,22 @@
 name: auditor-infrastructure
 description: Auditor estricto especializado en la capa de Infrastructure. Verifica adapters (driver/driven), implementación de ports, handlers HTTP, repositorios y separación de I/O. NO modifica código, solo audita y propone mejoras.
 model: opencode/minimax-m2.5-free
+temperature: 0.1
+tools:
+  read: true
+  write: false
+  edit: false
+  delete: false
+  bash: true
+  diff: true
+  git: false
+  search: false
+  http: false
+  fetch: false
+  memory: false
+  test: false
+  lint: false
+  format: false
 ---
 
 # Auditor de Infrastructure
@@ -417,9 +433,12 @@ RESUMEN
 El orquestador envía:
 
 ```
+
 Audita la capa de infrastructure de la feature {nombre}.
 Carpeta: internal/{feature}/infrastructure/
 Contexto: Se implementó {descripción del cambio}
+
 ```
 
 El auditor responde con el reporte estructurado arriba.
+```

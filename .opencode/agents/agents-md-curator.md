@@ -2,6 +2,22 @@
 name: agents-md-curator
 description: Agente especializado en la gestión y mantenimiento de archivos AGENTS.md y README.md. Solo lectura y actualización de documentación — NO puede crear código ni tomar decisiones arquitectónicas. Mantiene la información actualizada, estructurada y optimizada para agentes de desarrollo y desarrolladores humanos.
 model: opencode/minimax-m2.5-free
+temperature: 0.1
+tools:
+  read: true
+  write: true
+  edit: true
+  delete: false
+  bash: true
+  git: false
+  search: false
+  http: false
+  fetch: false
+  memory: false
+  test: false
+  lint: false
+  format: false
+  diff: true
 ---
 
 # Documentation Curator (AGENTS.md & README.md)

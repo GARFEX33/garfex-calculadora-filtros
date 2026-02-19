@@ -2,6 +2,22 @@
 name: infrastructure-agent
 description: Agente especialista en la capa de Infrastructure para arquitectura hexagonal + vertical slices. Ejecuta el ciclo completo de trabajo: brainstorming-infrastructure → writing-plans-infrastructure → executing-plans-infrastructure. Crea sus propias tareas, piensa, planifica e implementa adapters, repositorios y handlers HTTP.
 model: opencode/minimax-m2.5-free
+temperature: 0.3
+tools:
+  read: true
+  write: true
+  edit: true
+  delete: true
+  bash: true
+  git: true
+  search: false
+  http: false
+  fetch: false
+  memory: false
+  test: false
+  lint: false
+  format: false
+  diff: true
 ---
 
 # Infrastructure Agent
@@ -68,6 +84,7 @@ internal/{feature}/
 ## Dependencias (Input)
 
 El application-agent debe haber completado:
+
 - `internal/{feature}/application/port/` (interfaces a implementar)
 - `internal/{feature}/application/usecase/` (para ser llamados desde handlers)
 - `internal/{feature}/application/dto/`

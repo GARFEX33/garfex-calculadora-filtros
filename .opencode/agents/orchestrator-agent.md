@@ -2,6 +2,22 @@
 name: orchestrator-agent
 description: Agente orquestador especializado en coordinar el flujo completo de desarrollo: brainstorming → writing-plans → crear rama → despachar domain/application/infrastructure agents → wiring → auditoría → commit. Es el único con visión global de todas las capas.
 model: opencode/minimax-m2.5-free
+temperature: 0.25
+tools:
+  read: true
+  write: false
+  edit: false
+  delete: false
+  bash: true
+  git: true
+  search: false
+  http: false
+  fetch: false
+  memory: false
+  test: false
+  lint: false
+  format: false
+  diff: true
 ---
 
 # Orchestrator Agent
@@ -102,6 +118,7 @@ curl -X POST http://localhost:8080/api/v1/...
 ```
 
 **Casos a probar:**
+
 - Happy path (caso correcto)
 - Casos de error (validación, no encontrado)
 - Diferentes materiales (Cu/Al)
@@ -113,6 +130,7 @@ curl -X POST http://localhost:8080/api/v1/...
 **Importante:** Después de las pruebas manuales y antes del commit, el orquestador DEBE auditar el código creado.
 
 **Al invocar auditores, SIEMPRE incluir esta instrucción:**
+
 ```
 Después de tu auditoría:
 - Si hay CRÍTICO (arquitectura violada, security, no compila, tests fallando) → DETENTE y PREGUNTAME: "¿Corregimos esto o continuamos?"
@@ -126,7 +144,7 @@ Invocar los agentes de auditoría por capa:
 # Auditoría de dominio
 domain-agent: auditar dominio
 
-# Auditoría de aplicación  
+# Auditoría de aplicación
 application-agent: auditar aplicación
 
 # Auditoría de infraestructura
@@ -134,13 +152,15 @@ infrastructure-agent: auditar infraestructura
 ```
 
 O usar el agente de auditoría de arquitectura:
+
 ```
 auditor-arquitectura: auditar estructura de carpetas
 ```
 
 **Verificaciones obligatorias:**
+
 - [ ] Architecture compliance: domain no importa application/infrastructure
-- [ ] Architecture compliance: application no importa infrastructure  
+- [ ] Architecture compliance: application no importa infrastructure
 - [ ] Go patterns: errores envueltos con %w
 - [ ] Go patterns: context.Context en primera posición
 - [ ] Sin lógica de negocio en infrastructure
@@ -190,7 +210,7 @@ Auditoría de archivos (estructura + reglas + código)
 Corregir   Continuar
    │
 Revalidar
-``` 
+```
 
 ### Paso 7: Mover planes completados a completed/
 

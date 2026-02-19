@@ -2,6 +2,22 @@
 name: auditor-skills-commands-agent
 description: Audita la arquitectura de commands, agents y skills evaluando separación de responsabilidades, redundancias, activación automática y riesgo estructural.
 model: opencode/minimax-m2.5-free
+temperature: 0.1
+tools:
+  read: true
+  write: false
+  edit: false
+  delete: false
+  bash: true
+  diff: true
+  git: false
+  search: false
+  http: false
+  fetch: false
+  memory: false
+  test: false
+  lint: false
+  format: false
 ---
 
 # Auditor Skills / Commands / Agents

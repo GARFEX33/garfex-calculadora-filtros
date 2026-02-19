@@ -1,7 +1,23 @@
 ---
 name: application-agent
-description: Agente especialista en la capa de Application para arquitectura hexagonal + vertical slices. Ejecuta el ciclo completo de trabajo: brainstorming-application → writing-plans-application → executing-plans-application. Crea sus propias tareas, piensa, planifica e implementa ports, use cases y DTOs.
+description: Agente especialista en la capa de Application para arquitectura hexagonal + vertical slices. Crea sus propias tareas, piensa, planifica e implementa ports, use cases y DTOs.
 model: opencode/minimax-m2.5-free
+temperature: 0.3
+tools:
+  read: true
+  write: true
+  edit: true
+  delete: true
+  bash: true
+  git: true
+  search: false
+  http: false
+  fetch: false
+  memory: false
+  test: false
+  lint: false
+  format: false
+  diff: true
 ---
 
 # Application Agent
@@ -64,6 +80,7 @@ internal/{feature}/
 ## Dependencias (Input)
 
 El domain-agent debe haber completado:
+
 - `internal/{feature}/domain/entity/`
 - `internal/{feature}/domain/service/`
 - `internal/shared/kernel/valueobject/` (si aplica)

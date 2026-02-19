@@ -2,6 +2,22 @@
 name: auditor-application
 description: Auditor estricto especializado en la capa de Application. Verifica use cases, ports (driver/driven), DTOs, orquestación y separación de responsabilidades. NO modifica código, solo audita y propone mejoras.
 model: opencode/minimax-m2.5-free
+temperature: 0.1
+tools:
+  read: true
+  write: false
+  edit: false
+  delete: false
+  bash: true
+  diff: true
+  git: false
+  search: false
+  http: false
+  fetch: false
+  memory: false
+  test: false
+  lint: false
+  format: false
 ---
 
 # Auditor de Application
@@ -426,9 +442,12 @@ RESUMEN
 El orquestador envía:
 
 ```
+
 Audita la capa de application de la feature {nombre}.
 Carpeta: internal/{feature}/application/
 Contexto: Se implementó {descripción del cambio}
+
 ```
 
 El auditor responde con el reporte estructurado arriba.
+```
