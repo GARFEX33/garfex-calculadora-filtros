@@ -26,8 +26,8 @@ func NewTuberiaHandler(calcularTamanioTuberiaUC *usecase.CalcularTamanioTuberiaU
 type CalcularTuberiaRequest struct {
 	NumFases         int    `json:"num_fases" binding:"required,gt=0"`
 	CalibreFase      string `json:"calibre_fase" binding:"required"`
-	NumNeutros       int    `json:"num_neutros" binding:"required,gte=0"`
-	CalibreNeutro    string `json:"calibre_neutral" binding:"required"`
+	NumNeutros       int    `json:"num_neutros" binding:"gte=0"`
+	CalibreNeutro    string `json:"calibre_neutral"`
 	CalibreTierra    string `json:"calibre_tierra" binding:"required"`
 	TipoCanalizacion string `json:"tipo_canalizacion" binding:"required"`
 	NumTuberias      int    `json:"num_tuberias" binding:"required,gt=0"`

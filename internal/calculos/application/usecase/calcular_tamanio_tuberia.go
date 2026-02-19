@@ -48,9 +48,13 @@ func (uc *CalcularTamanioTuberiaUseCase) Execute(
 		return dto.TuberiaOutput{}, fmt.Errorf("obtener área fase %s: %w", input.CalibreFase, err)
 	}
 
-	areaNeutro, err := uc.tablaRepo.ObtenerAreaConductor(ctx, input.CalibreNeutro)
-	if err != nil {
-		return dto.TuberiaOutput{}, fmt.Errorf("obtener área neutro %s: %w", input.CalibreNeutro, err)
+	// Get area for neutral only if there are neutrals
+	var areaNeutro float64
+	if input.NumNeutros > 0 {
+		areaNeutro, err = uc.tablaRepo.ObtenerAreaConductor(ctx, input.CalibreNeutro)
+		if err != nil {
+			return dto.TuberiaOutput{}, fmt.Errorf("obtener área neutro %s: %w", input.CalibreNeutro, err)
+		}
 	}
 
 	// El conductor de tierra es desnudo - usar tabla 8 (conductor desnudo)
