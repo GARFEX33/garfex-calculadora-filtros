@@ -58,7 +58,7 @@ func TestCalcularCharolaTriangularUseCase_Execute(t *testing.T) {
 			// espacioControl = 2.15 * 10 = 21.5
 			// anchoControl = 10
 			// anchoRequerido = 50.8 + 54.61 + 21.5 + 10 + 8.5 = 145.41 mm
-			// 5000 (100mm) > 145.41 -> 100mm
+			// 7500 (150mm) > 145.41 -> 150mm
 			input: dto.CharolaTriangularInput{
 				HilosPorFase:      2,
 				DiametroFaseMM:    25.4,
@@ -68,8 +68,8 @@ func TestCalcularCharolaTriangularUseCase_Execute(t *testing.T) {
 			mockTabla: tablaCharola,
 			wantOutput: dto.CharolaTriangularOutput{
 				Tipo:           "CHAROLA_CABLE_TRIANGULAR",
-				Tamano:         "100mm",
-				TamanoPulgadas: "3.94\"",
+				Tamano:         "150mm",
+				TamanoPulgadas: "5.91\"",
 			},
 			wantErr: false,
 		},
