@@ -37,6 +37,7 @@ func (uc *CalcularCaidaTensionUseCase) Execute(
 	limiteCaida float64,
 	tipoCanalizacion entity.TipoCanalizacion,
 	sistemaElectrico entity.SistemaElectrico,
+	tipoVoltaje entity.TipoVoltaje,
 	hilosPorFase int,
 ) (dto.ResultadoCaidaTension, error) {
 	// Obtener impedancia
@@ -50,6 +51,7 @@ func (uc *CalcularCaidaTensionUseCase) Execute(
 		ReactanciaOhmPorKm:  impedancia.X(),
 		TipoCanalizacion:    tipoCanalizacion,
 		SistemaElectrico:    sistemaElectrico,
+		TipoVoltaje:         tipoVoltaje,
 		HilosPorFase:        hilosPorFase,
 	}
 

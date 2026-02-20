@@ -56,6 +56,11 @@ type CaidaTensionRequest struct {
 	// Valores: "MONOFASICO", "BIFASICO", "DELTA", "ESTRELLA"
 	SistemaElectrico string `json:"sistema_electrico" binding:"required"`
 
+	// TipoVoltaje indica si el voltaje ingresado es fase-neutro o fase-fase
+	// Valores: "FASE_NEUTRO" (Vfn), "FASE_FASE" (Vff), también acepta "FN" o "FF"
+	// Ejemplos: 127V es típicamente Vfn, 220V es típicamente Vff
+	TipoVoltaje string `json:"tipo_voltaje" binding:"required"`
+
 	// HilosPorFase es el número de hilos por fase
 	HilosPorFase int `json:"hilos_por_fase" binding:"required,min=1"`
 
@@ -127,6 +132,18 @@ func (h *CaidaTensionHandler) CalcularCaidaTension(c *gin.Context) {
 		return
 	}
 
+	// Parsear tipo de voltaje
+	tipoVoltaje, err := entity.ParseTipoVoltaje(req.TipoVoltaje)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, CaidaTensionResponseError{
+			Success: false,
+			Error:   "Tipo de voltaje inválido",
+			Code:    "TIPO_VOLTAJE_INVALIDO",
+			Details: err.Error(),
+		})
+		return
+	}
+
 	// Crear valor de tensión
 	tension, err := valueobject.NewTension(req.Tension)
 	if err != nil {
@@ -168,6 +185,7 @@ func (h *CaidaTensionHandler) CalcularCaidaTension(c *gin.Context) {
 		req.LimiteCaida,
 		tipoCanalizacion,
 		sistemaElectrico,
+		tipoVoltaje,
 		hilosPorFase,
 	)
 	if err != nil {
@@ -208,6 +226,15 @@ func (h *CaidaTensionHandler) mapCaidaTensionErrorToResponse(err error) (int, Ca
 			Success: false,
 			Error:   "Tensión fuera de rango permitido",
 			Code:    "TENSION_INVALIDA",
+			Details: err.Error(),
+		}
+	}
+
+	if errors.Is(err, entity.ErrTipoVoltajeInvalido) {
+		return http.StatusBadRequest, CaidaTensionResponseError{
+			Success: false,
+			Error:   "Tipo de voltaje inválido",
+			Code:    "TIPO_VOLTAJE_INVALIDO",
 			Details: err.Error(),
 		}
 	}
