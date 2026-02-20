@@ -247,7 +247,7 @@ internal/
   calculos/             ← feature: memoria de cálculo eléctrico
     domain/
       entity/           ← TipoCanalizacion, SistemaElectrico, ITM, MemoriaCalculo, etc.
-      service/          ← 13 servicios de cálculo eléctrico (IEEE-141, NOM)
+      service/          ← 14 servicios de cálculo eléctrico (NOM)
     application/
       port/             ← TablaNOMRepository, EquipoRepository (interfaces)
       usecase/          ← OrquestadorMemoriaCalculo y micro use cases
@@ -395,25 +395,39 @@ curl http://localhost:8080/health
 # Respuesta esperada: {"status":"ok"}
 ```
 
-**Endpoint principal:**
+**Endpoints disponibles:**
 
 ```bash
-curl -X POST http://localhost:8080/api/v1/calculos/memoria \
-  -H "Content-Type: application/json" \
-  -d '{"modo":"MANUAL_AMPERAJE","amperaje_nominal":50,"tension":220,"tipo_canalizacion":"TUBERIA_PVC","hilos_por_fase":1,"longitud_circuito":10,"itm":100,"factor_potencia":0.9,"estado":"Sonora","sistema_electrico":"DELTA","material":"Cu"}'
-```
-
-**Endpoint amperaje (cálculo rápido):**
-
-```bash
+# Amperaje nominal
 curl -X POST http://localhost:8080/api/v1/calculos/amperaje \
   -H "Content-Type: application/json" \
   -d '{"potencia_watts":5000,"tension":220,"sistema_electrico":"MONOFASICO","factor_potencia":0.9}'
+
+# Corriente ajustada
+curl -X POST http://localhost:8080/api/v1/calculos/corriente-ajustada \
+  -H "Content-Type: application/json" \
+  -d '{"amperaje_nominal":50,"estado":"Sonora","temperatura_ambiente":30,"cantidad_conductores":3,"factor_uso":1.0}'
+
+# Conductor alimentación
+curl -X POST http://localhost:8080/api/v1/calculos/conductor-alimentacion \
+  -H "Content-Type: application/json" \
+  -d '{"corriente_ajustada":60,"tipo_canalizacion":"TUBERIA_PVC","material":"Cu"}'
+
+# Conductor tierra
+curl -X POST http://localhost:8080/api/v1/calculos/conductor-tierra \
+  -H "Content-Type: application/json" \
+  -d '{"corriente_ajustada":60,"tipo_canalizacion":"TUBERIA_PVC","material":"Cu"}'
+
+# Tuberia
+curl -X POST http://localhost:8080/api/v1/calculos/tuberia \
+  -H "Content-Type: application/json" \
+  -d '{"conductor_seccion_mm2":13.3,"hilos_por_fase":1}'
+
+# Caida de tension
+curl -X POST http://localhost:8080/api/v1/calculos/caida-tension \
+  -H "Content-Type: application/json" \
+  -d '{"calibre":"2 AWG","material":"Cu","corriente_ajustada":50,"longitud_circuito":100,"tension":220,"limite_caida":3,"tipo_canalizacion":"TUBERIA_PVC","sistema_electrico":"DELTA","tipo_voltaje":"FF","hilos_por_fase":1}'
 ```
-
-**Campos obligatorios:** `modo`, `tension`, `tipo_canalizacion`, `itm`, `longitud_circuito`, `estado`, `sistema_electrico`
-
-**Campo `material`:** Opcional, valores: `"Cu"` (default) o `"Al"`
 
 ## Actualizacion de Documentacion
 
@@ -434,7 +448,7 @@ curl -X POST http://localhost:8080/api/v1/calculos/amperaje \
 - Arquitectura inicial: `completed/2026-02-09-arquitectura-inicial-design.md`
 - Domain layer: `completed/2026-02-10-domain-layer.md`
 - Tablas NOM canalizacion: `completed/2026-02-11-tablas-nom-canalizacion-design.md`
-- Caída de tension IEEE-141: `completed/2026-02-12-caida-tension-ieee141-design.md`
+- Caída de tension NOM: `completed/2026-02-12-caida-tension-ieee141-design.md`
 - Ports CSV infrastructure: `completed/2026-02-12-ports-csv-infrastructure-design.md`
 - Material Cu/Al conductor tierra: `completed/2026-02-13-material-conductor-tierra-design.md`
 

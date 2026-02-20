@@ -15,8 +15,9 @@ Orquesta domain services. Define contratos (ports), no implementaciones.
 ```
 internal/calculos/application/
 ├── port/           # Interfaces que infrastructure implementa
-│   ├── driver/     # Ports de entrada (para ser llamados)
-│   └── driven/     # Ports de salida (dependencias)
+│   ├── TablaNOMRepository
+│   ├── SeleccionarTemperatura
+│   └── EquipoRepository
 ├── usecase/        # Orquestadores
 │   └── helpers/    # Funciones auxiliares
 └── dto/            # Entrada/salida

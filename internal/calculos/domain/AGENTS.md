@@ -37,7 +37,7 @@ Capa de negocio pura para la feature de cálculos eléctricos. Sin dependencias 
 | Subdirectorio | Contenido |
 |---------------|-----------|
 | `entity/` | Entidades: TipoEquipo, TipoCanalizacion, SistemaElectrico, MemoriaCalculo, etc. |
-| `service/` | 13 servicios de cálculo NOM + IEEE-141 |
+| `service/` | 14 servicios de cálculo NOM |
 
 ## Referencias
 

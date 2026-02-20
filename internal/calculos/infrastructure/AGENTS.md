@@ -52,9 +52,14 @@ internal/calculos/infrastructure/
 ### Driver (HTTP)
 
 - **CalculoHandler** — endpoints REST
-  - `POST /api/v1/calculos/memoria` — memoria de cálculo completa
-  - `POST /api/v1/calculos/amperaje` — calcular amperaje nominal sin memoria completa
+  - `POST /api/v1/calculos/amperaje` — calcular amperaje nominal
   - `POST /api/v1/calculos/corriente-ajustada` — calcular corriente ajustada con factores NOM
+  - `POST /api/v1/calculos/conductor-alimentacion` — seleccionar conductor de alimentación
+  - `POST /api/v1/calculos/conductor-tierra` — seleccionar conductor de tierra
+  - `POST /api/v1/calculos/tuberia` — dimensionar tubería
+  - `POST /api/v1/calculos/charola/espaciado` — calcular espaciado en charola
+  - `POST /api/v1/calculos/charola/triangular` — calcular configuración triangular
+  - `POST /api/v1/calculos/caida-tension` — calcular caída de tensión
 
 ### Formatters
 

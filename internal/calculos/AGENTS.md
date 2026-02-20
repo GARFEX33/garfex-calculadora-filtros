@@ -10,7 +10,7 @@ Memoria de cálculo eléctrico según normativa NOM (México).
 
 Esta feature implementa el cálculo completo de una instalación eléctrica:
 corriente nominal → ajuste por temperatura/agrupamiento → selección de conductor →
-conductor de tierra → dimensionamiento de canalización → caída de tensión (IEEE-141).
+conductor de tierra → dimensionamiento de canalización → caída de tensión (NOM).
 
 ## Estructura
 
@@ -18,7 +18,7 @@ conductor de tierra → dimensionamiento de canalización → caída de tensión
 internal/calculos/
 ├── domain/          ← entidades y servicios de cálculo puro
 │   ├── entity/      ← Proyecto, TipoCanalizacion, SistemaElectrico, etc.
-│           └── service/     ← 13 servicios de cálculo NOM + IEEE-141
+│           └── service/     ← 14 servicios de cálculo NOM
 ├── application/     ← ports, use cases, DTOs
 │   ├── port/        ← TablaNOMRepository, EquipoRepository
 │   ├── usecase/     ← OrquestadorMemoriaCalculo y micro use cases
@@ -44,4 +44,4 @@ internal/calculos/
 ## Referencias
 
 - Workflow: [`AGENTS.md` raíz](../../../AGENTS.md) → "Sistema de Agentes Especializados"
-- Skill: [`orchestrating-agents`](.agents/skills/orchestrating-agents/SKILL.md)
+- Skill: [`orchestrating-agents`](../../.agents/skills/orchestrating-agents/SKILL.md)
