@@ -1,9 +1,3 @@
----
-name: feature-calculos
-description: Feature completa de memoria de cálculo eléctrico según normativa NOM.
-model: opencode/minimax-m2.5-free
----
-
 # Feature: calculos
 
 Memoria de cálculo eléctrico según normativa NOM (México).
@@ -18,7 +12,7 @@ conductor de tierra → dimensionamiento de canalización → caída de tensión
 internal/calculos/
 ├── domain/          ← entidades y servicios de cálculo puro
 │   ├── entity/      ← Proyecto, TipoCanalizacion, SistemaElectrico, etc.
-│           └── service/     ← 14 servicios de cálculo NOM
+│   └── service/     ← Servicios de cálculo NOM
 ├── application/     ← ports, use cases, DTOs
 │   ├── port/        ← TablaNOMRepository, EquipoRepository
 │   ├── usecase/     ← OrquestadorMemoriaCalculo y micro use cases
@@ -30,19 +24,15 @@ internal/calculos/
         └── driven/csv/      ← CSVTablaNOMRepository
 ```
 
-## Reglas de Aislamiento
-
-- **NO importa** `equipos/` ni ninguna otra feature
-- **Solo importa** `shared/kernel/` para value objects compartidos
-- **`cmd/api/main.go`** es el único que instancia y conecta esta feature
-
 ## Cómo modificar esta feature
 
 **NUNCA modificar directamente.** Usar el sistema de orquestación.
 
-> Ver flujo completo en [`AGENTS.md` raíz](../../../AGENTS.md)
+> Ver flujo completo en [docs/architecture/workflow.md](../../../docs/architecture/workflow.md)
 
 ## Referencias
 
-- Workflow: [`AGENTS.md` raíz](../../../AGENTS.md) → "Sistema de Agentes Especializados"
-- Skill: [`orchestrating-agents`](../../.agents/skills/orchestrating-agents/SKILL.md)
+- Workflow: [docs/architecture/workflow.md](../../../docs/architecture/workflow.md)
+- Sistema de agentes: [docs/architecture/agents.md](../../../docs/architecture/agents.md)
+- Estructura y reglas: [docs/reference/structure.md](../../../docs/reference/structure.md)
+- Skill: [orchestrating-agents](../../.agents/skills/orchestrating-agents/SKILL.md)

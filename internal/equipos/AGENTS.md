@@ -1,9 +1,3 @@
----
-name: feature-equipos
-description: Feature placeholder para catálogo de equipos (futuro).
-model: opencode/minimax-m2.5-free
----
-
 # Feature: equipos
 
 Catálogo de equipos Garfex — PLACEHOLDER FUTURO.
@@ -23,7 +17,7 @@ Cuando se decida implementar, usar el sistema de orquestación:
 # Paso 1: Domain
 orchestrate-agents --agent domain --feature equipos
 
-# Paso 2: Application  
+# Paso 2: Application
 orchestrate-agents --agent application --feature equipos
 
 # Paso 3: Infrastructure
@@ -49,15 +43,12 @@ internal/equipos/
         └── driven/postgres/  ← PostgresEquipoRepository
 ```
 
-## Reglas de Aislamiento
-
-- **NO importa** `calculos/` ni ninguna otra feature
-- **Solo importa** `shared/kernel/` si necesita VOs eléctricos compartidos
-- **`cmd/api/main.go`** es el único que conecta esta feature
-
 ## Referencias
 
-- Orquestación: Skill `.agents/skills/orchestrating-agents/SKILL.md`
-- Skill domain: `.agents/skills/brainstorming-dominio/SKILL.md`
-- Skill application: `.agents/skills/brainstorming-application/SKILL.md`
-- Skill infrastructure: `.agents/skills/brainstorming-infrastructure/SKILL.md`
+- Workflow: [docs/architecture/workflow.md](../../../docs/architecture/workflow.md)
+- Sistema de agentes: [docs/architecture/agents.md](../../../docs/architecture/agents.md)
+- Estructura y reglas: [docs/reference/structure.md](../../../docs/reference/structure.md)
+- Orquestación: [orchestrating-agents](../../.agents/skills/orchestrating-agents/SKILL.md)
+- Skill domain: [brainstorming-dominio](../../.agents/skills/brainstorming-dominio/SKILL.md)
+- Skill application: [brainstorming-application](../../.agents/skills/brainstorming-application/SKILL.md)
+- Skill infrastructure: [brainstorming-infrastructure](../../.agents/skills/brainstorming-infrastructure/SKILL.md)

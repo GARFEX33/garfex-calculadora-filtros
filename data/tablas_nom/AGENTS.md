@@ -9,7 +9,7 @@ model: opencode/minimax-m2.5-free
 Datos de normativa NOM en formato CSV. Leidos por `infrastructure/repository/`.
 
 > **Skills Reference**:
-> - [`golang-patterns`](.agents/skills/golang-patterns/SKILL.md) — convenciones al agregar mapeos en infrastructure
+> - [`golang-patterns`](../../.agents/skills/golang-patterns/SKILL.md) — convenciones al agregar mapeos en infrastructure
 
 ### Auto-invoke
 
@@ -18,7 +18,7 @@ Datos de normativa NOM en formato CSV. Leidos por `infrastructure/repository/`.
 | Agregar nueva tabla NOM | `golang-patterns` (para el mapeo en infrastructure) |
 | Modificar formato CSV existente | leer este AGENTS.md primero — validar contra fuente original |
 
-## Tablas Disponibles (Fase 1)
+## Tablas Disponibles
 
 ### Ampacidad (seleccion de conductor de alimentacion)
 
@@ -27,6 +27,8 @@ Datos de normativa NOM en formato CSV. Leidos por `infrastructure/repository/`.
 | `310-15-b-16.csv` | 310-15(b)(16) | Tuberia conduit (4 tipos) | 14 AWG - 2000 MCM |
 | `310-15-b-17.csv` | 310-15(b)(17) | Charola cable espaciado | 14 AWG - 2000 MCM |
 | `310-15-b-20.csv` | 310-15(b)(20) | Charola triangular | 8 AWG - 1000 MCM |
+| `310-15-b-2-a.csv` | 310-15(b)(2)(A) | Factor temp ambiente | 0-100°C |
+| `310-15-b-3-a.csv` | 310-15(b)(3)(A) | Factor cantidad conductores | 1-41+ |
 
 ### Tierra
 
@@ -47,6 +49,26 @@ Datos de normativa NOM en formato CSV. Leidos por `infrastructure/repository/`.
 | Archivo | Tabla NOM | Dato |
 |---------|-----------|------|
 | `tabla-conduit-dimensiones.csv` | Capítulo 9, Tabla 4 | Area interior (mm²) por tamaño de conduit |
+
+### Dimensionamiento de charolas
+
+| Archivo | Dato |
+|---------|------|
+| `charola_dimensiones.csv` | Area y dimensiones por ancho de charola |
+
+### Temperatura
+
+| Archivo | Dato |
+|---------|------|
+| `estados_temperatura.csv` | Temperatura base por estado de México |
+
+### Ocupacion de tubo (Chapter 9)
+
+| Archivo | Tipo conduit |
+|---------|-------------|
+| `tubo-ocupacion-pvc-40.csv` | PVC Schedule 40 |
+| `tubo-ocupacion-acero-pd-40.csv` | Acero PD-40 |
+| `tubo-ocupacion-acero-pg-40.csv` | Acero PG-40 |
 
 ## Formato CSV Ampacidad
 

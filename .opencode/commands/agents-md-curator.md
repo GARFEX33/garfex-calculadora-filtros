@@ -3,7 +3,7 @@ description: "Audit, create, update or sync AGENTS.md documentation files. Autom
 disable-model-invocation: false
 ---
 
-Utiliza el agente agents-md-curator para auditar todos los AGENTS.md del proyecto. Verifica:
+Utiliza el agente agents-md-governor para auditar todos los AGENTS.md del proyecto. Verifica:
 
 - Que la estructura de carpetas refleje lo documentado
 - Que las reglas de arquitectura (anti-duplicación, aislamiento) estén documentadas

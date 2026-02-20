@@ -1,9 +1,3 @@
----
-name: shared-kernel
-description: Value objects y utilidades compartidas entre todas las features.
-model: opencode/minimax-m2.5-free
----
-
 # Shared Kernel
 
 Value objects y utilidades compartidas entre todas las features.
@@ -11,6 +5,7 @@ Value objects y utilidades compartidas entre todas las features.
 ## Propósito
 
 El kernel contiene conceptos que son **transversales** al dominio:
+
 - Corriente, Tensión, Temperatura (conceptos eléctricos básicos)
 - MaterialConductor, Conductor
 - Charola, ResistenciaReactancia
