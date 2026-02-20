@@ -4,7 +4,6 @@ package service
 import (
 	"errors"
 	"fmt"
-	"strings"
 
 	"github.com/garfex/calculadora-filtros/internal/calculos/domain/entity"
 	"github.com/garfex/calculadora-filtros/internal/shared/kernel/valueobject"
@@ -15,16 +14,9 @@ var ErrCharolaTriangularNoEncontrada = errors.New("no se encontró charola trian
 // ErrTablaCharolaVacia is returned when the charola sizing table is empty.
 var ErrTablaCharolaVacia = errors.New("tabla de charola vacía")
 
-// obtenerAnchoCharola convierte el valor de la tabla al ancho real en mm.
-// Si el tamaño contiene "mm", el valor es área (ancho × 50mm) y se divide.
-// Si el tamaño es en pulgadas (ej: "6"), el valor es directamente el ancho en mm.
+// obtenerAnchoCharola retorna el ancho de la charola en mm directamente del valor en la tabla.
+// El archivo CSV charola_dimensiones.csv tiene los valores en mm (ej: 152.4 para 6 pulgadas).
 func obtenerAnchoCharola(entrada valueobject.EntradaTablaCanalizacion) float64 {
-	const alturaCharolaMM float64 = 50.0
-	if strings.Contains(entrada.Tamano, "mm") {
-		// Tabla en mm: el valor es área (ancho × altura)
-		return entrada.AreaInteriorMM2 / alturaCharolaMM
-	}
-	// Tabla en pulgadas: el valor es directamente el ancho en mm
 	return entrada.AreaInteriorMM2
 }
 

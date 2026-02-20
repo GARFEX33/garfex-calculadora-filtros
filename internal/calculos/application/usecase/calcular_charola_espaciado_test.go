@@ -80,14 +80,17 @@ func pointerToFloat64(v float64) *float64 {
 }
 
 func TestCalcularCharolaEspaciadoUseCase_Execute(t *testing.T) {
-	// Tabla de charolas de prueba
-	// Las áreas están calculadas para una altura de 50mm: Area = Ancho * 50
-	// Por ejemplo: 100mm ancho -> 5000mm2 área
+	// Tabla de charolas del CSV: charola_dimensiones.csv
 	tablaCharola := []valueobject.EntradaTablaCanalizacion{
-		{Tamano: "100mm", AreaInteriorMM2: 5000},  // 100mm ancho
-		{Tamano: "150mm", AreaInteriorMM2: 7500},  // 150mm ancho
-		{Tamano: "200mm", AreaInteriorMM2: 10000}, // 200mm ancho
-		{Tamano: "300mm", AreaInteriorMM2: 15000}, // 300mm ancho
+		{Tamano: "6", AreaInteriorMM2: 152.4},
+		{Tamano: "9", AreaInteriorMM2: 228.6},
+		{Tamano: "12", AreaInteriorMM2: 304.8},
+		{Tamano: "16", AreaInteriorMM2: 406.4},
+		{Tamano: "18", AreaInteriorMM2: 457.2},
+		{Tamano: "20", AreaInteriorMM2: 508.0},
+		{Tamano: "24", AreaInteriorMM2: 609.6},
+		{Tamano: "30", AreaInteriorMM2: 762.0},
+		{Tamano: "36", AreaInteriorMM2: 914.4},
 	}
 
 	tests := []struct {
@@ -102,7 +105,7 @@ func TestCalcularCharolaEspaciadoUseCase_Execute(t *testing.T) {
 		{
 			name: "happy path - caso básico DELTA 1 hilo",
 			// DELTA: 3 fases sin neutro, 1 hilo por fase = 3 hilos totales
-			// anchoRequerido = 3*25.4 + 3*25.4 + 8.5 = 160.9mm -> 200mm
+			// anchoRequerido = 3*25.4 + 3*25.4 + 8.5 = 160.9mm -> 9" (228.6mm)
 			input: dto.CharolaEspaciadoInput{
 				HilosPorFase:     1,
 				SistemaElectrico: "DELTA",
@@ -112,15 +115,15 @@ func TestCalcularCharolaEspaciadoUseCase_Execute(t *testing.T) {
 			mockTabla: tablaCharola,
 			wantOutput: dto.CharolaEspaciadoOutput{
 				Tipo:           "CHAROLA_CABLE_ESPACIADO",
-				Tamano:         "200mm",
-				TamanoPulgadas: "7.87\"",
+				Tamano:         "9",
+				TamanoPulgadas: "9\"",
 			},
 			wantErr: false,
 		},
 		{
 			name: "happy path - caso MONOFASICO 1 hilo",
 			// MONOFASICO: 1 fase con neutro, 1 hilo por fase = 2 hilos totales
-			// anchoRequerido = 2*25.4 + 2*25.4 + 8.5 = 109.3mm -> 150mm
+			// anchoRequerido = 2*25.4 + 2*25.4 + 8.5 = 109.3mm -> 6" (152.4mm)
 			input: dto.CharolaEspaciadoInput{
 				HilosPorFase:     1,
 				SistemaElectrico: "MONOFASICO",
@@ -130,22 +133,20 @@ func TestCalcularCharolaEspaciadoUseCase_Execute(t *testing.T) {
 			mockTabla: tablaCharola,
 			wantOutput: dto.CharolaEspaciadoOutput{
 				Tipo:           "CHAROLA_CABLE_ESPACIADO",
-				Tamano:         "150mm",
-				TamanoPulgadas: "5.91\"",
+				Tamano:         "6",
+				TamanoPulgadas: "6\"",
 			},
 			wantErr: false,
 		},
 		{
 			name: "happy path - con cable de control",
-			// ESTRELLA: 3 fases con neutro, 2 hilos por fase = 8 hilos totales (6 fuerza + 2 neutro)
-			// espacioFuerza = 8*25.4 = 203.2
-			// anchoFuerza = 8*25.4 = 203.2
-			// espacioControl = 2*10 = 20
-			// anchoControl = 10
-			// anchoTierra = 8.5
-			// anchoRequerido = 203.2 + 203.2 + 20 + 10 + 8.5 = 444.9mm
-			// Area necesaria = 444.9 * 50 = 22245 mm2 -> no hay charola suficiente en la tabla
-			// Voy a usar un caso más simple: MONOFASICO con 1 hilo
+			// MONOFASICO: 1 fase con neutro, 1 hilo por fase = 2 hilos totales
+			// espacioFuerza = 2*10 = 20
+			// anchoFuerza = 2*10 = 20
+			// espacioControl = 2*6 = 12
+			// anchoControl = 6
+			// anchoTierra = 5
+			// anchoRequerido = 20 + 20 + 12 + 6 + 5 = 63mm -> 6" (152.4mm)
 			input: dto.CharolaEspaciadoInput{
 				HilosPorFase:      1,
 				SistemaElectrico:  "MONOFASICO",
@@ -156,8 +157,8 @@ func TestCalcularCharolaEspaciadoUseCase_Execute(t *testing.T) {
 			mockTabla: tablaCharola,
 			wantOutput: dto.CharolaEspaciadoOutput{
 				Tipo:           "CHAROLA_CABLE_ESPACIADO",
-				Tamano:         "100mm",
-				TamanoPulgadas: "3.94\"",
+				Tamano:         "6",
+				TamanoPulgadas: "6\"",
 			},
 			wantErr: false,
 		},

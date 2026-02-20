@@ -81,10 +81,11 @@ func (uc *CalcularCharolaTriangularUseCase) Execute(
 	}
 
 	// 5. Convertir resultado domain a DTO output
+	// Tamano ya está en pulgadas (ej: "6", "9", "12")
 	return dto.CharolaTriangularOutput{
 		Tipo:           string(resultado.Tipo),
 		Tamano:         resultado.Tamano,
-		TamanoPulgadas: convertirTamanoAPulgadas(resultado.Tamano),
+		TamanoPulgadas: resultado.Tamano + "\"",
 		AnchoRequerido: resultado.AnchoRequerido,
 	}, nil
 }

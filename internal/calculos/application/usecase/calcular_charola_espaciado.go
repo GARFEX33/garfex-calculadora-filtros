@@ -4,8 +4,6 @@ package usecase
 import (
 	"context"
 	"fmt"
-	"strconv"
-	"strings"
 
 	"github.com/garfex/calculadora-filtros/internal/calculos/application/dto"
 	"github.com/garfex/calculadora-filtros/internal/calculos/application/port"
@@ -90,23 +88,11 @@ func (uc *CalcularCharolaEspaciadoUseCase) Execute(
 	}
 
 	// 5. Convertir resultado domain a DTO output
+	// Tamano ya está en pulgadas (ej: "6", "9", "12")
 	return dto.CharolaEspaciadoOutput{
 		Tipo:           string(resultado.Tipo),
 		Tamano:         resultado.Tamano,
-		TamanoPulgadas: convertirTamanoAPulgadas(resultado.Tamano),
+		TamanoPulgadas: resultado.Tamano + "\"",
 		AnchoRequerido: resultado.AnchoRequerido,
 	}, nil
-}
-
-// convertirTamanoAPulgadas convierte el tamaño de mm a pulgadas.
-// Ejemplo: "300mm" -> "12\""
-func convertirTamanoAPulgadas(tamano string) string {
-	// Remover "mm" del tamaño
-	tamano = strings.TrimSuffix(tamano, "mm")
-	mm, err := strconv.ParseFloat(tamano, 64)
-	if err != nil {
-		return tamano // Si no se puede convertir, devolver el original
-	}
-	pulgadas := mm / 25.4
-	return fmt.Sprintf("%.2f\"", pulgadas)
 }

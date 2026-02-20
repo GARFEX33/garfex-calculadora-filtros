@@ -119,8 +119,16 @@ func NewCSVTablaNOMRepository(basePath string) (*CSVTablaNOMRepository, error) {
 
 	// Load cable tray sizing tables
 	repo.tablasCharola = make(map[entity.TipoCanalizacion][]valueobject.EntradaTablaCanalizacion)
-	repo.tablasCharola[entity.TipoCanalizacionCharolaCableEspaciado] = repo.crearTablaCharolaEspaciado()
-	repo.tablasCharola[entity.TipoCanalizacionCharolaCableTriangular] = repo.crearTablaCharolaTriangular()
+	tablaEspaciado, err := repo.crearTablaCharolaEspaciado()
+	if err != nil {
+		return nil, fmt.Errorf("failed to load charola espaciado table: %w", err)
+	}
+	tablaTriangular, err := repo.crearTablaCharolaTriangular()
+	if err != nil {
+		return nil, fmt.Errorf("failed to load charola triangular table: %w", err)
+	}
+	repo.tablasCharola[entity.TipoCanalizacionCharolaCableEspaciado] = tablaEspaciado
+	repo.tablasCharola[entity.TipoCanalizacionCharolaCableTriangular] = tablaTriangular
 
 	// Load ampacity tables for conduit types
 	for _, canalizacion := range []entity.TipoCanalizacion{
@@ -591,35 +599,53 @@ func (r *CSVTablaNOMRepository) loadTablaTierra() ([]valueobject.EntradaTablaTie
 }
 
 // crearTablaCharolaEspaciado crea la tabla de dimensiones para charola cable espaciado.
-// Los tamaños son anchos estándar de charola en mm.
-func (r *CSVTablaNOMRepository) crearTablaCharolaEspaciado() []valueobject.EntradaTablaCanalizacion {
-	// Tamaños estándar de charola (ancho en mm) y área aproximada
-	// Asumiendo charola de 50mm de alto estándar
-	return []valueobject.EntradaTablaCanalizacion{
-		{Tamano: "50mm", AreaInteriorMM2: 2500},   // 50mm x 50mm
-		{Tamano: "100mm", AreaInteriorMM2: 5000},  // 100mm x 50mm
-		{Tamano: "150mm", AreaInteriorMM2: 7500},  // 150mm x 50mm
-		{Tamano: "200mm", AreaInteriorMM2: 10000}, // 200mm x 50mm
-		{Tamano: "300mm", AreaInteriorMM2: 15000}, // 300mm x 50mm
-		{Tamano: "450mm", AreaInteriorMM2: 22500}, // 450mm x 50mm
-		{Tamano: "600mm", AreaInteriorMM2: 30000}, // 600mm x 50mm
-	}
+// Lee del archivo CSV: charola_dimensiones.csv
+func (r *CSVTablaNOMRepository) crearTablaCharolaEspaciado() ([]valueobject.EntradaTablaCanalizacion, error) {
+	// Usar la tabla del archivo CSV - el ancho ya está en mm
+	return r.loadTablaCharolaDimensiones()
 }
 
 // crearTablaCharolaTriangular crea la tabla de dimensiones para charola cable triangular.
-// Los tamaños son anchos estándar de charola en mm.
-func (r *CSVTablaNOMRepository) crearTablaCharolaTriangular() []valueobject.EntradaTablaCanalizacion {
-	// Mismos tamaños pero el área efectiva es diferente por la forma triangular
-	// Se usa 40% del área rectangular para el cálculo de llenado
-	return []valueobject.EntradaTablaCanalizacion{
-		{Tamano: "50mm", AreaInteriorMM2: 2500},
-		{Tamano: "100mm", AreaInteriorMM2: 5000},
-		{Tamano: "150mm", AreaInteriorMM2: 7500},
-		{Tamano: "200mm", AreaInteriorMM2: 10000},
-		{Tamano: "300mm", AreaInteriorMM2: 15000},
-		{Tamano: "450mm", AreaInteriorMM2: 22500},
-		{Tamano: "600mm", AreaInteriorMM2: 30000},
+// Lee del archivo CSV: charola_dimensiones.csv
+func (r *CSVTablaNOMRepository) crearTablaCharolaTriangular() ([]valueobject.EntradaTablaCanalizacion, error) {
+	// Usar la tabla del archivo CSV - el ancho ya está en mm
+	return r.loadTablaCharolaDimensiones()
+}
+
+// loadTablaCharolaDimensiones carga las dimensiones de charolas desde el archivo CSV.
+func (r *CSVTablaNOMRepository) loadTablaCharolaDimensiones() ([]valueobject.EntradaTablaCanalizacion, error) {
+	filePath := filepath.Join(r.basePath, "charola_dimensiones.csv")
+	file, err := os.Open(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("cannot open charola_dimensiones.csv: %w", err)
 	}
+	defer file.Close()
+
+	reader := csv.NewReader(file)
+	records, err := reader.ReadAll()
+	if err != nil {
+		return nil, fmt.Errorf("cannot read charola_dimensiones.csv: %w", err)
+	}
+
+	var result []valueobject.EntradaTablaCanalizacion
+	// Skip header row
+	for i := 1; i < len(records); i++ {
+		record := records[i]
+		if len(record) < 2 {
+			continue
+		}
+		tamanoPulgadas := record[0]
+		anchoMM, err := strconv.ParseFloat(record[1], 64)
+		if err != nil {
+			return nil, fmt.Errorf("charola_dimensiones.csv line %d: invalid ancho_mm: %w", i+1, err)
+		}
+		result = append(result, valueobject.EntradaTablaCanalizacion{
+			Tamano:          tamanoPulgadas,
+			AreaInteriorMM2: anchoMM, // En este CSV, el valor es el ancho directo en mm
+		})
+	}
+
+	return result, nil
 }
 
 // rawAmpacidadEntry holds raw data from CSV before temperature extraction.

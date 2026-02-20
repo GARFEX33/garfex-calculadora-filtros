@@ -82,10 +82,9 @@ func CalcularCharolaEspaciado(
 	// Ancho total = EF + ancho_fuerza + EC + ancho_control + tierra
 	anchoRequerido := espacioFuerza + anchoFuerza + espacioControl + anchoControl + conductorTierra.DiametroMM()
 
-	// alturaCharolaMM: altura estándar de charola NOM-001-SEDE para convertir área interior (mm²) a ancho (mm).
-	const alturaCharolaMM float64 = 50.0
+	// El valor de la tabla es el ancho directo en mm
 	for _, entrada := range tablaCharola {
-		anchoCharolaMM := entrada.AreaInteriorMM2 / alturaCharolaMM
+		anchoCharolaMM := entrada.AreaInteriorMM2
 		if anchoCharolaMM >= anchoRequerido {
 			return entity.Canalizacion{
 				Tipo:           entity.TipoCanalizacionCharolaCableEspaciado,

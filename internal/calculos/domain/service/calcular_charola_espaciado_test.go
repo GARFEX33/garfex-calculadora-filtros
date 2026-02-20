@@ -12,14 +12,17 @@ import (
 )
 
 func TestCalcularCharolaEspaciado(t *testing.T) {
+	// Tabla del CSV: charola_dimensiones.csv
 	tablaCharola := []valueobject.EntradaTablaCanalizacion{
-		{Tamano: "50mm", AreaInteriorMM2: 2500},
-		{Tamano: "100mm", AreaInteriorMM2: 5000},
-		{Tamano: "150mm", AreaInteriorMM2: 7500},
-		{Tamano: "200mm", AreaInteriorMM2: 10000},
-		{Tamano: "300mm", AreaInteriorMM2: 15000},
-		{Tamano: "450mm", AreaInteriorMM2: 22500},
-		{Tamano: "600mm", AreaInteriorMM2: 30000},
+		{Tamano: "6", AreaInteriorMM2: 152.4},
+		{Tamano: "9", AreaInteriorMM2: 228.6},
+		{Tamano: "12", AreaInteriorMM2: 304.8},
+		{Tamano: "16", AreaInteriorMM2: 406.4},
+		{Tamano: "18", AreaInteriorMM2: 457.2},
+		{Tamano: "20", AreaInteriorMM2: 508.0},
+		{Tamano: "24", AreaInteriorMM2: 609.6},
+		{Tamano: "30", AreaInteriorMM2: 762.0},
+		{Tamano: "36", AreaInteriorMM2: 914.4},
 	}
 
 	t.Run("Delta 3 hilos - conductor 4 AWG (25.48mm) + tierra 8 AWG (8.5mm)", func(t *testing.T) {
@@ -36,8 +39,9 @@ func TestCalcularCharolaEspaciado(t *testing.T) {
 		)
 
 		require.NoError(t, err)
-		// Delta: 3 hilos, 2*3*25.48 + 8.5 = 161.38mm -> charola 200mm
-		assert.Equal(t, "200mm", result.Tamano)
+		// Delta: 3 hilos, 2*3*25.48 + 8.5 = 161.38mm -> charola 6" (152.4mm) no es suficiente
+		// Siguiente: 9" (228.6mm) >= 161.38mm
+		assert.Equal(t, "9", result.Tamano)
 	})
 
 	t.Run("hilosPorFase greater than 1", func(t *testing.T) {
@@ -54,8 +58,8 @@ func TestCalcularCharolaEspaciado(t *testing.T) {
 		)
 
 		require.NoError(t, err)
-		// Delta: 3 fases * 2 hilos = 6 hilos, 2*6*10 + 5 = 125mm -> charola 150mm
-		assert.Equal(t, "150mm", result.Tamano)
+		// Delta: 3 fases * 2 hilos = 6 hilos, 2*6*10 + 5 = 125mm -> charola 6" (152.4mm) >= 125mm
+		assert.Equal(t, "6", result.Tamano)
 	})
 
 	t.Run("Delta system requires 3 conductors", func(t *testing.T) {
