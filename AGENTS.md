@@ -240,6 +240,7 @@ internal/
     application/
       port/             ← TablaNOMRepository, EquipoRepository (interfaces)
       usecase/          ← OrquestadorMemoriaCalculo y micro use cases
+      │   └── helpers/  ← Funciones auxiliares
       dto/              ← EquipoInput, MemoriaOutput
     infrastructure/
       adapter/

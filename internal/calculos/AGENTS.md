@@ -22,6 +22,7 @@ internal/calculos/
 ├── application/     ← ports, use cases, DTOs
 │   ├── port/        ← TablaNOMRepository, EquipoRepository
 │   ├── usecase/     ← OrquestadorMemoriaCalculo y micro use cases
+│   │   └── helpers/ ← Funciones auxiliares
 │   └── dto/         ← EquipoInput, MemoriaOutput
 └── infrastructure/  ← adapters HTTP (driver) y CSV (driven)
     └── adapter/
