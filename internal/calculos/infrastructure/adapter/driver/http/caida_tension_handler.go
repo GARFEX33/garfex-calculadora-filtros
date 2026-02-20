@@ -52,8 +52,9 @@ type CaidaTensionRequest struct {
 	// Tension es la tensión del sistema en volts
 	Tension int `json:"tension" binding:"required,gt=0"`
 
-	// FactorPotencia es el factor de potencia (0 a 1)
-	FactorPotencia float64 `json:"factor_potencia" binding:"required,min=0,max=1"`
+	// SistemaElectrico es el tipo de sistema eléctrico
+	// Valores: "MONOFASICO", "BIFASICO", "DELTA", "ESTRELLA"
+	SistemaElectrico string `json:"sistema_electrico" binding:"required"`
 
 	// HilosPorFase es el número de hilos por fase
 	HilosPorFase int `json:"hilos_por_fase" binding:"required,min=1"`
@@ -114,6 +115,18 @@ func (h *CaidaTensionHandler) CalcularCaidaTension(c *gin.Context) {
 		return
 	}
 
+	// Parsear sistema eléctrico
+	sistemaElectrico, err := entity.ParseSistemaElectrico(req.SistemaElectrico)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, CaidaTensionResponseError{
+			Success: false,
+			Error:   "Sistema eléctrico inválido",
+			Code:    "SISTEMA_ELECTRICO_INVALIDO",
+			Details: err.Error(),
+		})
+		return
+	}
+
 	// Crear valor de tensión
 	tension, err := valueobject.NewTension(req.Tension)
 	if err != nil {
@@ -154,7 +167,7 @@ func (h *CaidaTensionHandler) CalcularCaidaTension(c *gin.Context) {
 		tension,
 		req.LimiteCaida,
 		tipoCanalizacion,
-		req.FactorPotencia,
+		sistemaElectrico,
 		hilosPorFase,
 	)
 	if err != nil {

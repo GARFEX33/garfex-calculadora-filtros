@@ -15,7 +15,8 @@ var ErrPotenciaInvalida = errors.New("potencia debe ser mayor que cero")
 // ErrTensionInvalida is returned when the tension value is zero or negative.
 var ErrTensionInvalida = errors.New("tensión no válida")
 
-// ErrFactorPotenciaInvalido is declared in calculo_caida_tension.go (same package).
+// ErrFactorPotenciaInvalido is returned when factor de potencia is out of range (0, 1].
+var ErrFactorPotenciaInvalido = errors.New("factor de potencia debe estar entre 0 y 1")
 
 // CalcularAmperajeNominalCircuito calcula el amperaje nominal de un circuito
 // eléctrico según fórmulas NOM-001-SEDE.
