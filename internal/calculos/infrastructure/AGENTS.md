@@ -33,9 +33,6 @@ internal/calculos/infrastructure/
 
 > Ver reglas consolidadas en [docs/reference/structure.md](../../../docs/reference/structure.md)
 
-- `internal/calculos/domain/service` — usar solo entity y valueobject
-- Lógica de negocio
-
 ## Cómo modificar esta capa
 
 > Ver flujo completo en [docs/architecture/workflow.md](../../../docs/architecture/workflow.md)
@@ -78,6 +75,15 @@ internal/calculos/infrastructure/
 | CALCULO_NO_POSIBLE          | 422         |
 | Error interno               | 500         |
 
+## Referencias
+
+> Ver reglas consolidadas en [docs/reference/structure.md](../../../docs/reference/structure.md)
+
+- Agente: `infrastructure-agent`
+- Skill: `.agents/skills/orchestrating-agents/SKILL.md`
+
+## QA Checklist
+
 ## Reglas de Oro
 
 1. **Implementar exactamente el port** — no agregar métodos
@@ -85,11 +91,6 @@ internal/calculos/infrastructure/
 3. **Handlers solo coordinan** — bind → use case → response
 4. **Inyección de dependencias** — constructor, no globals
 5. **Context.Context** — primer parámetro en I/O
-
-## Referencias
-
-- Agente: `infrastructure-agent`
-- Skill: `.agents/skills/orchestrating-agents/SKILL.md`
 
 ## QA Checklist
 

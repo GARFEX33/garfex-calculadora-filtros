@@ -26,7 +26,7 @@ Cuándo usar cada agente o skill.
 | Architecture compleja o microservicios | skill `clean-ddd-hexagonal-vertical-go-enterprise` |
 | Garantizar pureza de dominio | skill `enforce-domain-boundary` |
 | Finalizar branch de desarrollo | skill `finishing-a-development-branch` |
-| Auditar documentación AGENTS.md | `agents-md-governor` |
+| Auditar documentación AGENTS.md | `agents-md-manager` |
 | Brainstorming creativo (funcionalidades, componentes) | skill `brainstorming` |
 | Brainstorming de dominio (entidades, value objects) | skill `brainstorming-dominio` |
 | Brainstorming de aplicación (ports, use cases) | skill `brainstorming-application` |

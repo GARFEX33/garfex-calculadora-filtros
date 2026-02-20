@@ -30,9 +30,6 @@ internal/calculos/application/
 
 > Ver reglas consolidadas en [docs/reference/structure.md](../../../docs/reference/structure.md)
 
-- `internal/calculos/infrastructure/` — **nunca**
-- Frameworks (Gin, pgx, etc.)
-
 ## Cómo modificar esta capa
 
 > Ver flujo completo en [docs/architecture/workflow.md](../../../docs/architecture/workflow.md)

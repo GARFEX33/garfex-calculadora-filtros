@@ -20,10 +20,6 @@ Capa de negocio pura para la feature de cálculos eléctricos. Sin dependencias 
 
 > Ver reglas consolidadas en [docs/reference/structure.md](../../../docs/reference/structure.md)
 
-- `internal/calculos/application/`
-- `internal/calculos/infrastructure/`
-- Gin, pgx, encoding/csv, cualquier framework externo
-
 ## Cómo modificar esta capa
 
 > Ver flujo completo en [docs/architecture/workflow.md](../../../docs/architecture/workflow.md)
@@ -38,6 +34,8 @@ Capa de negocio pura para la feature de cálculos eléctricos. Sin dependencias 
 > **Nota:** Las subcarpetas `entity/` y `service/` heredan las reglas de este AGENTS.md. No necesitan AGENTS.md propio.
 
 ## Referencias
+
+> Ver reglas consolidadas en [docs/reference/structure.md](../../../docs/reference/structure.md)
 
 - Agente: `domain-agent`
 - Skill: [.agents/skills/orchestrating-agents/SKILL.md](../../.agents/skills/orchestrating-agents/SKILL.md)

@@ -36,8 +36,8 @@ Lista completa de skills del proyecto.
 
 | Skill | Descripcion | Ruta |
 |-------|-------------|------|
+| `orchestrating-agents` | Orquestación de agentes por capa | [.agents/skills/orchestrating-agents/SKILL.md](../../.agents/skills/orchestrating-agents/SKILL.md) |
 | `agents-md-manager` | Crear y auditar jerarquia AGENTS.md | [.agents/skills/agents-md-manager/SKILL.md](../../.agents/skills/agents-md-manager/SKILL.md) |
 | `clean-ddd-hexagonal-vertical-go-enterprise` | Arquitectura Enterprise | [.agents/skills/clean-ddd-hexagonal-vertical-go-enterprise/SKILL.md](../../.agents/skills/clean-ddd-hexagonal-vertical-go-enterprise/SKILL.md) |
 | `enforce-domain-boundary` | Garantiza pureza de dominio | [.agents/skills/enforce-domain-boundary/SKILL.md](../../.agents/skills/enforce-domain-boundary/SKILL.md) |
-| `orchestrating-agents` | Orquestación de agentes | [.agents/skills/orchestrating-agents/SKILL.md](../../.agents/skills/orchestrating-agents/SKILL.md) |
 | `finishing-a-development-branch` | Finalización de branch | [.agents/skills/finishing-a-development-branch/SKILL.md](../../.agents/skills/finishing-a-development-branch/SKILL.md) |
