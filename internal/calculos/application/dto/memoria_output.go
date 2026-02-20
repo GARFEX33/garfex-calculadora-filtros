@@ -36,11 +36,11 @@ type ResultadoCanalizacion struct {
 
 // ResultadoCaidaTension contiene el resultado del cálculo de caída.
 type ResultadoCaidaTension struct {
-	Porcentaje          float64
-	CaidaVolts          float64
-	Cumple              bool
-	LimitePorcentaje    float64
-	ResistenciaEfectiva float64 // R·cosθ + X·senθ
+	Porcentaje       float64
+	CaidaVolts       float64
+	Cumple           bool
+	LimitePorcentaje float64
+	Impedancia       float64 // Z = √(R² + X²) en Ω/km
 }
 
 // EntradaDimensionarCanalizacion es el DTO de entrada para DimensionarCanalizacionUseCase.

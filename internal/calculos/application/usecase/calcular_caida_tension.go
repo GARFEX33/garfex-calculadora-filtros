@@ -67,10 +67,10 @@ func (uc *CalcularCaidaTensionUseCase) Execute(
 	}
 
 	return dto.ResultadoCaidaTension{
-		Porcentaje:          resultadoCaida.Porcentaje,
-		CaidaVolts:          resultadoCaida.CaidaVolts,
-		Cumple:              resultadoCaida.Cumple,
-		LimitePorcentaje:    limiteCaida,
-		ResistenciaEfectiva: resultadoCaida.Impedancia,
+		Porcentaje:       resultadoCaida.Porcentaje,
+		CaidaVolts:       resultadoCaida.CaidaVolts,
+		Cumple:           resultadoCaida.Cumple,
+		LimitePorcentaje: limiteCaida,
+		Impedancia:       resultadoCaida.Impedancia,
 	}, nil
 }
