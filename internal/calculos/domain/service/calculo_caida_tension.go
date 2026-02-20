@@ -29,18 +29,27 @@ type EntradaCalculoCaidaTension struct {
 	TipoCanalizacion    entity.TipoCanalizacion // Documented in memoria de cálculo report
 	HilosPorFase        int                     // CF ≥ 1 (parallel conductors per phase)
 	FactorPotencia      float64                 // cosθ: FA/FR/TR = 1.0 | Carga = explicit FP
+	SistemaElectrico    entity.SistemaElectrico // For determining voltage drop factor (2 or √3)
 }
 
-// CalcularCaidaTension calculates the voltage drop for a three-phase system
-// using the IEEE-141 / NOM formula with power factor:
+// CalcularCaidaTension calculates the voltage drop using the IEEE-141 / NOM formula
+// with power factor, adjusted for the electrical system type:
+//
+// Monofásico/Bifásico:
+//
+//	%Vd = (2 × Ib × L × (R·cosθ + X·senθ) / (V × N)) × 100
+//
+// Trifásico (Estrella/Delta):
 //
 //	%Vd = (√3 × Ib × L × (R·cosθ + X·senθ) / (V × N)) × 100
+//
+// Common for all:
+//
 //	VD  = V × (%Vd / 100)
 //
 // Where cosθ = FactorPotencia, senθ = √(1 - FP²), N = HilosPorFase.
 //
-// For FP = 1.0 (FiltroActivo, FiltroRechazo, Transformador) the formula
-// reduces to: %Vd = (√3 × Ib × L × R / (V × N)) × 100  (reactance has no effect).
+// For FP = 1.0 (FiltroActivo, FiltroRechazo, Transformador) the reactance has no effect (senθ=0).
 func CalcularCaidaTension(
 	entrada EntradaCalculoCaidaTension,
 	corriente valueobject.Corriente,
@@ -71,12 +80,22 @@ func CalcularCaidaTension(
 	// Step 5: effective impedance term (Ω/km)
 	terminoEfectivo := rEf*cosTheta + xEf*sinTheta
 
-	// Step 6: %Vd = (√3 × Ib × L × terminoEfectivo / (V × N)) × 100
-	// Note: N (HilosPorFase) is already applied to R and X above via rEf and xEf.
-	lKm := distancia / 1000.0
-	porcentaje := math.Sqrt(3) * corriente.Valor() * lKm * terminoEfectivo / float64(tension.Valor()) * 100
+	// Step 6: Determine voltage drop factor based on electrical system
+	var factorSistema float64
+	switch entrada.SistemaElectrico {
+	case entity.SistemaElectricoMonofasico, entity.SistemaElectricoBifasico:
+		factorSistema = 2.0 // Monofásico y bifásico usan factor 2
+	case entity.SistemaElectricoEstrella, entity.SistemaElectricoDelta:
+		factorSistema = math.Sqrt(3) // Trifásico usa √3
+	default:
+		return entity.ResultadoCaidaTension{}, fmt.Errorf("sistema eléctrico inválido: %v", entrada.SistemaElectrico)
+	}
 
-	// Step 7: VD in volts
+	// Step 7: %Vd = (factor × Ib × L × terminoEfectivo / V) × 100
+	lKm := distancia / 1000.0
+	porcentaje := factorSistema * corriente.Valor() * lKm * terminoEfectivo / float64(tension.Valor()) * 100
+
+	// Step 8: VD in volts
 	vd := float64(tension.Valor()) * (porcentaje / 100)
 
 	return entity.ResultadoCaidaTension{
