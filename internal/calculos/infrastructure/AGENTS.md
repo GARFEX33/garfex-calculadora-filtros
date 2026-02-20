@@ -1,14 +1,8 @@
----
-name: infrastructure-agent
-description: Especialista únicamente en la capa de infraestructura de calculos. Adapters HTTP y CSV.
-model: opencode/minimax-m2.5-free
----
-
 # Calculos — Infrastructure Layer
 
 Implementa los ports definidos en `application/port/`. Tecnologías: CSV (encoding/csv), HTTP (Gin).
 
-> **Workflow:** Ver [`AGENTS.md` raíz](../../../AGENTS.md) → "Sistema de Agentes Especializados"
+> **Workflow:** Ver [docs/architecture/agents.md](../../../docs/architecture/agents.md)
 
 ## Estructura
 
@@ -25,6 +19,8 @@ internal/calculos/infrastructure/
 └── router.go                 # Configuración de rutas Gin
 ```
 
+> **Nota:** Las subcarpetas `adapter/driver/http/` y `adapter/driven/csv/` heredan las reglas de este AGENTS.md. No necesitan AGENTS.md propio.
+
 ## Dependencias permitidas
 
 - `internal/shared/kernel/valueobject`
@@ -35,12 +31,14 @@ internal/calculos/infrastructure/
 
 ## Dependencias prohibidas
 
+> Ver reglas consolidadas en [docs/reference/structure.md](../../../docs/reference/structure.md)
+
 - `internal/calculos/domain/service` — usar solo entity y valueobject
 - Lógica de negocio
 
 ## Cómo modificar esta capa
 
-> Ver flujo completo en [`AGENTS.md` raíz](../../../AGENTS.md)
+> Ver flujo completo en [docs/architecture/workflow.md](../../../docs/architecture/workflow.md)
 
 ## Adapters
 
@@ -68,17 +66,17 @@ internal/calculos/infrastructure/
 
 ## Mapeo de Errores HTTP
 
-| Error domain/application | HTTP status |
-|--------------------------|-------------|
-| ErrModoInvalido | 400 |
-| ErrTipoCanalizacionInvalido | 400 |
-| ErrSistemaElectricoInvalido | 400 |
-| ErrTipoEquipoInvalido | 400 |
-| Validación | 400 |
-| ErrConductorNoEncontrado | 422 |
-| ErrCanalizacionNoDisponible | 422 |
-| CALCULO_NO_POSIBLE | 422 |
-| Error interno | 500 |
+| Error domain/application    | HTTP status |
+| --------------------------- | ----------- |
+| ErrModoInvalido             | 400         |
+| ErrTipoCanalizacionInvalido | 400         |
+| ErrSistemaElectricoInvalido | 400         |
+| ErrTipoEquipoInvalido       | 400         |
+| Validación                  | 400         |
+| ErrConductorNoEncontrado    | 422         |
+| ErrCanalizacionNoDisponible | 422         |
+| CALCULO_NO_POSIBLE          | 422         |
+| Error interno               | 500         |
 
 ## Reglas de Oro
 

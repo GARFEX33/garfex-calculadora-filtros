@@ -1,21 +1,15 @@
----
-name: domain-agent
-description: Especialista únicamente en la capa de dominio de calculos. Entidades, value objects y servicios de negocio.
-model: opencode/minimax-m2.5-free
----
-
 # Calculos — Domain Layer
 
 Capa de negocio pura para la feature de cálculos eléctricos. Sin dependencias externas (sin Gin, pgx, CSV).
 
-> **Workflow:** Ver [`AGENTS.md` raíz](../../../AGENTS.md) → "Sistema de Agentes Especializados"
+> **Workflow:** Ver [docs/architecture/agents.md](../../../docs/architecture/agents.md)
 
 ## Estructura
 
-| Subdirectorio | Contenido |
-|---------------|-----------|
-| `entity/` | Entidades, tipos, interfaces del dominio de cálculos |
-| `service/` | Servicios de cálculo puros (sin I/O) |
+| Subdirectorio | Contenido                                            |
+| ------------- | ---------------------------------------------------- |
+| `entity/`     | Entidades, tipos, interfaces del dominio de cálculos |
+| `service/`    | Servicios de cálculo puros (sin I/O)                 |
 
 ## Dependencias permitidas
 
@@ -24,25 +18,29 @@ Capa de negocio pura para la feature de cálculos eléctricos. Sin dependencias 
 
 ## Dependencias prohibidas
 
+> Ver reglas consolidadas en [docs/reference/structure.md](../../../docs/reference/structure.md)
+
 - `internal/calculos/application/`
 - `internal/calculos/infrastructure/`
 - Gin, pgx, encoding/csv, cualquier framework externo
 
 ## Cómo modificar esta capa
 
-> Ver flujo completo en [`AGENTS.md` raíz](../../../AGENTS.md)
+> Ver flujo completo en [docs/architecture/workflow.md](../../../docs/architecture/workflow.md)
 
 ## Guías
 
-| Subdirectorio | Contenido |
-|---------------|-----------|
-| `entity/` | Entidades: TipoEquipo, TipoCanalizacion, SistemaElectrico, MemoriaCalculo, etc. |
-| `service/` | 14 servicios de cálculo NOM |
+| Subdirectorio | Contenido                                                                       |
+| ------------- | ------------------------------------------------------------------------------- |
+| `entity/`     | Entidades: TipoEquipo, TipoCanalizacion, SistemaElectrico, MemoriaCalculo, etc. |
+| `service/`    | Servicios de cálculo NOM (ls internal/calculos/domain/service/*.go)            |
+
+> **Nota:** Las subcarpetas `entity/` y `service/` heredan las reglas de este AGENTS.md. No necesitan AGENTS.md propio.
 
 ## Referencias
 
 - Agente: `domain-agent`
-- Skill: `.agents/skills/orchestrating-agents/SKILL.md`
+- Skill: [.agents/skills/orchestrating-agents/SKILL.md](../../.agents/skills/orchestrating-agents/SKILL.md)
 
 ## Reglas de Oro
 

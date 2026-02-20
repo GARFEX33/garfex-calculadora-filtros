@@ -1,14 +1,8 @@
----
-name: application-agent
-description: Especialista únicamente en la capa de aplicación de calculos. Ports, use cases y DTOs.
-model: opencode/minimax-m2.5-free
----
-
 # Calculos — Application Layer
 
 Orquesta domain services. Define contratos (ports), no implementaciones.
 
-> **Workflow:** Ver [`AGENTS.md` raíz](../../../AGENTS.md) → "Sistema de Agentes Especializados"
+> **Workflow:** Ver [docs/architecture/agents.md](../../../docs/architecture/agents.md)
 
 ## Estructura
 
@@ -23,6 +17,8 @@ internal/calculos/application/
 └── dto/            # Entrada/salida
 ```
 
+> **Nota:** Las subcarpetas `port/`, `usecase/` y `dto/` heredan las reglas de este AGENTS.md. No necesitan AGENTS.md propio.
+
 ## Dependencias permitidas
 
 - `internal/shared/kernel/valueobject`
@@ -32,12 +28,14 @@ internal/calculos/application/
 
 ## Dependencias prohibidas
 
+> Ver reglas consolidadas en [docs/reference/structure.md](../../../docs/reference/structure.md)
+
 - `internal/calculos/infrastructure/` — **nunca**
 - Frameworks (Gin, pgx, etc.)
 
 ## Cómo modificar esta capa
 
-> Ver flujo completo en [`AGENTS.md` raíz](../../../AGENTS.md)
+> Ver flujo completo en [docs/architecture/workflow.md](../../../docs/architecture/workflow.md)
 
 ## Flujo de Use Cases (orden obligatorio)
 
@@ -103,15 +101,15 @@ El use case es responsable de la conversión:
 func (uc *MiUseCase) Execute(ctx context.Context, input dto.MiInput) (dto.MiOutput, error) {
     // 1. Validar DTO
     if err := input.Validate(); err != nil { return ..., err }
-    
+
     // 2. Convertir primitivos → value objects
     corriente, err := valueobject.NewCorriente(input.Corriente)
     tipoCanalizacion, err := entity.ParseTipoCanalizacion(input.TipoCanalizacion)
     material := input.ToDomainMaterial()
-    
+
     // 3. Llamar servicio de dominio
     resultado, err := service.MiServicio(corriente, material, ...)
-    
+
     // 4. Convertir domain → DTO output
     return dto.MiOutput{
         Calibre:    resultado.Calibre(),
@@ -131,15 +129,4 @@ func (uc *MiUseCase) Execute(ctx context.Context, input dto.MiInput) (dto.MiOutp
 
 - Agente: `application-agent`
 - Skill: `.agents/skills/orchestrating-agents/SKILL.md`
-
-## QA Checklist
-
-- [ ] `go test ./internal/calculos/application/...` pasa
-- [ ] Use case < ~80 líneas
-- [ ] Sin lógica de negocio (fórmulas, validaciones complejas)
-- [ ] Sin imports de infrastructure
-- [ ] Error wrapping con `%w`
-- [ ] DTOs usan SOLO primitivos (string, int, float64)
-- [ ] Use case convierte DTO → value objects antes de llamar a domain
-- [ ] Use case convierte resultado domain → DTO antes de retornar
-- [ ] Un use case = una responsabilidad (no combinar funcionalidades)
+- QA Checklist: [QA_CHECKLIST.md](QA_CHECKLIST.md)
