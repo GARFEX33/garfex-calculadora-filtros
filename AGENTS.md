@@ -53,17 +53,6 @@ domain-agent → application-agent → infrastructure-agent
 | Crear/modificar ports, use cases, DTOs | `application-agent` | `brainstorming-application` → `writing-plans-application` → `executing-plans-application` |
 | Crear/modificar adapters, repositorios, handlers HTTP | `infrastructure-agent` | `brainstorming-infrastructure` → `writing-plans-infrastructure` → `executing-plans-infrastructure` |
 | Actualizar/auditar archivos AGENTS.md y README.md | `agents-md-curator` | `agents-md-manager` |
-| Auditar capa de dominio (DDD, pureza, Go idiomático) | `auditor-domain` | `golang-patterns`, `golang-pro`, `enforce-domain-boundary` |
-| Auditar capa de application (ports, use cases, DTOs) | `auditor-application` | `golang-patterns`, `golang-pro` |
-| Auditar capa de infrastructure (adapters, I/O, seguridad) | `auditor-infrastructure` | `golang-patterns`, `golang-pro`, `api-design-principles` |
-
-> **Regla de Auditoría:** Al invocar auditores, el coordinador DEBE incluir estas instrucciones en el prompt:
-> ```
-> Después de tu auditoría:
-> - Si hay CRÍTICO (arquitectura violada, security, no compila, tests fallando) → DETENTE y PREGUNTAME: "¿Corregimos esto o continuamos?"
-> - Si hay WARNING → Reportalo pero continuamos
-> - Si está limpio → Apruebalos directamente
-> ```
 
 ### Reglas de delegación entre agentes
 
@@ -349,11 +338,6 @@ Cuando realices estas acciones, LEE el AGENTS.md o skill correspondiente PRIMERO
 | Crear nuevo skill                             | skill `skill-creator`                                        |
 | Sincronizar skills a AGENTS.md                | skill `skill-sync`                                           |
 | Hacer commits o pull requests                 | skill `commit-work`                                          |
-| Auditar capa de dominio                       | `auditor-domain`                                             |
-| Auditar capa de application                   | `auditor-application`                                        |
-| Auditar capa de infrastructure                | `auditor-infrastructure`                                     |
-| Auditar documentación AGENTS.md               | `auditor-agents-md-architecture`                             |
-| Auditar sistema de agentes y skills           | `auditor-skills-commands-agent`                              |
 
 ## Stack
 
