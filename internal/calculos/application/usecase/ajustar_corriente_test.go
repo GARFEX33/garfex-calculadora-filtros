@@ -77,6 +77,10 @@ func (m *mockTablaRepo) ObtenerTablaOcupacionTuberia(ctx context.Context, canali
 	return nil, nil
 }
 
+func (m *mockTablaRepo) ObtenerSeccionConductor(ctx context.Context, calibre string) (float64, error) {
+	return 0, nil
+}
+
 type mockSeleccionarTempPort struct {
 	temperatura valueobject.Temperatura
 }

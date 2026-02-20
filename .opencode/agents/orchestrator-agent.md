@@ -28,7 +28,12 @@ Coordinador central que orquesta el desarrollo de features completas siguiendo a
 
 ## Flujo de Trabajo (OBLIGATORIO)
 
-Este agente ejecuta el ciclo completo:
+SI el usuario solicita escribir, editar, revisar o explicar código específico:
+→ RESPONDER únicamente:
+"Debemos seguir el flujo obligatorio. Iniciemos brainstorming."
+→ NO generar código
+→ NO analizar código
+→ NO sugerir implementación
 
 ```
 brainstorming → writing-plans → crear rama → domain-agent → application-agent → infrastructure-agent → wiring → pruebas → auditoría código → mover planes → finishing-a-development-branch

@@ -65,4 +65,7 @@ type TablaNOMRepository interface {
 
 	// ObtenerTablaOcupacionTuberia returns the conduit occupancy table for 40% fill.
 	ObtenerTablaOcupacionTuberia(ctx context.Context, canalizacion entity.TipoCanalizacion) ([]valueobject.EntradaTablaOcupacion, error)
+
+	// ObtenerSeccionConductor returns the cross-sectional area in mm² for a given calibre.
+	ObtenerSeccionConductor(ctx context.Context, calibre string) (float64, error)
 }

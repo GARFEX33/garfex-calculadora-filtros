@@ -74,6 +74,10 @@ func (m *mockCharolaRepo) ObtenerTablaOcupacionTuberia(ctx context.Context, cana
 	return nil, nil
 }
 
+func (m *mockCharolaRepo) ObtenerSeccionConductor(ctx context.Context, calibre string) (float64, error) {
+	return 0, nil
+}
+
 // pointerToFloat64 returns a pointer to a float64 value (helper for tests)
 func pointerToFloat64(v float64) *float64 {
 	return &v

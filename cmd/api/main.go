@@ -34,6 +34,7 @@ func main() {
 	calcularTamanioTuberiaUC := usecase.NewCalcularTamanioTuberiaUseCase(tablaRepo)
 	calcularCharolaEspaciadoUC := usecase.NewCalcularCharolaEspaciadoUseCase(tablaRepo)
 	calcularCharolaTriangularUC := usecase.NewCalcularCharolaTriangularUseCase(tablaRepo)
+	calcularCaidaTensionUC := usecase.NewCalcularCaidaTensionUseCase(tablaRepo)
 
 	// Crear router
 	router := infrastructure.NewRouter(
@@ -44,6 +45,7 @@ func main() {
 		calcularTamanioTuberiaUC,
 		calcularCharolaEspaciadoUC,
 		calcularCharolaTriangularUC,
+		calcularCaidaTensionUC,
 	)
 
 	// Configurar servidor HTTP

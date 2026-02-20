@@ -29,7 +29,8 @@ func NewCalcularCaidaTensionUseCase(
 // Execute calcula la caída de tensión.
 func (uc *CalcularCaidaTensionUseCase) Execute(
 	ctx context.Context,
-	conductor valueobject.Conductor,
+	calibre string,
+	material valueobject.MaterialConductor,
 	corrienteAjustada valueobject.Corriente,
 	longitudCircuito float64,
 	tension valueobject.Tension,
@@ -38,11 +39,8 @@ func (uc *CalcularCaidaTensionUseCase) Execute(
 	factorPotencia float64,
 	hilosPorFase int,
 ) (dto.ResultadoCaidaTension, error) {
-	// El conductor ya tiene el material como MaterialConductor
-	material := conductor.Material()
-
 	// Obtener impedancia
-	impedancia, err := uc.tablaRepo.ObtenerImpedancia(ctx, conductor.Calibre(), tipoCanalizacion, material)
+	impedancia, err := uc.tablaRepo.ObtenerImpedancia(ctx, calibre, tipoCanalizacion, material)
 	if err != nil {
 		return dto.ResultadoCaidaTension{}, fmt.Errorf("obtener impedancia: %w", err)
 	}

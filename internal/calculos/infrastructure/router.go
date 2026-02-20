@@ -17,6 +17,7 @@ func NewRouter(
 	calcularTamanioTuberiaUC *usecase.CalcularTamanioTuberiaUseCase,
 	calcularCharolaEspaciadoUC *usecase.CalcularCharolaEspaciadoUseCase,
 	calcularCharolaTriangularUC *usecase.CalcularCharolaTriangularUseCase,
+	calcularCaidaTensionUC *usecase.CalcularCaidaTensionUseCase,
 ) *gin.Engine {
 	router := gin.New()
 
@@ -56,6 +57,10 @@ func NewRouter(
 			charolaHandler := http.NewCharolaHandler(calcularCharolaEspaciadoUC, calcularCharolaTriangularUC)
 			calculos.POST("/charola/espaciado", charolaHandler.PostCharolaEspaciado)
 			calculos.POST("/charola/triangular", charolaHandler.PostCharolaTriangular)
+
+			// Caída de tensión
+			caidaTensionHandler := http.NewCaidaTensionHandler(calcularCaidaTensionUC)
+			calculos.POST("/caida-tension", caidaTensionHandler.CalcularCaidaTension)
 		}
 	}
 

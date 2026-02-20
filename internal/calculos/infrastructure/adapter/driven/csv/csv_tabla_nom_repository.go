@@ -30,6 +30,7 @@ type factorAgrupamientoEntry struct {
 
 // impedanciaEntry holds all impedance values for a given calibre from Tabla 9.
 type impedanciaEntry struct {
+	SeccionMM2      float64
 	ReactanciaAl    float64
 	ReactanciaAcero float64
 	ResCuPVC        float64
@@ -799,7 +800,7 @@ func (r *CSVTablaNOMRepository) loadTablaImpedancia() (map[string]impedanciaEntr
 	}
 
 	requiredCols := []string{
-		"calibre", "reactancia_al", "reactancia_acero",
+		"calibre", "seccion_mm2", "reactancia_al", "reactancia_acero",
 		"res_cu_pvc", "res_cu_al", "res_cu_acero",
 		"res_al_pvc", "res_al_al", "res_al_acero",
 	}
@@ -824,6 +825,9 @@ func (r *CSVTablaNOMRepository) loadTablaImpedancia() (map[string]impedanciaEntr
 		entry := impedanciaEntry{}
 
 		// Parse all fields
+		if v, err := strconv.ParseFloat(record[indices["seccion_mm2"]], 64); err == nil {
+			entry.SeccionMM2 = v
+		}
 		if v, err := strconv.ParseFloat(record[indices["reactancia_al"]], 64); err == nil {
 			entry.ReactanciaAl = v
 		}
@@ -1244,4 +1248,18 @@ func (r *CSVTablaNOMRepository) loadTablaOcupacionTuberia(filename string) ([]va
 	}
 
 	return result, nil
+}
+
+// ObtenerSeccionConductor returns the cross-sectional area in mm² for a given calibre from Tabla 9.
+func (r *CSVTablaNOMRepository) ObtenerSeccionConductor(ctx context.Context, calibre string) (float64, error) {
+	entry, ok := r.tablaImpedancia[calibre]
+	if !ok {
+		return 0, fmt.Errorf("calibre no encontrado en tabla de impedancia: %s", calibre)
+	}
+
+	if entry.SeccionMM2 <= 0 {
+		return 0, fmt.Errorf("sección no disponible para calibre: %s", calibre)
+	}
+
+	return entry.SeccionMM2, nil
 }
