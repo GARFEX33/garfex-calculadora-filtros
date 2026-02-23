@@ -10,25 +10,39 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/joho/godotenv"
+
 	calculosport "github.com/garfex/calculadora-filtros/internal/calculos/application/port"
 	"github.com/garfex/calculadora-filtros/internal/calculos/application/usecase"
 	"github.com/garfex/calculadora-filtros/internal/calculos/infrastructure"
 	"github.com/garfex/calculadora-filtros/internal/calculos/infrastructure/adapter/driven/csv"
+
+	equiposusecase "github.com/garfex/calculadora-filtros/internal/equipos/application/usecase"
+	equiposinfra "github.com/garfex/calculadora-filtros/internal/equipos/infrastructure"
+	equipospostgres "github.com/garfex/calculadora-filtros/internal/equipos/infrastructure/adapter/driven/postgres"
+	equipohttp "github.com/garfex/calculadora-filtros/internal/equipos/infrastructure/adapter/driver/http"
+	sharedpostgres "github.com/garfex/calculadora-filtros/internal/shared/infrastructure/postgres"
 )
 
 func main() {
-	// Crear repositorios
+	// Cargar variables de entorno desde .env (solo en desarrollo, ignora error si no existe)
+	if err := godotenv.Load(); err != nil {
+		log.Println("Archivo .env no encontrado, usando variables de entorno del sistema")
+	}
+
+	// ─── Calculos: repositorios y use cases ──────────────────────────────────
+
 	tablaRepo, err := csv.NewCSVTablaNOMRepository("data/tablas_nom")
 	if err != nil {
 		log.Fatalf("Error cargando tablas NOM: %v", err)
 	}
 
-	// TODO: Implementar PostgreSQL repository
+	// TODO: conectar EquipoRepository de calculos al repo de equipos (futuro)
 	var equipoRepo calculosport.EquipoRepository
 
-	// Crear micro use cases
 	calcularCorrienteUC := usecase.NewCalcularCorrienteUseCase(equipoRepo)
 	ajustarCorrienteUC := usecase.NewAjustarCorrienteUseCase(tablaRepo)
+	seleccionarConductorUC := usecase.NewSeleccionarConductorUseCase(tablaRepo)
 	seleccionarConductorAlimentacionUC := usecase.NewSeleccionarConductorAlimentacionUseCase(tablaRepo)
 	seleccionarConductorTierraUC := usecase.NewSeleccionarConductorTierraUseCase(tablaRepo)
 	calcularTamanioTuberiaUC := usecase.NewCalcularTamanioTuberiaUseCase(tablaRepo)
@@ -36,19 +50,68 @@ func main() {
 	calcularCharolaTriangularUC := usecase.NewCalcularCharolaTriangularUseCase(tablaRepo)
 	calcularCaidaTensionUC := usecase.NewCalcularCaidaTensionUseCase(tablaRepo)
 
-	// Crear router
+	orquestadorMemoriaUC := usecase.NewOrquestadorMemoriaCalculoUseCase(
+		calcularCorrienteUC,
+		ajustarCorrienteUC,
+		seleccionarConductorUC,
+		calcularTamanioTuberiaUC,
+		calcularCharolaEspaciadoUC,
+		calcularCharolaTriangularUC,
+		calcularCaidaTensionUC,
+		tablaRepo,
+	)
+
+	// ─── Equipos: conexión DB + repositorio + use cases ──────────────────────
+
+	dbCfg, err := sharedpostgres.LoadDBConfigFromEnv()
+	if err != nil {
+		log.Fatalf("Error cargando configuración de base de datos: %v", err)
+	}
+
+	pool, err := equipospostgres.NewPool(dbCfg)
+	if err != nil {
+		log.Fatalf("Error conectando a PostgreSQL: %v", err)
+	}
+	defer pool.Close()
+	log.Printf("Conectado a PostgreSQL en %s:%s", dbCfg.Host, dbCfg.Port)
+
+	equipoFiltroRepo := equipospostgres.NewPostgresEquipoFiltroRepository(pool)
+
+	crearEquipoUC := equiposusecase.NewCrearEquipoUseCase(equipoFiltroRepo)
+	obtenerEquipoUC := equiposusecase.NewObtenerEquipoUseCase(equipoFiltroRepo)
+	listarEquiposUC := equiposusecase.NewListarEquiposUseCase(equipoFiltroRepo)
+	actualizarEquipoUC := equiposusecase.NewActualizarEquipoUseCase(equipoFiltroRepo)
+	eliminarEquipoUC := equiposusecase.NewEliminarEquipoUseCase(equipoFiltroRepo)
+
+	equipoHandler := equipohttp.NewEquipoHandler(
+		crearEquipoUC,
+		obtenerEquipoUC,
+		listarEquiposUC,
+		actualizarEquipoUC,
+		eliminarEquipoUC,
+	)
+
+	// ─── Router principal ────────────────────────────────────────────────────
+
 	router := infrastructure.NewRouter(
 		calcularCorrienteUC,
 		ajustarCorrienteUC,
+		seleccionarConductorUC,
 		seleccionarConductorAlimentacionUC,
 		seleccionarConductorTierraUC,
 		calcularTamanioTuberiaUC,
 		calcularCharolaEspaciadoUC,
 		calcularCharolaTriangularUC,
 		calcularCaidaTensionUC,
+		orquestadorMemoriaUC,
 	)
 
-	// Configurar servidor HTTP
+	// Montar rutas de equipos bajo /api/v1
+	v1 := router.Group("/api/v1")
+	equiposinfra.RegisterEquiposRoutes(v1, equipoHandler)
+
+	// ─── Servidor HTTP ───────────────────────────────────────────────────────
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
@@ -59,11 +122,9 @@ func main() {
 		Handler: router,
 	}
 
-	// Canal para señales de sistema
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 
-	// Iniciar servidor en goroutine
 	go func() {
 		log.Printf("Servidor iniciado en puerto %s", port)
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
@@ -71,11 +132,9 @@ func main() {
 		}
 	}()
 
-	// Esperar señal de cierre
 	<-quit
 	log.Println("Cerrando servidor...")
 
-	// Graceful shutdown con timeout
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
