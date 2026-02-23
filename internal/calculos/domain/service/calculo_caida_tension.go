@@ -68,36 +68,45 @@ type EntradaCalculoCaidaTension struct {
 	HilosPorFase        int                     // N ≥ 1 (parallel conductors per phase)
 	SistemaElectrico    entity.SistemaElectrico // For determining voltage drop factor
 	TipoVoltaje         entity.TipoVoltaje      // FASE_NEUTRO or FASE_FASE (for voltage reference)
+	FactorPotencia      float64                 // cosθ ∈ (0, 1] — factor de potencia del circuito
 }
 
-// CalcularCaidaTension calculates the voltage drop using the NOM simplified formula:
+// CalcularCaidaTension calculates the voltage drop using the NOM / IEEE-141 formula
+// with effective impedance:
 //
-// Sistema Monofásico 1F-2H:
+// Formula general: e = factor × (I/N) × L × (R × cosθ + X × sinθ)
 //
-//	e = 2·I·Z·L        →  %e = (e / Vfn) × 100
+// Sistema Monofásico 1F-2H (Circuito Monofásico 2 hilos):
 //
-// Sistema Bifásico 2F-3H:
+//	e = 2 × (I/N) × L × Zef
+//	%e = (e / Vfn) × 100
 //
-//	e = I·Z·L          →  %e = (e / Vfn) × 100
+// Sistema Bifásico 2F-3H (Circuito Monofásico 3 hilos):
+//
+//	e = 2 × (I/N) × L × Zef
+//	%e = (e / Vfn) × 100
 //
 // Sistema Trifásico Delta 3F-3H:
 //
-//	e = √3·I·Z·L       →  %e = (e / Vff) × 100
+//	e = √3 × (I/N) × L × Zef
+//	%e = (e / Vff) × 100
 //
 // Sistema Trifásico Estrella 3F-4H:
 //
-//	e = I·Z·L          →  %e = (e / Vfn) × 100
+//	e = √3 × (I/N) × L × Zef
+//	%e = (e / Vfn) × 100
 //
 // Where:
 //
-//	I = Corriente nominal en Amperes (sin factor de corrección)
-//	Z = Impedancia de Tabla 9 = √(R² + X²) en Ω/km
-//	L = Longitud del alimentador en km
-//	N = HilosPorFase (conductores en paralelo)
-//	Vfn = Voltaje entre fase y neutro
-//	Vff = Voltaje entre fases
+//	I   = Corriente nominal en Amperes
+//	N   = HilosPorFase (conductores en paralelo por fase)
+//	Zef = Impedancia efectiva = R·cosθ + X·senθ  en Ω/km  (IEEE-141 / NOM Tabla 9)
+//	L   = Longitud del alimentador en km
+//	Vfn = Voltaje fase-neutro
+//	Vff = Voltaje fase-fase
+//	cosθ = FactorPotencia,  senθ = √(1 - cos²θ)
 //
-// Note: La corriente I NO lleva factor de potencia en la fórmula NOM.
+// Note: Se usa impedancia EFECTIVA (R·cosθ + X·senθ), NO la magnitud √(R²+X²).
 func CalcularCaidaTension(
 	entrada EntradaCalculoCaidaTension,
 	corriente valueobject.Corriente,
@@ -114,12 +123,12 @@ func CalcularCaidaTension(
 
 	n := float64(entrada.HilosPorFase)
 
-	// Step 1: Calculate effective R and X per parallel conductor
-	rEf := entrada.ResistenciaOhmPorKm / n
-	xEf := entrada.ReactanciaOhmPorKm / n
-
-	// Step 2: Calculate impedance Z = √(R² + X²) from Tabla 9
-	impedancia := math.Sqrt(rEf*rEf + xEf*xEf)
+	// Step 1: Calculate effective impedance Zef = R·cosθ + X·senθ (per conductor)
+	// Note: We use R and X directly, NOT divided by N. The division by N
+	// is applied to the current I in Step 4.
+	cosTheta := entrada.FactorPotencia
+	senTheta := math.Sqrt(1 - cosTheta*cosTheta)
+	impedancia := entrada.ResistenciaOhmPorKm*cosTheta + entrada.ReactanciaOhmPorKm*senTheta
 
 	// Step 3: Determine voltage drop factor based on electrical system per NOM
 	var factorSistema float64
@@ -127,18 +136,19 @@ func CalcularCaidaTension(
 	case entity.SistemaElectricoMonofasico:
 		factorSistema = 2.0 // Monofásico 1F-2H
 	case entity.SistemaElectricoBifasico:
-		factorSistema = 1.0 // Bifásico 2F-3H
+		factorSistema = 2.0 // Bifásico 2F-3H (dos fases, como monofásico)
 	case entity.SistemaElectricoDelta:
 		factorSistema = math.Sqrt(3) // Trifásico 3F-3H (Delta)
 	case entity.SistemaElectricoEstrella:
-		factorSistema = 1.0 // Trifásico 3F-4H (Estrella)
+		factorSistema = math.Sqrt(3) // Trifásico 3F-4H (Estrella)
 	default:
 		return entity.ResultadoCaidaTension{}, fmt.Errorf("sistema eléctrico inválido: %v", entrada.SistemaElectrico)
 	}
 
-	// Step 4: Calculate voltage drop: e = factor × I × Z × L
+	// Step 4: Calculate voltage drop: e = factor × (I/N) × Z × L
 	lKm := distancia / 1000.0
-	caida := factorSistema * corriente.Valor() * impedancia * lKm
+	corrientePorHilo := corriente.Valor() / n
+	caida := factorSistema * corrientePorHilo * impedancia * lKm
 
 	// Step 5: Determine voltage reference based on electrical system and convert if needed
 	// According to NOM-001-SEDE-2012:
@@ -157,8 +167,8 @@ func CalcularCaidaTension(
 		Porcentaje:  porcentaje,
 		CaidaVolts:  caida,
 		Cumple:      porcentaje <= limiteNOM,
-		Impedancia:  impedancia, // Z = √(R² + X²) from Tabla 9
-		Resistencia: rEf,
-		Reactancia:  xEf,
+		Impedancia:  impedancia, // Zef = R·cosθ + X·senθ (IEEE-141 efectiva)
+		Resistencia: entrada.ResistenciaOhmPorKm,
+		Reactancia:  entrada.ReactanciaOhmPorKm,
 	}, nil
 }

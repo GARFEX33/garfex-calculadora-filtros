@@ -40,7 +40,7 @@ type ResultadoCaidaTension struct {
 	CaidaVolts       float64
 	Cumple           bool
 	LimitePorcentaje float64
-	Impedancia       float64 // Z = √(R² + X²) en Ω/km
+	Impedancia       float64 // Zef = R·cosθ + X·senθ en Ω/km (IEEE-141 efectiva)
 }
 
 // EntradaDimensionarCanalizacion es el DTO de entrada para DimensionarCanalizacionUseCase.

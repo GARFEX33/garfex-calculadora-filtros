@@ -39,6 +39,7 @@ func (uc *CalcularCaidaTensionUseCase) Execute(
 	sistemaElectrico entity.SistemaElectrico,
 	tipoVoltaje entity.TipoVoltaje,
 	hilosPorFase int,
+	factorPotencia float64,
 ) (dto.ResultadoCaidaTension, error) {
 	// Obtener impedancia
 	impedancia, err := uc.tablaRepo.ObtenerImpedancia(ctx, calibre, tipoCanalizacion, material)
@@ -53,6 +54,7 @@ func (uc *CalcularCaidaTensionUseCase) Execute(
 		SistemaElectrico:    sistemaElectrico,
 		TipoVoltaje:         tipoVoltaje,
 		HilosPorFase:        hilosPorFase,
+		FactorPotencia:      factorPotencia,
 	}
 
 	resultadoCaida, err := service.CalcularCaidaTension(

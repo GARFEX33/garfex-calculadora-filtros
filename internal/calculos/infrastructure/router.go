@@ -12,12 +12,14 @@ import (
 func NewRouter(
 	calcularCorrienteUC *usecase.CalcularCorrienteUseCase,
 	ajustarCorrienteUC *usecase.AjustarCorrienteUseCase,
+	seleccionarConductorUC *usecase.SeleccionarConductorUseCase,
 	seleccionarConductorAlimentacionUC *usecase.SeleccionarConductorAlimentacionUseCase,
 	seleccionarConductorTierraUC *usecase.SeleccionarConductorTierraUseCase,
 	calcularTamanioTuberiaUC *usecase.CalcularTamanioTuberiaUseCase,
 	calcularCharolaEspaciadoUC *usecase.CalcularCharolaEspaciadoUseCase,
 	calcularCharolaTriangularUC *usecase.CalcularCharolaTriangularUseCase,
 	calcularCaidaTensionUC *usecase.CalcularCaidaTensionUseCase,
+	orquestadorMemoriaUC *usecase.OrquestadorMemoriaCalculoUseCase,
 ) *gin.Engine {
 	router := gin.New()
 
@@ -61,6 +63,10 @@ func NewRouter(
 			// Caída de tensión
 			caidaTensionHandler := http.NewCaidaTensionHandler(calcularCaidaTensionUC)
 			calculos.POST("/caida-tension", caidaTensionHandler.CalcularCaidaTension)
+
+			// Memoria de cálculo completa (orquestador)
+			memoriaHandler := http.NewMemoriaHandler(orquestadorMemoriaUC)
+			calculos.POST("/memoria", memoriaHandler.CalcularMemoria)
 		}
 	}
 

@@ -9,7 +9,7 @@ type ResultadoCaidaTension struct {
 	Porcentaje  float64 // %VD = (VD / V) × 100
 	CaidaVolts  float64 // VD in volts
 	Cumple      bool    // %VD ≤ limiteNOM
-	Impedancia  float64 // Término efectivo (Ω/km) = R·cosθ + X·senθ  (IEEE-141)
+	Impedancia  float64 // Zef = R·cosθ + X·senθ en Ω/km (IEEE-141 impedancia efectiva)
 	Resistencia float64 // R_ef = ResistenciaOhmPorKm / HilosPorFase
 	Reactancia  float64 // X_ef = ReactanciaOhmPorKm / HilosPorFase  (Tabla 9)
 }

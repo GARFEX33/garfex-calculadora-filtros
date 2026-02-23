@@ -78,8 +78,10 @@ func (uc *CalcularCorrienteUseCase) calcularManualAmperaje(input dto.EquipoInput
 // calcularManualPotencia calculates current from manual power using entity.SistemaElectrico.
 // The DTO SistemaElectrico converts directly to entity via ToEntity().
 func (uc *CalcularCorrienteUseCase) calcularManualPotencia(input dto.EquipoInput) (dto.ResultadoCorriente, error) {
-	if input.PotenciaNominal <= 0 {
-		return dto.ResultadoCorriente{}, dto.ErrEquipoInputInvalido
+	// Convertir DTO a Potencia value object (valida y normaliza a watts)
+	potencia, err := input.ToDomainPotencia()
+	if err != nil {
+		return dto.ResultadoCorriente{}, fmt.Errorf("potencia inválida: %w", err)
 	}
 
 	// Convertir DTO a entity — los valores son idénticos (DELTA, ESTRELLA, etc.)
@@ -92,7 +94,7 @@ func (uc *CalcularCorrienteUseCase) calcularManualPotencia(input dto.EquipoInput
 	}
 
 	corriente, err := service.CalcularAmperajeNominalCircuito(
-		input.PotenciaNominal,
+		potencia,
 		tension,
 		sistema,
 		input.FactorPotencia,

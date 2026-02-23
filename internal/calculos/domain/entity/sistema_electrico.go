@@ -67,3 +67,47 @@ func (s SistemaElectrico) CantidadConductores() int {
 		return 0
 	}
 }
+
+// NecesitaNeutro returns true if the electrical system requires a neutral conductor.
+// - ESTRELLA: 4-wire Wye system requires neutral
+// - BIFASICO: 3-wire system with center-tapped phase requires neutral
+// - MONOFASICO: 2-wire system with neutral
+// - DELTA: 3-wire system does NOT require neutral
+func (s SistemaElectrico) NecesitaNeutro() bool {
+	switch s {
+	case SistemaElectricoDelta:
+		return false
+	case SistemaElectricoEstrella,
+		SistemaElectricoBifasico,
+		SistemaElectricoMonofasico:
+		return true
+	default:
+		return false
+	}
+}
+
+// CantidadFases returns the number of phases in the electrical system.
+// - DELTA, ESTRELLA: 3-phase systems
+// - BIFASICO: 2-phase system
+// - MONOFASICO: single-phase system
+func (s SistemaElectrico) CantidadFases() int {
+	switch s {
+	case SistemaElectricoDelta, SistemaElectricoEstrella:
+		return 3
+	case SistemaElectricoBifasico:
+		return 2
+	case SistemaElectricoMonofasico:
+		return 1
+	default:
+		return 0
+	}
+}
+
+// CantidadNeutros returns the number of neutral conductors required.
+// Returns 1 when NecesitaNeutro is true, 0 otherwise.
+func (s SistemaElectrico) CantidadNeutros() int {
+	if s.NecesitaNeutro() {
+		return 1
+	}
+	return 0
+}

@@ -9,9 +9,6 @@ import (
 	"github.com/garfex/calculadora-filtros/internal/shared/kernel/valueobject"
 )
 
-// ErrPotenciaInvalida is returned when potenciaWatts is zero or negative.
-var ErrPotenciaInvalida = errors.New("potencia debe ser mayor que cero")
-
 // ErrTensionInvalida is returned when the tension value is zero or negative.
 var ErrTensionInvalida = errors.New("tensión no válida")
 
@@ -22,7 +19,7 @@ var ErrFactorPotenciaInvalido = errors.New("factor de potencia debe estar entre 
 // eléctrico según fórmulas NOM-001-SEDE.
 //
 // Parámetros:
-//   - potenciaWatts: potencia activa en Watts
+//   - potencia: potencia del circuito (value object, internamente en watts)
 //   - tension: tensión del circuito (V)
 //   - sistema: sistema eléctrico canónico del dominio
 //   - factorPotencia: factor de potencia (0 a 1]
@@ -31,13 +28,13 @@ var ErrFactorPotenciaInvalido = errors.New("factor de potencia debe estar entre 
 //   - Monofásico/Bifásico: I = W / (V × FP)
 //   - Delta/Estrella (trifásico): I = W / (V × √3 × FP)
 func CalcularAmperajeNominalCircuito(
-	potenciaWatts float64,
+	potencia valueobject.Potencia,
 	tension valueobject.Tension,
 	sistema entity.SistemaElectrico,
 	factorPotencia float64,
 ) (valueobject.Corriente, error) {
-	if potenciaWatts <= 0 {
-		return valueobject.Corriente{}, ErrPotenciaInvalida
+	if potencia.Valor() <= 0 {
+		return valueobject.Corriente{}, valueobject.ErrPotenciaInvalida
 	}
 	if factorPotencia <= 0 || factorPotencia > 1 {
 		return valueobject.Corriente{}, ErrFactorPotenciaInvalido
@@ -47,6 +44,9 @@ func CalcularAmperajeNominalCircuito(
 	if tensionV <= 0 {
 		return valueobject.Corriente{}, ErrTensionInvalida
 	}
+
+	// Obtener watts de la potencia (siempre normalizados a watts)
+	potenciaWatts := potencia.Valor()
 
 	var amperaje float64
 	switch sistema {
