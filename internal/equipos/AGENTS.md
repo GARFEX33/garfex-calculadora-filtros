@@ -1,54 +1,120 @@
 # Feature: equipos
 
-Catálogo de equipos Garfex — PLACEHOLDER FUTURO.
+Catálogo de equipos de filtros eléctricos Garfex (filtros activos y de rechazo) con CRUD completo persistido en PostgreSQL (Supabase via pgx v5).
 
-Esta feature estará a cargo del catálogo de equipos eléctricos (filtros activos,
-filtros de rechazo, transformadores, cargas) con su búsqueda y persistencia en PostgreSQL.
+## Propósito
 
-## Estado actual
+Gestionar el catálogo de filtros eléctricos que se instalan en instalaciones industriales según normativa NOM. Cada equipo tiene: clave comercial, tipo de filtro, voltaje nominal, amperaje, capacidad ITM y bornes opcionales.
 
-**Estructura vacía.** Solo existe como placeholder para mantener los límites de la arquitectura.
+## Endpoints
 
-## Implementar esta feature
+| Método | Path | Descripción |
+|--------|------|-------------|
+| `POST` | `/api/v1/equipos` | Crear nuevo equipo filtro |
+| `GET` | `/api/v1/equipos` | Listar con paginación y filtros opcionales |
+| `GET` | `/api/v1/equipos/:id` | Obtener equipo por UUID |
+| `PUT` | `/api/v1/equipos/:id` | Actualizar equipo completo |
+| `DELETE` | `/api/v1/equipos/:id` | Eliminar equipo (idempotente) |
 
-Cuando se decida implementar, usar el sistema de orquestación:
+### Query params de listado
 
-```bash
-# Paso 1: Domain
-orchestrate-agents --agent domain --feature equipos
+| Param | Tipo | Descripción |
+|-------|------|-------------|
+| `page` | int | Página (default: 1) |
+| `page_size` | int | Registros por página (default: 20, max: 100) |
+| `tipo` | string | Filtrar por tipo: `A`, `KVA`, `KVAR` |
+| `voltaje` | int | Filtrar por voltaje exacto (V) |
 
-# Paso 2: Application
-orchestrate-agents --agent application --feature equipos
+### Tipos de filtro (`TipoFiltro`)
 
-# Paso 3: Infrastructure
-orchestrate-agents --agent infrastructure --feature equipos
+| Valor | Descripción |
+|-------|-------------|
+| `A` | Filtro activo — calificado en Amperes |
+| `KVA` | Filtro calificado en KVA |
+| `KVAR` | Filtro de rechazo — calificado en KVAR reactivos |
 
-# Paso 4: Orquestador actualiza main.go
-```
+> Los valores del enum coinciden exactamente con el enum PostgreSQL `public.tipo_filtro`.
 
-## Estructura esperada
+## Estructura
 
 ```
 internal/equipos/
 ├── domain/
-│   ├── entity/      ← Equipo, FiltroActivo, FiltroRechazo, etc.
-│   └── service/     ← Búsqueda, Validaciones
+│   └── entity/
+│       ├── tipo_filtro.go       ← TipoFiltro enum (A, KVA, KVAR)
+│       ├── equipo_filtro.go     ← EquipoFiltro entity, NewEquipoFiltro()
+│       └── errors.go            ← ErrTipoFiltroInvalido, ErrVoltajeInvalido, etc.
 ├── application/
-│   ├── port/        ← EquipoRepository
-│   ├── usecase/     ← BuscarEquipo, ListarEquipos
-│   └── dto/         ← EquipoInput, EquipoOutput
+│   ├── port/
+│   │   └── equipo_filtro_repository.go  ← Interface: Crear, ObtenerPorID, Listar, Contar, Actualizar, Eliminar
+│   ├── dto/
+│   │   ├── equipo_filtro_input.go   ← CreateEquipoInput, UpdateEquipoInput, ListEquiposQuery
+│   │   ├── equipo_filtro_output.go  ← EquipoOutput, ListEquiposOutput, PaginationMeta
+│   │   └── errors.go                ← ErrEquipoNoEncontrado, ErrClaveYaExiste, ErrInputInvalido, ErrIDInvalido
+│   └── usecase/
+│       ├── crear_equipo.go
+│       ├── obtener_equipo.go
+│       ├── listar_equipos.go      ← usa Contar() + Listar() para pagination metadata
+│       ├── actualizar_equipo.go
+│       └── eliminar_equipo.go
 └── infrastructure/
+    ├── router.go                  ← RegisterEquiposRoutes() monta 5 endpoints bajo /api/v1
     └── adapter/
-        ├── driver/http/      ← EquipoHandler
-        └── driven/postgres/  ← PostgresEquipoRepository
+        ├── driven/postgres/
+        │   ├── pool.go                       ← NewPool() pgxpool, max 10 conns, 5s timeout
+        │   └── equipo_filtro_repository.go   ← PostgresEquipoFiltroRepository
+        └── driver/http/
+            └── equipo_handler.go             ← EquipoHandler, 5 métodos, errorResponse con timestamp ISO 8601
 ```
+
+## Tabla PostgreSQL
+
+```
+public.equipos_filtros
+├── id         uuid        PK, DEFAULT gen_random_uuid()
+├── created_at timestamptz DEFAULT now()
+├── clave      text        UNIQUE, NULLABLE
+├── tipo       tipo_filtro NOT NULL  ← enum: 'A', 'KVA', 'KVAR'
+├── voltaje    integer     NOT NULL
+├── "qn/In"    integer     NOT NULL  ← columna con barra diagonal — escapar con comillas en SQL
+├── itm        integer     NOT NULL
+└── bornes     integer     NULLABLE
+```
+
+> ⚠️ El campo `qn/In` tiene barra diagonal. En SQL siempre usar comillas dobles: `"qn/In"`.
+
+## Conexión a PostgreSQL
+
+- Supabase self-hosted en servidor Ubuntu, puerto **5434** (mapeado en docker-compose.yml del servidor)
+- Variables de entorno: `DB_HOST`, `DB_PORT=5434`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`
+- Pool: `internal/equipos/infrastructure/adapter/driven/postgres/pool.go`
+
+## Mapeo de Errores HTTP
+
+| Error application | HTTP | Causa |
+|-------------------|------|-------|
+| `ErrInputInvalido` | 400 | Campo requerido faltante o inválido |
+| `ErrIDInvalido` | 400 | UUID malformado en path param |
+| `ErrEquipoNoEncontrado` | 404 | ID no existe |
+| `ErrClaveYaExiste` | 409 | Violación UNIQUE en columna `clave` (SQLSTATE 23505) |
+| Error interno | 500 | Error no manejado |
+
+Todas las respuestas de error incluyen campo `timestamp` en ISO 8601.
+
+## Deuda Técnica Conocida
+
+- `PUT` semánticamente debería ser `PATCH` (actualmente acepta campos parciales)
+- Sin rate limiting
+- Sin autenticación
+- Sin OpenAPI/Swagger spec
+
+## Cómo modificar esta feature
+
+Ver guías por capa:
+- [domain/AGENTS.md](domain/AGENTS.md)
+- [application/AGENTS.md](application/AGENTS.md)
+- [infrastructure/AGENTS.md](infrastructure/AGENTS.md)
 
 ## Referencias
 
-- Workflow: [docs/architecture/workflow.md](../../../docs/architecture/workflow.md)
-- Sistema de agentes: [docs/architecture/agents.md](../../../docs/architecture/agents.md)
 - Estructura y reglas: [docs/reference/structure.md](../../../docs/reference/structure.md)
-- Orquestación: [orchestrating-agents](../../.agents/skills/orchestrating-agents/SKILL.md)
-- Skill domain: [brainstorming-dominio](../../.agents/skills/brainstorming-dominio/SKILL.md)
-- Skill application: [brainstorming-application](../../.agents/skills/brainstorming-application/SKILL.md)
-- Skill infrastructure: [brainstorming-infrastructure](../../.agents/skills/brainstorming-infrastructure/SKILL.md)
