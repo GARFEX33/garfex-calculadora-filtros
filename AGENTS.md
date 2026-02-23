@@ -100,14 +100,6 @@ Cuando realices estas acciones, invoca el skill correspondiente PRIMERO:
 | `verification-before-completion` | Verificar antes de declarar trabajo listo |
 | `agents-md-manager` | Gestionar AGENTS.md y README.md jerárquicos |
 
-## Documentación
-
-| Tema                    | Archivo                                                        |
-| ----------------------- | -------------------------------------------------------------- |
-| Estructura del proyecto | [docs/reference/structure.md](docs/reference/structure.md)     |
-| Skills disponibles      | [docs/reference/skills.md](docs/reference/skills.md)           |
-| Comandos y endpoints    | [docs/reference/commands.md](docs/reference/commands.md)       |
-
 ## Documentacion Implementada
 
 ### Backend

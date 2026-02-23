@@ -6,39 +6,7 @@ Esta feature implementa el cálculo completo de una instalación eléctrica:
 corriente nominal → ajuste por temperatura/agrupamiento → selección de conductor →
 conductor de tierra → dimensionamiento de canalización → caída de tensión (NOM).
 
-### Fórmula de caída de tensión (NOM / IEEE-141)
-
-La caída de tensión usa **impedancia efectiva**, no la magnitud vectorial:
-
-```
-Zef = R·cosθ + X·senθ      (senθ = √(1 - cos²θ))
-e   = factor × (I/N) × L × Zef
-%e  = (e / V_referencia) × 100
-```
-
-Donde:
-- **I** = Corriente nominal (A)
-- **N** = Número de conductores en paralelo por fase
-- **L** = Longitud del circuito (km)
-- **R, X** = Resistencia y reactancia por conductor (Ω/km) de Tabla 9 NOM
-- **cosθ** = Factor de potencia (0 < FP ≤ 1)
-- **Zef** = Impedancia efectiva por conductor
-
-#### Factores por sistema eléctrico
-
-| Sistema         | factor | Voltaje referencia |
-| --------------- | ------ | ------------------ |
-| MONOFASICO 1F2H | 2      | Vfn                |
-| BIFASICO 2F3H  | 2      | Vfn                |
-| DELTA 3F3H     | √3     | Vff                |
-| ESTRELLA 3F4H  | √3     | Vfn                |
-
-#### Conversión de voltaje
-
-- Si el sistema requiere Vfn pero el usuario ingresa Vff: `Vref = Vff / √3`
-- Si el sistema requiere Vff pero el usuario ingresa Vfn: `Vref = Vfn × √3`
-
-> **NO usar** `Z = √(R² + X²)` — eso es la magnitud, no la impedancia efectiva.
+> Fórmula de caída de tensión (impedancia efectiva NOM/IEEE-141) → ver fuente de verdad en [domain/AGENTS.md](domain/AGENTS.md#convenciones-de-cálculo--caída-de-tensión)
 
 ## Endpoints
 
