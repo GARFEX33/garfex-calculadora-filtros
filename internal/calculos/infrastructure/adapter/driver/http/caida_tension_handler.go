@@ -43,8 +43,8 @@ type CaidaTensionRequest struct {
 	// Valores: "TUBERIA_PVC", "TUBERIA_METALICA", "CHAROLA"
 	TipoCanalizacion string `json:"tipo_canalizacion" binding:"required"`
 
-	// CorrienteAjustada es la corriente ajustada en amperes
-	CorrienteAjustada float64 `json:"corriente_ajustada" binding:"required,gt=0"`
+	// CorrienteNominal es la corriente nominal del circuito en amperes
+	CorrienteNominal float64 `json:"corriente_nominal" binding:"required,gt=0"`
 
 	// LongitudCircuito es la longitud del circuito en metros
 	LongitudCircuito float64 `json:"longitud_circuito" binding:"required,gt=0"`
@@ -66,6 +66,11 @@ type CaidaTensionRequest struct {
 
 	// LimiteCaida es el límite de caída de tensión en porcentaje
 	LimiteCaida float64 `json:"limite_caida" binding:"required,gt=0"`
+
+	// FactorPotencia es el coseno del ángulo de desfasamiento (cosθ)
+	// Representa el factor de potencia del circuito: 0 < FP ≤ 1
+	// Ejemplos: 0.85 (motores típicos), 0.9 (cargas mixtas), 1.0 (carga resistiva pura)
+	FactorPotencia float64 `json:"factor_potencia" binding:"required,gt=0,lte=1"`
 }
 
 // CaidaTensionResponse representa la respuesta exitosa.
@@ -144,8 +149,8 @@ func (h *CaidaTensionHandler) CalcularCaidaTension(c *gin.Context) {
 		return
 	}
 
-	// Crear valor de tensión
-	tension, err := valueobject.NewTension(req.Tension)
+	// Crear valor de tensión (default a V para compatibilidad)
+	tension, err := valueobject.NewTension(float64(req.Tension), "V")
 	if err != nil {
 		c.JSON(http.StatusBadRequest, CaidaTensionResponseError{
 			Success: false,
@@ -156,12 +161,12 @@ func (h *CaidaTensionHandler) CalcularCaidaTension(c *gin.Context) {
 		return
 	}
 
-	// Crear valor de corriente ajustada
-	corrienteAjustada, err := valueobject.NewCorriente(req.CorrienteAjustada)
+	// Crear valor de corriente nominal
+	corrienteNominal, err := valueobject.NewCorriente(req.CorrienteNominal)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, CaidaTensionResponseError{
 			Success: false,
-			Error:   "Corriente ajustada inválida",
+			Error:   "Corriente nominal inválida",
 			Code:    "CORRIENTE_INVALIDA",
 			Details: err.Error(),
 		})
@@ -179,7 +184,7 @@ func (h *CaidaTensionHandler) CalcularCaidaTension(c *gin.Context) {
 		c.Request.Context(),
 		req.Calibre,
 		material,
-		corrienteAjustada,
+		corrienteNominal,
 		req.LongitudCircuito,
 		tension,
 		req.LimiteCaida,
@@ -187,6 +192,7 @@ func (h *CaidaTensionHandler) CalcularCaidaTension(c *gin.Context) {
 		sistemaElectrico,
 		tipoVoltaje,
 		hilosPorFase,
+		req.FactorPotencia,
 	)
 	if err != nil {
 		status, response := h.mapCaidaTensionErrorToResponse(err)
