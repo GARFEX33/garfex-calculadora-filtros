@@ -1,8 +1,12 @@
 # Análisis: Problema Voltaje Fase-Fase (FF) vs Fase-Neutro (FN) en Caída de Tensión
 
 **Fecha:** 2026-02-19  
-**Estado:** En análisis  
+**Estado:** ✅ **RESUELTO - Factores corregidos el 2026-02-22**  
 **Prioridad:** CRÍTICA
+
+> **Nota:** Este documento fue la base para la corrección. Los factores fueron corregidos posteriormente.
+> - BIFASICO: factor 1 → 2
+> - ESTRELLA: factor 1 → √3
 
 ---
 
@@ -17,7 +21,7 @@ La implementación actual de `CalcularCaidaTension` **no distingue entre voltaje
 Según NOM-001-SEDE-2012, la caída de tensión se calcula como:
 
 ```
-e = factor × I × Z × L    (caída en volts)
+e = factor × (I/N) × L × (R × cosθ + X × sinθ)    (caída en volts)
 %e = (e / V_referencia) × 100
 ```
 
@@ -26,7 +30,7 @@ Donde `V_referencia` **depende del sistema eléctrico**:
 | Sistema Eléctrico | Factor | V_referencia | Fórmula completa |
 |-------------------|--------|--------------|------------------|
 | **Monofásico** 1F-2H | 2 | **Vfn** (fase-neutro) | %e = (2·I·Z·L / Vfn) × 100 |
-| **Bifásico** 2F-3H | 1 | **Vfn** (fase-neutro) | %e = (I·Z·L / Vfn) × 100 |
+| **Bifásico** 2F-3H | 2 | **Vfn** (fase-neutro) | %e = (2·I·Z·L / Vfn) × 100 |
 | **Trifásico DELTA** 3F-3H | √3 | **Vff** (fase-fase) | %e = (√3·I·Z·L / Vff) × 100 |
 | **Trifásico ESTRELLA** 3F-4H | 1 | **Vfn** (fase-neutro) | %e = (I·Z·L / Vfn) × 100 |
 

@@ -41,6 +41,7 @@ curl http://localhost:8080/health
 ## Endpoints Disponibles
 
 ### Amperaje Nominal
+
 ```bash
 curl -X POST http://localhost:8080/api/v1/calculos/amperaje \
   -H "Content-Type: application/json" \
@@ -48,6 +49,7 @@ curl -X POST http://localhost:8080/api/v1/calculos/amperaje \
 ```
 
 ### Corriente Ajustada
+
 ```bash
 curl -X POST http://localhost:8080/api/v1/calculos/corriente-ajustada \
   -H "Content-Type: application/json" \
@@ -55,6 +57,7 @@ curl -X POST http://localhost:8080/api/v1/calculos/corriente-ajustada \
 ```
 
 ### Conductor Alimentación
+
 ```bash
 curl -X POST http://localhost:8080/api/v1/calculos/conductor-alimentacion \
   -H "Content-Type: application/json" \
@@ -62,6 +65,7 @@ curl -X POST http://localhost:8080/api/v1/calculos/conductor-alimentacion \
 ```
 
 ### Conductor Tierra
+
 ```bash
 curl -X POST http://localhost:8080/api/v1/calculos/conductor-tierra \
   -H "Content-Type: application/json" \
@@ -69,6 +73,7 @@ curl -X POST http://localhost:8080/api/v1/calculos/conductor-tierra \
 ```
 
 ### Tuberia
+
 ```bash
 curl -X POST http://localhost:8080/api/v1/calculos/tuberia \
   -H "Content-Type: application/json" \
@@ -76,13 +81,15 @@ curl -X POST http://localhost:8080/api/v1/calculos/tuberia \
 ```
 
 ### Caida de Tension
+
 ```bash
 curl -X POST http://localhost:8080/api/v1/calculos/caida-tension \
   -H "Content-Type: application/json" \
-  -d '{"calibre":"2 AWG","material":"Cu","corriente_ajustada":50,"longitud_circuito":100,"tension":220,"limite_caida":3,"tipo_canalizacion":"TUBERIA_PVC","sistema_electrico":"DELTA","tipo_voltaje":"FF","hilos_por_fase":1}'
+  -d '{"calibre":"2 AWG","material":"Cu","corriente_nominal":50,"longitud_circuito":100,"tension":220,"limite_caida":3,"tipo_canalizacion":"TUBERIA_PVC","sistema_electrico":"DELTA","tipo_voltaje":"FF","hilos_por_fase":1}'
 ```
 
 ### Charola
+
 ```bash
 # Espaciado
 curl -X POST http://localhost:8080/api/v1/calculos/charola/espaciado \
@@ -94,3 +101,31 @@ curl -X POST http://localhost:8080/api/v1/calculos/charola/triangular \
   -H "Content-Type: application/json" \
   -d '{"ancho_mm":600,"cantidad_conductores":5}'
 ```
+
+### Memoria de Cálculo (Orquestador)
+
+Endpoint completo que ejecuta todos los pasos secuencialmente: amperaje → ajuste → conductor → tierra → canalización → caída de tensión.
+
+```bash
+curl -X POST http://localhost:8080/api/v1/calculos/memoria \
+  -H "Content-Type: application/json" \
+  -d '{
+    "modo": "MANUAL_POTENCIA",
+    "tipo_equipo": "CARGA",
+    "potencia_nominal": 15,
+    "potencia_unidad": "KW",
+    "tension": 480,
+    "factor_potencia": 0.85,
+    "itm": 30,
+    "sistema_electrico": "ESTRELLA",
+    "estado": "Ciudad de Mexico",
+    "tipo_canalizacion": "TUBERIA_PVC",
+    "longitud_circuito": 50,
+    "tipo_voltaje": "FASE_FASE"
+  }'
+```
+
+**Parámetros:**
+- `modo`: MANUAL_POTENCIA | MANUAL_AMPERAJE | LISTADO
+- `potencia_unidad`: W | KW | KVA | KVAR (default: KW)
+- `tipo_voltaje`: FASE_NEUTRO | FASE_FASE (default: FASE_FASE para sistemas trifásicos)

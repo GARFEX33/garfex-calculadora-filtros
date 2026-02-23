@@ -102,7 +102,9 @@ Siempre pedir datos en Excel/CSV al usuario y validar fila por fila contra la fu
 
 ---
 
-## CRITICAL RULES
+## CRITICAL RULES — Datos NOM
+
+*Estas reglas son específicas para el manejo de tablas de normativa NOM. Ver [docs/reference/structure.md](../../../docs/reference/structure.md) para reglas globales de arquitectura.*
 
 ### Integridad de Datos
 - ALWAYS: Validar 100% contra fuente oficial NOM fila por fila antes de commitear

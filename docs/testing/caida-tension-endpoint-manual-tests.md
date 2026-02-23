@@ -65,7 +65,7 @@ A partir de la versión actual, el endpoint requiere especificar el **tipo de vo
   "calibre": "2 AWG",
   "material": "Cu",
   "tipo_canalizacion": "TUBERIA_PVC",
-  "corriente_ajustada": 70.0,
+  "corriente_nominal": 70.0,
   "longitud_circuito": 30.0,
   "tension": 127,
   "tipo_voltaje": "FASE_NEUTRO",
@@ -104,7 +104,7 @@ curl -X POST http://localhost:8080/api/v1/calculos/caida-tension \
     "calibre": "2 AWG",
     "material": "Cu",
     "tipo_canalizacion": "TUBERIA_PVC",
-    "corriente_ajustada": 70,
+    "corriente_nominal": 70,
     "longitud_circuito": 30,
     "tension": 127,
     "tipo_voltaje": "FASE_NEUTRO",
@@ -124,7 +124,7 @@ curl -X POST http://localhost:8080/api/v1/calculos/caida-tension \
   "calibre": "2 AWG",
   "material": "Cu",
   "tipo_canalizacion": "TUBERIA_PVC",
-  "corriente_ajustada": 70.0,
+  "corriente_nominal": 70.0,
   "longitud_circuito": 30.0,
   "tension": 220,
   "tipo_voltaje": "FASE_FASE",
@@ -165,7 +165,7 @@ curl -X POST http://localhost:8080/api/v1/calculos/caida-tension \
   "calibre": "2 AWG",
   "material": "Cu",
   "tipo_canalizacion": "TUBERIA_PVC",
-  "corriente_ajustada": 70.0,
+  "corriente_nominal": 70.0,
   "longitud_circuito": 30.0,
   "tension": 127,
   "tipo_voltaje": "FASE_NEUTRO",
@@ -205,7 +205,7 @@ curl -X POST http://localhost:8080/api/v1/calculos/caida-tension \
   "calibre": "2 AWG",
   "material": "Cu",
   "tipo_canalizacion": "TUBERIA_PVC",
-  "corriente_ajustada": 70.0,
+  "corriente_nominal": 70.0,
   "longitud_circuito": 30.0,
   "tension": 220,
   "tipo_voltaje": "FASE_FASE",
@@ -245,7 +245,7 @@ curl -X POST http://localhost:8080/api/v1/calculos/caida-tension \
   "calibre": "2 AWG",
   "material": "Cu",
   "tipo_canalizacion": "TUBERIA_PVC",
-  "corriente_ajustada": 70.0,
+  "corriente_nominal": 70.0,
   "longitud_circuito": 30.0,
   "tension": 127,
   "tipo_voltaje": "FASE_NEUTRO",
@@ -286,7 +286,7 @@ curl -X POST http://localhost:8080/api/v1/calculos/caida-tension \
   "calibre": "2 AWG",
   "material": "Cu",
   "tipo_canalizacion": "TUBERIA_PVC",
-  "corriente_ajustada": 70.0,
+  "corriente_nominal": 70.0,
   "longitud_circuito": 30.0,
   "tension": 127,
   "tipo_voltaje": "FASE_NEUTRO",
@@ -326,7 +326,7 @@ curl -X POST http://localhost:8080/api/v1/calculos/caida-tension \
   "calibre": "2 AWG",
   "material": "Cu",
   "tipo_canalizacion": "TUBERIA_PVC",
-  "corriente_ajustada": 70.0,
+  "corriente_nominal": 70.0,
   "longitud_circuito": 30.0,
   "tension": 127,
   "tipo_voltaje": "FASE_NEUTRO",
@@ -368,7 +368,7 @@ curl -X POST http://localhost:8080/api/v1/calculos/caida-tension \
   "calibre": "2 AWG",
   "material": "Al",
   "tipo_canalizacion": "TUBERIA_PVC",
-  "corriente_ajustada": 70.0,
+  "corriente_nominal": 70.0,
   "longitud_circuito": 30.0,
   "tension": 127,
   "tipo_voltaje": "FASE_NEUTRO",
@@ -396,7 +396,7 @@ curl -X POST http://localhost:8080/api/v1/calculos/caida-tension \
   "calibre": "2 AWG",
   "material": "Cu",
   "tipo_canalizacion": "TUBERIA_PVC",
-  "corriente_ajustada": 120.0,
+  "corriente_nominal": 120.0,
   "longitud_circuito": 30.0,
   "tension": 480,
   "tipo_voltaje": "FASE_FASE",
@@ -425,7 +425,7 @@ curl -X POST http://localhost:8080/api/v1/calculos/caida-tension \
   "calibre": "2 AWG",
   "material": "Cu",
   "tipo_canalizacion": "TUBERIA_PVC",
-  "corriente_ajustada": 70,
+  "corriente_nominal": 70,
   "longitud_circuito": 30,
   "tension": 127,
   "tipo_voltaje": "TRIFASICO",
@@ -455,7 +455,7 @@ curl -X POST http://localhost:8080/api/v1/calculos/caida-tension \
   "calibre": "2 AWG",
   "material": "Cu",
   "tipo_canalizacion": "TUBERIA_PVC",
-  "corriente_ajustada": 70,
+  "corriente_nominal": 70,
   "longitud_circuito": 30,
   "tension": 127,
   "sistema_electrico": "MONOFASICO",
@@ -484,7 +484,7 @@ curl -X POST http://localhost:8080/api/v1/calculos/caida-tension \
   "calibre": "2 AWG",
   "material": "Cu",
   "tipo_canalizacion": "TUBERIA_PVC",
-  "corriente_ajustada": 70,
+  "corriente_nominal": 70,
   "longitud_circuito": 30,
   "tension": 127,
   "tipo_voltaje": "FASE_NEUTRO",
@@ -511,18 +511,18 @@ Para facilitar la verificación, aquí está la tabla con los mismos parámetros
 
 | Sistema Eléctrico | Voltaje Ingresado | Tipo Voltaje | V_ref (interno) | Factor | % Caída | Cumple |
 |-------------------|-------------------|--------------|-----------------|--------|---------|--------|
-| MONOFASICO | 127V | FASE_NEUTRO | 127V | 2 | 2.11% | ✅ |
-| MONOFASICO | 220V | FASE_FASE | 127V (conv) | 2 | 2.11% | ✅ |
-| BIFASICO | 127V | FASE_NEUTRO | 127V | 1 | 1.05% | ✅ |
-| DELTA | 220V | FASE_FASE | 220V | √3 | 1.05% | ✅ |
-| DELTA | 127V | FASE_NEUTRO | 220V (conv) | √3 | 1.05% | ✅ |
-| ESTRELLA | 127V | FASE_NEUTRO | 127V | 1 | 1.05% | ✅ |
-| ESTRELLA | 220V | FASE_FASE | 127V (conv) | 1 | 1.05% | ✅ |
+| MONOFASICO | 127V | FASE_NEUTRO | 127V | 2 | 2.06% | ✅ |
+| MONOFASICO | 220V | FASE_FASE | 127V (conv) | 2 | 2.06% | ✅ |
+| BIFASICO | 127V | FASE_NEUTRO | 127V | 2 | 2.06% | ✅ |
+| DELTA | 220V | FASE_FASE | 220V | √3 | 1.03% | ✅ |
+| DELTA | 127V | FASE_NEUTRO | 220V (conv) | √3 | 1.03% | ✅ |
+| ESTRELLA | 127V | FASE_NEUTRO | 127V | √3 | 1.78% | ✅ |
+| ESTRELLA | 220V | FASE_FASE | 127V (conv) | √3 | 1.78% | ✅ |
 
 **Relaciones matemáticas verificadas:**
-- MONOFASICO = 2 × BIFASICO ✅ (ambos con Vfn 127V)
-- DELTA = BIFASICO ✅ (en % caída, con sus respectivas V_ref)
-- ESTRELLA = BIFASICO ✅ (ambos usan factor 1 con Vfn 127V)
+- MONOFASICO = BIFASICO ✅ (ambos factor=2, Vref=127V)
+- ESTRELLA = MONOFASICO / √3 ✅ (1.78% = 2.06% / 1.732)
+- DELTA = MONOFASICO / 2 ✅ (1.03% ≈ 2.06% / 2)
 
 ---
 
@@ -537,28 +537,28 @@ echo "=== Testing Voltage Drop Endpoint with tipo_voltaje ===" echo ""
 echo "1. MONOFASICO con Vfn 127V:"
 curl -s -X POST http://localhost:8080/api/v1/calculos/caida-tension \
   -H "Content-Type: application/json" \
-  -d '{"calibre":"2 AWG","material":"Cu","tipo_canalizacion":"TUBERIA_PVC","corriente_ajustada":70,"longitud_circuito":30,"tension":127,"tipo_voltaje":"FASE_NEUTRO","sistema_electrico":"MONOFASICO","hilos_por_fase":1,"limite_caida":3.0}' \
+  -d '{"calibre":"2 AWG","material":"Cu","tipo_canalizacion":"TUBERIA_PVC","corriente_nominal":70,"longitud_circuito":30,"tension":127,"tipo_voltaje":"FASE_NEUTRO","sistema_electrico":"MONOFASICO","hilos_por_fase":1,"limite_caida":3.0}' \
   | python -m json.tool
 
 echo ""
 echo "2. BIFASICO con Vfn 127V:"
 curl -s -X POST http://localhost:8080/api/v1/calculos/caida-tension \
   -H "Content-Type: application/json" \
-  -d '{"calibre":"2 AWG","material":"Cu","tipo_canalizacion":"TUBERIA_PVC","corriente_ajustada":70,"longitud_circuito":30,"tension":127,"tipo_voltaje":"FASE_NEUTRO","sistema_electrico":"BIFASICO","hilos_por_fase":1,"limite_caida":3.0}' \
+  -d '{"calibre":"2 AWG","material":"Cu","tipo_canalizacion":"TUBERIA_PVC","corriente_nominal":70,"longitud_circuito":30,"tension":127,"tipo_voltaje":"FASE_NEUTRO","sistema_electrico":"BIFASICO","hilos_por_fase":1,"limite_caida":3.0}' \
   | python -m json.tool
 
 echo ""
 echo "3. DELTA con Vff 220V:"
 curl -s -X POST http://localhost:8080/api/v1/calculos/caida-tension \
   -H "Content-Type: application/json" \
-  -d '{"calibre":"2 AWG","material":"Cu","tipo_canalizacion":"TUBERIA_PVC","corriente_ajustada":70,"longitud_circuito":30,"tension":220,"tipo_voltaje":"FASE_FASE","sistema_electrico":"DELTA","hilos_por_fase":1,"limite_caida":3.0}' \
+  -d '{"calibre":"2 AWG","material":"Cu","tipo_canalizacion":"TUBERIA_PVC","corriente_nominal":70,"longitud_circuito":30,"tension":220,"tipo_voltaje":"FASE_FASE","sistema_electrico":"DELTA","hilos_por_fase":1,"limite_caida":3.0}' \
   | python -m json.tool
 
 echo ""
 echo "4. ESTRELLA con Vfn 127V:"
 curl -s -X POST http://localhost:8080/api/v1/calculos/caida-tension \
   -H "Content-Type: application/json" \
-  -d '{"calibre":"2 AWG","material":"Cu","tipo_canalizacion":"TUBERIA_PVC","corriente_ajustada":70,"longitud_circuito":30,"tension":127,"tipo_voltaje":"FASE_NEUTRO","sistema_electrico":"ESTRELLA","hilos_por_fase":1,"limite_caida":3.0}' \
+  -d '{"calibre":"2 AWG","material":"Cu","tipo_canalizacion":"TUBERIA_PVC","corriente_nominal":70,"longitud_circuito":30,"tension":127,"tipo_voltaje":"FASE_NEUTRO","sistema_electrico":"ESTRELLA","hilos_por_fase":1,"limite_caida":3.0}' \
   | python -m json.tool
 
 echo ""

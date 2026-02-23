@@ -5,7 +5,6 @@ license: Apache-2.0
 metadata:
   author: garfex
   version: "3.0"
-  agent: agents-md-curator
 ---
 
 # AGENTS.md & README.md Manager
@@ -34,10 +33,10 @@ Ver: `.opencode/agents/agents-md-curator.md`
 
 ## Diferencia entre AGENTS.md y README.md
 
-| Archivo | Propósito | Audiencia |
-|---------|-----------|-----------|
-| `AGENTS.md` | Instrucciones para agentes AI | Agentes de desarrollo |
-| `README.md` | Documentación técnica | Desarrolladores humanos |
+| Archivo     | Propósito                     | Audiencia               |
+| ----------- | ----------------------------- | ----------------------- |
+| `AGENTS.md` | Instrucciones para agentes AI | Agentes de desarrollo   |
+| `README.md` | Documentación técnica         | Desarrolladores humanos |
 
 **AGENTS.md** contiene: reglas de arquitectura, dependencias, skills asociados, QA checklists.
 **README.md** contiene: descripción del módulo, API pública, ejemplos de uso, notas técnicas.
@@ -48,12 +47,12 @@ Ver: `.opencode/agents/agents-md-curator.md`
 
 ### Eficiencia de Tokens
 
-| Archivo         | Propósito                  | Límite        |
-| --------------- | -------------------------- | ------------- |
-| Root AGENTS.md  | Índice de navegación       | ~150 líneas   |
-| Layer AGENTS.md | Reglas de la capa          | ~150 líneas   |
-| Layer README.md | Documentación técnica      | ~100 líneas   |
-| Skills          | Patrones con ejemplos      | Autocontenido |
+| Archivo         | Propósito             | Límite        |
+| --------------- | --------------------- | ------------- |
+| Root AGENTS.md  | Índice de navegación  | ~150 líneas   |
+| Layer AGENTS.md | Reglas de la capa     | ~150 líneas   |
+| Layer README.md | Documentación técnica | ~100 líneas   |
+| Skills          | Patrones con ejemplos | Autocontenido |
 
 **Carga por acción:** root (~50 líneas) + 1 layer AGENTS (~50 líneas) + 1 skill (~100 líneas) = ~200 líneas total
 
@@ -165,27 +164,27 @@ Root README.md: {OK|WARN|FAIL}
 
 ### Root README.md
 
-| Sección                | Requerida | Regla                                        |
-| ---------------------- | --------- | -------------------------------------------- |
-| Título + descripción   | Sí        | Nombre del proyecto + una línea de propósito |
-| `## Instalación`       | Sí        | Pasos para instalar y configurar             |
-| `## Uso`               | Sí        | Comandos básicos o ejemplo rápido            |
-| `## API / Endpoints`   | Opcional  | Si es un servicio, documentar endpoints      |
-| `## Arquitectura`      | Opcional  | Diagrama o descripción de alto nivel         |
-| `## Desarrollo`        | Sí        | Comandos de desarrollo (test, lint, build)   |
-| `## Licencia`          | Opcional  | Tipo de licencia                             |
+| Sección              | Requerida | Regla                                        |
+| -------------------- | --------- | -------------------------------------------- |
+| Título + descripción | Sí        | Nombre del proyecto + una línea de propósito |
+| `## Instalación`     | Sí        | Pasos para instalar y configurar             |
+| `## Uso`             | Sí        | Comandos básicos o ejemplo rápido            |
+| `## API / Endpoints` | Opcional  | Si es un servicio, documentar endpoints      |
+| `## Arquitectura`    | Opcional  | Diagrama o descripción de alto nivel         |
+| `## Desarrollo`      | Sí        | Comandos de desarrollo (test, lint, build)   |
+| `## Licencia`        | Opcional  | Tipo de licencia                             |
 
 **Límite:** ~200 líneas
 
 ### Layer README.md
 
-| Sección              | Requerida | Regla                                       |
-| -------------------- | --------- | ------------------------------------------- |
-| Título               | Sí        | Nombre del módulo/capa                      |
-| Descripción          | Sí        | Qué hace este módulo (1-2 párrafos)         |
-| `## API Pública`     | Sí        | Funciones/tipos exportados principales      |
-| `## Ejemplos`        | Opcional  | Código de ejemplo de uso                    |
-| `## Notas Técnicas`  | Opcional  | Consideraciones de implementación           |
+| Sección             | Requerida | Regla                                  |
+| ------------------- | --------- | -------------------------------------- |
+| Título              | Sí        | Nombre del módulo/capa                 |
+| Descripción         | Sí        | Qué hace este módulo (1-2 párrafos)    |
+| `## API Pública`    | Sí        | Funciones/tipos exportados principales |
+| `## Ejemplos`       | Opcional  | Código de ejemplo de uso               |
+| `## Notas Técnicas` | Opcional  | Consideraciones de implementación      |
 
 **Límite:** ~100 líneas
 
@@ -322,12 +321,12 @@ Si hay drift → WARN, proponer actualización.
 
 ### README.md (documentación técnica)
 
-| Tipo               | Ubicación                                   | Contenido principal           |
-| ------------------ | ------------------------------------------- | ----------------------------- |
-| Root README.md     | `README.md`                                 | Instalación, uso, desarrollo  |
-| Layer README.md    | `internal/{feature}/{layer}/README.md`      | API pública, ejemplos         |
-| Subdirectorio      | `internal/{feature}/{layer}/{sub}/README.md`| Documentación específica      |
-| Skills README      | `.agents/skills/README.md`                  | Índice de skills disponibles  |
+| Tipo            | Ubicación                                    | Contenido principal          |
+| --------------- | -------------------------------------------- | ---------------------------- |
+| Root README.md  | `README.md`                                  | Instalación, uso, desarrollo |
+| Layer README.md | `internal/{feature}/{layer}/README.md`       | API pública, ejemplos        |
+| Subdirectorio   | `internal/{feature}/{layer}/{sub}/README.md` | Documentación específica     |
+| Skills README   | `.agents/skills/README.md`                   | Índice de skills disponibles |
 
 ---
 

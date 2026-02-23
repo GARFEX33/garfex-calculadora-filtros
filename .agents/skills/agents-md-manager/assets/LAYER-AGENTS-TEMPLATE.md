@@ -4,13 +4,7 @@
 
 ## Trabajar en esta Capa
 
-Esta capa es responsabilidad del **`{layer}-agent`**. El agente ejecuta su ciclo completo:
-
-```
-brainstorming-{layer} → writing-plans-{layer} → executing-plans-{layer}
-```
-
-**NO modificar directamente** — usar el sistema de orquestación.
+Esta capa sigue las reglas de arquitectura hexagonal y vertical slicing.
 
 ## Estructura
 
@@ -35,19 +29,7 @@ internal/{feature}/{layer}/
 
 ## Cómo modificar esta capa
 
-### Para nueva feature
-
-```bash
-# Orquestador despacha el agente correspondiente:
-orchestrate-agents --agent {layer} --feature {feature}
-```
-
-### Para cambios menores
-
-```bash
-# Orquestador da instrucciones específicas:
-# "{layer}-agent: agregar método X a entidad Y"
-```
+直接amente, siguiendo las reglas de esta capa y las reglas globales en `docs/reference/structure.md`.
 
 ## Reglas de Oro
 
@@ -59,8 +41,7 @@ orchestrate-agents --agent {layer} --feature {feature}
 
 ## Referencias
 
-- Agente: `.opencode/agents/{layer}-agent.md`
-- Skills: `brainstorming-{layer}`, `writing-plans-{layer}`, `executing-plans-{layer}`
+- Estructura y reglas: [docs/reference/structure.md](../../../docs/reference/structure.md)
 
 ## QA Checklist
 
