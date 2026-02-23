@@ -2,8 +2,6 @@
 
 Orquesta domain services. Define contratos (ports), no implementaciones.
 
-> **Workflow:** Ver [docs/architecture/agents.md](../../../docs/architecture/agents.md)
-
 ## Estructura
 
 ```
@@ -30,10 +28,6 @@ internal/calculos/application/
 
 > Ver reglas consolidadas en [docs/reference/structure.md](../../../docs/reference/structure.md)
 
-## Cómo modificar esta capa
-
-> Ver flujo completo en [docs/architecture/workflow.md](../../../docs/architecture/workflow.md)
-
 ## Flujo de Use Cases (orden obligatorio)
 
 1. Corriente Nominal
@@ -44,7 +38,31 @@ internal/calculos/application/
 6. Dimensionar Canalización
 7. Calcular Caída de Tensión
 
-## Reglas de Application
+### Firma de CalcularCaidaTensionUseCase.Execute
+
+```go
+func (uc *CalcularCaidaTensionUseCase) Execute(
+    ctx              context.Context,
+    calibre          string,
+    material         valueobject.MaterialConductor,
+    corrienteAjustada valueobject.Corriente,
+    longitudCircuito float64,
+    tension          valueobject.Tension,
+    limiteCaida      float64,
+    tipoCanalizacion entity.TipoCanalizacion,
+    sistemaElectrico entity.SistemaElectrico,
+    tipoVoltaje      entity.TipoVoltaje,
+    hilosPorFase     int,
+    factorPotencia   float64,   // cosθ ∈ (0, 1] — obligatorio
+) (dto.ResultadoCaidaTension, error)
+```
+
+> El campo `Impedancia` en `dto.ResultadoCaidaTension` es `Zef = R·cosθ + X·senθ` por conductor (Ω/km).
+> La caída se calcula como: `e = factor × (I/N) × L × Zef`
+
+## Reglas de Oro — Capa Application
+
+*Estas reglas son específicas para la capa Application de cálculos. Ver [docs/reference/structure.md](../../../docs/reference/structure.md) para reglas globales.*
 
 ### Use cases solo orquestan
 
@@ -71,6 +89,15 @@ if valor > 100 {  // esto va en domain
 - Nunca exponer value objects ni entities de domain
 - Métodos helper permitidos: `Validate()`, `ToDomain*()`
 - Mapping explícito `domain ↔ DTO` dentro del use case
+
+**Campos con unidad en `EquipoInput`:**
+
+| Campo           | Tipo    | Unidad campo    | Valores válidos         | Default |
+| --------------- | ------- | --------------- | ----------------------- | ------- |
+| `Tension`       | float64 | `TensionUnidad` | V, kV                   | "V"     |
+| `PotenciaNominal` | float64 | `PotenciaUnidad` | W, KW, KVA, KVAR     | "KW"    |
+
+Los defaults se aplican en `ApplyDefaults()`. La conversión al value object ocurre en `ToDomainTension()` y `ToDomainPotencia()`.
 
 ```go
 // ✅ CORRECTO — DTO con primitivos
@@ -124,6 +151,5 @@ func (uc *MiUseCase) Execute(ctx context.Context, input dto.MiInput) (dto.MiOutp
 
 ## Referencias
 
-- Agente: `application-agent`
-- Skill: `.agents/skills/orchestrating-agents/SKILL.md`
+- Estructura y reglas: [docs/reference/structure.md](../../../docs/reference/structure.md)
 - QA Checklist: [QA_CHECKLIST.md](QA_CHECKLIST.md)
