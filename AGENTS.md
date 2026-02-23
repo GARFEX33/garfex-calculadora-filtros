@@ -25,8 +25,8 @@ garfex-calculadora-filtros/
 │   └── shared/kernel/          # Value objects compartidos
 ├── data/tablas_nom/            # Tablas NOM (datos estáticos)
 ├── frontend/
-│   ├── web/                    # SvelteKit + TypeScript
-│   └── mobile/                 # Flutter (futuro)
+│   ├── web/                    # SvelteKit + TypeScript (PWA responsive)
+│   └── mobile/                 # Reservado — no activo
 └── docker-compose.yml
 ```
 
@@ -52,6 +52,8 @@ Cuando realices estas acciones, invoca el skill correspondiente PRIMERO:
 | Crear o editar cualquier componente `.svelte` o módulo `.svelte.ts/.svelte.js` | `svelte-code-writer` |
 | Usar runes (`$state`, `$derived`, `$effect`, `$props`), snippets, eventos o migrar de Svelte 4 | `svelte5-best-practices` |
 | Definir rutas, layouts, error boundaries, SSR o hidratación en SvelteKit | `sveltekit-structure` |
+| Crear componentes UI, design tokens, responsive layout o sistema de estilos con Tailwind | `tailwind-design-system` |
+| Tipos genéricos, tipos condicionales, mapped types, type-safe API clients o utilidades TS | `typescript-advanced-types` |
 
 ### General
 
@@ -83,6 +85,8 @@ Cuando realices estas acciones, invoca el skill correspondiente PRIMERO:
 | `svelte-code-writer` | CLI `@sveltejs/mcp` para docs y autofixer — OBLIGATORIO al tocar `.svelte` |
 | `svelte5-best-practices` | Runes, snippets, eventos, TypeScript, migración Svelte 4→5 |
 | `sveltekit-structure` | Routing, layouts, error handling, SSR, hidratación |
+| `tailwind-design-system` | Design tokens, componentes UI, responsive, dark mode con Tailwind v4 |
+| `typescript-advanced-types` | Generics, conditional/mapped types, type-safe API clients, utilidades TS |
 
 ### Skills Generales
 
@@ -126,4 +130,4 @@ Cuando realices estas acciones, invoca el skill correspondiente PRIMERO:
 | Tema           | Archivo                                              |
 | -------------- | ---------------------------------------------------- |
 | Frontend Web   | [frontend/web/AGENTS.md](frontend/web/AGENTS.md)     |
-| Frontend Mobile | [frontend/mobile/AGENTS.md](frontend/mobile/AGENTS.md) |
+| Frontend Mobile | [frontend/mobile/AGENTS.md](frontend/mobile/AGENTS.md) — reservado, no activo |
