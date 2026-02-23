@@ -37,6 +37,15 @@ func (uc *ActualizarEquipoUseCase) Execute(ctx context.Context, id string, input
 		return dto.EquipoOutput{}, fmt.Errorf("%w: %s", dto.ErrInputInvalido, err.Error())
 	}
 
+	var conexion *entity.Conexion
+	if input.Conexion != nil {
+		c, err := entity.ParseConexion(*input.Conexion)
+		if err != nil {
+			return dto.EquipoOutput{}, fmt.Errorf("%w: %s", dto.ErrInputInvalido, err.Error())
+		}
+		conexion = &c
+	}
+
 	equipo := &entity.EquipoFiltro{
 		ID:       parsedID,
 		Clave:    input.Clave,
@@ -45,6 +54,7 @@ func (uc *ActualizarEquipoUseCase) Execute(ctx context.Context, id string, input
 		Amperaje: input.Amperaje,
 		ITM:      input.ITM,
 		Bornes:   input.Bornes,
+		Conexion: conexion,
 	}
 
 	updated, err := uc.repo.Actualizar(ctx, equipo)

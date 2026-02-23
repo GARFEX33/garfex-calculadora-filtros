@@ -100,9 +100,9 @@ func (h *CalculoHandler) CalcularAmperaje(c *gin.Context) {
 		Tension:          float64(req.Tension),
 		SistemaElectrico: dto.SistemaElectrico(req.SistemaElectrico),
 		FactorPotencia:   req.FactorPotencia,
-		ITM:              0, // No requerido para este cálculo
 		Estado:           "default",
 	}
+	input.Equipo.ITM = 0 // No requerido para este cálculo
 
 	// Ejecutar use case de corriente en modo MANUAL_POTENCIA
 	output, err := h.calcularCorrienteUseCase.Execute(c.Request.Context(), input)

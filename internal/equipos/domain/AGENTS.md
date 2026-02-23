@@ -26,8 +26,9 @@ Entidad principal del catálogo. Campos:
 | `Amperaje` | `int` | Corriente nominal Qn/In en Amperes |
 | `ITM` | `int` | Capacidad del interruptor termomagnético en Amperes |
 | `Bornes` | `*int` | Número de bornes (nullable) |
+| `Conexion` | `*Conexion` | Tipo de conexión eléctrica (nullable): MONOFASICA, TRIFASICA |
 
-Constructor: `NewEquipoFiltro(clave, tipo, voltaje, amperaje, itm, bornes)` — valida que voltaje, amperaje e ITM sean > 0.
+Constructor: `NewEquipoFiltro(clave, tipo, voltaje, amperaje, itm, bornes, conexion)` — valida que voltaje, amperaje e ITM sean > 0. `Bornes` y `Conexion` son nullable.
 
 ### `TipoFiltro`
 
@@ -40,6 +41,19 @@ Enum que mapea exactamente al enum PostgreSQL `public.tipo_filtro`:
 | `TipoFiltroKVAR` | `"KVAR"` | Filtro de rechazo reactivo |
 
 `ParseTipoFiltro(s string)` convierte string → TipoFiltro con error claro si el valor no es válido.
+
+### `Conexion`
+
+Enum que mapea exactamente al enum PostgreSQL `public.conexion`:
+
+| Constante | Valor DB | Descripción |
+|-----------|---------|-------------|
+| `ConexionDelta` | `"DELTA"` | Conexión trifásica en triángulo (∆) |
+| `ConexionEstrella` | `"ESTRELLA"` | Conexión trifásica en estrella (Y) |
+| `ConexionMonofasico` | `"MONOFASICO"` | Conexión monofásica |
+| `ConexionBifasico` | `"BIFASICO"` | Conexión bifásica |
+
+`ParseConexion(s string)` convierte string → Conexion con error claro si el valor no es válido.
 
 ## Dependencias permitidas
 

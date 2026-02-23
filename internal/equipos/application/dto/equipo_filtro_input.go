@@ -16,6 +16,7 @@ type CreateEquipoInput struct {
 	Amperaje int     `json:"amperaje"`
 	ITM      int     `json:"itm"`
 	Bornes   *int    `json:"bornes"`
+	Conexion *string `json:"conexion"` // nullable: "MONOFASICA" | "TRIFASICA"
 }
 
 // Validate checks that all required fields are present and valid.
@@ -35,6 +36,11 @@ func (i CreateEquipoInput) Validate() error {
 	if i.ITM <= 0 {
 		return fmt.Errorf("%w: itm debe ser mayor que cero", ErrInputInvalido)
 	}
+	if i.Conexion != nil {
+		if _, err := entity.ParseConexion(*i.Conexion); err != nil {
+			return fmt.Errorf("%w: %s", ErrInputInvalido, err.Error())
+		}
+	}
 	return nil
 }
 
@@ -44,7 +50,17 @@ func (i CreateEquipoInput) ToDomain() (*entity.EquipoFiltro, error) {
 	if err != nil {
 		return nil, err
 	}
-	return entity.NewEquipoFiltro(i.Clave, tipo, i.Voltaje, i.Amperaje, i.ITM, i.Bornes)
+
+	var conexion *entity.Conexion
+	if i.Conexion != nil {
+		c, err := entity.ParseConexion(*i.Conexion)
+		if err != nil {
+			return nil, err
+		}
+		conexion = &c
+	}
+
+	return entity.NewEquipoFiltro(i.Clave, tipo, i.Voltaje, i.Amperaje, i.ITM, i.Bornes, conexion)
 }
 
 // UpdateEquipoInput is the inbound DTO for updating an existing equipo filtro.
@@ -56,6 +72,7 @@ type UpdateEquipoInput struct {
 	Amperaje int     `json:"amperaje"`
 	ITM      int     `json:"itm"`
 	Bornes   *int    `json:"bornes"`
+	Conexion *string `json:"conexion"` // nullable: "MONOFASICA" | "TRIFASICA"
 }
 
 // Validate checks that all required fields are present and valid.
@@ -74,6 +91,11 @@ func (i UpdateEquipoInput) Validate() error {
 	}
 	if i.ITM <= 0 {
 		return fmt.Errorf("%w: itm debe ser mayor que cero", ErrInputInvalido)
+	}
+	if i.Conexion != nil {
+		if _, err := entity.ParseConexion(*i.Conexion); err != nil {
+			return fmt.Errorf("%w: %s", ErrInputInvalido, err.Error())
+		}
 	}
 	return nil
 }

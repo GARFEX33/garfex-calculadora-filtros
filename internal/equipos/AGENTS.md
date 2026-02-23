@@ -4,7 +4,7 @@ Catálogo de equipos de filtros eléctricos Garfex (filtros activos y de rechazo
 
 ## Propósito
 
-Gestionar el catálogo de filtros eléctricos que se instalan en instalaciones industriales según normativa NOM. Cada equipo tiene: clave comercial, tipo de filtro, voltaje nominal, amperaje, capacidad ITM y bornes opcionales.
+Gestionar el catálogo de filtros eléctricos que se instalan en instalaciones industriales según normativa NOM. Cada equipo tiene: clave comercial, tipo de filtro, voltaje nominal, amperaje, capacidad ITM, bornes opcionales y tipo de conexión eléctrica opcional.
 
 ## Endpoints
 
@@ -35,6 +35,17 @@ Gestionar el catálogo de filtros eléctricos que se instalan en instalaciones i
 
 > Los valores del enum coinciden exactamente con el enum PostgreSQL `public.tipo_filtro`.
 
+### Tipos de conexión (`Conexion`) — nullable
+
+| Valor | Descripción |
+|-------|-------------|
+| `DELTA` | Conexión trifásica en triángulo (∆) |
+| `ESTRELLA` | Conexión trifásica en estrella (Y) |
+| `MONOFASICO` | Conexión monofásica |
+| `BIFASICO` | Conexión bifásica |
+
+> Los valores del enum coinciden exactamente con el enum PostgreSQL `public.conexion`. El campo es opcional (nullable).
+
 ## Estructura
 
 ```
@@ -42,8 +53,9 @@ internal/equipos/
 ├── domain/
 │   └── entity/
 │       ├── tipo_filtro.go       ← TipoFiltro enum (A, KVA, KVAR)
+│       ├── conexion.go          ← Conexion enum (MONOFASICA, TRIFASICA)
 │       ├── equipo_filtro.go     ← EquipoFiltro entity, NewEquipoFiltro()
-│       └── errors.go            ← ErrTipoFiltroInvalido, ErrVoltajeInvalido, etc.
+│       └── errors.go            ← ErrTipoFiltroInvalido, ErrConexionInvalida, ErrVoltajeInvalido, etc.
 ├── application/
 │   ├── port/
 │   │   └── equipo_filtro_repository.go  ← Interface: Crear, ObtenerPorID, Listar, Contar, Actualizar, Eliminar
@@ -78,7 +90,8 @@ public.equipos_filtros
 ├── voltaje    integer     NOT NULL
 ├── "qn/In"    integer     NOT NULL  ← columna con barra diagonal — escapar con comillas en SQL
 ├── itm        integer     NOT NULL
-└── bornes     integer     NULLABLE
+├── bornes     integer     NULLABLE
+└── conexion   conexion    NULLABLE  ← enum: 'DELTA', 'ESTRELLA', 'MONOFASICO', 'BIFASICO'
 ```
 
 > ⚠️ El campo `qn/In` tiene barra diagonal. En SQL siempre usar comillas dobles: `"qn/In"`.
@@ -88,6 +101,12 @@ public.equipos_filtros
 - Supabase self-hosted en servidor Ubuntu, puerto **5434** (mapeado en docker-compose.yml del servidor)
 - Variables de entorno: `DB_HOST`, `DB_PORT=5434`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`
 - Pool: `internal/equipos/infrastructure/adapter/driven/postgres/pool.go`
+
+## Integración con cálculos (memoria de cálculo)
+
+El catálogo de equipos se consume desde la feature `calculos` mediante el adapter `CalcEquipoFiltroRepository` (`internal/calculos/infrastructure/adapter/driven/postgres/equipo_filtro_repository.go`).
+
+El pool de PostgreSQL se comparte entre ambos repositorios sin duplicar conexiones.
 
 ## Mapeo de Errores HTTP
 

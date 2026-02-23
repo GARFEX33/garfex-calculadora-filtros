@@ -12,10 +12,10 @@ import (
 
 	"github.com/joho/godotenv"
 
-	calculosport "github.com/garfex/calculadora-filtros/internal/calculos/application/port"
 	"github.com/garfex/calculadora-filtros/internal/calculos/application/usecase"
 	"github.com/garfex/calculadora-filtros/internal/calculos/infrastructure"
 	"github.com/garfex/calculadora-filtros/internal/calculos/infrastructure/adapter/driven/csv"
+	calculospostgres "github.com/garfex/calculadora-filtros/internal/calculos/infrastructure/adapter/driven/postgres"
 
 	equiposusecase "github.com/garfex/calculadora-filtros/internal/equipos/application/usecase"
 	equiposinfra "github.com/garfex/calculadora-filtros/internal/equipos/infrastructure"
@@ -30,17 +30,37 @@ func main() {
 		log.Println("Archivo .env no encontrado, usando variables de entorno del sistema")
 	}
 
-	// ─── Calculos: repositorios y use cases ──────────────────────────────────
+	// ─── Tablas NOM (CSV) ─────────────────────────────────────────────────────
 
 	tablaRepo, err := csv.NewCSVTablaNOMRepository("data/tablas_nom")
 	if err != nil {
 		log.Fatalf("Error cargando tablas NOM: %v", err)
 	}
 
-	// TODO: conectar EquipoRepository de calculos al repo de equipos (futuro)
-	var equipoRepo calculosport.EquipoRepository
+	// ─── PostgreSQL: pool compartido ──────────────────────────────────────────
+	// El pool se inicializa primero para que tanto equipos como calculos
+	// puedan compartirlo sin duplicar conexiones.
 
-	calcularCorrienteUC := usecase.NewCalcularCorrienteUseCase(equipoRepo)
+	dbCfg, err := sharedpostgres.LoadDBConfigFromEnv()
+	if err != nil {
+		log.Fatalf("Error cargando configuración de base de datos: %v", err)
+	}
+
+	pool, err := equipospostgres.NewPool(dbCfg)
+	if err != nil {
+		log.Fatalf("Error conectando a PostgreSQL: %v", err)
+	}
+	defer pool.Close()
+	log.Printf("Conectado a PostgreSQL en %s:%s", dbCfg.Host, dbCfg.Port)
+
+	// ─── Calculos: repositorios y use cases ──────────────────────────────────
+	// CalcEquipoFiltroRepository comparte el pool de equipos.
+	// Implementa calculos/port.EquipoRepository: busca por clave y mapea
+	// TipoFiltro (A/KVA/KVAR) a la entidad de cálculo correcta.
+
+	calcEquipoRepo := calculospostgres.NewCalcEquipoFiltroRepository(pool)
+
+	calcularCorrienteUC := usecase.NewCalcularCorrienteUseCase(calcEquipoRepo)
 	ajustarCorrienteUC := usecase.NewAjustarCorrienteUseCase(tablaRepo)
 	seleccionarConductorUC := usecase.NewSeleccionarConductorUseCase(tablaRepo)
 	seleccionarConductorAlimentacionUC := usecase.NewSeleccionarConductorAlimentacionUseCase(tablaRepo)
@@ -61,19 +81,7 @@ func main() {
 		tablaRepo,
 	)
 
-	// ─── Equipos: conexión DB + repositorio + use cases ──────────────────────
-
-	dbCfg, err := sharedpostgres.LoadDBConfigFromEnv()
-	if err != nil {
-		log.Fatalf("Error cargando configuración de base de datos: %v", err)
-	}
-
-	pool, err := equipospostgres.NewPool(dbCfg)
-	if err != nil {
-		log.Fatalf("Error conectando a PostgreSQL: %v", err)
-	}
-	defer pool.Close()
-	log.Printf("Conectado a PostgreSQL en %s:%s", dbCfg.Host, dbCfg.Port)
+	// ─── Equipos: repositorio + use cases ────────────────────────────────────
 
 	equipoFiltroRepo := equipospostgres.NewPostgresEquipoFiltroRepository(pool)
 

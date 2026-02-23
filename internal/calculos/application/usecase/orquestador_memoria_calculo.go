@@ -86,11 +86,20 @@ func (uc *OrquestadorMemoriaCalculoUseCase) Execute(
 		return dto.MemoriaOutput{}, fmt.Errorf("tensión inválida: %w", err)
 	}
 
+	// Get TipoEquipo according to mode
+	tipoEquipo, err := input.GetTipoEquipo()
+	if err != nil {
+		return dto.MemoriaOutput{}, fmt.Errorf("tipo de equipo inválido: %w", err)
+	}
+
+	// Get ITM according to mode
+	itm := input.Equipo.ITM
+
 	// Prepare output structure
 	output := dto.MemoriaOutput{
-		TipoEquipo:       input.TipoEquipo,
-		Clave:            input.Clave,
-		Tension:          tension.Valor(), // usar valor normalizado en volts
+		Equipo:           input.Equipo,
+		TipoEquipo:       string(tipoEquipo),
+		Tension:          tension.Valor(),
 		FactorPotencia:   input.FactorPotencia,
 		Estado:           input.Estado,
 		SistemaElectrico: input.SistemaElectrico,
@@ -98,8 +107,7 @@ func (uc *OrquestadorMemoriaCalculoUseCase) Execute(
 		TipoCanalizacion: input.TipoCanalizacion,
 		Material:         input.Material,
 		LongitudCircuito: input.LongitudCircuito,
-		ITM:              input.ITM,
-		FillFactor:       0.40, // 40% fill for tubería
+		ITM:              itm,
 	}
 
 	// Determine neutral count from system type
@@ -134,7 +142,7 @@ func (uc *OrquestadorMemoriaCalculoUseCase) Execute(
 		input.Estado,
 		tipoCanalizacion,
 		sistemaElectrico,
-		entity.TipoEquipo(input.TipoEquipo),
+		tipoEquipo,
 		input.HilosPorFase,
 		input.NumTuberias,
 	)
@@ -170,7 +178,7 @@ func (uc *OrquestadorMemoriaCalculoUseCase) Execute(
 		ctx,
 		corrienteAjustada,
 		input.HilosPorFase,
-		input.ITM,
+		itm,
 		material,
 		temperaturaUsada,
 		tipoCanalizacion,

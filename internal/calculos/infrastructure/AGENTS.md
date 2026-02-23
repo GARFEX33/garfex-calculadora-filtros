@@ -8,7 +8,8 @@ Implementa los ports definidos en `application/port/`. Tecnologías: CSV (encodi
 internal/calculos/infrastructure/
 ├── adapter/
 │   ├── driven/
-│   │   └── csv/              # CSVTablaNOMRepository
+│   │   ├── csv/              # CSVTablaNOMRepository (tablas NOM)
+│   │   └── postgres/         # CalcEquipoFiltroRepository (equipos_filtros)
 │   └── driver/
 │       └── http/
 │           ├── formatters/   # NombreTablaAmpacidad, GenerarObservaciones
@@ -37,6 +38,19 @@ internal/calculos/infrastructure/
 
 - **CSVTablaNOMRepository** — lee tablas NOM desde CSV
 - **CSVSeleccionarTemperatura** — temperaturas por estado
+- **CalcEquipoFiltroRepository** — consulta `equipos_filtros` en PostgreSQL y mapea a entidades de cálculo. Implementa `calculos/application/port.EquipoRepository`.
+
+### CalcEquipoFiltroRepository — Mapeo de TipoFiltro a entidad
+
+El adapter consulta la tabla `equipos_filtros` y convierte cada registro a la entidad de dominio correcta:
+
+| `TipoFiltro` BD | Campo `Amperaje` | Entidad calculos | Fórmula corriente |
+|---|---|---|---|
+| `A` | Corriente directa (A) | `FiltroActivo` | `I = Amperaje` (directo) |
+| `KVA` | Potencia aparente (KVA) | `Transformador` | `I = KVA / (kV × √3)` |
+| `KVAR` | Potencia reactiva (KVAR) | `FiltroRechazo` | `I = KVAR / (kV × √3)` |
+
+> **Nota**: El pool de PostgreSQL se comparte con el repositorio de equipos (`equipos/application/port.EquipoFiltroRepository`).
 
 ### Driver (HTTP)
 
@@ -98,6 +112,22 @@ internal/calculos/infrastructure/
 > `potencia_unidad` acepta: W, KW, KVA, KVAR (default: KW)
 > `tension_unidad` acepta: V, kV (default: V). Con `kV`, el valor se normaliza internamente: `0.48 kV` → `480 V`
 > `tipo_voltaje` acepta: FASE_NEUTRO, FASE_FASE
+
+**Ejemplo con modo LISTADO (equipo de la BD):**
+```json
+{
+  "modo": "LISTADO",
+  "clave": "GAR-100A-480V",
+  "itm": 125,
+  "tension": 480,
+  "sistema_electrico": "ESTRELLA",
+  "estado": "Ciudad de Mexico",
+  "tipo_canalizacion": "TUBERIA_PVC",
+  "longitud_circuito": 50,
+  "tipo_voltaje": "FASE_FASE"
+}
+```
+> En modo `LISTADO`, los campos `amperaje_nominal`, `potencia_nominal` y `tipo_equipo` se obtienen automáticamente de la BD según la `clave`.
 
 **Ejemplo con kV:**
 ```json

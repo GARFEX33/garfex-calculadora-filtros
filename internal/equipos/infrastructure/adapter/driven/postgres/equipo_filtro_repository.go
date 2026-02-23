@@ -35,9 +35,9 @@ func (r *PostgresEquipoFiltroRepository) Crear(ctx context.Context, equipo *enti
 	defer cancel()
 
 	query := `
-		INSERT INTO equipos_filtros (clave, tipo, voltaje, "qn/In", itm, bornes)
-		VALUES ($1, $2, $3, $4, $5, $6)
-		RETURNING id, created_at, clave, tipo, voltaje, "qn/In", itm, bornes
+		INSERT INTO equipos_filtros (clave, tipo, voltaje, "qn/In", itm, bornes, conexion)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)
+		RETURNING id, created_at, clave, tipo, voltaje, "qn/In", itm, bornes, conexion
 	`
 
 	row := r.pool.QueryRow(ctx, query,
@@ -47,6 +47,7 @@ func (r *PostgresEquipoFiltroRepository) Crear(ctx context.Context, equipo *enti
 		equipo.Amperaje,
 		equipo.ITM,
 		equipo.Bornes,
+		mapConexionToDB(equipo.Conexion),
 	)
 
 	created, err := scanEquipoFiltro(row)
@@ -66,7 +67,7 @@ func (r *PostgresEquipoFiltroRepository) ObtenerPorID(ctx context.Context, id uu
 	defer cancel()
 
 	query := `
-		SELECT id, created_at, clave, tipo, voltaje, "qn/In", itm, bornes
+		SELECT id, created_at, clave, tipo, voltaje, "qn/In", itm, bornes, conexion
 		FROM equipos_filtros
 		WHERE id = $1
 	`
@@ -109,7 +110,7 @@ func (r *PostgresEquipoFiltroRepository) Listar(ctx context.Context, filtros por
 
 	where, args, argIdx := buildWhereClause(filtros)
 
-	query := `SELECT id, created_at, clave, tipo, voltaje, "qn/In", itm, bornes FROM equipos_filtros` +
+	query := `SELECT id, created_at, clave, tipo, voltaje, "qn/In", itm, bornes, conexion FROM equipos_filtros` +
 		where +
 		" ORDER BY created_at DESC" +
 		fmt.Sprintf(" LIMIT $%d OFFSET $%d", argIdx, argIdx+1)
@@ -160,9 +161,9 @@ func (r *PostgresEquipoFiltroRepository) Actualizar(ctx context.Context, equipo 
 
 	query := `
 		UPDATE equipos_filtros
-		SET clave = $1, tipo = $2, voltaje = $3, "qn/In" = $4, itm = $5, bornes = $6
-		WHERE id = $7
-		RETURNING id, created_at, clave, tipo, voltaje, "qn/In", itm, bornes
+		SET clave = $1, tipo = $2, voltaje = $3, "qn/In" = $4, itm = $5, bornes = $6, conexion = $7
+		WHERE id = $8
+		RETURNING id, created_at, clave, tipo, voltaje, "qn/In", itm, bornes, conexion
 	`
 
 	row := r.pool.QueryRow(ctx, query,
@@ -172,6 +173,7 @@ func (r *PostgresEquipoFiltroRepository) Actualizar(ctx context.Context, equipo 
 		equipo.Amperaje,
 		equipo.ITM,
 		equipo.Bornes,
+		mapConexionToDB(equipo.Conexion),
 		equipo.ID,
 	)
 
@@ -219,6 +221,28 @@ func mapTipoFiltroFromDB(s string) entity.TipoFiltro {
 	return t
 }
 
+// mapConexionToDB converts a nullable *Conexion to a nullable *string for PostgreSQL.
+func mapConexionToDB(c *entity.Conexion) *string {
+	if c == nil {
+		return nil
+	}
+	s := string(*c)
+	return &s
+}
+
+// mapConexionFromDB converts a nullable *string from PostgreSQL to a domain *Conexion.
+func mapConexionFromDB(s *string) *entity.Conexion {
+	if s == nil {
+		return nil
+	}
+	c, err := entity.ParseConexion(*s)
+	if err != nil {
+		// Fallback — should not happen with a properly constrained DB
+		return nil
+	}
+	return &c
+}
+
 // scanEquipoFiltro scans a single pgx.Row into a domain entity.
 func scanEquipoFiltro(row pgx.Row) (*entity.EquipoFiltro, error) {
 	var (
@@ -230,9 +254,10 @@ func scanEquipoFiltro(row pgx.Row) (*entity.EquipoFiltro, error) {
 		amperaje  int
 		itm       int
 		bornes    *int
+		conexion  *string
 	)
 
-	err := row.Scan(&id, &createdAt, &clave, &tipo, &voltaje, &amperaje, &itm, &bornes)
+	err := row.Scan(&id, &createdAt, &clave, &tipo, &voltaje, &amperaje, &itm, &bornes, &conexion)
 	if err != nil {
 		return nil, err
 	}
@@ -246,6 +271,7 @@ func scanEquipoFiltro(row pgx.Row) (*entity.EquipoFiltro, error) {
 		Amperaje:  amperaje,
 		ITM:       itm,
 		Bornes:    bornes,
+		Conexion:  mapConexionFromDB(conexion),
 	}, nil
 }
 
@@ -260,9 +286,10 @@ func scanEquipoFiltroFromRows(rows pgx.Rows) (*entity.EquipoFiltro, error) {
 		amperaje  int
 		itm       int
 		bornes    *int
+		conexion  *string
 	)
 
-	err := rows.Scan(&id, &createdAt, &clave, &tipo, &voltaje, &amperaje, &itm, &bornes)
+	err := rows.Scan(&id, &createdAt, &clave, &tipo, &voltaje, &amperaje, &itm, &bornes, &conexion)
 	if err != nil {
 		return nil, err
 	}
@@ -276,6 +303,7 @@ func scanEquipoFiltroFromRows(rows pgx.Rows) (*entity.EquipoFiltro, error) {
 		Amperaje:  amperaje,
 		ITM:       itm,
 		Bornes:    bornes,
+		Conexion:  mapConexionFromDB(conexion),
 	}, nil
 }
 

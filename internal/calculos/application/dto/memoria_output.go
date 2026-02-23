@@ -15,11 +15,10 @@ type ResultadoConductor struct {
 	Material        string
 	SeccionMM2      float64
 	TipoAislamiento string
-	Capacidad       float64 // Ampacidad de la tabla
+	Capacidad       float64
 }
 
-// ResultadoConductores contiene los conductores seleccionados por SeleccionarConductorUseCase.
-// Usa tipos primitivos para evitar domain bleeding hacia la capa de application.
+// ResultadoConductores contiene los conductores seleccionados.
 type ResultadoConductores struct {
 	Alimentacion ResultadoConductor
 	Tierra       ResultadoConductor
@@ -40,7 +39,7 @@ type ResultadoCaidaTension struct {
 	CaidaVolts       float64
 	Cumple           bool
 	LimitePorcentaje float64
-	Impedancia       float64 // Zef = R·cosθ + X·senθ en Ω/km (IEEE-141 efectiva)
+	Impedancia       float64
 }
 
 // EntradaDimensionarCanalizacion es el DTO de entrada para DimensionarCanalizacionUseCase.
@@ -58,7 +57,7 @@ type ResultadoAjusteCorriente struct {
 	FactorAgrupamiento       float64 `json:"factor_agrupamiento"`
 	FactorUso                float64 `json:"factor_uso"`
 	FactorTotal              float64 `json:"factor_total"`
-	Temperatura              int     `json:"temperatura"` // 60 o 75
+	Temperatura              int     `json:"temperatura"`
 	ConductoresPorTubo       int     `json:"conductores_por_tubo"`
 	CantidadConductoresTotal int     `json:"cantidad_conductores_total"`
 	TemperaturaAmbiente      int     `json:"temperatura_ambiente"`
@@ -69,23 +68,24 @@ type ResultadoCorriente struct {
 	CorrienteNominal float64 `json:"corriente_nominal"`
 }
 
-// MemoriaOutput contiene el resultado completo de todos los pasos.
-// Es el DTO de salida para el use case CalcularMemoria.
+// MemoriaOutput contiene el resultado completo de la memoria de cálculo.
 type MemoriaOutput struct {
-	// Información del equipo
-	TipoEquipo     string  `json:"tipo_equipo"`
-	Clave          string  `json:"clave"`
-	Tension        int     `json:"tension"`
-	FactorPotencia float64 `json:"factor_potencia"`
+	// ═══════════════════════════════════════════════════════════════════════
+	// DATOS DEL EQUIPO (reflejan el input)
+	// ═══════════════════════════════════════════════════════════════════════
+	Equipo DatosEquipo `json:"equipo"`
 
-	// NUEVOS: Información de cálculo
+	// Información del cálculo
+	TipoEquipo          string           `json:"tipo_equipo"`
+	Tension             int              `json:"tension"`
+	FactorPotencia      float64          `json:"factor_potencia"`
 	Estado              string           `json:"estado"`
 	TemperaturaAmbiente int              `json:"temperatura_ambiente"`
 	SistemaElectrico    SistemaElectrico `json:"sistema_electrico"`
 	CantidadConductores int              `json:"cantidad_conductores"`
 
 	// Factores calculados
-	FactorTemperaturaCalculado  float64 `json:"factor_temperatura_calculado"`
+	FactorTemperaturaCalculado  float64 `json:"factor_temperatura_calculato"`
 	FactorAgrupamientoCalculado float64 `json:"factor_agrupamiento_calculado"`
 
 	// Paso 1: Corriente Nominal
@@ -103,7 +103,7 @@ type MemoriaOutput struct {
 	TipoCanalizacion string `json:"tipo_canalizacion"`
 
 	// Material del conductor
-	Material string `json:"material"` // "Cu" o "Al"
+	Material string `json:"material"`
 
 	// Paso 4: Conductor de Alimentación
 	TemperaturaUsada      int                `json:"temperatura_usada"`
@@ -111,21 +111,21 @@ type MemoriaOutput struct {
 	TablaAmpacidadUsada   string             `json:"tabla_ampacidad_usada"`
 
 	// Paso 5: Conductor de Tierra
-	ConductorTierra ResultadoConductor
-	ITM             int
+	ConductorTierra ResultadoConductor `json:"conductor_tierra"`
+	ITM             int                `json:"itm"`
 
 	// Paso 6: Canalización
-	Canalizacion ResultadoCanalizacion
-	FillFactor   float64 // 40% para tubería
+	Canalizacion ResultadoCanalizacion `json:"canalizacion"`
+	FillFactor   float64               `json:"fill_factor"`
 
 	// Paso 7: Caída de Tensión
-	LongitudCircuito float64
-	CaidaTension     ResultadoCaidaTension
+	LongitudCircuito float64               `json:"longitud_circuito"`
+	CaidaTension     ResultadoCaidaTension `json:"caida_tension"`
 
 	// Resumen de cumplimiento
-	CumpleNormativa bool
-	Observaciones   []string
+	CumpleNormativa bool     `json:"cumple_normativa"`
+	Observaciones   []string `json:"observaciones"`
 
 	// Todos los pasos para el reporte
-	Pasos []PasoMemoria
+	Pasos []PasoMemoria `json:"pasos"`
 }

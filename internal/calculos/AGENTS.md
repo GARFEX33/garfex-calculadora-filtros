@@ -77,11 +77,22 @@ internal/calculos/
 │   ├── usecase/     ← OrquestadorMemoriaCalculo y micro use cases
 │   │   └── helpers/ ← Funciones auxiliares
 │   └── dto/         ← EquipoInput, MemoriaOutput
-└── infrastructure/  ← adapters HTTP (driver) y CSV (driven)
+└── infrastructure/  ← adapters HTTP (driver), CSV y PostgreSQL (driven)
     └── adapter/
         ├── driver/http/     ← CalculoHandler, formatters
-        └── driven/csv/      ← CSVTablaNOMRepository
+        ├── driven/csv/      ← CSVTablaNOMRepository
+        └── driven/postgres/ ← CalcEquipoFiltroRepository
 ```
+
+### Integración con equipos (catálogo de filtros)
+
+El modo `LISTADO` en `POST /api/v1/calculos/memoria` permite seleccionar un equipo del catálogo de equipos (`equipos_filtros`).
+
+El adapter `CalcEquipoFiltroRepository` consulta la tabla y mapea cada tipo de filtro:
+
+- `TipoFiltro = A` → `FiltroActivo` (corriente directa)
+- `TipoFiltro = KVA` → `Transformador` (calcula I desde KVA)
+- `TipoFiltro = KVAR` → `FiltroRechazo` (calcula I desde KVAR)
 
 ## Cómo modificar esta feature
 

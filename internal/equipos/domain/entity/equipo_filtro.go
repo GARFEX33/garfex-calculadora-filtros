@@ -14,10 +14,11 @@ type EquipoFiltro struct {
 	CreatedAt time.Time
 	Clave     *string // nullable — unique key for user-readable identification
 	Tipo      TipoFiltro
-	Voltaje   int  // nominal voltage in volts
-	Amperaje  int  // nominal current Qn/In in amps
-	ITM       int  // interruptor termomagnético capacity in amps
-	Bornes    *int // nullable — number of terminals
+	Voltaje   int       // nominal voltage in volts
+	Amperaje  int       // nominal current Qn/In in amps
+	ITM       int       // interruptor termomagnético capacity in amps
+	Bornes    *int      // nullable — number of terminals
+	Conexion  *Conexion // nullable — electrical connection type (MONOFASICA, TRIFASICA)
 }
 
 // NewEquipoFiltro creates and validates a new EquipoFiltro entity.
@@ -29,6 +30,7 @@ func NewEquipoFiltro(
 	amperaje int,
 	itm int,
 	bornes *int,
+	conexion *Conexion,
 ) (*EquipoFiltro, error) {
 	if voltaje <= 0 {
 		return nil, ErrVoltajeInvalido
@@ -47,5 +49,6 @@ func NewEquipoFiltro(
 		Amperaje: amperaje,
 		ITM:      itm,
 		Bornes:   bornes,
+		Conexion: conexion,
 	}, nil
 }

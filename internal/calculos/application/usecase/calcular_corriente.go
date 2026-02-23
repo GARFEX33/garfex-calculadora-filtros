@@ -7,6 +7,7 @@ import (
 
 	"github.com/garfex/calculadora-filtros/internal/calculos/application/dto"
 	"github.com/garfex/calculadora-filtros/internal/calculos/application/port"
+	"github.com/garfex/calculadora-filtros/internal/calculos/domain/entity"
 	"github.com/garfex/calculadora-filtros/internal/calculos/domain/service"
 	"github.com/garfex/calculadora-filtros/internal/shared/kernel/valueobject"
 )
@@ -29,7 +30,7 @@ func NewCalcularCorrienteUseCase(
 func (uc *CalcularCorrienteUseCase) Execute(ctx context.Context, input dto.EquipoInput) (dto.ResultadoCorriente, error) {
 	switch input.Modo {
 	case dto.ModoListado:
-		return uc.calcularDesdeListado(ctx, input)
+		return uc.calcularDesdeListado(input)
 
 	case dto.ModoManualAmperaje:
 		return uc.calcularManualAmperaje(input)
@@ -42,18 +43,55 @@ func (uc *CalcularCorrienteUseCase) Execute(ctx context.Context, input dto.Equip
 	}
 }
 
-// calcularDesdeListado calculates current from equipment listing.
-func (uc *CalcularCorrienteUseCase) calcularDesdeListado(ctx context.Context, input dto.EquipoInput) (dto.ResultadoCorriente, error) {
-	if input.Clave == "" {
-		return dto.ResultadoCorriente{}, dto.ErrEquipoInputInvalido
-	}
-
-	equipo, err := uc.equipoRepo.BuscarPorClave(ctx, input.Clave)
+// calcularDesdeListado calculates current from equipment data.
+func (uc *CalcularCorrienteUseCase) calcularDesdeListado(input dto.EquipoInput) (dto.ResultadoCorriente, error) {
+	// Obtener tipo de equipo mapeado desde TipoFiltro
+	tipoEquipo, err := input.GetTipoEquipo()
 	if err != nil {
-		return dto.ResultadoCorriente{}, fmt.Errorf("buscar equipo: %w", err)
+		return dto.ResultadoCorriente{}, fmt.Errorf("mapear tipo de equipo: %w", err)
 	}
 
-	corriente, err := service.CalcularCorrienteNominal(equipo)
+	// Crear la entidad correcta según el tipo
+	var calculador entity.CalculadorCorriente
+
+	switch tipoEquipo {
+	case entity.TipoEquipoFiltroActivo:
+		// FiltroActivo: el amperaje es la corriente directa
+		calculador, err = entity.NewFiltroActivo(
+			input.Equipo.Clave,
+			input.Equipo.Voltaje,
+			input.Equipo.Amperaje,
+			entity.ITM{Amperaje: input.Equipo.ITM},
+		)
+
+	case entity.TipoEquipoFiltroRechazo:
+		// FiltroRechazo: el amperaje es KVAR
+		calculador, err = entity.NewFiltroRechazo(
+			input.Equipo.Clave,
+			input.Equipo.Voltaje,
+			input.Equipo.Amperaje,
+			entity.ITM{Amperaje: input.Equipo.ITM},
+		)
+
+	case entity.TipoEquipoTransformador:
+		// Transformador: el amperaje es KVA
+		calculador, err = entity.NewTransformador(
+			input.Equipo.Clave,
+			input.Equipo.Voltaje,
+			input.Equipo.Amperaje,
+			entity.ITM{Amperaje: input.Equipo.ITM},
+		)
+
+	default:
+		return dto.ResultadoCorriente{}, fmt.Errorf("tipo de equipo no soportado: %s", tipoEquipo)
+	}
+
+	if err != nil {
+		return dto.ResultadoCorriente{}, fmt.Errorf("crear entidad de equipo: %w", err)
+	}
+
+	// Calcular corriente nominal
+	corriente, err := service.CalcularCorrienteNominal(calculador)
 	if err != nil {
 		return dto.ResultadoCorriente{}, fmt.Errorf("calcular corriente: %w", err)
 	}
@@ -75,19 +113,15 @@ func (uc *CalcularCorrienteUseCase) calcularManualAmperaje(input dto.EquipoInput
 	return dto.ResultadoCorriente{CorrienteNominal: corriente.Valor()}, nil
 }
 
-// calcularManualPotencia calculates current from manual power using entity.SistemaElectrico.
-// The DTO SistemaElectrico converts directly to entity via ToEntity().
+// calcularManualPotencia calculates current from manual power.
 func (uc *CalcularCorrienteUseCase) calcularManualPotencia(input dto.EquipoInput) (dto.ResultadoCorriente, error) {
-	// Convertir DTO a Potencia value object (valida y normaliza a watts)
 	potencia, err := input.ToDomainPotencia()
 	if err != nil {
 		return dto.ResultadoCorriente{}, fmt.Errorf("potencia inválida: %w", err)
 	}
 
-	// Convertir DTO a entity — los valores son idénticos (DELTA, ESTRELLA, etc.)
 	sistema := input.SistemaElectrico.ToEntity()
 
-	// Convertir DTO primitivo a value object
 	tension, err := input.ToDomainTension()
 	if err != nil {
 		return dto.ResultadoCorriente{}, fmt.Errorf("tensión inválida: %w", err)

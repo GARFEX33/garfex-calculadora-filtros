@@ -8,6 +8,9 @@ var (
 	// ErrTipoFiltroInvalido is returned when a TipoFiltro string is not recognized.
 	ErrTipoFiltroInvalido = errors.New("tipo de filtro inválido")
 
+	// ErrConexionInvalida is returned when a Conexion string is not recognized.
+	ErrConexionInvalida = errors.New("tipo de conexión inválido")
+
 	// ErrVoltajeInvalido is returned when voltaje is <= 0.
 	ErrVoltajeInvalido = errors.New("el voltaje debe ser mayor que cero")
 

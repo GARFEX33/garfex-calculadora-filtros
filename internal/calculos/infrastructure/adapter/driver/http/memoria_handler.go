@@ -26,23 +26,32 @@ func NewMemoriaHandler(orquestadorUC *usecase.OrquestadorMemoriaCalculoUseCase) 
 
 // CalcularMemoriaRequest represents the request body for the memoria endpoint.
 type CalcularMemoriaRequest struct {
-	// Mode indicates how equipment data is provided
+	// Modo de cálculo (required)
 	Modo dto.ModoCalculo `json:"modo" binding:"required"`
 
-	// Equipment key (required if Modo = LISTADO)
-	Clave string `json:"clave"`
+	// ═══════════════════════════════════════════════════════════════════════
+	// DATOS DEL EQUIPO
+	// ═══════════════════════════════════════════════════════════════════════
+	// LISTADO: enviar equipo completo (tal cual de GET /equipos)
+	// MANUAL_AMPERAJE: enviar tipo_equipo, amperaje_nominal, tension, itm
+	// MANUAL_POTENCIA: enviar tipo_equipo, potencia_nominal, potencia_unidad, factor_potencia, tension, itm
 
-	// Equipment data (required if Modo = MANUAL_*)
+	// Equipo completo (modo LISTADO)
+	Equipo dto.DatosEquipo `json:"equipo"`
+
+	// Datos manuales (modo MANUAL_*)
 	TipoEquipo      string  `json:"tipo_equipo"`
 	AmperajeNominal float64 `json:"amperaje_nominal"`
 	PotenciaNominal float64 `json:"potencia_nominal"`
-	PotenciaUnidad  string  `json:"potencia_unidad"` // "W", "KW", "KVA", "KVAR"
-	Tension         float64 `json:"tension" binding:"required,gt=0"`
-	TensionUnidad   string  `json:"tension_unidad"` // "V" o "kV" (default: "V")
+	PotenciaUnidad  string  `json:"potencia_unidad"`
 	FactorPotencia  float64 `json:"factor_potencia"`
-	ITM             int     `json:"itm" binding:"required,gt=0"`
 
-	// Installation parameters
+	// ═══════════════════════════════════════════════════════════════════════
+	// DATOS DE INSTALACIÓN (comunes a todos los modos)
+	// ═══════════════════════════════════════════════════════════════════════
+	Tension               float64  `json:"tension" binding:"required,gt=0"`
+	TensionUnidad         string   `json:"tension_unidad"`
+	ITM                   int      `json:"itm"` // Requerido en MANUAL_*, opcional en LISTADO (usa equipo.itm)
 	TipoCanalizacion      string   `json:"tipo_canalizacion" binding:"required"`
 	TemperaturaOverride   *int     `json:"temperatura_override,omitempty"`
 	HilosPorFase          int      `json:"hilos_por_fase"`
@@ -52,12 +61,10 @@ type CalcularMemoriaRequest struct {
 	PorcentajeCaidaMaximo float64  `json:"porcentaje_caida_maximo"`
 	DiametroControlMM     *float64 `json:"diametro_control_mm,omitempty"`
 
-	// Electrical system
+	// Sistema eléctrico
 	SistemaElectrico dto.SistemaElectrico `json:"sistema_electrico" binding:"required"`
 	Estado           string               `json:"estado" binding:"required"`
-
-	// Voltage type (FASE_NEUTRO or FASE_FASE)
-	TipoVoltaje string `json:"tipo_voltaje" binding:"required"`
+	TipoVoltaje      string               `json:"tipo_voltaje" binding:"required"`
 }
 
 // CalcularMemoriaResponse represents the response for the memoria endpoint.
@@ -75,7 +82,6 @@ type CalcularMemoriaResponseError struct {
 }
 
 // CalcularMemoria POST /api/v1/calculos/memoria
-// Executes the complete memory calculation pipeline.
 func (h *MemoriaHandler) CalcularMemoria(c *gin.Context) {
 	var req CalcularMemoriaRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -88,18 +94,23 @@ func (h *MemoriaHandler) CalcularMemoria(c *gin.Context) {
 		return
 	}
 
+	// Determinar ITM según modo
+	itm := req.ITM
+	if req.Modo == dto.ModoListado && itm == 0 {
+		itm = req.Equipo.ITM
+	}
+
 	// Build EquipoInput from request
 	input := dto.EquipoInput{
 		Modo:                  req.Modo,
-		Clave:                 req.Clave,
+		Equipo:                req.Equipo,
 		TipoEquipo:            req.TipoEquipo,
 		AmperajeNominal:       req.AmperajeNominal,
 		PotenciaNominal:       req.PotenciaNominal,
 		PotenciaUnidad:        req.PotenciaUnidad,
+		FactorPotencia:        req.FactorPotencia,
 		Tension:               req.Tension,
 		TensionUnidad:         req.TensionUnidad,
-		FactorPotencia:        req.FactorPotencia,
-		ITM:                   req.ITM,
 		TipoCanalizacion:      req.TipoCanalizacion,
 		TemperaturaOverride:   req.TemperaturaOverride,
 		HilosPorFase:          req.HilosPorFase,
@@ -111,6 +122,11 @@ func (h *MemoriaHandler) CalcularMemoria(c *gin.Context) {
 		SistemaElectrico:      req.SistemaElectrico,
 		Estado:                req.Estado,
 		TipoVoltaje:           req.TipoVoltaje,
+	}
+
+	// Set ITM for MANUAL modes
+	if req.Modo != dto.ModoListado {
+		input.Equipo.ITM = itm
 	}
 
 	// Execute orchestrator

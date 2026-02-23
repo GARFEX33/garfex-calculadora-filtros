@@ -18,10 +18,17 @@ type EquipoOutput struct {
 	Amperaje  int     `json:"amperaje"`
 	ITM       int     `json:"itm"`
 	Bornes    *int    `json:"bornes"`
+	Conexion  *string `json:"conexion"` // nullable: "MONOFASICA" | "TRIFASICA"
 }
 
 // FromDomain converts a domain entity to an output DTO.
 func FromDomain(e *entity.EquipoFiltro) EquipoOutput {
+	var conexion *string
+	if e.Conexion != nil {
+		s := e.Conexion.String()
+		conexion = &s
+	}
+
 	return EquipoOutput{
 		ID:        e.ID.String(),
 		CreatedAt: e.CreatedAt.UTC().Format(time.RFC3339),
@@ -31,6 +38,7 @@ func FromDomain(e *entity.EquipoFiltro) EquipoOutput {
 		Amperaje:  e.Amperaje,
 		ITM:       e.ITM,
 		Bornes:    e.Bornes,
+		Conexion:  conexion,
 	}
 }
 

@@ -28,6 +28,7 @@ Implementa `port.EquipoFiltroRepository`. Detalles importantes:
 - **Unique violation**: detección via `pgconn.PgError` con SQLSTATE `23505` (NO string matching).
 - **`buildWhereClause()`**: función interna que evita duplicación entre `Listar` y `Contar`.
 - **`Eliminar` es idempotente**: no retorna error si el ID no existe.
+- **`conexion` nullable**: mapeada como `*string` en SQL y `*entity.Conexion` en dominio via `mapConexionToDB/mapConexionFromDB`.
 
 ```go
 // Construcción del repositorio

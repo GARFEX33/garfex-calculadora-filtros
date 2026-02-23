@@ -49,7 +49,7 @@ type EquipoFiltroRepository interface {
 | `UpdateEquipoInput` | Body de PUT — misma validación, ID viene del path |
 | `ListEquiposQuery` | Query params de GET — tiene `ApplyDefaults()` y `Offset()` |
 
-Campos `Clave` y `Bornes` son `*string` / `*int` (punteros para nullability).
+Campos `Clave`, `Bornes` y `Conexion` son `*string` / `*int` (punteros para nullability). `Conexion` acepta `"MONOFASICA"` o `"TRIFASICA"` cuando se provee.
 
 ### Output
 
