@@ -2,6 +2,23 @@
 
 Backend API en Go para memorias de cálculo de instalaciones eléctricas según normativa NOM (México).
 
+Para hacer el rebuild del servidor:
+
+# 1. Detén el servidor actual (Ctrl+C en la terminal donde está corriendo)
+
+# 2. Rebuild
+
+cd C:\PROGRAMACION\garfex-calculadora-filtros
+go build -o server.exe ./cmd/api
+
+# 3. Ejecuta el servidor
+
+./server.exe
+
+correr front
+cd frontend/web
+npm run dev
+
 ## Estado del Proyecto
 
 ✅ **Fase 1 - Completa**  
@@ -14,6 +31,7 @@ Las dos fases principales del proyecto están implementadas y operativas.
 ## Fases Completadas
 
 ### ✅ Fase 1: Domain Layer + API Core
+
 - **4 tipos de equipos:** Filtro Activo, Filtro de Rechazo, Transformador, Carga
 - **6 servicios de cálculo:**
   - Corriente nominal por tipo de equipo
@@ -29,6 +47,7 @@ Las dos fases principales del proyecto están implementadas y operativas.
 **Planes completados:** 11
 
 ### ✅ Fase 2: Factores Automáticos
+
 - **Factores de ajuste automáticos** basados en tablas NOM
   - Factor de temperatura según estado de México
   - Factor de agrupamiento según sistema eléctrico

@@ -1,10 +1,10 @@
 schema: spec-driven
 
 context: |
-  Tech stack: Go 1.23, Gin v1.11, PostgreSQL (pgx/v5), testify
-  Architecture: Clean Architecture / Hexagonal (Domain, Application, Infrastructure)
-  Testing: testify, go.uber.org/mock
-  Style: golangci-lint
+  Tech stack: Go 1.24 (Gin, Testify) + SvelteKit 2.x/Svelte 5.x + TypeScript 5.x + Tailwind CSS 4.x
+  Architecture: Hexagonal/DDD (Go), Vertical Slicing (frontend)
+  Testing: Testify (Go), Svelte (frontend)
+  Style: ESLint + Prettier + Husky (frontend)
 
 rules:
   proposal:

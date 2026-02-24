@@ -14,6 +14,35 @@ API Go (backend) + Frontend Svelte/TypeScript para memorias de calculo de instal
 
 Si el skill tiene checklist, crear todos con TodoWrite antes de seguirlo.
 
+## Memoria Persistente (Engram)
+
+**SIEMPRE usar Engram** para guardar el historial de decisiones, implementaciones y aprendizajes. Nunca usar openspec/.
+
+### Cuándo guardar en Engram (OBLIGATORIO)
+
+| Cuándo | Qué guardar |
+|--------|-------------|
+| Feature implementada | Resumen de cambios, archivos modificados |
+| Decisión de arquitectura | Por qué se eligió X sobre Y |
+| Bug corregido | Qué era, por qué ocurría, cómo se solucionó |
+| Sesión terminada | Resumen de lo hecho, siguiente paso |
+
+### Cómo guardar
+
+```typescript
+// Usar la herramienta engram_mem_save con:
+title: "Breve descripción"
+type: "architecture | bugfix | decision | pattern | config"
+content: "**What**: ... **Where**: ... **Learned**: ..."
+```
+
+### Beneficios
+
+- Persistencia entre sesiones
+- Búsqueda semántica de decisiones pasadas
+- Contexto para futuras sesiones
+- No requiere archivos en el repo
+
 ## Estructura del Proyecto
 
 ```
@@ -67,6 +96,20 @@ Cuando realices estas acciones, invoca el skill correspondiente PRIMERO:
 | Verificar antes de declarar trabajo completo | `verification-before-completion` |
 | Crear o auditar AGENTS.md / README.md | `agents-md-manager` |
 
+### SDD (Spec-Driven Development)
+
+| Acción | Skill |
+| ------ | ----- |
+| Inicializar SDD en el proyecto ("sdd init", "iniciar sdd") | `sdd-init` |
+| Escribir specs de un cambio | `sdd-spec` |
+| Crear diseño técnico | `sdd-design` |
+| Investigar viabilidad y contexto | `sdd-explore` |
+| Crear propuesta de cambio | `sdd-propose` |
+| Descomponer en tareas | `sdd-tasks` |
+| Implementar según specs | `sdd-apply` |
+| Validar implementación contra specs | `sdd-verify` |
+| Archivar cambio completado | `sdd-archive` |
+
 ## Skills Disponibles
 
 ### Skills de Backend (Go)
@@ -99,6 +142,22 @@ Cuando realices estas acciones, invoca el skill correspondiente PRIMERO:
 | `skill-sync` | Sincronizar metadatos de skills a AGENTS.md |
 | `verification-before-completion` | Verificar antes de declarar trabajo listo |
 | `agents-md-manager` | Gestionar AGENTS.md y README.md jerárquicos |
+
+### Skills SDD (Spec-Driven Development)
+
+ubicación: `~/.config/opencode/skills/`
+
+| Skill | Descripción |
+| ----- | ----------- |
+| `sdd-init` | Inicializar estructura SDD en el proyecto |
+| `sdd-spec` | Escribir especificaciones delta |
+| `sdd-design` | Crear diseño técnico |
+| `sdd-explore` | Investigar viabilidad y contexto |
+| `sdd-propose` | Crear propuesta de cambio |
+| `sdd-tasks` | Descomponer en tareas |
+| `sdd-apply` | Implementar según specs |
+| `sdd-verify` | Validar implementación contra specs |
+| `sdd-archive` | Archivar cambios completados |
 
 ## Documentacion Implementada
 

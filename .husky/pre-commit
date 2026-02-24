@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+# Husky pre-commit hook
+# Ejecuta lint-staged solo si hay cambios en frontend/web
+cd frontend/web && npx lint-staged
