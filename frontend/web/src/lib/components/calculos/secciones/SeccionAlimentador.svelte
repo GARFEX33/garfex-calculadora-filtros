@@ -23,6 +23,9 @@
 			: 1.25
 	);
 
+	// Numerador intermedio (corriente nominal × factor de uso)
+	let numeradorIntermedio = $derived(memoria.corriente_nominal * factorUso);
+
 	let justificacionFactorUso = $derived(
 		memoria.tipo_equipo === 'FILTRO_ACTIVO' || memoria.tipo_equipo === 'FILTRO_RECHAZO'
 			? 'Los conductores para capacitores deben tener al menos el 135% de la corriente nominal (Artículo 460-8)'
@@ -61,8 +64,13 @@
 	<!-- Norma de referencia -->
 	<div class="mb-4 rounded border border-primary/30 bg-primary/10 p-3">
 		<p class="text-sm font-medium text-primary">
-			Referencias: Artículo 460-8 (Conductores para Capacitores) • Artículo 310-15(b)(2)(A)
-			(Temperatura) • Artículo 310-15(b)(3)(A) (Agrupamiento)
+			{#if memoria.tipo_equipo === 'FILTRO_ACTIVO' || memoria.tipo_equipo === 'FILTRO_RECHAZO'}
+				Referencias: Artículo 460-8 (Conductores para Capacitores) • Artículo 310-15(b)(2)(A)
+				(Temperatura) • Artículo 310-15(b)(3)(A) (Agrupamiento)
+			{:else}
+				Referencias: Artículo 215-2 (Conductores de Alimentación) • Artículo 310-15(b)(2)(A)
+				(Temperatura) • Artículo 310-15(b)(3)(A) (Agrupamiento)
+			{/if}
 		</p>
 	</div>
 
@@ -125,9 +133,6 @@
 				<p class="text-foreground">
 					<strong>Factor de Agrupamiento:</strong>
 					{memoria.factor_agrupamiento.toFixed(2)}
-					{#if esCharola}
-						<span class="ml-1 text-success">(No aplica - Charola)</span>
-					{/if}
 				</p>
 				<p class="text-muted-foreground">
 					{#if esCharola}
@@ -160,7 +165,7 @@
 				)} × {memoria.factor_agrupamiento.toFixed(2)})
 			</p>
 			<p class="text-foreground">
-				I<sub>ajustada</sub> = {memoria.corriente_nominal.toFixed(2)} A × {factorUso.toFixed(2)} /
+				I<sub>ajustada</sub> = {numeradorIntermedio.toFixed(2)} A /
 				{memoria.factor_total_ajuste.toFixed(3)}
 			</p>
 			<p class="text-lg font-bold text-primary">

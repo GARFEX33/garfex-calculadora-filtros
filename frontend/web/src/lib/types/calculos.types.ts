@@ -70,6 +70,24 @@ export interface ResultadoCanalizacion {
 	NumeroDeTubos: number;
 }
 
+// Detalle de charola — valores intermedios del cálculo para el desarrollo en memoria
+export interface DetalleCharola {
+	// Diámetros
+	diametro_fase_mm: number;
+	diametro_tierra_mm: number;
+	diametro_control_mm?: number;
+	// Espaciado
+	num_hilos_total?: number;
+	espacio_fuerza_mm: number;
+	ancho_fuerza_mm?: number;
+	espacio_control_mm?: number;
+	ancho_control_mm?: number;
+	ancho_tierra_mm: number;
+	// Triangular
+	ancho_potencia_mm?: number;
+	factor_triangular?: number;
+}
+
 // Voltage drop result
 export interface ResultadoCaidaTension {
 	porcentaje: number;
@@ -105,6 +123,8 @@ export interface MemoriaOutput {
 	itm: number;
 	canalizacion: ResultadoCanalizacion;
 	fill_factor: number;
+	diametro_control_mm?: number;
+	detalle_charola?: DetalleCharola;
 	longitud_circuito: number;
 	caida_tension: ResultadoCaidaTension;
 	cumple_normativa: boolean;

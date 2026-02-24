@@ -22,7 +22,7 @@
 
 <section class="rounded-lg border border-border bg-card p-6">
 	<h2 class="mb-4 border-b border-border pb-2 text-xl font-semibold text-card-foreground">
-		5. Cálculo de Caída de Tensión
+		6. Cálculo de Caída de Tensión
 	</h2>
 
 	<p class="mb-4 text-sm text-muted-foreground">

@@ -47,11 +47,11 @@
 	<!-- 4. Conductor de Puesta a Tierra -->
 	<SeccionTierra {memoria} />
 
-	<!-- 5. Cálculo de Caída de Tensión -->
-	<SeccionCaidaTension {memoria} />
-
-	<!-- 6. Cálculo de Canalización -->
+	<!-- 5. Cálculo de Canalización -->
 	<SeccionCanalizacion {memoria} />
+
+	<!-- 6. Cálculo de Caída de Tensión -->
+	<SeccionCaidaTension {memoria} />
 
 	<!-- 7. Conclusión Técnica -->
 	<SeccionConclusion {memoria} />
