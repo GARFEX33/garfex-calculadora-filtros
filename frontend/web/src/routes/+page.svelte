@@ -150,6 +150,10 @@
 			base.temperatura_override = instalacion.temperatura_override;
 		}
 
+		if (instalacion.diametro_control_mm !== undefined) {
+			base.diametro_control_mm = instalacion.diametro_control_mm;
+		}
+
 		return base;
 	});
 

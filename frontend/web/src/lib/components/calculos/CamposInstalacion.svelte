@@ -14,6 +14,7 @@
 		hilos_por_fase: number;
 		porcentaje_caida_maximo: number;
 		temperatura_override: number | undefined;
+		diametro_control_mm?: number;
 	}
 
 	interface Props {
@@ -206,6 +207,27 @@
 						oninput={(e) =>
 							updateDatos(
 								'temperatura_override',
+								e.currentTarget.value ? Number(e.currentTarget.value) : undefined
+							)}
+						class="w-full rounded-md border border-input-border bg-input px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:outline-none"
+					/>
+				</div>
+
+				<!-- Diámetro Cable de Control -->
+				<div class="flex flex-col gap-1.5">
+					<label for="diametro_control_mm" class="text-sm text-muted-foreground"
+						>Diámetro Cable Control (mm)</label
+					>
+					<input
+						type="number"
+						id="diametro_control_mm"
+						step="0.1"
+						min="0"
+						placeholder="Opcional"
+						value={datos.diametro_control_mm ?? ''}
+						oninput={(e) =>
+							updateDatos(
+								'diametro_control_mm',
 								e.currentTarget.value ? Number(e.currentTarget.value) : undefined
 							)}
 						class="w-full rounded-md border border-input-border bg-input px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:outline-none"
