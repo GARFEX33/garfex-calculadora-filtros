@@ -11,6 +11,7 @@ import (
 // FiltrosListado contains optional filters and pagination for listing equipment.
 type FiltrosListado struct {
 	Tipo    *entity.TipoFiltro // nil = all types
+	Buscar  *string            // nil = no search, otherwise ILIKE on clave
 	Voltaje *int               // nil = all voltages
 	Limit   int                // page size (> 0)
 	Offset  int                // number of rows to skip

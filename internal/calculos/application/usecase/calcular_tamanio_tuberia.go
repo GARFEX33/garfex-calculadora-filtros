@@ -73,7 +73,7 @@ func (uc *CalcularTamanioTuberiaUseCase) Execute(
 	resultado, err := service.CalcularTamanioTuberiaWithMultiplePipes(
 		input.NumFases,
 		input.NumNeutros,
-		1, // 1 tierra por tubo
+		input.NumTierras, // Usar valor calculado según normativa NOM
 		areaFase,
 		areaNeutro,
 		areaTierra,

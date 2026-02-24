@@ -47,4 +47,6 @@ type ConductorTierraOutput struct {
 	SeccionMM2 float64 `json:"seccion_mm2"`
 	// ITMHasta es el ITM máximo para el cual aplica este calibre.
 	ITMHasta int `json:"itm_hasta"`
+	// NumHilos es el número de hilos de tierra (1 para charola/tubería≤2, 2 para tubería>2).
+	NumHilos int `json:"num_hilos"`
 }

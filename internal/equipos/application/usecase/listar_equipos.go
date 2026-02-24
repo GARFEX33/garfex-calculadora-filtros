@@ -37,6 +37,10 @@ func (uc *ListarEquiposUseCase) Execute(ctx context.Context, query dto.ListEquip
 		filtros.Tipo = &tipo
 	}
 
+	if query.Buscar != "" {
+		filtros.Buscar = &query.Buscar
+	}
+
 	if query.Voltaje > 0 {
 		v := query.Voltaje
 		filtros.Voltaje = &v

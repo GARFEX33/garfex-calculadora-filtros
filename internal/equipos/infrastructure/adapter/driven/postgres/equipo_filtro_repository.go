@@ -35,9 +35,9 @@ func (r *PostgresEquipoFiltroRepository) Crear(ctx context.Context, equipo *enti
 	defer cancel()
 
 	query := `
-		INSERT INTO equipos_filtros (clave, tipo, voltaje, "qn/In", itm, bornes, conexion)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)
-		RETURNING id, created_at, clave, tipo, voltaje, "qn/In", itm, bornes, conexion
+		INSERT INTO equipos_filtros (clave, tipo, voltaje, "qn/In", itm, bornes, conexion, tipo_voltaje)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		RETURNING id, created_at, clave, tipo, voltaje, "qn/In", itm, bornes, conexion, tipo_voltaje
 	`
 
 	row := r.pool.QueryRow(ctx, query,
@@ -48,6 +48,7 @@ func (r *PostgresEquipoFiltroRepository) Crear(ctx context.Context, equipo *enti
 		equipo.ITM,
 		equipo.Bornes,
 		mapConexionToDB(equipo.Conexion),
+		mapTipoVoltajeToDB(equipo.TipoVoltaje),
 	)
 
 	created, err := scanEquipoFiltro(row)
@@ -67,7 +68,7 @@ func (r *PostgresEquipoFiltroRepository) ObtenerPorID(ctx context.Context, id uu
 	defer cancel()
 
 	query := `
-		SELECT id, created_at, clave, tipo, voltaje, "qn/In", itm, bornes, conexion
+		SELECT id, created_at, clave, tipo, voltaje, "qn/In", itm, bornes, conexion, tipo_voltaje
 		FROM equipos_filtros
 		WHERE id = $1
 	`
@@ -95,6 +96,11 @@ func buildWhereClause(filtros port.FiltrosListado) (string, []any, int) {
 		args = append(args, mapTipoFiltroToDB(*filtros.Tipo))
 		argIdx++
 	}
+	if filtros.Buscar != nil && *filtros.Buscar != "" {
+		where += fmt.Sprintf(" AND clave ILIKE $%d", argIdx)
+		args = append(args, "%"+*filtros.Buscar+"%")
+		argIdx++
+	}
 	if filtros.Voltaje != nil {
 		where += fmt.Sprintf(" AND voltaje = $%d", argIdx)
 		args = append(args, *filtros.Voltaje)
@@ -110,7 +116,7 @@ func (r *PostgresEquipoFiltroRepository) Listar(ctx context.Context, filtros por
 
 	where, args, argIdx := buildWhereClause(filtros)
 
-	query := `SELECT id, created_at, clave, tipo, voltaje, "qn/In", itm, bornes, conexion FROM equipos_filtros` +
+	query := `SELECT id, created_at, clave, tipo, voltaje, "qn/In", itm, bornes, conexion, tipo_voltaje FROM equipos_filtros` +
 		where +
 		" ORDER BY created_at DESC" +
 		fmt.Sprintf(" LIMIT $%d OFFSET $%d", argIdx, argIdx+1)
@@ -161,9 +167,9 @@ func (r *PostgresEquipoFiltroRepository) Actualizar(ctx context.Context, equipo 
 
 	query := `
 		UPDATE equipos_filtros
-		SET clave = $1, tipo = $2, voltaje = $3, "qn/In" = $4, itm = $5, bornes = $6, conexion = $7
-		WHERE id = $8
-		RETURNING id, created_at, clave, tipo, voltaje, "qn/In", itm, bornes, conexion
+		SET clave = $1, tipo = $2, voltaje = $3, "qn/In" = $4, itm = $5, bornes = $6, conexion = $7, tipo_voltaje = $8
+		WHERE id = $9
+		RETURNING id, created_at, clave, tipo, voltaje, "qn/In", itm, bornes, conexion, tipo_voltaje
 	`
 
 	row := r.pool.QueryRow(ctx, query,
@@ -174,6 +180,7 @@ func (r *PostgresEquipoFiltroRepository) Actualizar(ctx context.Context, equipo 
 		equipo.ITM,
 		equipo.Bornes,
 		mapConexionToDB(equipo.Conexion),
+		mapTipoVoltajeToDB(equipo.TipoVoltaje),
 		equipo.ID,
 	)
 
@@ -243,67 +250,93 @@ func mapConexionFromDB(s *string) *entity.Conexion {
 	return &c
 }
 
+// mapTipoVoltajeToDB converts a nullable *TipoVoltaje to a nullable *string for PostgreSQL.
+func mapTipoVoltajeToDB(tv *entity.TipoVoltaje) *string {
+	if tv == nil {
+		return nil
+	}
+	s := string(*tv)
+	return &s
+}
+
+// mapTipoVoltajeFromDB converts a nullable *string from PostgreSQL to a domain *TipoVoltaje.
+func mapTipoVoltajeFromDB(s *string) *entity.TipoVoltaje {
+	if s == nil {
+		return nil
+	}
+	tv, err := entity.ParseTipoVoltaje(*s)
+	if err != nil {
+		// Fallback — should not happen with a properly constrained DB
+		return nil
+	}
+	return &tv
+}
+
 // scanEquipoFiltro scans a single pgx.Row into a domain entity.
 func scanEquipoFiltro(row pgx.Row) (*entity.EquipoFiltro, error) {
 	var (
-		id        uuid.UUID
-		createdAt time.Time
-		clave     *string
-		tipo      string
-		voltaje   int
-		amperaje  int
-		itm       int
-		bornes    *int
-		conexion  *string
+		id          uuid.UUID
+		createdAt   time.Time
+		clave       *string
+		tipo        string
+		voltaje     int
+		amperaje    int
+		itm         int
+		bornes      *int
+		conexion    *string
+		tipoVoltaje *string
 	)
 
-	err := row.Scan(&id, &createdAt, &clave, &tipo, &voltaje, &amperaje, &itm, &bornes, &conexion)
+	err := row.Scan(&id, &createdAt, &clave, &tipo, &voltaje, &amperaje, &itm, &bornes, &conexion, &tipoVoltaje)
 	if err != nil {
 		return nil, err
 	}
 
 	return &entity.EquipoFiltro{
-		ID:        id,
-		CreatedAt: createdAt,
-		Clave:     clave,
-		Tipo:      mapTipoFiltroFromDB(tipo),
-		Voltaje:   voltaje,
-		Amperaje:  amperaje,
-		ITM:       itm,
-		Bornes:    bornes,
-		Conexion:  mapConexionFromDB(conexion),
+		ID:          id,
+		CreatedAt:   createdAt,
+		Clave:       clave,
+		Tipo:        mapTipoFiltroFromDB(tipo),
+		Voltaje:     voltaje,
+		Amperaje:    amperaje,
+		ITM:         itm,
+		Bornes:      bornes,
+		Conexion:    mapConexionFromDB(conexion),
+		TipoVoltaje: mapTipoVoltajeFromDB(tipoVoltaje),
 	}, nil
 }
 
 // scanEquipoFiltroFromRows scans a pgx.Rows (multi-row scan) into a domain entity.
 func scanEquipoFiltroFromRows(rows pgx.Rows) (*entity.EquipoFiltro, error) {
 	var (
-		id        uuid.UUID
-		createdAt time.Time
-		clave     *string
-		tipo      string
-		voltaje   int
-		amperaje  int
-		itm       int
-		bornes    *int
-		conexion  *string
+		id          uuid.UUID
+		createdAt   time.Time
+		clave       *string
+		tipo        string
+		voltaje     int
+		amperaje    int
+		itm         int
+		bornes      *int
+		conexion    *string
+		tipoVoltaje *string
 	)
 
-	err := rows.Scan(&id, &createdAt, &clave, &tipo, &voltaje, &amperaje, &itm, &bornes, &conexion)
+	err := rows.Scan(&id, &createdAt, &clave, &tipo, &voltaje, &amperaje, &itm, &bornes, &conexion, &tipoVoltaje)
 	if err != nil {
 		return nil, err
 	}
 
 	return &entity.EquipoFiltro{
-		ID:        id,
-		CreatedAt: createdAt,
-		Clave:     clave,
-		Tipo:      mapTipoFiltroFromDB(tipo),
-		Voltaje:   voltaje,
-		Amperaje:  amperaje,
-		ITM:       itm,
-		Bornes:    bornes,
-		Conexion:  mapConexionFromDB(conexion),
+		ID:          id,
+		CreatedAt:   createdAt,
+		Clave:       clave,
+		Tipo:        mapTipoFiltroFromDB(tipo),
+		Voltaje:     voltaje,
+		Amperaje:    amperaje,
+		ITM:         itm,
+		Bornes:      bornes,
+		Conexion:    mapConexionFromDB(conexion),
+		TipoVoltaje: mapTipoVoltajeFromDB(tipoVoltaje),
 	}, nil
 }
 

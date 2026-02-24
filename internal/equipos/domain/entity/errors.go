@@ -19,4 +19,7 @@ var (
 
 	// ErrITMInvalido is returned when the ITM value is <= 0.
 	ErrITMInvalido = errors.New("el ITM debe ser mayor que cero")
+
+	// ErrTipoVoltajeInvalido is returned when a TipoVoltaje string is not recognized.
+	ErrTipoVoltajeInvalido = errors.New("tipo de voltaje inválido")
 )

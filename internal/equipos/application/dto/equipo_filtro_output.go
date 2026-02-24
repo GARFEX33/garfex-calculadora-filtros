@@ -10,15 +10,16 @@ import (
 // EquipoOutput is the outbound DTO for a single equipo filtro.
 // All fields are primitives — no domain types exposed.
 type EquipoOutput struct {
-	ID        string  `json:"id"`
-	CreatedAt string  `json:"created_at"` // ISO 8601
-	Clave     *string `json:"clave"`
-	Tipo      string  `json:"tipo"`
-	Voltaje   int     `json:"voltaje"`
-	Amperaje  int     `json:"amperaje"`
-	ITM       int     `json:"itm"`
-	Bornes    *int    `json:"bornes"`
-	Conexion  *string `json:"conexion"` // nullable: "MONOFASICA" | "TRIFASICA"
+	ID          string  `json:"id"`
+	CreatedAt   string  `json:"created_at"` // ISO 8601
+	Clave       *string `json:"clave"`
+	Tipo        string  `json:"tipo"`
+	Voltaje     int     `json:"voltaje"`
+	Amperaje    int     `json:"amperaje"`
+	ITM         int     `json:"itm"`
+	Bornes      *int    `json:"bornes"`
+	Conexion    *string `json:"conexion"`     // nullable: "DELTA" | "ESTRELLA" | "MONOFASICO" | "BIFASICO"
+	TipoVoltaje *string `json:"tipo_voltaje"` // nullable: "FF" | "FN"
 }
 
 // FromDomain converts a domain entity to an output DTO.
@@ -29,16 +30,23 @@ func FromDomain(e *entity.EquipoFiltro) EquipoOutput {
 		conexion = &s
 	}
 
+	var tipoVoltaje *string
+	if e.TipoVoltaje != nil {
+		s := e.TipoVoltaje.String()
+		tipoVoltaje = &s
+	}
+
 	return EquipoOutput{
-		ID:        e.ID.String(),
-		CreatedAt: e.CreatedAt.UTC().Format(time.RFC3339),
-		Clave:     e.Clave,
-		Tipo:      e.Tipo.String(),
-		Voltaje:   e.Voltaje,
-		Amperaje:  e.Amperaje,
-		ITM:       e.ITM,
-		Bornes:    e.Bornes,
-		Conexion:  conexion,
+		ID:          e.ID.String(),
+		CreatedAt:   e.CreatedAt.UTC().Format(time.RFC3339),
+		Clave:       e.Clave,
+		Tipo:        e.Tipo.String(),
+		Voltaje:     e.Voltaje,
+		Amperaje:    e.Amperaje,
+		ITM:         e.ITM,
+		Bornes:      e.Bornes,
+		Conexion:    conexion,
+		TipoVoltaje: tipoVoltaje,
 	}
 }
 

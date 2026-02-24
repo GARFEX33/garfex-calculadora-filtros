@@ -17,6 +17,7 @@ type TuberiaInput struct {
 	CalibreTierra    string `json:"calibre_tierra" binding:"required"`
 	TipoCanalizacion string `json:"tipo_canalizacion" binding:"required"`
 	NumTuberias      int    `json:"num_tuberias" binding:"required,gt=0"`
+	NumTierras       int    `json:"-"`
 }
 
 // Validate verifica que el input tenga los campos requeridos.
@@ -43,10 +44,22 @@ func (t TuberiaInput) Validate() error {
 	if t.NumTuberias <= 0 {
 		return fmt.Errorf("num_tuberias debe ser mayor que cero")
 	}
+	if t.NumTierras < 0 {
+		return fmt.Errorf("num_tierras no puede ser negativo")
+	}
 	return nil
 }
 
 // ToDomainTipoCanalizacion convierte el string a entity.TipoCanalizacion.
 func (t TuberiaInput) ToDomainTipoCanalizacion() (entity.TipoCanalizacion, error) {
 	return entity.ParseTipoCanalizacion(t.TipoCanalizacion)
+}
+
+// GetNumeroTierras retorna el número de hilos de tierra.
+// Si el valor es 0 o menor, retorna 1 como default.
+func (t TuberiaInput) GetNumeroTierras() int {
+	if t.NumTierras <= 0 {
+		return 1
+	}
+	return t.NumTierras
 }

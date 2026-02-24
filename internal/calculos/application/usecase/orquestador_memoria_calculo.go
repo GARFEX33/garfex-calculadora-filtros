@@ -51,6 +51,36 @@ func NewOrquestadorMemoriaCalculoUseCase(
 	}
 }
 
+// calcularNumHilosTierra calcula el número de hilos de tierra según las reglas de la NOM.
+//
+// Reglas de negocio:
+//   - Charola (cualquier tipo) → siempre 1 hilo de tierra
+//   - Tubería con ≤2 tubos → 1 hilo de tierra
+//   - Tubería con >2 tubos → 2 hilos de tierra
+//
+// Ejemplos de uso:
+//
+//	calcularNumHilosTierra(entity.TipoCanalizacionCharolaCableEspaciado, 5) // returns 1
+//	calcularNumHilosTierra(entity.TipoCanalizacionTuboPVC, 2)              // returns 1
+//	calcularNumHilosTierra(entity.TipoCanalizacionTuboPVC, 3)              // returns 2
+func calcularNumHilosTierra(tipoCanalizacion entity.TipoCanalizacion, numTuberias int) int {
+	// Charola siempre tiene 1 hilo de tierra
+	if tipoCanalizacion.EsCharola() {
+		return 1
+	}
+
+	// Default para valores inválidos
+	if numTuberias <= 0 {
+		return 1
+	}
+
+	// Tubería: ≤2 tubos = 1 hilo, >2 tubos = 2 hilos
+	if numTuberias <= 2 {
+		return 1
+	}
+	return 2
+}
+
 // Execute runs the complete memory calculation pipeline.
 // It orchestrates all 6 steps sequentially.
 func (uc *OrquestadorMemoriaCalculoUseCase) Execute(
@@ -284,6 +314,10 @@ func (uc *OrquestadorMemoriaCalculoUseCase) Execute(
 
 	} else {
 		// For TUBERIA types: use tuberia use case
+
+		// Calcular número de hilos de tierra según normativa NOM
+		numTierras := calcularNumHilosTierra(tipoCanalizacion, input.NumTuberias)
+
 		tuberiaInput := dto.TuberiaInput{
 			NumFases:         sistemaElectrico.CantidadFases(),
 			CalibreFase:      output.ConductorAlimentacion.Calibre,
@@ -292,6 +326,7 @@ func (uc *OrquestadorMemoriaCalculoUseCase) Execute(
 			CalibreTierra:    output.ConductorTierra.Calibre,
 			TipoCanalizacion: input.TipoCanalizacion,
 			NumTuberias:      input.NumTuberias,
+			NumTierras:       numTierras,
 		}
 
 		resultadoTuberia, err := uc.calcularTamanioTuberiaUC.Execute(ctx, tuberiaInput)
@@ -313,6 +348,16 @@ func (uc *OrquestadorMemoriaCalculoUseCase) Execute(
 			Resultado:   resultadoTuberia,
 		})
 	}
+
+	// ============================================================
+	// STEP 4b: Asignar número de hilos de tierra al conductor
+	// ============================================================
+	// El número de hilos de tierra se calcula según el tipo de canalización:
+	// - Charola: siempre 1 hilo
+	// - Tubería ≤2 tubos: 1 hilo
+	// - Tubería >2 tubos: 2 hilos
+	numHilosTierra := calcularNumHilosTierra(tipoCanalizacion, input.NumTuberias)
+	output.ConductorTierra.NumHilos = numHilosTierra
 
 	// ============================================================
 	// STEP 5: Calculate Voltage Drop

@@ -26,9 +26,10 @@ Entidad principal del catálogo. Campos:
 | `Amperaje` | `int` | Corriente nominal Qn/In en Amperes |
 | `ITM` | `int` | Capacidad del interruptor termomagnético en Amperes |
 | `Bornes` | `*int` | Número de bornes (nullable) |
-| `Conexion` | `*Conexion` | Tipo de conexión eléctrica (nullable): MONOFASICA, TRIFASICA |
+| `Conexion` | `*Conexion` | Tipo de conexión eléctrica (nullable): DELTA, ESTRELLA, MONOFASICO, BIFASICO |
+| `TipoVoltaje` | `*TipoVoltaje` | Tipo de voltaje de referencia (nullable): FF (fase-fase) o FN (fase-neutro). DB default: 'FF' |
 
-Constructor: `NewEquipoFiltro(clave, tipo, voltaje, amperaje, itm, bornes, conexion)` — valida que voltaje, amperaje e ITM sean > 0. `Bornes` y `Conexion` son nullable.
+Constructor: `NewEquipoFiltro(clave, tipo, voltaje, amperaje, itm, bornes, conexion, tipoVoltaje)` — valida que voltaje, amperaje e ITM sean > 0. `Bornes`, `Conexion` y `TipoVoltaje` son nullable.
 
 ### `TipoFiltro`
 
@@ -54,6 +55,17 @@ Enum que mapea exactamente al enum PostgreSQL `public.conexion`:
 | `ConexionBifasico` | `"BIFASICO"` | Conexión bifásica |
 
 `ParseConexion(s string)` convierte string → Conexion con error claro si el valor no es válido.
+
+### `TipoVoltaje`
+
+Enum que mapea exactamente al enum PostgreSQL `public.tipo_voltaje`:
+
+| Constante | Valor DB | Descripción |
+|-----------|---------|-------------|
+| `TipoVoltajeFaseFase` | `"FF"` | Voltaje fase-fase (línea a línea) |
+| `TipoVoltajeFaseNeutro` | `"FN"` | Voltaje fase-neutro |
+
+`ParseTipoVoltaje(s string)` convierte string → TipoVoltaje con error claro si el valor no es válido.
 
 ## Dependencias permitidas
 

@@ -46,15 +46,25 @@ func (uc *ActualizarEquipoUseCase) Execute(ctx context.Context, id string, input
 		conexion = &c
 	}
 
+	var tipoVoltaje *entity.TipoVoltaje
+	if input.TipoVoltaje != nil {
+		tv, err := entity.ParseTipoVoltaje(*input.TipoVoltaje)
+		if err != nil {
+			return dto.EquipoOutput{}, fmt.Errorf("%w: %s", dto.ErrInputInvalido, err.Error())
+		}
+		tipoVoltaje = &tv
+	}
+
 	equipo := &entity.EquipoFiltro{
-		ID:       parsedID,
-		Clave:    input.Clave,
-		Tipo:     tipo,
-		Voltaje:  input.Voltaje,
-		Amperaje: input.Amperaje,
-		ITM:      input.ITM,
-		Bornes:   input.Bornes,
-		Conexion: conexion,
+		ID:          parsedID,
+		Clave:       input.Clave,
+		Tipo:        tipo,
+		Voltaje:     input.Voltaje,
+		Amperaje:    input.Amperaje,
+		ITM:         input.ITM,
+		Bornes:      input.Bornes,
+		Conexion:    conexion,
+		TipoVoltaje: tipoVoltaje,
 	}
 
 	updated, err := uc.repo.Actualizar(ctx, equipo)

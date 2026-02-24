@@ -10,13 +10,14 @@ import (
 // CreateEquipoInput is the inbound DTO for creating a new equipo filtro.
 // All fields are primitives following the same convention as calculos DTOs.
 type CreateEquipoInput struct {
-	Clave    *string `json:"clave"`
-	Tipo     string  `json:"tipo"`
-	Voltaje  int     `json:"voltaje"`
-	Amperaje int     `json:"amperaje"`
-	ITM      int     `json:"itm"`
-	Bornes   *int    `json:"bornes"`
-	Conexion *string `json:"conexion"` // nullable: "MONOFASICA" | "TRIFASICA"
+	Clave       *string `json:"clave"`
+	Tipo        string  `json:"tipo"`
+	Voltaje     int     `json:"voltaje"`
+	Amperaje    int     `json:"amperaje"`
+	ITM         int     `json:"itm"`
+	Bornes      *int    `json:"bornes"`
+	Conexion    *string `json:"conexion"`     // nullable: "DELTA" | "ESTRELLA" | "MONOFASICO" | "BIFASICO"
+	TipoVoltaje *string `json:"tipo_voltaje"` // nullable: "FF" | "FN"; DB default: "FF"
 }
 
 // Validate checks that all required fields are present and valid.
@@ -41,6 +42,11 @@ func (i CreateEquipoInput) Validate() error {
 			return fmt.Errorf("%w: %s", ErrInputInvalido, err.Error())
 		}
 	}
+	if i.TipoVoltaje != nil {
+		if _, err := entity.ParseTipoVoltaje(*i.TipoVoltaje); err != nil {
+			return fmt.Errorf("%w: %s", ErrInputInvalido, err.Error())
+		}
+	}
 	return nil
 }
 
@@ -60,19 +66,29 @@ func (i CreateEquipoInput) ToDomain() (*entity.EquipoFiltro, error) {
 		conexion = &c
 	}
 
-	return entity.NewEquipoFiltro(i.Clave, tipo, i.Voltaje, i.Amperaje, i.ITM, i.Bornes, conexion)
+	var tipoVoltaje *entity.TipoVoltaje
+	if i.TipoVoltaje != nil {
+		tv, err := entity.ParseTipoVoltaje(*i.TipoVoltaje)
+		if err != nil {
+			return nil, err
+		}
+		tipoVoltaje = &tv
+	}
+
+	return entity.NewEquipoFiltro(i.Clave, tipo, i.Voltaje, i.Amperaje, i.ITM, i.Bornes, conexion, tipoVoltaje)
 }
 
 // UpdateEquipoInput is the inbound DTO for updating an existing equipo filtro.
 // The ID comes from the URL path, not the body.
 type UpdateEquipoInput struct {
-	Clave    *string `json:"clave"`
-	Tipo     string  `json:"tipo"`
-	Voltaje  int     `json:"voltaje"`
-	Amperaje int     `json:"amperaje"`
-	ITM      int     `json:"itm"`
-	Bornes   *int    `json:"bornes"`
-	Conexion *string `json:"conexion"` // nullable: "MONOFASICA" | "TRIFASICA"
+	Clave       *string `json:"clave"`
+	Tipo        string  `json:"tipo"`
+	Voltaje     int     `json:"voltaje"`
+	Amperaje    int     `json:"amperaje"`
+	ITM         int     `json:"itm"`
+	Bornes      *int    `json:"bornes"`
+	Conexion    *string `json:"conexion"`     // nullable: "DELTA" | "ESTRELLA" | "MONOFASICO" | "BIFASICO"
+	TipoVoltaje *string `json:"tipo_voltaje"` // nullable: "FF" | "FN"
 }
 
 // Validate checks that all required fields are present and valid.
@@ -97,12 +113,18 @@ func (i UpdateEquipoInput) Validate() error {
 			return fmt.Errorf("%w: %s", ErrInputInvalido, err.Error())
 		}
 	}
+	if i.TipoVoltaje != nil {
+		if _, err := entity.ParseTipoVoltaje(*i.TipoVoltaje); err != nil {
+			return fmt.Errorf("%w: %s", ErrInputInvalido, err.Error())
+		}
+	}
 	return nil
 }
 
 // ListEquiposQuery contains optional query filters and pagination for listing equipos.
 type ListEquiposQuery struct {
 	Tipo     string // optional: "A" | "KVA" | "KVAR"
+	Buscar   string // optional: flexible search by clave (ILIKE)
 	Voltaje  int    // optional: > 0 to filter by voltage
 	Page     int    // 1-indexed, default 1
 	PageSize int    // default 20, max 100

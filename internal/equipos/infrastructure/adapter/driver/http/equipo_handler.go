@@ -102,10 +102,11 @@ func (h *EquipoHandler) ObtenerPorID(c *gin.Context) {
 }
 
 // Listar GET /api/v1/equipos
-// Query params: tipo, voltaje, page (default 1), page_size (default 20, max 100)
+// Query params: tipo, voltaje, buscar, page (default 1), page_size (default 20, max 100)
 func (h *EquipoHandler) Listar(c *gin.Context) {
 	query := dto.ListEquiposQuery{
-		Tipo: c.Query("tipo"),
+		Tipo:   c.Query("tipo"),
+		Buscar: c.Query("buscar"),
 	}
 
 	if voltajeStr := c.Query("voltaje"); voltajeStr != "" {

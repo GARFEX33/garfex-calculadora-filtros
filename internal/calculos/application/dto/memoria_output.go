@@ -16,6 +16,7 @@ type ResultadoConductor struct {
 	SeccionMM2      float64
 	TipoAislamiento string
 	Capacidad       float64
+	NumHilos        int // Número de hilos de tierra (1 para charola/tubería≤2, 2 para tubería>2)
 }
 
 // ResultadoConductores contiene los conductores seleccionados.
