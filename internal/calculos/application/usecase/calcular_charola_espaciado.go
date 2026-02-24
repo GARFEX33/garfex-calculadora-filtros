@@ -88,11 +88,52 @@ func (uc *CalcularCharolaEspaciadoUseCase) Execute(
 	}
 
 	// 5. Convertir resultado domain a DTO output
-	// Tamano ya está en pulgadas (ej: "6", "9", "12")
-	return dto.CharolaEspaciadoOutput{
-		Tipo:           string(resultado.Tipo),
-		Tamano:         resultado.Tamano,
-		TamanoPulgadas: resultado.Tamano + "\"",
-		AnchoRequerido: resultado.AnchoRequerido,
-	}, nil
+	// Recalcular valores intermedios para el desarrollo de la memoria de cálculo
+	var numFases int
+	var tieneNeutro bool
+	switch sistema {
+	case entity.SistemaElectricoMonofasico:
+		numFases = 1
+		tieneNeutro = true
+	case entity.SistemaElectricoBifasico:
+		numFases = 2
+		tieneNeutro = true
+	case entity.SistemaElectricoDelta:
+		numFases = 3
+		tieneNeutro = false
+	default: // Estrella
+		numFases = 3
+		tieneNeutro = true
+	}
+	hilosFaseTotal := numFases * input.HilosPorFase
+	if tieneNeutro {
+		hilosFaseTotal += input.HilosPorFase
+	}
+	espacioFuerza := float64(hilosFaseTotal) * input.DiametroFaseMM
+	anchoFuerza := espacioFuerza
+
+	var espacioControl, anchoControl float64
+	if input.DiametroControlMM != nil && *input.DiametroControlMM > 0 {
+		espacioControl = 2.0 * *input.DiametroControlMM
+		anchoControl = *input.DiametroControlMM
+	}
+
+	out := dto.CharolaEspaciadoOutput{
+		Tipo:             string(resultado.Tipo),
+		Tamano:           resultado.Tamano,
+		TamanoPulgadas:   resultado.Tamano + "\"",
+		AnchoRequerido:   resultado.AnchoRequerido,
+		DiametroFaseMM:   input.DiametroFaseMM,
+		DiametroTierraMM: input.DiametroTierraMM,
+		NumHilosTotal:    hilosFaseTotal,
+		EspacioFuerzaMM:  espacioFuerza,
+		AnchoFuerzaMM:    anchoFuerza,
+		EspacioControlMM: espacioControl,
+		AnchoControlMM:   anchoControl,
+		AnchoTierraMM:    input.DiametroTierraMM,
+	}
+	if input.DiametroControlMM != nil && *input.DiametroControlMM > 0 {
+		out.DiametroControlMM = input.DiametroControlMM
+	}
+	return out, nil
 }

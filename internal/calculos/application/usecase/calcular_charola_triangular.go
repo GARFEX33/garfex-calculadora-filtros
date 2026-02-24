@@ -80,12 +80,33 @@ func (uc *CalcularCharolaTriangularUseCase) Execute(
 		return dto.CharolaTriangularOutput{}, fmt.Errorf("calcular charola triangular: %w", err)
 	}
 
-	// 5. Convertir resultado domain a DTO output
-	// Tamano ya está en pulgadas (ej: "6", "9", "12")
-	return dto.CharolaTriangularOutput{
-		Tipo:           string(resultado.Tipo),
-		Tamano:         resultado.Tamano,
-		TamanoPulgadas: resultado.Tamano + "\"",
-		AnchoRequerido: resultado.AnchoRequerido,
-	}, nil
+	// 5. Convertir resultado domain a DTO output con valores intermedios para la memoria
+	const factorTriangular = 2.15
+	anchoPotencia := 2.0 * input.DiametroFaseMM * float64(input.HilosPorFase)
+	espacioFuerza := float64(input.HilosPorFase-1) * factorTriangular * input.DiametroFaseMM
+
+	var espacioControl, anchoControl float64
+	if input.DiametroControlMM != nil && *input.DiametroControlMM > 0 {
+		espacioControl = factorTriangular * *input.DiametroControlMM
+		anchoControl = *input.DiametroControlMM
+	}
+
+	out := dto.CharolaTriangularOutput{
+		Tipo:             string(resultado.Tipo),
+		Tamano:           resultado.Tamano,
+		TamanoPulgadas:   resultado.Tamano + "\"",
+		AnchoRequerido:   resultado.AnchoRequerido,
+		DiametroFaseMM:   input.DiametroFaseMM,
+		DiametroTierraMM: input.DiametroTierraMM,
+		AnchoPotenciaMM:  anchoPotencia,
+		EspacioFuerzaMM:  espacioFuerza,
+		EspacioControlMM: espacioControl,
+		AnchoControlMM:   anchoControl,
+		AnchoTierraMM:    input.DiametroTierraMM,
+		FactorTriangular: factorTriangular,
+	}
+	if input.DiametroControlMM != nil && *input.DiametroControlMM > 0 {
+		out.DiametroControlMM = input.DiametroControlMM
+	}
+	return out, nil
 }

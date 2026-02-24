@@ -34,6 +34,27 @@ type ResultadoCanalizacion struct {
 	NumeroDeTubos    int
 }
 
+// DetalleCharola contiene los valores intermedios del cálculo de charola
+// para mostrar el desarrollo completo en la memoria de cálculo.
+type DetalleCharola struct {
+	// Diámetros de los conductores (mm)
+	DiametroFaseMM    float64  `json:"diametro_fase_mm"`
+	DiametroTierraMM  float64  `json:"diametro_tierra_mm"`
+	DiametroControlMM *float64 `json:"diametro_control_mm,omitempty"`
+
+	// Charola espaciado
+	NumHilosTotal    int     `json:"num_hilos_total,omitempty"`
+	EspacioFuerzaMM  float64 `json:"espacio_fuerza_mm"`
+	AnchoFuerzaMM    float64 `json:"ancho_fuerza_mm,omitempty"`
+	EspacioControlMM float64 `json:"espacio_control_mm,omitempty"`
+	AnchoControlMM   float64 `json:"ancho_control_mm,omitempty"`
+	AnchoTierraMM    float64 `json:"ancho_tierra_mm"`
+
+	// Charola triangular (adicional)
+	AnchoPotenciaMM  float64 `json:"ancho_potencia_mm,omitempty"`
+	FactorTriangular float64 `json:"factor_triangular,omitempty"`
+}
+
 // ResultadoCaidaTension contiene el resultado del cálculo de caída.
 type ResultadoCaidaTension struct {
 	Porcentaje       float64
@@ -116,8 +137,9 @@ type MemoriaOutput struct {
 	ITM             int                `json:"itm"`
 
 	// Paso 6: Canalización
-	Canalizacion ResultadoCanalizacion `json:"canalizacion"`
-	FillFactor   float64               `json:"fill_factor"`
+	Canalizacion   ResultadoCanalizacion `json:"canalizacion"`
+	FillFactor     float64               `json:"fill_factor"`
+	DetalleCharola *DetalleCharola       `json:"detalle_charola,omitempty"`
 
 	// Paso 7: Caída de Tensión
 	LongitudCircuito float64               `json:"longitud_circuito"`

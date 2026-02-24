@@ -269,11 +269,14 @@ func (uc *OrquestadorMemoriaCalculoUseCase) Execute(
 
 		switch tipoCanalizacion {
 		case entity.TipoCanalizacionCharolaCableTriangular:
-			// For triangular, use triangular use case (similar input structure)
+			// For triangular, use triangular use case
 			triangularInput := dto.CharolaTriangularInput{
 				HilosPorFase:     input.HilosPorFase,
 				DiametroFaseMM:   diametroFase,
 				DiametroTierraMM: diametroTierra,
+			}
+			if input.DiametroControlMM != nil && *input.DiametroControlMM > 0 {
+				triangularInput.DiametroControlMM = input.DiametroControlMM
 			}
 			resultadoTriangular, err := uc.calcularCharolaTriangularUC.Execute(ctx, triangularInput)
 			if err != nil {
@@ -286,6 +289,18 @@ func (uc *OrquestadorMemoriaCalculoUseCase) Execute(
 				TamanoPulgadas: resultadoTriangular.TamanoPulgadas,
 				AnchoRequerido: resultadoTriangular.AnchoRequerido,
 			}
+			// Poblar detalle con valores intermedios del triangular
+			output.DetalleCharola = &dto.DetalleCharola{
+				DiametroFaseMM:    resultadoTriangular.DiametroFaseMM,
+				DiametroTierraMM:  resultadoTriangular.DiametroTierraMM,
+				DiametroControlMM: resultadoTriangular.DiametroControlMM,
+				AnchoPotenciaMM:   resultadoTriangular.AnchoPotenciaMM,
+				EspacioFuerzaMM:   resultadoTriangular.EspacioFuerzaMM,
+				EspacioControlMM:  resultadoTriangular.EspacioControlMM,
+				AnchoControlMM:    resultadoTriangular.AnchoControlMM,
+				AnchoTierraMM:     resultadoTriangular.AnchoTierraMM,
+				FactorTriangular:  resultadoTriangular.FactorTriangular,
+			}
 
 		case entity.TipoCanalizacionCharolaCableEspaciado:
 			resultadoCharola, err := uc.calcularCharolaEspaciadoUC.Execute(ctx, charolaInput)
@@ -293,6 +308,18 @@ func (uc *OrquestadorMemoriaCalculoUseCase) Execute(
 				return dto.MemoriaOutput{}, fmt.Errorf("paso 4 (charola espaciado): %w", err)
 			}
 			resultadoCanalizacion = resultadoCharola
+			// Poblar detalle con valores intermedios del espaciado
+			output.DetalleCharola = &dto.DetalleCharola{
+				DiametroFaseMM:    resultadoCharola.DiametroFaseMM,
+				DiametroTierraMM:  resultadoCharola.DiametroTierraMM,
+				DiametroControlMM: resultadoCharola.DiametroControlMM,
+				NumHilosTotal:     resultadoCharola.NumHilosTotal,
+				EspacioFuerzaMM:   resultadoCharola.EspacioFuerzaMM,
+				AnchoFuerzaMM:     resultadoCharola.AnchoFuerzaMM,
+				EspacioControlMM:  resultadoCharola.EspacioControlMM,
+				AnchoControlMM:    resultadoCharola.AnchoControlMM,
+				AnchoTierraMM:     resultadoCharola.AnchoTierraMM,
+			}
 
 		default:
 			return dto.MemoriaOutput{}, fmt.Errorf("tipo de canalización no soportado para charola: %s", tipoCanalizacion)

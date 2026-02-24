@@ -35,4 +35,15 @@ type CharolaEspaciadoOutput struct {
 	Tamano         string  `json:"tamano"`
 	TamanoPulgadas string  `json:"tamano_pulgadas"`
 	AnchoRequerido float64 `json:"ancho_requerido_mm"`
+
+	// Valores intermedios del desarrollo — para mostrar en memoria de cálculo
+	DiametroFaseMM    float64  `json:"diametro_fase_mm"`
+	DiametroTierraMM  float64  `json:"diametro_tierra_mm"`
+	DiametroControlMM *float64 `json:"diametro_control_mm,omitempty"`
+	NumHilosTotal     int      `json:"num_hilos_total"`
+	EspacioFuerzaMM   float64  `json:"espacio_fuerza_mm"`
+	AnchoFuerzaMM     float64  `json:"ancho_fuerza_mm"`
+	EspacioControlMM  float64  `json:"espacio_control_mm,omitempty"`
+	AnchoControlMM    float64  `json:"ancho_control_mm,omitempty"`
+	AnchoTierraMM     float64  `json:"ancho_tierra_mm"`
 }
