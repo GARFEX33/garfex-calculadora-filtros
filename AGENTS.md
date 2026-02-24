@@ -14,9 +14,21 @@ API Go (backend) + Frontend Svelte/TypeScript para memorias de calculo de instal
 
 Si el skill tiene checklist, crear todos con TodoWrite antes de seguirlo.
 
-## Memoria Persistente (Engram)
+> Catálogo completo de skills: [.agents/skills/INDEX.md](.agents/skills/INDEX.md)
 
-**SIEMPRE usar Engram** para guardar el historial de decisiones, implementaciones y aprendizajes. Nunca usar openspec/.
+## Memoria Persistente (Engram) — ÚNICA FUENTE DE VERDAD
+
+> **REGLA ABSOLUTA**: Todo historial de cambios, decisiones y contexto del proyecto vive EXCLUSIVAMENTE en Engram.
+> **NUNCA** crear ni usar carpetas `openspec/` ni archivos de specs en el repo. No existe openspec en este proyecto.
+
+**SIEMPRE usar Engram** para guardar el historial de decisiones, implementaciones y aprendizajes.
+
+### Por qué SOLO Engram
+
+- Engram persiste entre sesiones sin contaminar el repositorio
+- Los archivos openspec/ quedan en git y confunden a futuros agentes
+- Búsqueda semántica — encuentra decisiones pasadas por contexto, no por nombre de archivo
+- Un único lugar para buscar: no hay que revisar carpetas de specs dispersas
 
 ### Cuándo guardar en Engram (OBLIGATORIO)
 
@@ -26,6 +38,8 @@ Si el skill tiene checklist, crear todos con TodoWrite antes de seguirlo.
 | Decisión de arquitectura | Por qué se eligió X sobre Y |
 | Bug corregido | Qué era, por qué ocurría, cómo se solucionó |
 | Sesión terminada | Resumen de lo hecho, siguiente paso |
+| Change SDD completado | Proposal, specs, design, tasks, verify (todo en Engram) |
+| Change SDD pendiente | Estado actual + tareas pendientes |
 
 ### Cómo guardar
 
@@ -36,12 +50,13 @@ type: "architecture | bugfix | decision | pattern | config"
 content: "**What**: ... **Where**: ... **Learned**: ..."
 ```
 
-### Beneficios
+### Cómo recuperar contexto al iniciar sesión
 
-- Persistencia entre sesiones
-- Búsqueda semántica de decisiones pasadas
-- Contexto para futuras sesiones
-- No requiere archivos en el repo
+```
+1. mem_context() — ver sesiones recientes
+2. mem_search("tema relevante") — buscar decisiones pasadas
+3. mem_get_observation(id) — leer contenido completo si está truncado
+```
 
 ## Estructura del Proyecto
 
@@ -63,8 +78,6 @@ garfex-calculadora-filtros/
 
 ### Backend (Go)
 
-Cuando realices estas acciones, invoca el skill correspondiente PRIMERO:
-
 | Acción | Skill |
 | ------ | ----- |
 | Crear/modificar archivos `.go` en `internal/` | `clean-ddd-hexagonal-vertical-go-enterprise` |
@@ -73,8 +86,6 @@ Cuando realices estas acciones, invoca el skill correspondiente PRIMERO:
 | Diseñar o revisar endpoints REST / API contracts | `api-design-principles` |
 
 ### Frontend (Svelte / SvelteKit)
-
-Cuando realices estas acciones, invoca el skill correspondiente PRIMERO:
 
 | Acción | Skill |
 | ------ | ----- |
@@ -98,6 +109,8 @@ Cuando realices estas acciones, invoca el skill correspondiente PRIMERO:
 
 ### SDD (Spec-Driven Development)
 
+> **IMPORTANTE**: En este proyecto los artefactos SDD (proposal, specs, design, tasks, verify) se guardan en **Engram**, NO en carpetas `openspec/`. El modo de artefactos es `engram`.
+
 | Acción | Skill |
 | ------ | ----- |
 | Inicializar SDD en el proyecto ("sdd init", "iniciar sdd") | `sdd-init` |
@@ -109,55 +122,6 @@ Cuando realices estas acciones, invoca el skill correspondiente PRIMERO:
 | Implementar según specs | `sdd-apply` |
 | Validar implementación contra specs | `sdd-verify` |
 | Archivar cambio completado | `sdd-archive` |
-
-## Skills Disponibles
-
-### Skills de Backend (Go)
-
-| Skill | Descripción |
-| ----- | ----------- |
-| `clean-ddd-hexagonal-vertical-go-enterprise` | Arquitectura hexagonal + DDD + vertical slices en Go |
-| `golang-patterns` | Patrones idiomáticos de Go |
-| `golang-pro` | Go avanzado: goroutines, generics, gRPC |
-| `api-design-principles` | Principios de diseño REST y GraphQL |
-
-### Skills de Frontend (Svelte)
-
-| Skill | Descripción |
-| ----- | ----------- |
-| `svelte-code-writer` | CLI `@sveltejs/mcp` para docs y autofixer — OBLIGATORIO al tocar `.svelte` |
-| `svelte5-best-practices` | Runes, snippets, eventos, TypeScript, migración Svelte 4→5 |
-| `sveltekit-structure` | Routing, layouts, error handling, SSR, hidratación |
-| `tailwind-design-system` | Design tokens, componentes UI, responsive, dark mode con Tailwind v4 |
-| `typescript-advanced-types` | Generics, conditional/mapped types, type-safe API clients, utilidades TS |
-
-### Skills Generales
-
-| Skill | Descripción |
-| ----- | ----------- |
-| `finishing-a-development-branch` | Guía para finalizar e integrar ramas |
-| `commit-work` | Commits convencionales de alta calidad |
-| `systematic-debugging` | Debugging sistemático ante bugs o fallos |
-| `skill-creator` | Crear nuevos skills para agentes |
-| `skill-sync` | Sincronizar metadatos de skills a AGENTS.md |
-| `verification-before-completion` | Verificar antes de declarar trabajo listo |
-| `agents-md-manager` | Gestionar AGENTS.md y README.md jerárquicos |
-
-### Skills SDD (Spec-Driven Development)
-
-ubicación: `~/.config/opencode/skills/`
-
-| Skill | Descripción |
-| ----- | ----------- |
-| `sdd-init` | Inicializar estructura SDD en el proyecto |
-| `sdd-spec` | Escribir especificaciones delta |
-| `sdd-design` | Crear diseño técnico |
-| `sdd-explore` | Investigar viabilidad y contexto |
-| `sdd-propose` | Crear propuesta de cambio |
-| `sdd-tasks` | Descomponer en tareas |
-| `sdd-apply` | Implementar según specs |
-| `sdd-verify` | Validar implementación contra specs |
-| `sdd-archive` | Archivar cambios completados |
 
 ## Documentacion Implementada
 
@@ -178,7 +142,7 @@ ubicación: `~/.config/opencode/skills/`
 
 ### Frontend
 
-| Tema           | Archivo                                              |
-| -------------- | ---------------------------------------------------- |
-| Frontend Web   | [frontend/web/AGENTS.md](frontend/web/AGENTS.md)     |
+| Tema            | Archivo                                                                        |
+| --------------- | ------------------------------------------------------------------------------ |
+| Frontend Web    | [frontend/web/AGENTS.md](frontend/web/AGENTS.md)                               |
 | Frontend Mobile | [frontend/mobile/AGENTS.md](frontend/mobile/AGENTS.md) — reservado, no activo |

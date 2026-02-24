@@ -83,15 +83,16 @@ internal/equipos/
 
 ```
 public.equipos_filtros
-├── id         uuid        PK, DEFAULT gen_random_uuid()
-├── created_at timestamptz DEFAULT now()
-├── clave      text        UNIQUE, NULLABLE
-├── tipo       tipo_filtro NOT NULL  ← enum: 'A', 'KVA', 'KVAR'
-├── voltaje    integer     NOT NULL
-├── "qn/In"    integer     NOT NULL  ← columna con barra diagonal — escapar con comillas en SQL
-├── itm        integer     NOT NULL
-├── bornes     integer     NULLABLE
-└── conexion   conexion    NULLABLE  ← enum: 'DELTA', 'ESTRELLA', 'MONOFASICO', 'BIFASICO'
+├── id           uuid          PK, DEFAULT gen_random_uuid()
+├── created_at   timestamptz   DEFAULT now()
+├── clave        text          UNIQUE, NULLABLE
+├── tipo         tipo_filtro   NOT NULL  ← enum: 'A', 'KVA', 'KVAR'
+├── voltaje      integer       NOT NULL
+├── "qn/In"      integer       NOT NULL  ← columna con barra diagonal — escapar con comillas en SQL
+├── itm          integer       NOT NULL
+├── bornes       integer       NULLABLE
+├── conexion     conexion      NULLABLE  ← enum: 'DELTA', 'ESTRELLA', 'MONOFASICO', 'BIFASICO'
+└── tipo_voltaje tipo_voltaje  NULLABLE  ← enum: 'FF' (fase-fase), 'FN' (fase-neutro). DB default: 'FF'
 ```
 
 > ⚠️ El campo `qn/In` tiene barra diagonal. En SQL siempre usar comillas dobles: `"qn/In"`.

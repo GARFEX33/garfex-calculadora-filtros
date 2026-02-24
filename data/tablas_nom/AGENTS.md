@@ -1,17 +1,8 @@
----
-name: data-tablas-nom
-description: Datos de normativa NOM en formato CSV.
-model: opencode/minimax-m2.5-free
----
-
 # Tablas NOM (CSV)
 
-Datos de normativa NOM en formato CSV. Leidos por `infrastructure/repository/`.
+Datos de normativa NOM en formato CSV. Leidos por `internal/calculos/infrastructure/adapter/driven/csv/`.
 
-> **Skills Reference**:
-> - [`golang-patterns`](../../.agents/skills/golang-patterns/SKILL.md) — convenciones al agregar mapeos en infrastructure
-
-### Auto-invoke
+## Auto-invoke
 
 | Accion | Skill |
 |--------|-------|
@@ -97,7 +88,7 @@ Siempre pedir datos en Excel/CSV al usuario y validar fila por fila contra la fu
 1. Obtener datos del usuario en Excel/CSV
 2. Crear archivo CSV con formato estandar
 3. Validar 100% contra fuente original (fila por fila)
-4. Agregar mapeo en `infrastructure/repository/`
+4. Agregar mapeo en `internal/calculos/infrastructure/adapter/driven/csv/CSVTablaNOMRepository`
 5. Documentar en este AGENTS.md
 
 ---
@@ -137,4 +128,4 @@ Siempre pedir datos en Excel/CSV al usuario y validar fila por fila contra la fu
 - [ ] Cabecera con todas las columnas requeridas
 - [ ] Sin valores inventados o interpolados
 - [ ] Archivo agregado a la tabla "Tablas Disponibles" en este AGENTS.md
-- [ ] Mapeo agregado en `infrastructure/repository/CSVTablaNOMRepository`
+- [ ] Mapeo agregado en `internal/calculos/infrastructure/adapter/driven/csv/CSVTablaNOMRepository`

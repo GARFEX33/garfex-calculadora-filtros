@@ -74,7 +74,7 @@ Enum que mapea exactamente al enum PostgreSQL `public.tipo_voltaje`:
 
 ## Dependencias prohibidas
 
-> Ver reglas consolidadas en [docs/reference/structure.md](../../../../docs/reference/structure.md)
+> Ver reglas consolidadas en [docs/reference/structure.md](../../../docs/reference/structure.md)
 
 - Sin `internal/shared/kernel` — los equipos no usan value objects eléctricos del kernel
 - Sin `internal/calculos/` ni ninguna otra feature
@@ -88,4 +88,4 @@ Enum que mapea exactamente al enum PostgreSQL `public.tipo_voltaje`:
 
 ## Referencias
 
-- Estructura y reglas: [docs/reference/structure.md](../../../../docs/reference/structure.md)
+- Estructura y reglas: [docs/reference/structure.md](../../../docs/reference/structure.md)

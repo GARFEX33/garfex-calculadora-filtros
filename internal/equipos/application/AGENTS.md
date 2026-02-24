@@ -90,7 +90,7 @@ Constructores de mapeo: `FromDomain(e)` y `FromDomainList(entities, page, pageSi
 
 ## Dependencias prohibidas
 
-> Ver reglas consolidadas en [docs/reference/structure.md](../../../../docs/reference/structure.md)
+> Ver reglas consolidadas en [docs/reference/structure.md](../../../docs/reference/structure.md)
 
 - Sin `internal/shared/kernel` (equipos no usan value objects eléctricos)
 - Sin Gin, pgx
@@ -105,4 +105,4 @@ Constructores de mapeo: `FromDomain(e)` y `FromDomainList(entities, page, pageSi
 
 ## Referencias
 
-- Estructura y reglas: [docs/reference/structure.md](../../../../docs/reference/structure.md)
+- Estructura y reglas: [docs/reference/structure.md](../../../docs/reference/structure.md)

@@ -64,11 +64,10 @@ El adapter `CalcEquipoFiltroRepository` consulta la tabla y mapea cada tipo de f
 
 ## Cómo modificar esta feature
 
-Trabajar directamente en las capas internas:
-
-- `domain/` — entidades y servicios de cálculo puro
-- `application/` — ports, use cases, DTOs
-- `infrastructure/` — adapters HTTP y CSV
+Ver guías por capa:
+- [domain/AGENTS.md](domain/AGENTS.md) — entidades y servicios de cálculo puro
+- [application/AGENTS.md](application/AGENTS.md) — ports, use cases, DTOs
+- [infrastructure/AGENTS.md](infrastructure/AGENTS.md) — adapters HTTP, CSV y PostgreSQL
 
 > Ver estructura y reglas en [docs/reference/structure.md](../../../docs/reference/structure.md)
 

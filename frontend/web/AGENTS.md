@@ -45,10 +45,25 @@ frontend/web/
 │   │   ├── index.ts               # Re-exporta utils y tipos principales
 │   │   ├── api/
 │   │   │   ├── client.ts          # Cliente HTTP base (fetch wrapper)
-│   │   │   ├── calculos.ts        # (futuro) Endpoints de cálculos
-│   │   │   └── equipos.ts         # (futuro) Endpoints de equipos
+│   │   │   ├── calculos.ts        # Endpoints de cálculos (memoria, amperaje, etc.)
+│   │   │   └── equipos.ts         # Endpoints de equipos (CRUD catálogo)
 │   │   ├── components/
-│   │   │   └── ui/                # Componentes primitivos reutilizables
+│   │   │   ├── ui/                # Componentes primitivos reutilizables
+│   │   │   └── calculos/          # Componentes de la calculadora eléctrica
+│   │   │       ├── CamposInstalacion.svelte
+│   │   │       ├── FormularioListado.svelte
+│   │   │       ├── FormularioManual.svelte
+│   │   │       ├── MemoriaTecnica.svelte
+│   │   │       ├── ResultadosMemoria.svelte
+│   │   │       ├── SelectorModo.svelte
+│   │   │       └── secciones/     # Secciones de la memoria de cálculo
+│   │   │           ├── SeccionAlimentador.svelte
+│   │   │           ├── SeccionCaidaTension.svelte
+│   │   │           ├── SeccionCanalizacion.svelte
+│   │   │           ├── SeccionConclusion.svelte
+│   │   │           ├── SeccionCorriente.svelte
+│   │   │           ├── SeccionEncabezado.svelte
+│   │   │           └── SeccionTierra.svelte
 │   │   ├── types/
 │   │   │   ├── index.ts           # Re-exporta todos los tipos
 │   │   │   └── api.types.ts       # ApiResponse, ApiError, ApiResult, etc.
@@ -59,6 +74,7 @@ frontend/web/
 │       ├── +layout.svelte         # Layout raíz (importa app.css)
 │       ├── +page.svelte           # Home /
 │       ├── calculos/              # Rutas de cálculo eléctrico
+│       │   └── resultado/         # /calculos/resultado — memoria de cálculo completa
 │       └── equipos/               # Rutas de catálogo de filtros
 ├── static/                        # Assets estáticos públicos
 ├── .env                           # Variables de entorno locales (no commit)

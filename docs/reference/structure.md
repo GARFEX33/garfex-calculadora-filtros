@@ -18,12 +18,35 @@ internal/
       adapter/
         driver/http/
         driven/csv/
+        driven/postgres/
   equipos/
     domain/
+      entity/
     application/
+      port/
+      dto/
+      usecase/
     infrastructure/
+      adapter/
+        driver/http/
+        driven/postgres/
 cmd/api/main.go
 data/tablas_nom/
+frontend/
+  web/
+    src/
+      routes/
+        calculos/
+          resultado/
+        equipos/
+      lib/
+        api/
+        components/
+          ui/
+          calculos/
+            secciones/
+        types/
+        utils/
 tests/integration/
 ```
 
@@ -38,6 +61,10 @@ tests/integration/
 | Application | `internal/calculos/application/` | [AGENTS.md](../../internal/calculos/application/AGENTS.md) |
 | Infrastructure | `internal/calculos/infrastructure/` | [AGENTS.md](../../internal/calculos/infrastructure/AGENTS.md) |
 | Feature Equipos | `internal/equipos/` | [AGENTS.md](../../internal/equipos/AGENTS.md) |
+| Domain — Equipos | `internal/equipos/domain/` | [AGENTS.md](../../internal/equipos/domain/AGENTS.md) |
+| Application — Equipos | `internal/equipos/application/` | [AGENTS.md](../../internal/equipos/application/AGENTS.md) |
+| Infrastructure — Equipos | `internal/equipos/infrastructure/` | [AGENTS.md](../../internal/equipos/infrastructure/AGENTS.md) |
+| Frontend Web | `frontend/web/` | [AGENTS.md](../../frontend/web/AGENTS.md) |
 | Datos NOM | `data/tablas_nom/` | [AGENTS.md](../../data/tablas_nom/AGENTS.md) |
 
 ## Reglas de Aislamiento Entre Features

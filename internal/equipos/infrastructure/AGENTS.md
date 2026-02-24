@@ -97,4 +97,4 @@ Variables de entorno requeridas:
 
 ## Referencias
 
-- Estructura y reglas: [docs/reference/structure.md](../../../../docs/reference/structure.md)
+- Estructura y reglas: [docs/reference/structure.md](../../../docs/reference/structure.md)
