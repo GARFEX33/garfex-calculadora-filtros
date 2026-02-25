@@ -123,6 +123,7 @@ func (uc *CalcularCharolaEspaciadoUseCase) Execute(
 		Tamano:           resultado.Tamano,
 		TamanoPulgadas:   resultado.Tamano + "\"",
 		AnchoRequerido:   resultado.AnchoRequerido,
+		AnchoComercialMM: resultado.AnchoComercialMM,
 		DiametroFaseMM:   input.DiametroFaseMM,
 		DiametroTierraMM: input.DiametroTierraMM,
 		NumHilosTotal:    hilosFaseTotal,
