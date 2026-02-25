@@ -55,14 +55,14 @@ func NewOrquestadorMemoriaCalculoUseCase(
 //
 // Reglas de negocio:
 //   - Charola (cualquier tipo) → siempre 1 hilo de tierra
-//   - Tubería con ≤2 tubos → 1 hilo de tierra
-//   - Tubería con >2 tubos → 2 hilos de tierra
+//   - Tubería → 1 hilo de tierra por tubo (= numTuberias)
 //
 // Ejemplos de uso:
 //
 //	calcularNumHilosTierra(entity.TipoCanalizacionCharolaCableEspaciado, 5) // returns 1
-//	calcularNumHilosTierra(entity.TipoCanalizacionTuboPVC, 2)              // returns 1
-//	calcularNumHilosTierra(entity.TipoCanalizacionTuboPVC, 3)              // returns 2
+//	calcularNumHilosTierra(entity.TipoCanalizacionTuboPVC, 1)              // returns 1
+//	calcularNumHilosTierra(entity.TipoCanalizacionTuboPVC, 2)              // returns 2
+//	calcularNumHilosTierra(entity.TipoCanalizacionTuboPVC, 3)              // returns 3
 func calcularNumHilosTierra(tipoCanalizacion entity.TipoCanalizacion, numTuberias int) int {
 	// Charola siempre tiene 1 hilo de tierra
 	if tipoCanalizacion.EsCharola() {
@@ -74,11 +74,8 @@ func calcularNumHilosTierra(tipoCanalizacion entity.TipoCanalizacion, numTuberia
 		return 1
 	}
 
-	// Tubería: ≤2 tubos = 1 hilo, >2 tubos = 2 hilos
-	if numTuberias <= 2 {
-		return 1
-	}
-	return 2
+	// Tubería: 1 tierra por tubo
+	return numTuberias
 }
 
 // Execute runs the complete memory calculation pipeline.
@@ -186,6 +183,7 @@ func (uc *OrquestadorMemoriaCalculoUseCase) Execute(
 	output.FactorTotalAjuste = resultadoAjuste.FactorTotal
 	output.TemperaturaAmbiente = resultadoAjuste.TemperaturaAmbiente
 	output.CantidadConductores = resultadoAjuste.CantidadConductoresTotal
+	output.ConductoresPorTubo = resultadoAjuste.ConductoresPorTubo
 	output.Pasos = append(output.Pasos, dto.PasoMemoria{
 		Numero:      2,
 		Nombre:      "Ajuste de Corriente",
@@ -284,10 +282,11 @@ func (uc *OrquestadorMemoriaCalculoUseCase) Execute(
 			}
 			// Map to compatible output
 			resultadoCanalizacion = dto.CharolaEspaciadoOutput{
-				Tipo:           resultadoTriangular.Tipo,
-				Tamano:         resultadoTriangular.Tamano,
-				TamanoPulgadas: resultadoTriangular.TamanoPulgadas,
-				AnchoRequerido: resultadoTriangular.AnchoRequerido,
+				Tipo:             resultadoTriangular.Tipo,
+				Tamano:           resultadoTriangular.Tamano,
+				TamanoPulgadas:   resultadoTriangular.TamanoPulgadas,
+				AnchoRequerido:   resultadoTriangular.AnchoRequerido,
+				AnchoComercialMM: resultadoTriangular.AnchoComercialMM,
 			}
 			// Poblar detalle con valores intermedios del triangular
 			output.DetalleCharola = &dto.DetalleCharola{
@@ -328,6 +327,7 @@ func (uc *OrquestadorMemoriaCalculoUseCase) Execute(
 		// Map charola result to output
 		output.Canalizacion = dto.ResultadoCanalizacion{
 			Tamano:           resultadoCanalizacion.Tamano,
+			AnchoComercialMM: resultadoCanalizacion.AnchoComercialMM,
 			AreaRequeridaMM2: resultadoCanalizacion.AnchoRequerido,
 			NumeroDeTubos:    1,
 		}
@@ -354,11 +354,27 @@ func (uc *OrquestadorMemoriaCalculoUseCase) Execute(
 			TipoCanalizacion: input.TipoCanalizacion,
 			NumTuberias:      input.NumTuberias,
 			NumTierras:       numTierras,
+			HilosPorFase:     input.HilosPorFase, // Necesario para calcular conductores por tubo
 		}
 
 		resultadoTuberia, err := uc.calcularTamanioTuberiaUC.Execute(ctx, tuberiaInput)
 		if err != nil {
 			return dto.MemoriaOutput{}, fmt.Errorf("paso 4 (tubería): %w", err)
+		}
+
+		// Poblar DetalleTuberia con valores intermedios
+		// NumFasesPorTubo y NumNeutrosPorTubo vienen ya calculados correctamente
+		// desde el UseCase (considera HilosPorFase y NumTuberias)
+		output.DetalleTuberia = &dto.DetalleTuberia{
+			AreaFaseMM2:          resultadoTuberia.AreaFaseMM2,
+			AreaNeutroMM2:        resultadoTuberia.AreaNeutroMM2,
+			AreaTierraMM2:        resultadoTuberia.AreaTierraMM2,
+			NumFasesPorTubo:      resultadoTuberia.NumFasesPorTubo,
+			NumNeutrosPorTubo:    resultadoTuberia.NumNeutrosPorTubo,
+			NumTierras:           resultadoTuberia.NumTierras,
+			AreaOcupacionTuboMM2: resultadoTuberia.AreaOcupacionTuboMM2,
+			DesignacionMetrica:   resultadoTuberia.DesignacionMetrica,
+			FillFactor:           resultadoTuberia.FillFactor,
 		}
 
 		output.Canalizacion = dto.ResultadoCanalizacion{
@@ -367,6 +383,9 @@ func (uc *OrquestadorMemoriaCalculoUseCase) Execute(
 			AreaRequeridaMM2: 0, // Not directly provided by this use case
 			NumeroDeTubos:    resultadoTuberia.NumTuberias,
 		}
+
+		// Asignar fill factor
+		output.FillFactor = resultadoTuberia.FillFactor
 
 		output.Pasos = append(output.Pasos, dto.PasoMemoria{
 			Numero:      4,

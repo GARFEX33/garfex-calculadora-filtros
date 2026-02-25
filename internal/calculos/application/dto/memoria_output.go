@@ -29,6 +29,7 @@ type ResultadoConductores struct {
 // ResultadoCanalizacion contiene la información de la canalización.
 type ResultadoCanalizacion struct {
 	Tamano           string
+	AnchoComercialMM float64 `json:"ancho_comercial_mm,omitempty"`
 	AreaTotalMM2     float64
 	AreaRequeridaMM2 float64
 	NumeroDeTubos    int
@@ -53,6 +54,27 @@ type DetalleCharola struct {
 	// Charola triangular (adicional)
 	AnchoPotenciaMM  float64 `json:"ancho_potencia_mm,omitempty"`
 	FactorTriangular float64 `json:"factor_triangular,omitempty"`
+}
+
+// DetalleTuberia contiene los valores intermedios del cálculo de tubería
+// para mostrar el desarrollo completo en la memoria de cálculo.
+type DetalleTuberia struct {
+	// Áreas físicas de conductores (mm²)
+	// Fase: Tabla 5 NOM (área con aislamiento THW)
+	// Tierra: Tabla 8 NOM (conductor desnudo)
+	AreaFaseMM2   float64  `json:"area_fase_mm2"`
+	AreaNeutroMM2 *float64 `json:"area_neutro_mm2,omitempty"` // nil si DELTA (sin neutro)
+	AreaTierraMM2 float64  `json:"area_tierra_mm2"`
+
+	// Distribución de conductores por tubo
+	NumFasesPorTubo   int `json:"num_fases_por_tubo"`
+	NumNeutrosPorTubo int `json:"num_neutros_por_tubo"` // 0 si DELTA
+	NumTierras        int `json:"num_tierras"`          // 1 o 2 según NOM
+
+	// Tubo seleccionado de la tabla NOM (Cap. 9)
+	AreaOcupacionTuboMM2 float64 `json:"area_ocupacion_tubo_mm2"` // área_ocupacion_mm2 del CSV (40% interior ya aplicado)
+	DesignacionMetrica   string  `json:"designacion_metrica"`     // ej: "63" → mostrar como "63 mm"
+	FillFactor           float64 `json:"fill_factor"`             // 0.40 para >2 conductores
 }
 
 // ResultadoCaidaTension contiene el resultado del cálculo de caída.
@@ -120,6 +142,7 @@ type MemoriaOutput struct {
 	CorrienteAjustada  float64 `json:"corriente_ajustada"`
 	HilosPorFase       int     `json:"hilos_por_fase"`
 	CorrientePorHilo   float64 `json:"corriente_por_hilo"`
+	ConductoresPorTubo int     `json:"conductores_por_tubo"`
 
 	// Paso 3: Tipo de Canalización
 	TipoCanalizacion string `json:"tipo_canalizacion"`
@@ -140,6 +163,7 @@ type MemoriaOutput struct {
 	Canalizacion   ResultadoCanalizacion `json:"canalizacion"`
 	FillFactor     float64               `json:"fill_factor"`
 	DetalleCharola *DetalleCharola       `json:"detalle_charola,omitempty"`
+	DetalleTuberia *DetalleTuberia       `json:"detalle_tuberia,omitempty"`
 
 	// Paso 7: Caída de Tensión
 	LongitudCircuito float64               `json:"longitud_circuito"`
