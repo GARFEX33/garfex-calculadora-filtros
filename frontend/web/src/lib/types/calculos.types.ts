@@ -6,9 +6,10 @@ export type SistemaElectrico = 'DELTA' | 'ESTRELLA' | 'BIFASICO' | 'MONOFASICO';
 export type TipoVoltaje = 'FASE_NEUTRO' | 'FASE_FASE';
 export type TipoCanalizacion =
 	| 'TUBERIA_PVC'
-	| 'TUBERIA_EMT'
+	| 'TUBERIA_ACERO_PG'
+	| 'TUBERIA_ACERO_PD'
 	| 'CHAROLA_CABLE_ESPACIADO'
-	| 'CHAROLA_CABLE_TRESBOLILLO';
+	| 'CHAROLA_CABLE_TRIANGULAR';
 export type MaterialConductor = 'Cu' | 'Al';
 export type UnidadPotencia = 'W' | 'KW' | 'KVA' | 'KVAR';
 export type UnidadTension = 'V' | 'kV';
@@ -68,6 +69,7 @@ export interface ResultadoCanalizacion {
 	AreaTotalMM2: number;
 	AreaRequeridaMM2: number;
 	NumeroDeTubos: number;
+	ancho_comercial_mm?: number;
 }
 
 // Detalle de charola — valores intermedios del cálculo para el desarrollo en memoria
@@ -86,6 +88,24 @@ export interface DetalleCharola {
 	// Triangular
 	ancho_potencia_mm?: number;
 	factor_triangular?: number;
+}
+
+// Detalle de tubería — valores intermedios del cálculo para el desarrollo en memoria
+export interface DetalleTuberia {
+	// Áreas físicas de conductores (mm²)
+	// Fase/Neutro: Tabla 5 NOM (área con aislamiento THW)
+	// Tierra: Tabla 8 NOM (conductor desnudo)
+	area_fase_mm2: number;
+	area_neutro_mm2?: number; // undefined si DELTA (sin neutro)
+	area_tierra_mm2: number;
+	// Distribución por tubo
+	num_fases_por_tubo: number;
+	num_neutros_por_tubo: number; // 0 si DELTA
+	num_tierras: number;
+	// Tubo seleccionado de la tabla NOM
+	area_ocupacion_tubo_mm2: number; // área de ocupación del CSV (40% del interior ya aplicado)
+	designacion_metrica: string; // ej: "63" → mostrar como "63 mm"
+	fill_factor: number;
 }
 
 // Voltage drop result
@@ -107,6 +127,7 @@ export interface MemoriaOutput {
 	temperatura_ambiente: number;
 	sistema_electrico: SistemaElectrico;
 	cantidad_conductores: number;
+	conductores_por_tubo?: number;
 	corriente_nominal: number;
 	corriente_ajustada: number;
 	factor_temperatura: number;
@@ -123,8 +144,8 @@ export interface MemoriaOutput {
 	itm: number;
 	canalizacion: ResultadoCanalizacion;
 	fill_factor: number;
-	diametro_control_mm?: number;
 	detalle_charola?: DetalleCharola;
+	detalle_tuberia?: DetalleTuberia;
 	longitud_circuito: number;
 	caida_tension: ResultadoCaidaTension;
 	cumple_normativa: boolean;

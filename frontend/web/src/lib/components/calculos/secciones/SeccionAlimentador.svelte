@@ -33,9 +33,7 @@
 	);
 
 	// Número de hilos del conductor de alimentación (del backend)
-	let numHilosAlimentacion = $derived(
-		(memoria.conductor_alimentacion.NumHilos ?? memoria.hilos_por_fase) || 1
-	);
+	let numHilosAlimentacion = $derived(memoria.hilos_por_fase || 1);
 
 	// Verificación de capacidad
 	let capacidadPorHilo = $derived(memoria.conductor_alimentacion.Capacidad);
@@ -128,7 +126,12 @@
 			<div class="space-y-1 text-sm">
 				<p class="text-foreground">
 					<strong>Cantidad de Conductores:</strong>
-					{memoria.cantidad_conductores}
+					{#if memoria.canalizacion.NumeroDeTubos > 1 && memoria.conductores_por_tubo}
+						{memoria.conductores_por_tubo} conductores por tubo
+						<span class="text-muted-foreground">({memoria.cantidad_conductores} total)</span>
+					{:else}
+						{memoria.cantidad_conductores}
+					{/if}
 				</p>
 				<p class="text-foreground">
 					<strong>Factor de Agrupamiento:</strong>
