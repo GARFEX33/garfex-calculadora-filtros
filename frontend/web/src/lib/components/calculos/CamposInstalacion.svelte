@@ -8,6 +8,7 @@
 		sistema_electrico: string;
 		estado: string;
 		tipo_canalizacion: TipoCanalizacion | '';
+		num_tuberias: number | undefined;
 		longitud_circuito: number | undefined;
 		tipo_voltaje: string;
 		material: MaterialConductor;
@@ -63,10 +64,24 @@
 
 	const canalizacionOptions: { value: TipoCanalizacion; label: string }[] = [
 		{ value: 'TUBERIA_PVC', label: 'Tubería PVC' },
-		{ value: 'TUBERIA_EMT', label: 'Tubería EMT' },
-		{ value: 'CHAROLA_CABLE_ESPACIADO', label: 'Charola (Espaciado)' },
-		{ value: 'CHAROLA_CABLE_TRESBOLILLO', label: 'Charola (Tresbolillo)' }
+		{ value: 'TUBERIA_ACERO_PG', label: 'Tubería PG' },
+		{ value: 'TUBERIA_ACERO_PD', label: 'Tubería PD' },
+		{ value: 'CHAROLA_CABLE_ESPACIADO', label: 'Charola Espaciado' },
+		{ value: 'CHAROLA_CABLE_TRIANGULAR', label: 'Charola Triangular' }
 	];
+
+	// Derivar si el tipo de canalización es tubería
+	const esTuberia = $derived(datos.tipo_canalizacion?.startsWith('TUBERIA_') ?? false);
+
+	// Resetear num_tuberias cuando cambia a CHAROLA_*
+	function handleTipoCanalizacionChange(e: Event) {
+		const target = e.target as HTMLSelectElement;
+		const value = target.value as TipoCanalizacion | '';
+		if (value.startsWith('CHAROLA_')) {
+			datos.num_tuberias = undefined;
+		}
+		updateDatos('tipo_canalizacion', value);
+	}
 
 	function updateDatos<K extends keyof CamposInstalacionData>(
 		key: K,
@@ -116,8 +131,7 @@
 				<select
 					id="tipo_canalizacion"
 					value={datos.tipo_canalizacion}
-					onchange={(e) =>
-						updateDatos('tipo_canalizacion', e.currentTarget.value as TipoCanalizacion | '')}
+					onchange={handleTipoCanalizacionChange}
 					class="w-full rounded-md border border-input-border bg-input px-3 py-2 text-sm text-foreground focus:ring-2 focus:ring-ring focus:outline-none"
 				>
 					<option value="">Seleccionar...</option>
@@ -126,6 +140,26 @@
 					{/each}
 				</select>
 			</div>
+
+			<!-- Número de tubes (solo para TUBERIA_*) -->
+			{#if esTuberia}
+				<div class="flex flex-col gap-1.5">
+					<label for="num_tuberias" class="text-sm text-muted-foreground">Número de tubos</label>
+					<input
+						type="number"
+						id="num_tuberias"
+						min="1"
+						placeholder="1"
+						value={datos.num_tuberias ?? ''}
+						oninput={(e) =>
+							updateDatos(
+								'num_tuberias',
+								e.currentTarget.value ? Number(e.currentTarget.value) : undefined
+							)}
+						class="w-full rounded-md border border-input-border bg-input px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:outline-none"
+					/>
+				</div>
+			{/if}
 
 			<!-- Longitud del Circuito -->
 			<div class="flex flex-col gap-1.5">

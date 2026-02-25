@@ -9,6 +9,32 @@
 
 	// Número de hilos del conductor de tierra (del backend)
 	let numHilosTierra = $derived(memoria.conductor_tierra.NumHilos ?? 1);
+
+	// Canalización type and tube count
+	let tipo = $derived(memoria.tipo_canalizacion);
+	let canalizacion = $derived(memoria.canalizacion);
+	let numTubos = $derived(canalizacion.NumeroDeTubos ?? 1);
+
+	// Clasificación del tipo de canalización
+	let esTuberia = $derived(
+		tipo === 'TUBERIA_PVC' ||
+			tipo === 'TUBERIA_ALUMINIO' ||
+			tipo === 'TUBERIA_ACERO_PG' ||
+			tipo === 'TUBERIA_ACERO_PD'
+	);
+
+	// numHilosTierraMostrar: el backend ya envía el valor correcto (1 tierra por tubo = numTuberias total)
+	let numHilosTierraMostrar = $derived(numHilosTierra);
+
+	// Bug 2 fix: conductores por tubería para tubería multi-tubo
+	let conductoresPorTubo = $derived(
+		esTuberia && numTubos > 1
+			? Math.ceil(memoria.cantidad_conductores / numTubos)
+			: memoria.cantidad_conductores
+	);
+
+	// Bug 3 fix: multiplicador ×N solo aplica para charola (conductores paralelos por fase)
+	let mostrarMultiplicadorTierra = $derived(!esTuberia && numHilosTierra > 1);
 </script>
 
 <section class="rounded-lg border border-border bg-card p-6">
@@ -48,7 +74,11 @@
 				<span class="font-medium text-foreground"
 					>Circuito con {memoria.hilos_por_fase} hilos por fase:</span
 				>
-				{memoria.cantidad_conductores} conductores totales en la canalización
+				{#if esTuberia && numTubos > 1}
+					{conductoresPorTubo} conductores por tubería/canalización
+				{:else}
+					{memoria.cantidad_conductores} conductores totales en la canalización
+				{/if}
 			</p>
 		{/if}
 	</div>
@@ -69,7 +99,7 @@
 						<td class="px-4 py-2 text-muted-foreground">Calibre</td>
 						<td class="px-4 py-2 font-mono font-medium text-foreground">
 							{memoria.conductor_tierra.Calibre}
-							{#if numHilosTierra > 1}
+							{#if mostrarMultiplicadorTierra}
 								<span class="ml-1 text-xs text-muted-foreground">× {numHilosTierra}</span>
 							{/if}
 						</td>
@@ -86,7 +116,7 @@
 						<td class="px-4 py-2 text-muted-foreground">Sección</td>
 						<td class="px-4 py-2 text-foreground">
 							{memoria.conductor_tierra.SeccionMM2.toFixed(2)} mm²
-							{#if numHilosTierra > 1}
+							{#if mostrarMultiplicadorTierra}
 								<span class="ml-1 text-xs text-muted-foreground"
 									>(× {numHilosTierra} = {(
 										memoria.conductor_tierra.SeccionMM2 * numHilosTierra
@@ -104,7 +134,7 @@
 					<tr>
 						<td class="px-4 py-2 text-muted-foreground">Número de Hilos</td>
 						<td class="px-4 py-2 text-foreground">
-							{numHilosTierra}
+							{numHilosTierraMostrar}
 						</td>
 					</tr>
 				</tbody>

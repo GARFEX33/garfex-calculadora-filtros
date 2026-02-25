@@ -43,6 +43,7 @@
 		sistema_electrico: '',
 		estado: '',
 		tipo_canalizacion: '',
+		num_tuberias: undefined,
 		longitud_circuito: undefined,
 		tipo_voltaje: '',
 		material: 'Cu',
@@ -154,6 +155,12 @@
 			base.diametro_control_mm = instalacion.diametro_control_mm;
 		}
 
+		// num_tuberias: only include if it has a value and is greater than 0
+		// (CHAROLA_* types don't show this field, so it will be undefined)
+		if (instalacion.num_tuberias !== undefined && instalacion.num_tuberias > 0) {
+			base.num_tuberias = instalacion.num_tuberias;
+		}
+
 		return base;
 	});
 
@@ -179,6 +186,7 @@
 				sistema_electrico: '',
 				estado: instalacion.estado, // Keep estado as it's not equipment-specific
 				tipo_canalizacion: '',
+				num_tuberias: undefined,
 				longitud_circuito: undefined,
 				tipo_voltaje: '',
 				material: 'Cu',
