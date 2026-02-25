@@ -48,8 +48,10 @@ func CalcularAreaPorTubo(
 	neutrosPorTubo := float64(neutros) / float64(numTuberias)
 	areaNeutrosPorTubo := neutrosPorTubo * areaNeutral
 
-	// Ground area per tube: NOT distributed - full ground goes in each tube
-	areaTierraPorTubo := float64(tierras) * areaTierra * float64(numTuberias)
+	// Ground area per tube: in tubería, tierras = numTuberias (1 per tube per NOM).
+	// Distribute tierras evenly across tubes — same logic as fases/neutros.
+	tierrasPorTubo := float64(tierras) / float64(numTuberias)
+	areaTierraPorTubo := tierrasPorTubo * areaTierra
 
 	return areaFasesPorTubo + areaNeutrosPorTubo + areaTierraPorTubo
 }

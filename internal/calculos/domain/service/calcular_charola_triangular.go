@@ -59,9 +59,10 @@ func CalcularCharolaTriangular(
 		anchoCharolaMM := obtenerAnchoCharola(entrada)
 		if anchoCharolaMM >= anchoRequerido {
 			return entity.Canalizacion{
-				Tipo:           entity.TipoCanalizacionCharolaCableTriangular,
-				Tamano:         entrada.Tamano,
-				AnchoRequerido: anchoRequerido,
+				Tipo:             entity.TipoCanalizacionCharolaCableTriangular,
+				Tamano:           entrada.Tamano,
+				AnchoRequerido:   anchoRequerido,
+				AnchoComercialMM: anchoCharolaMM,
 			}, nil
 		}
 	}

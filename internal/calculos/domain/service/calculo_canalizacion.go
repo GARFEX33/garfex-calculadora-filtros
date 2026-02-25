@@ -75,6 +75,7 @@ func CalcularCanalizacion(
 				tipo,
 				entrada.Tamano,
 				areaTotal,
+				0, // AnchoComercialMM: solo aplica para charola, no para tubería
 				numeroDeTubos,
 				factorRelleno,
 			)

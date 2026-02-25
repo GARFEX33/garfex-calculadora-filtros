@@ -87,9 +87,10 @@ func CalcularCharolaEspaciado(
 		anchoCharolaMM := entrada.AreaInteriorMM2
 		if anchoCharolaMM >= anchoRequerido {
 			return entity.Canalizacion{
-				Tipo:           entity.TipoCanalizacionCharolaCableEspaciado,
-				Tamano:         entrada.Tamano,
-				AnchoRequerido: anchoRequerido,
+				Tipo:             entity.TipoCanalizacionCharolaCableEspaciado,
+				Tamano:           entrada.Tamano,
+				AnchoRequerido:   anchoRequerido,
+				AnchoComercialMM: anchoCharolaMM,
 			}, nil
 		}
 	}
