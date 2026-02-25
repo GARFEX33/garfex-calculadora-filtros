@@ -44,14 +44,23 @@
 	let fillFactorPorcentaje = $derived((memoria.fill_factor * 100).toFixed(0));
 
 	// Control conductor — optional
-	let tieneControl = $derived(!!memoria.diametro_control_mm && memoria.diametro_control_mm > 0);
+	let tieneControl = $derived(
+		!!memoria.detalle_charola?.diametro_control_mm &&
+			memoria.detalle_charola.diametro_control_mm > 0
+	);
 
 	// Detalle charola — valores intermedios para el desarrollo con números reales
 	let detalle = $derived(memoria.detalle_charola);
 
+	// Detalle tubería — valores intermedios para el desarrollo con números reales
+	let detalleTuberia = $derived(memoria.detalle_tuberia);
+
 	// Labels legibles de material y sistema eléctrico
 	let materialLabel = $derived(
 		memoria.conductor_alimentacion.Material?.toUpperCase() === 'CU' ? 'Cobre (Cu)' : 'Aluminio (Al)'
+	);
+	let materialTierraLabel = $derived(
+		memoria.conductor_tierra.Material?.toUpperCase() === 'CU' ? 'Cobre (Cu)' : 'Aluminio (Al)'
 	);
 	let sistemaLabel = $derived.by(() => {
 		switch (memoria.sistema_electrico) {
@@ -130,33 +139,162 @@
 					<p class="text-xs">3+ conductores</p>
 				</div>
 			</div>
-			<p class="font-mono text-sm text-foreground">
-				Área_requerida = (Σ Áreas_conductores / N_tubos) / {fillFactorPorcentaje}%
-			</p>
+			{#if detalleTuberia}
+				<hr class="my-3 border-border/60" />
+				<!-- Fórmula simbólica -->
+				<p class="font-mono text-sm text-muted-foreground">
+					{#if canalizacion.NumeroDeTubos > 1}
+						{#if detalleTuberia.area_neutro_mm2}
+							A<sub>req</sub> = (N<sub>fases</sub>/N<sub>tubos</sub>) × A<sub>fase</sub> + (N<sub
+								>neutros</sub
+							>/N<sub>tubos</sub>) × A<sub>neutro</sub> + (N<sub>tierra</sub>/N<sub>tubos</sub>) × A<sub
+								>tierra</sub
+							>
+						{:else}
+							A<sub>req</sub> = (N<sub>fases</sub>/N<sub>tubos</sub>) × A<sub>fase</sub> + (N<sub
+								>tierra</sub
+							>/N<sub>tubos</sub>) × A<sub>tierra</sub>
+						{/if}
+					{:else if detalleTuberia.area_neutro_mm2}
+						A<sub>req</sub> = N<sub>fases</sub> × A<sub>fase</sub> + N<sub>neutros</sub> × A<sub
+							>neutro</sub
+						>
+						+ N<sub>tierra</sub> × A<sub>tierra</sub>
+					{:else}
+						A<sub>req</sub> = N<sub>fases</sub> × A<sub>fase</sub> + N<sub>tierra</sub> × A<sub
+							>tierra</sub
+						>
+					{/if}
+				</p>
+			{/if}
 		</div>
 
-		<!-- Conductores en la instalación -->
-		<div class="mb-6">
-			<h3 class="mb-2 font-semibold text-foreground">Conductores en la Instalación</h3>
-			<div class="grid grid-cols-2 gap-4 text-sm">
-				<div>
-					<span class="text-muted-foreground">Total de conductores:</span>
-					<span class="ml-2 font-medium text-foreground">{memoria.cantidad_conductores}</span>
-				</div>
-				<div>
-					<span class="text-muted-foreground">Hilos por fase:</span>
-					<span class="ml-2 font-medium text-foreground">{memoria.hilos_por_fase}</span>
-				</div>
-				<div>
-					<span class="text-muted-foreground">Tubos en paralelo:</span>
-					<span class="ml-2 font-medium text-foreground">{canalizacion?.NumeroDeTubos ?? 1}</span>
-				</div>
-				<div>
-					<span class="text-muted-foreground">Factor de llenado aplicado:</span>
-					<span class="ml-2 font-mono font-medium text-foreground">{fillFactorPorcentaje}%</span>
+		<!-- Conductores en la Instalación -->
+		<div class="mb-6 overflow-hidden rounded border border-border">
+			<table class="w-full text-sm">
+				<thead class="bg-muted">
+					<tr>
+						<th class="px-4 py-2 text-left font-medium text-foreground">Conductor</th>
+						<th class="px-4 py-2 text-left font-medium text-foreground">Especificación</th>
+					</tr>
+				</thead>
+				<tbody class="divide-y divide-border">
+					<!-- Sistema -->
+					<tr>
+						<td class="px-4 py-2 text-muted-foreground">Sistema eléctrico</td>
+						<td class="px-4 py-2 font-medium text-foreground">{sistemaLabel}</td>
+					</tr>
+					<tr>
+						<td class="px-4 py-2 text-muted-foreground">Hilos por fase</td>
+						<td class="px-4 py-2 font-medium text-foreground">{memoria.hilos_por_fase}</td>
+					</tr>
+					<!-- Separador visual -->
+					<tr class="bg-muted/40">
+						<td
+							class="px-4 py-1 text-xs font-semibold tracking-wide text-muted-foreground uppercase"
+							>Conductores físicos</td
+						>
+						<td class="px-4 py-1"></td>
+					</tr>
+					<!-- Fase -->
+					<tr>
+						<td class="px-4 py-2 text-muted-foreground">Fase</td>
+						<td class="px-4 py-2 text-foreground">
+							<span class="font-mono font-medium">{memoria.conductor_alimentacion.Calibre}</span>
+							<span class="ml-1 text-muted-foreground">{materialLabel}</span>
+						</td>
+					</tr>
+					<!-- Tierra -->
+					<tr>
+						<td class="px-4 py-2 text-muted-foreground">Tierra</td>
+						<td class="px-4 py-2 text-foreground">
+							<span class="font-mono font-medium">{memoria.conductor_tierra.Calibre}</span>
+							<span class="ml-1 text-muted-foreground">{materialTierraLabel}</span>
+							<span
+								class="ml-2 rounded bg-muted px-1 py-0.5 text-xs font-medium text-muted-foreground"
+								>Desnudo</span
+							>
+						</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+
+		<!-- Desarrollo — con detalle de áreas por conductor -->
+		{#if detalleTuberia}
+			<div class="mb-6">
+				<h3 class="mb-2 font-semibold text-foreground">Desarrollo</h3>
+				<div class="space-y-1.5 rounded bg-muted/30 p-3 font-mono text-sm">
+					<!-- Sistema -->
+					<p class="text-muted-foreground">
+						{sistemaLabel} — {memoria.hilos_por_fase} conductor(es) por fase — {canalizacion.NumeroDeTubos}
+						tubo(s)
+					</p>
+
+					<hr class="my-2 border-border/60" />
+
+					<!-- Fases -->
+					<p class="text-foreground">
+						<strong>Fase</strong>: {detalleTuberia.num_fases_por_tubo} × {detalleTuberia.area_fase_mm2.toFixed(
+							2
+						)} mm²
+						<span class="font-sans text-xs text-muted-foreground">
+							({memoria.conductor_alimentacion.Calibre} — Tabla 5 NOM)
+						</span>
+						=
+						<strong
+							>{(detalleTuberia.num_fases_por_tubo * detalleTuberia.area_fase_mm2).toFixed(2)} mm²</strong
+						>
+					</p>
+
+					<!-- Neutro (si aplica) -->
+					{#if detalleTuberia.area_neutro_mm2}
+						<p class="text-foreground">
+							<strong>Neutro</strong>: {detalleTuberia.num_neutros_por_tubo} × {detalleTuberia.area_neutro_mm2.toFixed(
+								2
+							)} mm²
+							<span class="font-sans text-xs text-muted-foreground">
+								({memoria.conductor_alimentacion.Calibre} — Tabla 5 NOM)
+							</span>
+							=
+							<strong
+								>{(detalleTuberia.num_neutros_por_tubo * detalleTuberia.area_neutro_mm2).toFixed(2)} mm²</strong
+							>
+						</p>
+					{/if}
+
+					<!-- Tierra -->
+					<p class="text-foreground">
+						<strong>Tierra</strong>: {detalleTuberia.num_tierras} × {detalleTuberia.area_tierra_mm2.toFixed(
+							2
+						)} mm²
+						<span class="font-sans text-xs text-muted-foreground">
+							({memoria.conductor_tierra.Calibre} Desnudo — Tabla 8 NOM)
+						</span>
+						=
+						<strong
+							>{(detalleTuberia.num_tierras * detalleTuberia.area_tierra_mm2).toFixed(2)} mm²</strong
+						>
+					</p>
+
+					<hr class="my-2 border-border/60" />
+
+					<!-- Selección en tabla NOM -->
+					<p class="text-muted-foreground">
+						Tabla NOM Cap. 9 — seleccionar primer tubo donde Área<sub
+							>ocup. {fillFactorPorcentaje}%</sub
+						>
+						≥ {canalizacion.AreaTotalMM2.toFixed(2)} mm²:
+					</p>
+					<p class="text-lg font-bold text-primary">
+						Tubo: {canalizacion.Tamano}" / {detalleTuberia.designacion_metrica} mm — Área<sub
+							>ocup.</sub
+						>
+						= {detalleTuberia.area_ocupacion_tubo_mm2.toFixed(0)} mm²
+					</p>
 				</div>
 			</div>
-		</div>
+		{/if}
 
 		<!-- Resultado tubería -->
 		<div>
@@ -177,20 +315,30 @@
 							</td>
 						</tr>
 						<tr>
+							<td class="px-4 py-2 text-muted-foreground">Designación Métrica</td>
+							<td class="px-4 py-2 font-mono text-foreground">
+								{detalleTuberia?.designacion_metrica
+									? `${detalleTuberia.designacion_metrica} mm`
+									: '—'}
+							</td>
+						</tr>
+						<tr>
 							<td class="px-4 py-2 text-muted-foreground">Número de Tubos</td>
 							<td class="px-4 py-2 font-medium text-foreground">
 								{canalizacion?.NumeroDeTubos ?? 1}
 							</td>
 						</tr>
 						<tr>
-							<td class="px-4 py-2 text-muted-foreground">Área por Tubo</td>
+							<td class="px-4 py-2 text-muted-foreground">Área Total de Cables</td>
 							<td class="px-4 py-2 font-mono text-foreground">
 								{canalizacion?.AreaTotalMM2?.toFixed(2) ?? '—'} mm²
 							</td>
 						</tr>
 						<tr>
-							<td class="px-4 py-2 text-muted-foreground">Factor de Llenado</td>
-							<td class="px-4 py-2 font-mono text-foreground">{fillFactorPorcentaje}%</td>
+							<td class="px-4 py-2 text-muted-foreground">Área de Ocupación al 40% (NOM)</td>
+							<td class="px-4 py-2 font-mono text-foreground">
+								{detalleTuberia?.area_ocupacion_tubo_mm2?.toFixed(0) ?? '—'} mm²
+							</td>
 						</tr>
 					</tbody>
 				</table>
@@ -403,6 +551,14 @@
 								{canalizacion?.Tamano || '—'}
 							</td>
 						</tr>
+						{#if canalizacion?.ancho_comercial_mm && canalizacion.ancho_comercial_mm > 0}
+							<tr>
+								<td class="px-4 py-2 text-muted-foreground">Ancho Comercial Seleccionado</td>
+								<td class="px-4 py-2 font-mono font-bold text-primary">
+									{canalizacion.ancho_comercial_mm.toFixed(1)} mm
+								</td>
+							</tr>
+						{/if}
 					</tbody>
 				</table>
 			</div>
@@ -632,6 +788,14 @@
 								{canalizacion?.Tamano || '—'}
 							</td>
 						</tr>
+						{#if canalizacion?.ancho_comercial_mm && canalizacion.ancho_comercial_mm > 0}
+							<tr>
+								<td class="px-4 py-2 text-muted-foreground">Ancho Comercial Seleccionado</td>
+								<td class="px-4 py-2 font-mono font-bold text-primary">
+									{canalizacion.ancho_comercial_mm.toFixed(1)} mm
+								</td>
+							</tr>
+						{/if}
 					</tbody>
 				</table>
 			</div>
