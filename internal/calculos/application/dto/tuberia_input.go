@@ -18,6 +18,16 @@ type TuberiaInput struct {
 	TipoCanalizacion string `json:"tipo_canalizacion" binding:"required"`
 	NumTuberias      int    `json:"num_tuberias" binding:"required,gt=0"`
 	NumTierras       int    `json:"-"`
+	HilosPorFase     int    `json:"-"` // Conductores por fase (≥1); default 1 si no se especifica
+}
+
+// GetHilosPorFase retorna el número de hilos por fase.
+// Si el valor es 0 o menor, retorna 1 como default (evita división por cero).
+func (t TuberiaInput) GetHilosPorFase() int {
+	if t.HilosPorFase <= 0 {
+		return 1
+	}
+	return t.HilosPorFase
 }
 
 // Validate verifica que el input tenga los campos requeridos.

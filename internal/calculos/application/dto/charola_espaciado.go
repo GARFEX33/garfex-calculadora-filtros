@@ -31,10 +31,11 @@ func (i CharolaEspaciadoInput) Validate() error {
 
 // CharolaEspaciadoOutput representa el resultado del cálculo de charola con espaciado.
 type CharolaEspaciadoOutput struct {
-	Tipo           string  `json:"tipo"`
-	Tamano         string  `json:"tamano"`
-	TamanoPulgadas string  `json:"tamano_pulgadas"`
-	AnchoRequerido float64 `json:"ancho_requerido_mm"`
+	Tipo             string  `json:"tipo"`
+	Tamano           string  `json:"tamano"`
+	TamanoPulgadas   string  `json:"tamano_pulgadas"`
+	AnchoRequerido   float64 `json:"ancho_requerido_mm"`
+	AnchoComercialMM float64 `json:"ancho_comercial_mm"`
 
 	// Valores intermedios del desarrollo — para mostrar en memoria de cálculo
 	DiametroFaseMM    float64  `json:"diametro_fase_mm"`
