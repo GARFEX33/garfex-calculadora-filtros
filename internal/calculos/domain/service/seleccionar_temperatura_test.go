@@ -63,13 +63,13 @@ func TestSeleccionarTemperatura_OverrideTomaPrecedencia(t *testing.T) {
 }
 
 func TestSeleccionarTemperatura_CorrienteExacta100A(t *testing.T) {
-	// Corriente exactamente 100A → <=100A → 60°C en tubería
+	// Corriente exactamente 100A → >=100A → 75°C en tubería (boundary)
 	corriente, err := valueobject.NewCorriente(100.0)
 	require.NoError(t, err)
 
 	temp := service.SeleccionarTemperatura(corriente, entity.TipoCanalizacionTuberiaPVC, nil)
 
-	assert.Equal(t, valueobject.Temp60, temp)
+	assert.Equal(t, valueobject.Temp75, temp)
 }
 
 func TestSeleccionarTemperatura_CorrienteExacta100AEnCharolaTriangular(t *testing.T) {

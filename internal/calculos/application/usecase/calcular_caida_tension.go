@@ -31,7 +31,7 @@ func (uc *CalcularCaidaTensionUseCase) Execute(
 	ctx context.Context,
 	calibre string,
 	material valueobject.MaterialConductor,
-	corrienteAjustada valueobject.Corriente,
+	corrienteNominal valueobject.Corriente,
 	longitudCircuito float64,
 	tension valueobject.Tension,
 	limiteCaida float64,
@@ -59,7 +59,7 @@ func (uc *CalcularCaidaTensionUseCase) Execute(
 
 	resultadoCaida, err := service.CalcularCaidaTension(
 		entradaCaida,
-		corrienteAjustada,
+		corrienteNominal,
 		longitudCircuito,
 		tension,
 		limiteCaida,
@@ -74,5 +74,7 @@ func (uc *CalcularCaidaTensionUseCase) Execute(
 		Cumple:           resultadoCaida.Cumple,
 		LimitePorcentaje: limiteCaida,
 		Impedancia:       resultadoCaida.Impedancia,
+		Resistencia:      resultadoCaida.Resistencia,
+		Reactancia:       resultadoCaida.Reactancia,
 	}, nil
 }

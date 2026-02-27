@@ -44,22 +44,22 @@ func TestCalcularAreaPorTubo_SingleTube(t *testing.T) {
 }
 
 func TestCalcularAreaPorTubo_MultipleTubes(t *testing.T) {
-	// 6 fases, 2 neutros, 1 tierra en 2 tubos
+	// 6 fases, 2 neutros, 2 tierras (1 por tubo) en 2 tubos
 	// fases por tubo: 6/2 = 3 → 3 × 86 = 258
 	// neutros por tubo: 2/2 = 1 → 1 × 86 = 86
-	// tierras por tubo: 1 × 17.09 × 2 = 34.18 (NO se divide)
-	// total por tubo: 258 + 86 + 34.18 = 378.18
+	// tierras por tubo: 2/2 = 1 → 1 × 17.09 = 17.09
+	// total por tubo: 258 + 86 + 17.09 = 361.09
 	area := service.CalcularAreaPorTubo(
 		6, // fases
 		2, // neutros
-		1, // tierras
+		2, // tierras (1 por tubo × 2 tubos)
 		86.0,
 		86.0,
 		17.09,
 		2, // 2 tuberías
 	)
 
-	expected := 378.18
+	expected := 361.09 // same as single tube — 1 tierra per tube
 	assert.InDelta(t, expected, area, 0.01)
 }
 

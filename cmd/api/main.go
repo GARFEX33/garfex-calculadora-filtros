@@ -13,14 +13,18 @@ import (
 	"github.com/joho/godotenv"
 
 	"github.com/garfex/calculadora-filtros/internal/calculos/application/usecase"
+	calculosport "github.com/garfex/calculadora-filtros/internal/calculos/application/port"
 	"github.com/garfex/calculadora-filtros/internal/calculos/infrastructure"
 	"github.com/garfex/calculadora-filtros/internal/calculos/infrastructure/adapter/driven/csv"
 	calculospostgres "github.com/garfex/calculadora-filtros/internal/calculos/infrastructure/adapter/driven/postgres"
+	calcmock "github.com/garfex/calculadora-filtros/internal/calculos/infrastructure/adapter/driven/mock"
 
 	equiposusecase "github.com/garfex/calculadora-filtros/internal/equipos/application/usecase"
+	equiposport "github.com/garfex/calculadora-filtros/internal/equipos/application/port"
 	equiposinfra "github.com/garfex/calculadora-filtros/internal/equipos/infrastructure"
 	equipospostgres "github.com/garfex/calculadora-filtros/internal/equipos/infrastructure/adapter/driven/postgres"
 	equipohttp "github.com/garfex/calculadora-filtros/internal/equipos/infrastructure/adapter/driver/http"
+	mockequipos "github.com/garfex/calculadora-filtros/internal/equipos/infrastructure/adapter/driven/mock"
 	sharedpostgres "github.com/garfex/calculadora-filtros/internal/shared/infrastructure/postgres"
 )
 
@@ -30,6 +34,15 @@ func main() {
 		log.Println("Archivo .env no encontrado, usando variables de entorno del sistema")
 	}
 
+	// ─── Configuración de modo mock ─────────────────────────────────────────────
+	mockMode := os.Getenv("MOCK_MODE") == "true"
+	environment := os.Getenv("ENVIRONMENT")
+
+	// Validación de seguridad: MOCK_MODE no permitido en producción
+	if mockMode && environment == "production" {
+		log.Fatal("❌ MOCK_MODE no está permitido en entorno de producción")
+	}
+
 	// ─── Tablas NOM (CSV) ─────────────────────────────────────────────────────
 
 	tablaRepo, err := csv.NewCSVTablaNOMRepository("data/tablas_nom")
@@ -37,28 +50,35 @@ func main() {
 		log.Fatalf("Error cargando tablas NOM: %v", err)
 	}
 
-	// ─── PostgreSQL: pool compartido ──────────────────────────────────────────
-	// El pool se inicializa primero para que tanto equipos como calculos
-	// puedan compartirlo sin duplicar conexiones.
+	// ─── Repositorios: PostgreSQL o Mock según MOCK_MODE ─────────────────────
+	// En MOCK_MODE=true no se intenta conectar a PostgreSQL. Ambos repositorios
+	// (equipos y cálculos) usan implementaciones en memoria.
 
-	dbCfg, err := sharedpostgres.LoadDBConfigFromEnv()
-	if err != nil {
-		log.Fatalf("Error cargando configuración de base de datos: %v", err)
+	var calcEquipoRepo calculosport.EquipoRepository
+	var equipoFiltroRepo equiposport.EquipoFiltroRepository
+
+	if mockMode {
+		log.Println("⚠️  MOCK_MODE activo — usando repositorios en memoria (sin PostgreSQL)")
+		calcEquipoRepo = calcmock.NewCalcEquipoMockRepository()
+		equipoFiltroRepo = mockequipos.NewMockEquipoFiltroRepository()
+	} else {
+		dbCfg, err := sharedpostgres.LoadDBConfigFromEnv()
+		if err != nil {
+			log.Fatalf("Error cargando configuración de base de datos: %v", err)
+		}
+
+		pool, err := equipospostgres.NewPool(dbCfg)
+		if err != nil {
+			log.Fatalf("Error conectando a PostgreSQL: %v", err)
+		}
+		defer pool.Close()
+		log.Printf("✅ Conectado a PostgreSQL en %s:%s", dbCfg.Host, dbCfg.Port)
+
+		calcEquipoRepo = calculospostgres.NewCalcEquipoFiltroRepository(pool)
+		equipoFiltroRepo = equipospostgres.NewPostgresEquipoFiltroRepository(pool)
 	}
 
-	pool, err := equipospostgres.NewPool(dbCfg)
-	if err != nil {
-		log.Fatalf("Error conectando a PostgreSQL: %v", err)
-	}
-	defer pool.Close()
-	log.Printf("Conectado a PostgreSQL en %s:%s", dbCfg.Host, dbCfg.Port)
-
-	// ─── Calculos: repositorios y use cases ──────────────────────────────────
-	// CalcEquipoFiltroRepository comparte el pool de equipos.
-	// Implementa calculos/port.EquipoRepository: busca por clave y mapea
-	// TipoFiltro (A/KVA/KVAR) a la entidad de cálculo correcta.
-
-	calcEquipoRepo := calculospostgres.NewCalcEquipoFiltroRepository(pool)
+	// ─── Calculos: use cases ──────────────────────────────────────────────────
 
 	calcularCorrienteUC := usecase.NewCalcularCorrienteUseCase(calcEquipoRepo)
 	ajustarCorrienteUC := usecase.NewAjustarCorrienteUseCase(tablaRepo)
@@ -69,6 +89,7 @@ func main() {
 	calcularCharolaEspaciadoUC := usecase.NewCalcularCharolaEspaciadoUseCase(tablaRepo)
 	calcularCharolaTriangularUC := usecase.NewCalcularCharolaTriangularUseCase(tablaRepo)
 	calcularCaidaTensionUC := usecase.NewCalcularCaidaTensionUseCase(tablaRepo)
+	seleccionarConductorCaidaTensionUC := usecase.NewSeleccionarConductorPorCaidaTensionUseCase(calcularCaidaTensionUC, tablaRepo)
 
 	orquestadorMemoriaUC := usecase.NewOrquestadorMemoriaCalculoUseCase(
 		calcularCorrienteUC,
@@ -78,12 +99,11 @@ func main() {
 		calcularCharolaEspaciadoUC,
 		calcularCharolaTriangularUC,
 		calcularCaidaTensionUC,
+		seleccionarConductorCaidaTensionUC,
 		tablaRepo,
 	)
 
-	// ─── Equipos: repositorio + use cases ────────────────────────────────────
-
-	equipoFiltroRepo := equipospostgres.NewPostgresEquipoFiltroRepository(pool)
+	// ─── Equipos: use cases ───────────────────────────────────────────────────
 
 	crearEquipoUC := equiposusecase.NewCrearEquipoUseCase(equipoFiltroRepo)
 	obtenerEquipoUC := equiposusecase.NewObtenerEquipoUseCase(equipoFiltroRepo)

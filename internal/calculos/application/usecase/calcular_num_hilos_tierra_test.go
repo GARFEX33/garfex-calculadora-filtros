@@ -35,7 +35,7 @@ func TestCalcularNumHilosTierra(t *testing.T) {
 			expected:         1,
 		},
 
-		// Casos de Tubería PVC - ≤2 tubos = 1 hilo, >2 tubos = 2 hilos
+		// Casos de Tubería PVC - 1 hilo de tierra por tubo (regla NOM)
 		{
 			name:             "TuberiaPVC_1tubo_retorna1",
 			tipoCanalizacion: entity.TipoCanalizacionTuberiaPVC,
@@ -43,28 +43,28 @@ func TestCalcularNumHilosTierra(t *testing.T) {
 			expected:         1,
 		},
 		{
-			name:             "TuberiaPVC_2tubos_retorna1",
+			name:             "TuberiaPVC_2tubos_retorna2",
 			tipoCanalizacion: entity.TipoCanalizacionTuberiaPVC,
 			numTuberias:      2,
-			expected:         1,
+			expected:         2,
 		},
 		{
-			name:             "TuberiaPVC_3tubos_retorna2",
+			name:             "TuberiaPVC_3tubos_retorna3",
 			tipoCanalizacion: entity.TipoCanalizacionTuberiaPVC,
 			numTuberias:      3,
-			expected:         2,
+			expected:         3,
 		},
 		{
-			name:             "TuberiaPVC_4tubos_retorna2",
+			name:             "TuberiaPVC_4tubos_retorna4",
 			tipoCanalizacion: entity.TipoCanalizacionTuberiaPVC,
 			numTuberias:      4,
-			expected:         2,
+			expected:         4,
 		},
 		{
-			name:             "TuberiaPVC_100tubos_retorna2",
+			name:             "TuberiaPVC_100tubos_retorna100",
 			tipoCanalizacion: entity.TipoCanalizacionTuberiaPVC,
 			numTuberias:      100,
-			expected:         2,
+			expected:         100,
 		},
 
 		// Casos de Tubería Aluminio
@@ -75,10 +75,10 @@ func TestCalcularNumHilosTierra(t *testing.T) {
 			expected:         1,
 		},
 		{
-			name:             "TuberiaAluminio_3tubos_retorna2",
+			name:             "TuberiaAluminio_3tubos_retorna3",
 			tipoCanalizacion: entity.TipoCanalizacionTuberiaAluminio,
 			numTuberias:      3,
-			expected:         2,
+			expected:         3,
 		},
 
 		// Casos de Tubería Acero PG
@@ -89,10 +89,10 @@ func TestCalcularNumHilosTierra(t *testing.T) {
 			expected:         1,
 		},
 		{
-			name:             "TuberiaAceroPG_3tubos_retorna2",
+			name:             "TuberiaAceroPG_3tubos_retorna3",
 			tipoCanalizacion: entity.TipoCanalizacionTuberiaAceroPG,
 			numTuberias:      3,
-			expected:         2,
+			expected:         3,
 		},
 
 		// Casos de Tubería Acero PD
@@ -103,10 +103,10 @@ func TestCalcularNumHilosTierra(t *testing.T) {
 			expected:         1,
 		},
 		{
-			name:             "TuberiaAceroPD_3tubos_retorna2",
+			name:             "TuberiaAceroPD_3tubos_retorna3",
 			tipoCanalizacion: entity.TipoCanalizacionTuberiaAceroPD,
 			numTuberias:      3,
-			expected:         2,
+			expected:         3,
 		},
 
 		// Casos con valores inválidos (0 o negativos) - default a 1

@@ -412,35 +412,90 @@ func (uc *OrquestadorMemoriaCalculoUseCase) Execute(
 func (uc *OrquestadorMemoriaCalculoUseCase) generarObservaciones(memoria dto.MemoriaOutput) []string {
 	var obs []string
 
-	// Observation about voltage drop
+	// 1. Caída de tensión
 	if memoria.CaidaTension.Cumple {
-		obs = append(obs, fmt.Sprintf("La caída de tensión (%.2f%%) cumple con el límite de %.1f%%",
-			memoria.CaidaTension.Porcentaje, memoria.CaidaTension.LimitePorcentaje))
+		obs = append(obs, fmt.Sprintf(
+			"La caída de tensión (%.2f%%) cumple con el límite de %.1f%%",
+			memoria.CaidaTension.Porcentaje, memoria.CaidaTension.LimitePorcentaje,
+		))
 	} else {
-		obs = append(obs, fmt.Sprintf("ADVERTENCIA: La caída de tensión (%.2f%%) excede el límite de %.1f%%. Considere aumentar el calibre del conductor.",
-			memoria.CaidaTension.Porcentaje, memoria.CaidaTension.LimitePorcentaje))
+		obs = append(obs, fmt.Sprintf(
+			"ADVERTENCIA: La caída de tensión (%.2f%%) excede el límite de %.1f%%. Considere aumentar el calibre del conductor.",
+			memoria.CaidaTension.Porcentaje, memoria.CaidaTension.LimitePorcentaje,
+		))
 	}
 
-	// Observation about conductor selection
-	obs = append(obs, fmt.Sprintf("Conductor de alimentación: %s %s (%s, %.2f mm²)",
-		memoria.ConductorAlimentacion.Material,
-		memoria.ConductorAlimentacion.Calibre,
-		memoria.ConductorAlimentacion.TipoAislamiento,
-		memoria.ConductorAlimentacion.SeccionMM2))
+	// 2. Conductor de alimentación — con hilos en paralelo si aplica
+	hilosFase := memoria.HilosPorFase
+	if hilosFase <= 0 {
+		hilosFase = 1
+	}
+	if hilosFase > 1 {
+		obs = append(obs, fmt.Sprintf(
+			"Conductor de alimentación: %s %s (%s, %.2f mm²) — %d hilos por fase en paralelo",
+			memoria.ConductorAlimentacion.Material,
+			memoria.ConductorAlimentacion.Calibre,
+			memoria.ConductorAlimentacion.TipoAislamiento,
+			memoria.ConductorAlimentacion.SeccionMM2,
+			hilosFase,
+		))
+	} else {
+		obs = append(obs, fmt.Sprintf(
+			"Conductor de alimentación: %s %s (%s, %.2f mm²)",
+			memoria.ConductorAlimentacion.Material,
+			memoria.ConductorAlimentacion.Calibre,
+			memoria.ConductorAlimentacion.TipoAislamiento,
+			memoria.ConductorAlimentacion.SeccionMM2,
+		))
+	}
 
-	// Observation about ground conductor
-	obs = append(obs, fmt.Sprintf("Conductor de tierra: %s %s (%.2f mm²)",
-		memoria.ConductorTierra.Material,
-		memoria.ConductorTierra.Calibre,
-		memoria.ConductorTierra.SeccionMM2))
+	// 3. Conductor de tierra — con cantidad de hilos si hay múltiples tubos
+	// NumHilos es int (no puntero); valor 0 se trata como 1 (un conductor)
+	numHilosTierra := memoria.ConductorTierra.NumHilos
+	if numHilosTierra <= 0 {
+		numHilosTierra = 1
+	}
+	if numHilosTierra > 1 {
+		obs = append(obs, fmt.Sprintf(
+			"Conductor de tierra: %s %s (%.2f mm²) — %d conductores",
+			memoria.ConductorTierra.Material,
+			memoria.ConductorTierra.Calibre,
+			memoria.ConductorTierra.SeccionMM2,
+			numHilosTierra,
+		))
+	} else {
+		obs = append(obs, fmt.Sprintf(
+			"Conductor de tierra: %s %s (%.2f mm²)",
+			memoria.ConductorTierra.Material,
+			memoria.ConductorTierra.Calibre,
+			memoria.ConductorTierra.SeccionMM2,
+		))
+	}
 
-	// Observation about canalization
-	obs = append(obs, fmt.Sprintf("Canalización recomendada: %s", memoria.Canalizacion.Tamano))
+	// 4. Canalización — con número de tubos si hay más de uno
+	numTubos := memoria.Canalizacion.NumeroDeTubos
+	if numTubos <= 0 {
+		numTubos = 1
+	}
+	if numTubos > 1 {
+		obs = append(obs, fmt.Sprintf(
+			"Canalización: %d tubos de %s",
+			numTubos,
+			memoria.Canalizacion.Tamano,
+		))
+	} else {
+		obs = append(obs, fmt.Sprintf(
+			"Canalización: %s",
+			memoria.Canalizacion.Tamano,
+		))
+	}
 
-	// Observation about factors
+	// 5. Factores aplicados (solo si hay corrección significativa)
 	if memoria.FactorTotalAjuste < 1.0 {
-		obs = append(obs, fmt.Sprintf("Factores aplicados: Temperatura=%.2f, Agrupamiento=%.2f, Uso=%.2f",
-			memoria.FactorTemperatura, memoria.FactorAgrupamiento, memoria.FactorTotalAjuste))
+		obs = append(obs, fmt.Sprintf(
+			"Factores aplicados: Temperatura=%.2f, Agrupamiento=%.2f, Uso=%.2f",
+			memoria.FactorTemperatura, memoria.FactorAgrupamiento, memoria.FactorTotalAjuste,
+		))
 	}
 
 	return obs

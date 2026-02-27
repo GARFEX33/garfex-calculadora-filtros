@@ -94,7 +94,7 @@ type EquipoInput struct {
 	// DATOS DE INSTALACIÓN (comunes a todos los modos)
 	// ═══════════════════════════════════════════════════════════════════════
 	Tension               float64  // Voltaje de referencia para cálculos
-	TensionUnidad         string   // "V" o "kV" (default: "V")
+	TensionUnidad         string   `json:"tension_unidad"` // "V" o "kV" (default: "V")
 	TipoCanalizacion      string   // "TUBERIA_PVC", "CHAROLA_CABLE_ESPACIADO", etc.
 	TemperaturaOverride   *int     // nil = usar lógica por defecto
 	HilosPorFase          int      // default: 1
@@ -241,6 +241,9 @@ func (e *EquipoInput) ApplyDefaults() {
 	}
 	if e.TensionUnidad == "" {
 		e.TensionUnidad = "V"
+	}
+	if e.FactorPotencia <= 0 {
+		e.FactorPotencia = 1.0
 	}
 }
 

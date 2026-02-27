@@ -9,8 +9,8 @@ import (
 // SeleccionarTemperatura determines the temperature column according to NOM rules.
 //
 // Rules per NOM-001-SEDE-2012:
-// - Corriente <= 100A -> 60°C (or 75°C if charola triangular without 60°C column)
-// - Corriente > 100A -> 75°C
+// - Corriente < 100A -> 60°C (or 75°C if charola triangular without 60°C column)
+// - Corriente >= 100A -> 75°C
 // - If temperaturaOverride is provided, it takes precedence
 func SeleccionarTemperatura(
 	corriente valueobject.Corriente,
@@ -23,14 +23,14 @@ func SeleccionarTemperatura(
 	}
 
 	// NOM rules based on current
-	if corriente.Valor() <= 100 {
-		// <= 100A -> 60°C (or 75°C if charola triangular)
+	if corriente.Valor() < 100 {
+		// < 100A -> 60°C (or 75°C if charola triangular)
 		if tipoCanalizacion == entity.TipoCanalizacionCharolaCableTriangular {
 			return valueobject.Temp75
 		}
 		return valueobject.Temp60
 	}
 
-	// > 100A -> 75°C
+	// >= 100A -> 75°C
 	return valueobject.Temp75
 }

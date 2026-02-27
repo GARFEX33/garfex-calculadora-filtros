@@ -87,6 +87,18 @@ func NewTension(valor float64, unidad string) (Tension, error) {
 	return Tension{valor: volts, unidad: unidadParsed}, nil
 }
 
+// NewTensionInterna crea un value object Tension para uso INTERNO en cálculos.
+// A diferencia de NewTension, NO valida contra la lista de voltajes NOM.
+// Usar exclusivamente para tensiones derivadas de conversiones matemáticas
+// (ej: Vfn→Vff o Vff→Vfn durante el cálculo de caída de tensión).
+// Solo verifica que el valor sea mayor que cero.
+func NewTensionInterna(valor float64) (Tension, error) {
+	if valor <= 0 {
+		return Tension{}, fmt.Errorf("%w: valor debe ser mayor que cero", ErrVoltajeInvalido)
+	}
+	return Tension{valor: int(math.Round(valor)), unidad: UnidadTensionV}, nil
+}
+
 func (t Tension) Valor() int            { return t.valor }
 func (t Tension) Unidad() UnidadTension { return t.unidad }
 

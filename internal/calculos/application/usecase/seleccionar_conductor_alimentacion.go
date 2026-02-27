@@ -56,13 +56,8 @@ func (uc *SeleccionarConductorAlimentacionUseCase) Execute(
 		hilosPorFase = 1
 	}
 
-	// 3. Determinar temperatura (input o regla NOM)
-	var temperatura valueobject.Temperatura
-	if input.Temperatura != nil {
-		temperatura = valueobject.Temperatura(*input.Temperatura)
-	} else {
-		temperatura = service.SeleccionarTemperatura(corrienteAjustada, tipoCanalizacion, nil)
-	}
+	// 3. Determinar temperatura siempre por regla NOM
+	temperatura := service.SeleccionarTemperatura(corrienteAjustada, tipoCanalizacion, nil)
 
 	// 4. Obtener tabla de ampacidad
 	tablaAmpacidad, err := uc.tablaRepo.ObtenerTablaAmpacidad(ctx, tipoCanalizacion, material, temperatura)

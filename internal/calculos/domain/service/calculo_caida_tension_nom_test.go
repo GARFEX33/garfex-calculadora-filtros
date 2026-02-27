@@ -72,11 +72,11 @@ func TestCalcularCaidaTension_VoltajesNOMReales(t *testing.T) {
 			tipoVoltaje:               entity.TipoVoltajeFaseNeutro,
 			voltajeIngresado:          127,
 			voltajeReferenciaEsperado: 127.0,
-			factor:                    "2",
-			// e = 2 × 70 × 0.62251 × 0.030 = 2.6145 V
-			// %e = 2.6145 / 127 × 100 = 2.059%
-			expectedPorcentaje: 2.059,
-			expectedCaida:      2.6145,
+			factor:                    "1",
+			// e = 1 × 70 × 0.62251 × 0.030 = 1.3073 V
+			// %e = 1.3073 / 127 × 100 = 1.029%
+			expectedPorcentaje: 1.029,
+			expectedCaida:      1.3073,
 		},
 		{
 			name:                      "DELTA - usuario ingresa Vff 220V",
@@ -107,23 +107,23 @@ func TestCalcularCaidaTension_VoltajesNOMReales(t *testing.T) {
 			sistema:                   entity.SistemaElectricoEstrella,
 			tipoVoltaje:               entity.TipoVoltajeFaseNeutro,
 			voltajeIngresado:          127,
-			voltajeReferenciaEsperado: 127.0,
+			voltajeReferenciaEsperado: 220.0, // se convierte a Vff
 			factor:                    "√3",
 			// e = √3 × 70 × 0.62251 × 0.030 = 2.264 V
-			// %e = 2.264 / 127 × 100 = 1.783%
-			expectedPorcentaje: 1.783,
+			// %e = 2.264 / 220 × 100 = 1.029%
+			expectedPorcentaje: 1.029,
 			expectedCaida:      2.264,
 		},
 		{
-			name:                      "ESTRELLA - usuario ingresa Vff 220V (se convierte a Vfn 127V)",
+			name:                      "ESTRELLA - usuario ingresa Vff 220V",
 			sistema:                   entity.SistemaElectricoEstrella,
 			tipoVoltaje:               entity.TipoVoltajeFaseFase,
 			voltajeIngresado:          220,
-			voltajeReferenciaEsperado: 127.0, // 220 / √3
+			voltajeReferenciaEsperado: 220.0,
 			factor:                    "√3",
 			// e = √3 × 70 × 0.62251 × 0.030 = 2.264 V
-			// %e = 2.264 / 127 × 100 = 1.783%
-			expectedPorcentaje: 1.783,
+			// %e = 2.264 / 220 × 100 = 1.029%
+			expectedPorcentaje: 1.029,
 			expectedCaida:      2.264,
 		},
 	}
@@ -156,53 +156,73 @@ func TestCalcularCaidaTension_VoltajesNOMReales(t *testing.T) {
 }
 
 // TestCalcularCaidaTension_RelacionesSistemas verifica las relaciones matemáticas
-// entre sistemas cuando todos usan el mismo voltaje de referencia.
+// entre sistemas eléctricos.
 //
-// IMPORTANTE: Estas relaciones solo son válidas cuando se compara con el mismo
-// voltaje de REFERENCIA (Vfn para MONOFASICO/BIFASICO/ESTRELLA, Vff para DELTA).
+// IMPORTANTE: Las relaciones dependen del factor y voltaje de referencia:
+//   - MONOFASICO: factor=2, Vref=Vfn
+//   - BIFASICO: factor=1, Vref=Vfn
+//   - ESTRELLA: factor=√3, Vref=Vff
+//   - DELTA: factor=√3, Vref=Vff
+//
 // La fórmula usa impedancia efectiva Zef = R·cosθ + X·senθ.
 func TestCalcularCaidaTension_RelacionesSistemas(t *testing.T) {
 	corriente, _ := valueobject.NewCorriente(70.0)
 
-	// Caso 1: Sistemas que usan Vfn (127V)
-	sistemasVfn := []struct {
-		nombre  string
-		sistema entity.SistemaElectrico
-		factor  float64
-	}{
-		{"MONOFASICO", entity.SistemaElectricoMonofasico, 2.0},
-		{"BIFASICO", entity.SistemaElectricoBifasico, 1.0},
-		{"ESTRELLA", entity.SistemaElectricoEstrella, 1.0},
+	// Caso 1: MONOFASICO usa Vfn (127V)
+	entradaMonofasico := service.EntradaCalculoCaidaTension{
+		ResistenciaOhmPorKm: 0.62,
+		ReactanciaOhmPorKm:  0.148,
+		TipoCanalizacion:    entity.TipoCanalizacionTuberiaPVC,
+		SistemaElectrico:    entity.SistemaElectricoMonofasico,
+		TipoVoltaje:         entity.TipoVoltajeFaseNeutro,
+		HilosPorFase:        1,
+		FactorPotencia:      0.9,
 	}
 
-	resultadosVfn := make(map[string]float64)
-	for _, s := range sistemasVfn {
-		entrada := service.EntradaCalculoCaidaTension{
-			ResistenciaOhmPorKm: 0.62,
-			ReactanciaOhmPorKm:  0.148,
-			TipoCanalizacion:    entity.TipoCanalizacionTuberiaPVC,
-			SistemaElectrico:    s.sistema,
-			TipoVoltaje:         entity.TipoVoltajeFaseNeutro,
-			HilosPorFase:        1,
-			FactorPotencia:      0.9,
-		}
+	tensionMonofasico, _ := valueobject.NewTension(127, "V") // Vfn
+	resultadoMonofasico, err := service.CalcularCaidaTension(entradaMonofasico, corriente, 30.0, tensionMonofasico, 3.0)
+	require.NoError(t, err)
 
-		tension, _ := valueobject.NewTension(127, "V") // Vfn
-		resultado, err := service.CalcularCaidaTension(entrada, corriente, 30.0, tension, 3.0)
-		require.NoError(t, err)
-		resultadosVfn[s.nombre] = resultado.Porcentaje
+	// MONOFASICO: factor=2, Vref=127 → %e = 2.059%
+	assert.InDelta(t, 2.059, resultadoMonofasico.Porcentaje, 0.01, "MONOFASICO")
+
+	// Caso 2: BIFASICO usa Vfn (127V)
+	entradaBifasico := service.EntradaCalculoCaidaTension{
+		ResistenciaOhmPorKm: 0.62,
+		ReactanciaOhmPorKm:  0.148,
+		TipoCanalizacion:    entity.TipoCanalizacionTuberiaPVC,
+		SistemaElectrico:    entity.SistemaElectricoBifasico,
+		TipoVoltaje:         entity.TipoVoltajeFaseNeutro,
+		HilosPorFase:        1,
+		FactorPotencia:      0.9,
 	}
 
-	// Las relaciones entre sistemas dependen de los factores y voltajes de referencia:
-	// - MONOFASICO: factor=2, Vref=Vfn
-	// - BIFASICO: factor=2, Vref=Vfn
-	// - ESTRELLA: factor=√3, Vref=Vfn
-	// - DELTA: factor=√3, Vref=Vff
-	// Con mismo voltaje de referencia (Vfn=127V):
-	// MONOFASICO y BIFASICO dan igual resultado (mismo factor)
-	// ESTRELLA = MONOFASICO/√3 = 2.059/1.732 = 1.189 ≈ 1.188 (el valor exacto)
+	tensionBifasico, _ := valueobject.NewTension(127, "V") // Vfn
+	resultadoBifasico, err := service.CalcularCaidaTension(entradaBifasico, corriente, 30.0, tensionBifasico, 3.0)
+	require.NoError(t, err)
 
-	// Caso 2: Sistema DELTA usa Vff (220V)
+	// BIFASICO: factor=1, Vref=127 → %e = 1.029%
+	assert.InDelta(t, 1.029, resultadoBifasico.Porcentaje, 0.01, "BIFASICO")
+
+	// Caso 3: ESTRELLA usa Vff (220V)
+	entradaEstrella := service.EntradaCalculoCaidaTension{
+		ResistenciaOhmPorKm: 0.62,
+		ReactanciaOhmPorKm:  0.148,
+		TipoCanalizacion:    entity.TipoCanalizacionTuberiaPVC,
+		SistemaElectrico:    entity.SistemaElectricoEstrella,
+		TipoVoltaje:         entity.TipoVoltajeFaseFase,
+		HilosPorFase:        1,
+		FactorPotencia:      0.9,
+	}
+
+	tensionEstrella, _ := valueobject.NewTension(220, "V") // Vff
+	resultadoEstrella, err := service.CalcularCaidaTension(entradaEstrella, corriente, 30.0, tensionEstrella, 3.0)
+	require.NoError(t, err)
+
+	// ESTRELLA: factor=√3, Vref=220 → %e = 1.029%
+	assert.InDelta(t, 1.029, resultadoEstrella.Porcentaje, 0.01, "ESTRELLA")
+
+	// Caso 4: DELTA usa Vff (220V)
 	entradaDelta := service.EntradaCalculoCaidaTension{
 		ResistenciaOhmPorKm: 0.62,
 		ReactanciaOhmPorKm:  0.148,
@@ -217,11 +237,15 @@ func TestCalcularCaidaTension_RelacionesSistemas(t *testing.T) {
 	resultadoDelta, err := service.CalcularCaidaTension(entradaDelta, corriente, 30.0, tensionDelta, 3.0)
 	require.NoError(t, err)
 
-	// DELTA con Vff (220V) vs MONOFASICO con Vfn (127V)
-	// DELTA: factor √3, Vref = 220 → %e = 1.029%
-	// MONOFASICO: factor 2, Vref = 127 → %e = 2.059%
-	// Relación: %e_DELTA / %e_MONOFASICO = (√3/220) / (2/127) = (1.732/220) / (2/127) = 0.499 ≈ 0.5
-	assert.InDelta(t, resultadoDelta.Porcentaje, resultadosVfn["MONOFASICO"]/2, 0.01, "DELTA (con Vff) = MONOFASICO (con Vfn) / 2")
+	// DELTA: factor=√3, Vref=220 → %e = 1.029%
+	assert.InDelta(t, 1.029, resultadoDelta.Porcentaje, 0.01, "DELTA")
+
+	// Verificar relaciones:
+	// - BIFASICO = MONOFASICO / 2 (mismo Vref, factor 1 vs 2)
+	assert.InDelta(t, resultadoMonofasico.Porcentaje/2, resultadoBifasico.Porcentaje, 0.01, "BIFASICO = MONOFASICO/2")
+
+	// - ESTRELLA = DELTA (mismo factor √3 y mismo Vref=220)
+	assert.InDelta(t, resultadoDelta.Porcentaje, resultadoEstrella.Porcentaje, 0.01, "ESTRELLA = DELTA")
 }
 
 // TestCalcularCaidaTension_ConHilosPorFase verifica que múltiples hilos dividen R y X.
@@ -273,7 +297,7 @@ func TestCalcularCaidaTension_VoltajesUSA(t *testing.T) {
 		expectedCumple   bool
 	}{
 		{
-			name:             "ESTRELLA 480V-3F (usuario ingresa Vff, se convierte a Vfn 277V)",
+			name:             "ESTRELLA 480V-3F (usuario ingresa Vff, usa Vff directo)",
 			sistema:          entity.SistemaElectricoEstrella,
 			tipoVoltaje:      entity.TipoVoltajeFaseFase,
 			voltajeIngresado: 480,

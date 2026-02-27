@@ -20,8 +20,8 @@ var ErrHilosPorFaseInvalido = errors.New("hilos por fase debe ser mayor que cero
 // requerido por el sistema eléctrico según NOM-001-SEDE-2012.
 //
 // Reglas de conversión:
-//   - MONOFASICO, BIFASICO, ESTRELLA → requieren Vfn (fase-neutro)
-//   - DELTA → requiere Vff (fase-fase)
+//   - MONOFASICO, BIFASICO → requieren Vfn (fase-neutro)
+//   - ESTRELLA, DELTA → requieren Vff (fase-fase)
 //
 // Si el voltaje ingresado no coincide con el requerido, se convierte usando:
 //   - Vfn = Vff / √3
@@ -34,9 +34,9 @@ func calcularVoltajeReferencia(
 	// Determinar qué tipo de voltaje requiere el sistema
 	var requiereVfn bool
 	switch sistema {
-	case entity.SistemaElectricoMonofasico, entity.SistemaElectricoBifasico, entity.SistemaElectricoEstrella:
+	case entity.SistemaElectricoMonofasico, entity.SistemaElectricoBifasico:
 		requiereVfn = true
-	case entity.SistemaElectricoDelta:
+	case entity.SistemaElectricoDelta, entity.SistemaElectricoEstrella:
 		requiereVfn = false // requiere Vff
 	default:
 		// Sistema inválido, retornar voltaje sin conversión
@@ -83,7 +83,7 @@ type EntradaCalculoCaidaTension struct {
 //
 // Sistema Bifásico 2F-3H (Circuito Monofásico 3 hilos):
 //
-//	e = 2 × (I/N) × L × Zef
+//	e = (I/N) × L × Zef
 //	%e = (e / Vfn) × 100
 //
 // Sistema Trifásico Delta 3F-3H:
@@ -94,7 +94,7 @@ type EntradaCalculoCaidaTension struct {
 // Sistema Trifásico Estrella 3F-4H:
 //
 //	e = √3 × (I/N) × L × Zef
-//	%e = (e / Vfn) × 100
+//	%e = (e / Vff) × 100
 //
 // Where:
 //
@@ -136,7 +136,7 @@ func CalcularCaidaTension(
 	case entity.SistemaElectricoMonofasico:
 		factorSistema = 2.0 // Monofásico 1F-2H
 	case entity.SistemaElectricoBifasico:
-		factorSistema = 2.0 // Bifásico 2F-3H (dos fases, como monofásico)
+		factorSistema = 1.0 // Bifásico 2F-3H
 	case entity.SistemaElectricoDelta:
 		factorSistema = math.Sqrt(3) // Trifásico 3F-3H (Delta)
 	case entity.SistemaElectricoEstrella:
@@ -152,7 +152,7 @@ func CalcularCaidaTension(
 
 	// Step 5: Determine voltage reference based on electrical system and convert if needed
 	// According to NOM-001-SEDE-2012:
-	//   - MONOFASICO, BIFASICO, ESTRELLA → use Vfn (phase-to-neutral)
+	//   - MONOFASICO, BIFASICO → use Vfn; ESTRELLA, DELTA → use Vff (phase-to-neutral)
 	//   - DELTA → use Vff (phase-to-phase)
 	voltajeReferencia := calcularVoltajeReferencia(
 		float64(tension.Valor()),
