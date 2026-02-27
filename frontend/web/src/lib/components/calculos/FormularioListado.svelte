@@ -1,99 +1,83 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import { cn } from '$lib/utils';
-	import { listarEquipos } from '$lib/api/equipos';
 	import type { EquipoFiltro } from '$lib/types/equipos.types';
 
 	interface Props {
 		equipoSeleccionado: EquipoFiltro | undefined;
 		onEquipoChange: (equipo: EquipoFiltro | undefined) => void;
+		// Props para datos externos (en lugar de fetch interno)
+		equipos?: EquipoFiltro[];
+		totalEquipos?: number;
+		loading?: boolean;
+		error?: string | null;
+		onBusquedaChange?: (query: string) => void;
+		onPaginaChange?: (pagina: number) => void;
+		// Indica si los datos se proporcionan externamente
+		externalData?: boolean;
 	}
 
-	let { equipoSeleccionado = $bindable(), onEquipoChange }: Props = $props();
+	let {
+		equipoSeleccionado = $bindable(),
+		onEquipoChange,
+		equipos = [],
+		totalEquipos = 1,
+		loading = false,
+		error = null,
+		onBusquedaChange,
+		onPaginaChange,
+		externalData = false
+	}: Props = $props();
 
-	let equipos = $state<EquipoFiltro[]>([]);
-	let loading = $state(true);
-	let error = $state<string | null>(null);
+	// Estado local para búsqueda y paginación (si no hay datos externos)
 	let searchTerm = $state('');
 	let currentPage = $state(1);
 	let totalPages = $state(1);
-	let mounted = $state(false);
 
-	// Debounce timer for real-time search
-	let debounceTimer: ReturnType<typeof setTimeout> | null = null;
-
-	onMount(async () => {
-		await cargarEquipos();
-		mounted = true;
+	// Sincronizar totalPages cuando cambian los datos
+	$effect(() => {
+		if (totalEquipos > 0) {
+			totalPages = Math.ceil(totalEquipos / 20);
+		}
 	});
 
-	// Debounced search effect - triggers 300ms after searchTerm changes
-	$effect(() => {
-		// Skip effect during initial mount - equipos were already loaded
-		if (!mounted) return;
+	// Manejar búsqueda local (sin datos externos)
+	function handleSearchLocal() {
+		if (!externalData && onBusquedaChange) {
+			onBusquedaChange(searchTerm);
+		}
+	}
 
-		// Clear existing timer
+	// Manejar cambio de página local
+	function handlePreviousPage() {
+		if (!externalData && onPaginaChange && currentPage > 1) {
+			currentPage--;
+			onPaginaChange(currentPage);
+		}
+	}
+
+	function handleNextPage() {
+		if (!externalData && onPaginaChange && currentPage < totalPages) {
+			currentPage++;
+			onPaginaChange(currentPage);
+		}
+	}
+
+	// Debounce para búsqueda local
+	let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+
+	$effect(() => {
+		// Solo hacer debounce si no hay datos externos
+		if (externalData) return;
+
 		if (debounceTimer) {
 			clearTimeout(debounceTimer);
 		}
 
-		// Set new timer for debounced search
-		// The searchTerm dependency is implicitly tracked by accessing it in cargarEquipos
 		debounceTimer = setTimeout(() => {
-			// Access searchTerm to maintain reactivity tracking
 			void searchTerm;
-			cargarEquipos(1);
+			handleSearchLocal();
 		}, 300);
 	});
-
-	// Cleanup timer on unmount
-	onMount(() => {
-		return () => {
-			if (debounceTimer) {
-				clearTimeout(debounceTimer);
-			}
-		};
-	});
-
-	async function cargarEquipos(page = 1) {
-		loading = true;
-		error = null;
-		currentPage = page;
-
-		const params: { page: number; per_page: number; buscar?: string } = {
-			page,
-			per_page: 20
-		};
-		if (searchTerm) {
-			params.buscar = searchTerm;
-		}
-
-		const result = await listarEquipos(params);
-
-		if (result.ok) {
-			equipos = result.data.data.equipos;
-			totalPages = result.data.data.pagination.total_pages;
-		} else {
-			error = result.error.error || 'Error al cargar equipos';
-		}
-		loading = false;
-	}
-
-	async function handleSearch() {
-		await cargarEquipos(1);
-	}
-
-	async function handlePreviousPage() {
-		if (currentPage > 1) {
-			await cargarEquipos(currentPage - 1);
-		}
-	}
-
-	async function handleNextPage() {
-		if (currentPage < totalPages) {
-			await cargarEquipos(currentPage + 1);
-		}
-	}
 
 	function handleSelectEquipo(equipo: EquipoFiltro) {
 		onEquipoChange(equipo);
@@ -120,12 +104,12 @@
 			type="text"
 			placeholder="Buscar por clave (ej: 400, 48D)..."
 			bind:value={searchTerm}
-			onkeydown={(e) => e.key === 'Enter' && handleSearch()}
+			onkeydown={(e) => e.key === 'Enter' && handleSearchLocal()}
 			class="flex-1 rounded-md border border-input-border bg-input px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:outline-none"
 		/>
 		<button
 			type="button"
-			onclick={handleSearch}
+			onclick={handleSearchLocal}
 			class="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover"
 		>
 			Buscar
@@ -142,7 +126,7 @@
 			<p class="text-sm text-destructive">{error}</p>
 			<button
 				type="button"
-				onclick={() => cargarEquipos(currentPage)}
+				onclick={() => onPaginaChange?.(currentPage)}
 				class="rounded-md bg-secondary px-4 py-2 text-sm font-medium text-secondary-foreground transition-colors hover:bg-secondary/80"
 			>
 				Reintentar

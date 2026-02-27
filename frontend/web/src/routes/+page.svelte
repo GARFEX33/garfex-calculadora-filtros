@@ -1,42 +1,39 @@
 <script lang="ts">
-	import type {
-		ModoCalculo,
-		CalcularMemoriaRequest,
-		DatosEquipo,
-		SistemaElectrico,
-		TipoCanalizacion,
-		MaterialConductor,
-		TipoVoltaje
-	} from '$lib/types/calculos.types';
-	import type { EquipoFiltro } from '$lib/types/equipos.types';
+	import type { ModoCalculo } from '$lib/features/calculos/domain/types/memoria.types';
+	import type { EquipoFiltro } from '$lib/features/equipos/domain/types/equipo.types';
 	import type { FormularioManualData } from '$lib/components/calculos/FormularioManual.svelte';
 	import type { CamposInstalacionData } from '$lib/components/calculos/CamposInstalacion.svelte';
+	import type { DatosEquipo } from '$lib/features/calculos/domain/types/memoria.types';
 
 	import SelectorModo from '$lib/components/calculos/SelectorModo.svelte';
 	import FormularioManual from '$lib/components/calculos/FormularioManual.svelte';
 	import FormularioListado from '$lib/components/calculos/FormularioListado.svelte';
 	import CamposInstalacion from '$lib/components/calculos/CamposInstalacion.svelte';
 
-	import { calcularMemoria } from '$lib/api/calculos';
+	import { memoriaStore } from '$lib/features/calculos/application/stores/memoria.store.svelte';
+	import { equiposStore } from '$lib/features/equipos/application/stores/equipos.store.svelte';
+	import { mapConexionToSistemaElectrico, mapTipoVoltajeToTipoVoltaje } from '$lib/features/calculos/infrastructure/mappers/memoria.mapper';
 	import { goto } from '$app/navigation';
+	import { onMount } from 'svelte';
 
-	// ── Estado Principal ──────────────────────────────────────────────────────────
-	let modo = $state<ModoCalculo>('MANUAL_AMPERAJE');
+	// ── Estado Local (solo UI) ───────────────────────────────────────────────────
+	// Modo - se sincroniza con el store
+	let modo = $state<ModoCalculo>(memoriaStore.input.modo);
 
-	// Manual form data
+	// Datos del formulario manual (UI state)
 	let datosManual = $state<FormularioManualData>({
 		tipo_equipo: '',
 		amperaje_nominal: undefined,
 		potencia_nominal: undefined,
 		potencia_unidad: 'KW',
 		factor_potencia: undefined,
-		itm: undefined
+		itm: undefined,
+		tension: 220,
+		tipo_voltaje: 'FASE_NEUTRO',
+		sistema_electrico: ''
 	});
 
-	// Listado form data
-	let equipoSeleccionado = $state<EquipoFiltro | undefined>(undefined);
-
-	// Installation fields
+	// Datos de instalación (UI state)
 	let instalacion = $state<CamposInstalacionData>({
 		tension: undefined,
 		tension_unidad: 'V',
@@ -49,124 +46,26 @@
 		material: 'Cu',
 		hilos_por_fase: 1,
 		porcentaje_caida_maximo: 3.0,
-		temperatura_override: undefined
+		temperatura_override: undefined,
+		diametro_control_mm: undefined
 	});
 
-	// Submission state
-	let loading = $state(false);
-	let error = $state<string | undefined>(undefined);
+	// Equipo seleccionado en modo LISTADO
+	let equipoSeleccionado = $state<EquipoFiltro | undefined>(undefined);
 
-	// ── Derived Values ────────────────────────────────────────────────────────────
+	// ── Derived Values ───────────────────────────────────────────────────────────
 	let esModoManual = $derived(modo === 'MANUAL_AMPERAJE' || modo === 'MANUAL_POTENCIA');
 	let esModoListado = $derived(modo === 'LISTADO');
 
-	// ── Mapping Functions ──────────────────────────────────────────────────────────
-	// Maps equipment connection type to the expected format for installation
-	function mapearConexionASistemaElectrico(
-		conexion: string | null | undefined
-	): SistemaElectrico | '' {
-		if (!conexion) return '';
+	// Derived from store
+	let loading = $derived(memoriaStore.loading);
+	let error = $derived(memoriaStore.error);
 
-		const mapa: Record<string, SistemaElectrico> = {
-			DELTA: 'DELTA',
-			ESTRELLA: 'ESTRELLA',
-			MONOFASICO: 'MONOFASICO',
-			BIFASICO: 'BIFASICO'
-		};
-		return mapa[conexion] || '';
-	}
-
-	// Maps equipment voltage type to the expected format
-	function mapearTipoVoltaje(tipoVoltaje: string | null | undefined): TipoVoltaje | '' {
-		if (!tipoVoltaje) return '';
-
-		const mapa: Record<string, TipoVoltaje> = {
-			FF: 'FASE_FASE',
-			FN: 'FASE_NEUTRO'
-		};
-		return mapa[tipoVoltaje] || '';
-	}
-
-	// ── Build Request ─────────────────────────────────────────────────────────────
-	// Build CalcularMemoriaRequest from current state, only including optional fields with actual values
-	let request = $derived.by((): CalcularMemoriaRequest => {
-		const base: CalcularMemoriaRequest = {
-			modo,
-			tension: instalacion.tension ?? 0,
-			tension_unidad: instalacion.tension_unidad,
-			sistema_electrico: instalacion.sistema_electrico as SistemaElectrico,
-			estado: instalacion.estado,
-			tipo_canalizacion: instalacion.tipo_canalizacion as TipoCanalizacion,
-			longitud_circuito: instalacion.longitud_circuito ?? 0,
-			tipo_voltaje: instalacion.tipo_voltaje as TipoVoltaje,
-			material: instalacion.material as MaterialConductor,
-			hilos_por_fase: instalacion.hilos_por_fase,
-			porcentaje_caida_maximo: instalacion.porcentaje_caida_maximo
-		};
-
-		// Add optional fields only if they have values
-		if (equipoSeleccionado && modo === 'LISTADO') {
-			const equipo: DatosEquipo = {
-				clave: equipoSeleccionado.clave,
-				tipo: equipoSeleccionado.tipo,
-				voltaje: equipoSeleccionado.voltaje,
-				amperaje: equipoSeleccionado.amperaje,
-				itm: equipoSeleccionado.itm
-			};
-			// Only include bornes if it has a real value (null/undefined = omit)
-			if (equipoSeleccionado.bornes !== null && equipoSeleccionado.bornes !== undefined) {
-				equipo.bornes = equipoSeleccionado.bornes;
-			}
-			base.equipo = equipo;
-		}
-
-		if (modo === 'MANUAL_AMPERAJE' || modo === 'MANUAL_POTENCIA') {
-			if (datosManual.tipo_equipo) {
-				base.tipo_equipo = datosManual.tipo_equipo;
-			}
-
-			if (modo === 'MANUAL_AMPERAJE' && datosManual.amperaje_nominal !== undefined) {
-				base.amperaje_nominal = datosManual.amperaje_nominal;
-			}
-
-			if (modo === 'MANUAL_POTENCIA') {
-				if (datosManual.potencia_nominal !== undefined) {
-					base.potencia_nominal = datosManual.potencia_nominal;
-				}
-				if (datosManual.potencia_unidad) {
-					base.potencia_unidad = datosManual.potencia_unidad;
-				}
-				if (datosManual.factor_potencia !== undefined) {
-					base.factor_potencia = datosManual.factor_potencia;
-				}
-			}
-
-			if (datosManual.itm !== undefined) {
-				base.itm = datosManual.itm;
-			}
-		}
-
-		// Optional installation fields
-		if (instalacion.temperatura_override !== undefined) {
-			base.temperatura_override = instalacion.temperatura_override;
-		}
-
-		if (instalacion.diametro_control_mm !== undefined) {
-			base.diametro_control_mm = instalacion.diametro_control_mm;
-		}
-
-		// num_tuberias: only include if it has a value and is greater than 0
-		// (CHAROLA_* types don't show this field, so it will be undefined)
-		if (instalacion.num_tuberias !== undefined && instalacion.num_tuberias > 0) {
-			base.num_tuberias = instalacion.num_tuberias;
-		}
-
-		return base;
-	});
-
-	// ── Handlers ──────────────────────────────────────────────────────────────────
+	// ── Handlers ─────────────────────────────────────────────────────────────────
 	function handleModoChange(newModo: ModoCalculo) {
 		modo = newModo;
+		memoriaStore.actualizarInput({ modo: newModo });
+
 		// Reset incompatible data when switching modes
 		if (newModo === 'LISTADO') {
 			datosManual = {
@@ -175,7 +74,10 @@
 				potencia_nominal: undefined,
 				potencia_unidad: 'KW',
 				factor_potencia: undefined,
-				itm: undefined
+				itm: undefined,
+				tension: 220,
+				tipo_voltaje: 'FASE_NEUTRO',
+				sistema_electrico: ''
 			};
 		} else {
 			equipoSeleccionado = undefined;
@@ -184,7 +86,7 @@
 				tension: undefined,
 				tension_unidad: 'V',
 				sistema_electrico: '',
-				estado: instalacion.estado, // Keep estado as it's not equipment-specific
+				estado: instalacion.estado,
 				tipo_canalizacion: '',
 				num_tuberias: undefined,
 				longitud_circuito: undefined,
@@ -192,55 +94,148 @@
 				material: 'Cu',
 				hilos_por_fase: 1,
 				porcentaje_caida_maximo: 3.0,
-				temperatura_override: undefined
+				temperatura_override: undefined,
+				diametro_control_mm: undefined
 			};
 		}
 	}
 
 	function handleDatosManualChange(newDatos: FormularioManualData) {
 		datosManual = newDatos;
+
+		// Update store with manual-specific fields
+		const update: Record<string, number | string | undefined> = {
+			tension: newDatos.tension,
+			tipo_voltaje: newDatos.tipo_voltaje,
+			sistema_electrico: newDatos.sistema_electrico
+		};
+
+		if (newDatos.tipo_equipo) update['tipo_equipo'] = newDatos.tipo_equipo;
+		if (newDatos.amperaje_nominal !== undefined) update['amperaje_nominal'] = newDatos.amperaje_nominal;
+		if (newDatos.potencia_nominal !== undefined) update['potencia_nominal'] = newDatos.potencia_nominal;
+		if (newDatos.potencia_unidad) update['potencia_unidad'] = newDatos.potencia_unidad;
+		if (newDatos.factor_potencia !== undefined) update['factor_potencia'] = newDatos.factor_potencia;
+		if (newDatos.itm !== undefined) update['itm'] = newDatos.itm;
+
+		memoriaStore.actualizarInput(update as Parameters<typeof memoriaStore.actualizarInput>[0]);
 	}
 
 	function handleEquipoChange(equipo: EquipoFiltro | undefined) {
 		equipoSeleccionado = equipo;
 
-		// Auto-fill installation fields from selected equipment
 		if (equipo) {
+			// Auto-fill installation fields from selected equipment
+			const sistemaElectrico = mapConexionToSistemaElectrico(equipo.conexion);
+			const tipoVoltaje = mapTipoVoltajeToTipoVoltaje(equipo.tipo_voltaje);
+
 			instalacion = {
 				...instalacion,
 				tension: equipo.voltaje,
 				tension_unidad: 'V',
-				sistema_electrico: mapearConexionASistemaElectrico(equipo.conexion),
-				tipo_voltaje: mapearTipoVoltaje(equipo.tipo_voltaje)
+				sistema_electrico: sistemaElectrico ?? '',
+				tipo_voltaje: tipoVoltaje ?? ''
 			};
+
+			// Build equipment data for store
+			const equipoData: DatosEquipo = {
+				clave: equipo.clave,
+				tipo: equipo.tipo,
+				voltaje: equipo.voltaje,
+				amperaje: equipo.amperaje,
+				itm: equipo.itm
+			};
+			if (equipo.bornes !== undefined && equipo.bornes !== null) {
+				equipoData.bornes = equipo.bornes;
+			}
+
+			// Update store with equipment data (only include valid values)
+			const update: Parameters<typeof memoriaStore.actualizarInput>[0] = {
+				equipo: equipoData,
+				tension: equipo.voltaje
+			};
+
+			// Only add sistema_electrico and tipo_voltaje if they have valid values
+			if (sistemaElectrico) {
+				update['sistema_electrico'] = sistemaElectrico;
+			}
+			if (tipoVoltaje) {
+				update['tipo_voltaje'] = tipoVoltaje;
+			}
+
+			memoriaStore.actualizarInput(update);
+		} else {
+			// Clear equipment - use a empty object trick or just don't pass it
+			// Since we can't set to undefined with exactOptionalPropertyTypes,
+			// we need to reset the entire input for this mode
+			const currentInput = memoriaStore.input;
+			const { equipo: _, ...inputWithoutEquipo } = currentInput;
+			memoriaStore.input = inputWithoutEquipo;
 		}
 	}
 
 	function handleInstalacionChange(newDatos: CamposInstalacionData) {
 		instalacion = newDatos;
+
+		// Update store with installation fields
+		const update: Record<string, number | string | undefined> = {
+			tension: newDatos.tension ?? 0,
+			tension_unidad: newDatos.tension_unidad,
+			sistema_electrico: newDatos.sistema_electrico || undefined,
+			estado: newDatos.estado,
+			tipo_canalizacion: newDatos.tipo_canalizacion,
+			longitud_circuito: newDatos.longitud_circuito ?? 0,
+			tipo_voltaje: newDatos.tipo_voltaje || undefined,
+			material: newDatos.material,
+			hilos_por_fase: newDatos.hilos_por_fase,
+			porcentaje_caida_maximo: newDatos.porcentaje_caida_maximo
+		};
+
+		if (newDatos.temperatura_override !== undefined) {
+			update['temperatura_override'] = newDatos.temperatura_override;
+		}
+		if (newDatos.diametro_control_mm !== undefined) {
+			update['diametro_control_mm'] = newDatos.diametro_control_mm;
+		}
+		if (newDatos.num_tuberias !== undefined && newDatos.num_tuberias > 0) {
+			update['num_tuberias'] = newDatos.num_tuberias;
+		}
+
+		memoriaStore.actualizarInput(update as Parameters<typeof memoriaStore.actualizarInput>[0]);
 	}
 
 	async function handleSubmit(event: SubmitEvent) {
 		event.preventDefault();
-		loading = true;
-		error = undefined;
 
-		try {
-			const result = await calcularMemoria(request);
-			if (result.ok) {
-				// Redirect to results page with data (handle Unicode characters)
-				const jsonStr = JSON.stringify(result.data.data);
-				const encodedData = btoa(unescape(encodeURIComponent(jsonStr)));
-				goto(`/calculos/resultado?data=${encodedData}`);
-			} else {
-				error = result.error.error;
-			}
-		} catch (e) {
-			error = e instanceof Error ? e.message : 'Error desconocido';
-		} finally {
-			loading = false;
+		await memoriaStore.calcular();
+
+		if (memoriaStore.output) {
+			// Redirect to results page with data (handle Unicode characters)
+			const jsonStr = JSON.stringify(memoriaStore.output);
+			const encodedData = btoa(unescape(encodeURIComponent(jsonStr)));
+			goto(`/calculos/resultado?data=${encodedData}`);
 		}
 	}
+
+	// ── Equipos Store Integration ─────────────────────────────────────────────────
+	// Handler for search from FormularioListado
+	async function handleBusquedaChange(query: string) {
+		await equiposStore.buscar(query);
+	}
+
+	// Handler for page change from FormularioListado
+	async function handlePaginaChange(pagina: number) {
+		await equiposStore.cambiarPagina(pagina);
+	}
+
+	// Load equipos when mode changes to LISTADO
+	$effect(() => {
+		if (modo === 'LISTADO') {
+			// Only load if we haven't loaded yet or if we need fresh data
+			if (equiposStore.equipos.length === 0 && !equiposStore.loading) {
+				void equiposStore.cargar();
+			}
+		}
+	});
 </script>
 
 <svelte:head>
@@ -271,7 +266,17 @@
 						onDatosChange={handleDatosManualChange}
 					/>
 				{:else if esModoListado}
-					<FormularioListado bind:equipoSeleccionado onEquipoChange={handleEquipoChange} />
+					<FormularioListado
+						bind:equipoSeleccionado
+						onEquipoChange={handleEquipoChange}
+						equipos={equiposStore.equipos}
+						totalEquipos={equiposStore.total}
+						loading={equiposStore.loading}
+						error={equiposStore.error}
+						onBusquedaChange={handleBusquedaChange}
+						onPaginaChange={handlePaginaChange}
+						externalData={true}
+					/>
 				{/if}
 			</div>
 
