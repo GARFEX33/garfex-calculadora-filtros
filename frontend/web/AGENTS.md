@@ -91,6 +91,129 @@ frontend/web/
 # .husky/pre-commit               # Hook: cd frontend/web && npx lint-staged
 ```
 
+## Arquitectura: Vertical Slicing
+
+Este proyecto usa **Vertical Slicing** para organizar la lógica de negocio en lugar del patrón tradicional de capas horizontales.
+
+### Por qué Vertical Slicing
+
+- **Acoplamiento débil**: Cada feature es independiente y puede evolucionar sin afectar otras
+- **Testabilidad**: Cada capa de una feature se puede testear de forma aislada
+- **SSR-safe**: Los stores usan `$state` de Svelte 5, seguros para SSR
+- **Preparación para OpenAPI**: Los tipos/domain están separados de la infraestructura, facilitando la generación automática将来
+
+### Estructura de directorios features/
+
+```
+src/lib/features/
+├── calculos/                    # Feature: cálculos eléctricos
+│   ├── domain/                   # Tipos, validadores, reglas de negocio
+│   │   ├── types/               # Tipos del dominio (sin dependencias externas)
+│   │   │   ├── memoria.types.ts
+│   │   │   ├── calculo.enums.ts
+│   │   │   └── index.ts
+│   │   └── validators/           # Validadores puros (sin side effects)
+│   │       └── validar-memoria-request.ts
+│   ├── infrastructure/            # Implementación técnica
+│   │   ├── api/                 # Cliente HTTP (usa apiClient)
+│   │   └── mappers/             # Transformación API ↔ Domain
+│   └── application/              # Orquestación (stores, servicios)
+│       └── stores/               # Svelte 5 stores con $state
+│           └── memoria.store.svelte.ts
+└── equipos/                      # Feature: catálogo de filtros
+    ├── domain/
+    ├── infrastructure/
+    └── application/
+```
+
+### Reglas de dependencia
+
+```
+domain/    → SIN dependencias (solo tipos TS puros)
+infrastructure/ → domain/ (usa los tipos del dominio)
+application/   → domain/ + infrastructure/ (combina lógica + datos)
+components/    → application/ (usa stores, NO lógica de negocio)
+```
+
+**Regla de oro**: Los componentes UI NUNCA deben tener lógica de negocio. Delegar siempre a los stores.
+
+### Capas explicadas
+
+#### domain/
+- **Qué va aquí**: Tipos, enums, validadores puros
+- **Qué NO va aquí**: `fetch`, `console.log`, referencias a `window`, estados reactivos
+- **Ejemplo**:
+  ```typescript
+  // ✓ Correcto: tipo puro
+  export interface EquipoFiltro { id: string; clave: string; }
+  
+  // ✗ Incorrecto:依赖 externa
+  export interface EquipoConFetch extends EquipoFiltro { fetch: () => Promise }
+  ```
+
+#### infrastructure/
+- **Qué va aquí**: Llamadas API, transformaciones de datos, configuraciones externas
+- **Qué NO va aquí**: Lógica de negocio, estados reactivos
+- **Ejemplo**:
+  ```typescript
+  // Mapea API → Domain
+  export function mapApiToEquipo(api: ApiEquipo): EquipoFiltro { ... }
+  ```
+
+#### application/
+- **Qué va aquí**: Stores con `$state`, servicios que orquestan múltiples llamadas
+- **Qué NO va aquí**: Tipos definidos (usar los del domain)
+- **Ejemplo**:
+  ```typescript
+  class EquiposStore {
+    equipos = $state<EquipoFiltro[]>([]);
+    loading = $state(false);
+    async cargar() { ... }
+  }
+  ```
+
+### Cómo agregar una nueva feature
+
+1. Crear directorio en `src/lib/features/{nombre-feature}/`
+2. Crear las 3 capas: `domain/`, `infrastructure/`, `application/`
+3. Definir tipos en `domain/types/`
+4. Implementar API en `infrastructure/api/`
+5. Crear store en `application/stores/`
+6. Crear `index.ts` que re-exporte todo
+7. Consumir desde componentes en `src/lib/components/`
+
+### Auto-invocación de Skills
+
+| Contexto                          | Skill                                |
+| --------------------------------- | ------------------------------------ |
+| Crear/modificar .svelte           | `svelte5-best-practices`             |
+| Crear store con $state            | `svelte5-best-practices`             |
+| Tipos domain, validadores puros   | `typescript-advanced-types`          |
+| Client API, mapeos                | `api-design-principles`              |
+| Componente con diseño responsivo  | `tailwind-design-system`             |
+
+### Compatibilidad con re-exports
+
+Los archivos legacy en `lib/api/` y `lib/types/` re-exportan desde `features/` para no romper imports existentes:
+
+```typescript
+// Legacy import (deprecated pero funciona)
+import { EquipoFiltro } from '$lib/types/equipos.types';
+
+// Nuevo import (recomendado)
+import { EquipoFiltro } from '$lib/features/equipos';
+```
+
+### Preparación para OpenAPI/codegen
+
+La separación stricta entre domain e infrastructure permite:
+
+1. **Fase actual**: Escribir tipos manualmente en `domain/types/`
+2. **Fase futura**: Generar tipos desde OpenAPI y colocarlos en `infrastructure/api/generated/`
+3. **Mappers**: Mantienen la transformación sin cambiar el domain
+
+Esto permite migrar gradualmente sin reescribir toda la aplicación.
+
 ## Design System — Tokens Tailwind v4
 
 El archivo `src/app.css` define TODOS los tokens en `@theme`. **Nunca usar valores arbitrarios**.
