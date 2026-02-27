@@ -8,12 +8,12 @@
 	let { memoria }: Props = $props();
 
 	// Número de hilos del conductor de tierra (del backend)
-	let numHilosTierra = $derived(memoria.conductor_tierra.NumHilos ?? 1);
+	let numHilosTierra = $derived(memoria.conductor_tierra.num_hilos ?? 1);
 
 	// Canalización type and tube count
 	let tipo = $derived(memoria.tipo_canalizacion);
 	let canalizacion = $derived(memoria.canalizacion);
-	let numTubos = $derived(canalizacion.NumeroDeTubos ?? 1);
+	let numTubos = $derived(canalizacion.numero_de_tubos ?? 1);
 
 	// Clasificación del tipo de canalización
 	let esTuberia = $derived(
@@ -98,7 +98,7 @@
 					<tr>
 						<td class="px-4 py-2 text-muted-foreground">Calibre</td>
 						<td class="px-4 py-2 font-mono font-medium text-foreground">
-							{memoria.conductor_tierra.Calibre}
+							{memoria.conductor_tierra.calibre}
 							{#if mostrarMultiplicadorTierra}
 								<span class="ml-1 text-xs text-muted-foreground">× {numHilosTierra}</span>
 							{/if}
@@ -107,7 +107,7 @@
 					<tr>
 						<td class="px-4 py-2 text-muted-foreground">Material</td>
 						<td class="px-4 py-2 text-foreground">
-							{memoria.conductor_tierra.Material?.toUpperCase() === 'CU'
+							{memoria.conductor_tierra.material?.toUpperCase() === 'CU'
 								? 'Cobre (Cu)'
 								: 'Aluminio (Al)'}
 						</td>
@@ -115,11 +115,11 @@
 					<tr>
 						<td class="px-4 py-2 text-muted-foreground">Sección</td>
 						<td class="px-4 py-2 text-foreground">
-							{memoria.conductor_tierra.SeccionMM2.toFixed(2)} mm²
+							{memoria.conductor_tierra.seccion_mm2.toFixed(2)} mm²
 							{#if mostrarMultiplicadorTierra}
 								<span class="ml-1 text-xs text-muted-foreground"
 									>(× {numHilosTierra} = {(
-										memoria.conductor_tierra.SeccionMM2 * numHilosTierra
+										memoria.conductor_tierra.seccion_mm2 * numHilosTierra
 									).toFixed(2)} mm² total)</span
 								>
 							{/if}
@@ -128,7 +128,7 @@
 					<tr>
 						<td class="px-4 py-2 text-muted-foreground">Tipo de Aislamiento</td>
 						<td class="px-4 py-2 text-foreground">
-							{memoria.conductor_tierra.TipoAislamiento || 'Desnudo'}
+							{memoria.conductor_tierra.tipo_aislamiento || 'Desnudo'}
 						</td>
 					</tr>
 					<tr>

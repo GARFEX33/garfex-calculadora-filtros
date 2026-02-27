@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 
 	"github.com/garfex/calculadora-filtros/internal/calculos/domain/entity"
 	"github.com/garfex/calculadora-filtros/internal/shared/kernel/valueobject"
@@ -285,8 +286,9 @@ func (r *CSVTablaNOMRepository) ObtenerCapacidadConductor(
 		return 0, fmt.Errorf("obtener tabla ampacidad: %w", err)
 	}
 
+	calibreNorm := strings.TrimSuffix(strings.TrimSpace(calibre), " AWG")
 	for _, entrada := range tabla {
-		if entrada.Conductor.Calibre == calibre {
+		if strings.TrimSuffix(strings.TrimSpace(entrada.Conductor.Calibre), " AWG") == calibreNorm {
 			return entrada.Capacidad, nil
 		}
 	}
@@ -301,7 +303,7 @@ func (r *CSVTablaNOMRepository) ObtenerImpedancia(
 	canalizacion entity.TipoCanalizacion,
 	material valueobject.MaterialConductor,
 ) (valueobject.ResistenciaReactancia, error) {
-	entry, ok := r.tablaImpedancia[calibre]
+	entry, ok := r.tablaImpedancia[strings.TrimSuffix(strings.TrimSpace(calibre), " AWG")]
 	if !ok {
 		return valueobject.ResistenciaReactancia{}, fmt.Errorf("calibre not found in impedance table: %s", calibre)
 	}
@@ -432,7 +434,12 @@ func rangoContiene(rango string, temp int) bool {
 
 // ObtenerDiametroConductor returns the diameter in mm for a given calibre, material, and insulation type.
 func (r *CSVTablaNOMRepository) ObtenerDiametroConductor(ctx context.Context, calibre string, material string, conAislamiento bool) (float64, error) {
-	entry, ok := r.tablaDiametros[calibre]
+	// tablaDiametros tiene keys con sufijo " AWG" (tal como vienen del CSV)
+	calibreKey := calibre
+	if !strings.HasSuffix(calibre, " AWG") {
+		calibreKey = calibre + " AWG"
+	}
+	entry, ok := r.tablaDiametros[calibreKey]
 	if !ok {
 		return 0, fmt.Errorf("calibre no encontrado en tabla de diametros: %s", calibre)
 	}
@@ -462,7 +469,12 @@ func (r *CSVTablaNOMRepository) ObtenerCharolaPorAncho(ctx context.Context, anch
 
 // ObtenerAreaConductor returns the area with insulation (area_tw_thw) for a given calibre.
 func (r *CSVTablaNOMRepository) ObtenerAreaConductor(ctx context.Context, calibre string) (float64, error) {
-	entry, ok := r.tablaDiametros[calibre]
+	// tablaDiametros tiene keys con sufijo " AWG"
+	calibreKey := calibre
+	if !strings.HasSuffix(calibre, " AWG") {
+		calibreKey = calibre + " AWG"
+	}
+	entry, ok := r.tablaDiametros[calibreKey]
 	if !ok {
 		return 0, fmt.Errorf("calibre no encontrado en tabla de áreas: %s", calibre)
 	}
@@ -476,7 +488,12 @@ func (r *CSVTablaNOMRepository) ObtenerAreaConductor(ctx context.Context, calibr
 
 // ObtenerAreaConductorDesnudo returns the area for bare conductor (Tabla 8) - used for ground conductors.
 func (r *CSVTablaNOMRepository) ObtenerAreaConductorDesnudo(ctx context.Context, calibre string) (float64, error) {
-	entry, ok := r.tablaConductorDesnudo[calibre]
+	// tablaConductorDesnudo tiene keys con sufijo " AWG"
+	calibreKey := calibre
+	if !strings.HasSuffix(calibre, " AWG") {
+		calibreKey = calibre + " AWG"
+	}
+	entry, ok := r.tablaConductorDesnudo[calibreKey]
 	if !ok {
 		return 0, fmt.Errorf("calibre no encontrado en tabla de conductor desnudo: %s", calibre)
 	}
@@ -820,7 +837,8 @@ func (r *CSVTablaNOMRepository) loadTablaImpedancia() (map[string]impedanciaEntr
 			continue // Skip incomplete rows
 		}
 
-		calibre := record[indices["calibre"]]
+		// Normalizar: "1/0 AWG" → "1/0", "2 AWG" → "2", "250" → "250"
+		calibre := strings.TrimSuffix(strings.TrimSpace(record[indices["calibre"]]), " AWG")
 
 		entry := impedanciaEntry{}
 
@@ -1252,7 +1270,7 @@ func (r *CSVTablaNOMRepository) loadTablaOcupacionTuberia(filename string) ([]va
 
 // ObtenerSeccionConductor returns the cross-sectional area in mm² for a given calibre from Tabla 9.
 func (r *CSVTablaNOMRepository) ObtenerSeccionConductor(ctx context.Context, calibre string) (float64, error) {
-	entry, ok := r.tablaImpedancia[calibre]
+	entry, ok := r.tablaImpedancia[strings.TrimSuffix(strings.TrimSpace(calibre), " AWG")]
 	if !ok {
 		return 0, fmt.Errorf("calibre no encontrado en tabla de impedancia: %s", calibre)
 	}

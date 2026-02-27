@@ -53,22 +53,26 @@ export interface CalcularMemoriaRequest {
 	diametro_control_mm?: number;
 }
 
-// Conductor result — backend serializes in PascalCase
+// Conductor result — backend serializes in snake_case
 export interface ResultadoConductor {
-	Calibre: string;
-	Material: string;
-	SeccionMM2: number;
-	TipoAislamiento: string;
-	Capacidad: number;
-	NumHilos?: number;
+	calibre: string;
+	material: string;
+	seccion_mm2: number;
+	tipo_aislamiento: string;
+	capacidad: number;
+	num_hilos?: number;
+	// Campos para recalculo por caída de tensión
+	seleccion_por_caida_tension?: boolean;
+	calibre_original_ampacidad?: string;
+	nota_seleccion?: string;
 }
 
-// Conduit/raceway result — backend serializes in PascalCase
+// Conduit/raceway result — backend serializes in snake_case
 export interface ResultadoCanalizacion {
-	Tamano: string;
-	AreaTotalMM2: number;
-	AreaRequeridaMM2: number;
-	NumeroDeTubos: number;
+	tamano: string;
+	area_total_mm2: number;
+	area_requerida_mm2: number;
+	numero_de_tubos: number;
 	ancho_comercial_mm?: number;
 }
 
@@ -115,6 +119,8 @@ export interface ResultadoCaidaTension {
 	cumple: boolean;
 	limite_porcentaje: number;
 	impedancia: number;
+	resistencia: number;
+	reactancia: number;
 }
 
 // Full calculation result (from POST response data field)

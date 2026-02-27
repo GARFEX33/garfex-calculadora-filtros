@@ -15,7 +15,7 @@
 
 	// Check individual criteria
 	let cumpleAmpacidad = $derived(
-		memoria.conductor_alimentacion.Capacidad >= memoria.corriente_nominal * 1.25
+		memoria.conductor_alimentacion.capacidad >= memoria.corriente_por_hilo
 	);
 	let cumpleCaida = $derived(memoria.caida_tension?.cumple ?? false);
 </script>

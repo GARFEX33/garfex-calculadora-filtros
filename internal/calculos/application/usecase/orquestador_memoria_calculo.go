@@ -4,7 +4,6 @@ package usecase
 import (
 	"context"
 	"fmt"
-	"math"
 
 	"github.com/garfex/calculadora-filtros/internal/calculos/application/dto"
 	"github.com/garfex/calculadora-filtros/internal/calculos/application/port"
@@ -16,13 +15,14 @@ import (
 // It chains all steps sequentially where each step's output feeds the next.
 type OrquestadorMemoriaCalculoUseCase struct {
 	// Use cases for each step
-	calcularCorrienteUC         *CalcularCorrienteUseCase
-	ajustarCorrienteUC          *AjustarCorrienteUseCase
-	seleccionarConductorUC      *SeleccionarConductorUseCase
-	calcularTamanioTuberiaUC    *CalcularTamanioTuberiaUseCase
-	calcularCharolaEspaciadoUC  *CalcularCharolaEspaciadoUseCase
-	calcularCharolaTriangularUC *CalcularCharolaTriangularUseCase
-	calcularCaidaTensionUC      *CalcularCaidaTensionUseCase
+	calcularCorrienteUC                  *CalcularCorrienteUseCase
+	ajustarCorrienteUC                   *AjustarCorrienteUseCase
+	seleccionarConductorUC               *SeleccionarConductorUseCase
+	calcularTamanioTuberiaUC             *CalcularTamanioTuberiaUseCase
+	calcularCharolaEspaciadoUC           *CalcularCharolaEspaciadoUseCase
+	calcularCharolaTriangularUC          *CalcularCharolaTriangularUseCase
+	calcularCaidaTensionUC               *CalcularCaidaTensionUseCase
+	seleccionarConductorCaidaTensionUC   *SeleccionarConductorPorCaidaTensionUseCase
 
 	// Repository for diameter lookups (needed for charola)
 	tablaRepo port.TablaNOMRepository
@@ -37,17 +37,19 @@ func NewOrquestadorMemoriaCalculoUseCase(
 	calcularCharolaEspaciadoUC *CalcularCharolaEspaciadoUseCase,
 	calcularCharolaTriangularUC *CalcularCharolaTriangularUseCase,
 	calcularCaidaTensionUC *CalcularCaidaTensionUseCase,
+	seleccionarConductorCaidaTensionUC *SeleccionarConductorPorCaidaTensionUseCase,
 	tablaRepo port.TablaNOMRepository,
 ) *OrquestadorMemoriaCalculoUseCase {
 	return &OrquestadorMemoriaCalculoUseCase{
-		calcularCorrienteUC:         calcularCorrienteUC,
-		ajustarCorrienteUC:          ajustarCorrienteUC,
-		seleccionarConductorUC:      seleccionarConductorUC,
-		calcularTamanioTuberiaUC:    calcularTamanioTuberiaUC,
-		calcularCharolaEspaciadoUC:  calcularCharolaEspaciadoUC,
-		calcularCharolaTriangularUC: calcularCharolaTriangularUC,
-		calcularCaidaTensionUC:      calcularCaidaTensionUC,
-		tablaRepo:                   tablaRepo,
+		calcularCorrienteUC:                calcularCorrienteUC,
+		ajustarCorrienteUC:                ajustarCorrienteUC,
+		seleccionarConductorUC:            seleccionarConductorUC,
+		calcularTamanioTuberiaUC:          calcularTamanioTuberiaUC,
+		calcularCharolaEspaciadoUC:        calcularCharolaEspaciadoUC,
+		calcularCharolaTriangularUC:       calcularCharolaTriangularUC,
+		calcularCaidaTensionUC:            calcularCaidaTensionUC,
+		seleccionarConductorCaidaTensionUC: seleccionarConductorCaidaTensionUC,
+		tablaRepo:                         tablaRepo,
 	}
 }
 
@@ -228,170 +230,38 @@ func (uc *OrquestadorMemoriaCalculoUseCase) Execute(
 	// ============================================================
 	// STEP 4: Size Conduit/Tray (branch by canalization type)
 	// ============================================================
+	canalizacion, detalleCharola, detalleTuberia, fillFactor, err := uc.calcularCanalizacion(
+		ctx,
+		output.ConductorAlimentacion.Calibre,
+		output.ConductorTierra.Calibre,
+		material,
+		tipoCanalizacion,
+		sistemaElectrico,
+		input,
+		numNeutros,
+	)
+	if err != nil {
+		return dto.MemoriaOutput{}, fmt.Errorf("paso 4 (canalización): %w", err)
+	}
+	output.Canalizacion = canalizacion
+	output.DetalleCharola = detalleCharola
+	output.DetalleTuberia = detalleTuberia
+	output.FillFactor = fillFactor
+
+	// Append the appropriate paso based on canalization type
 	if tipoCanalizacion.EsCharola() {
-		// For CHAROLA: need to look up diameters first
-		diametroFase, err := uc.tablaRepo.ObtenerDiametroConductor(
-			ctx,
-			output.ConductorAlimentacion.Calibre,
-			material.String(),
-			true, // with insulation
-		)
-		if err != nil {
-			return dto.MemoriaOutput{}, fmt.Errorf("obtener diámetro fase: %w", err)
-		}
-
-		diametroTierra, err := uc.tablaRepo.ObtenerDiametroConductor(
-			ctx,
-			output.ConductorTierra.Calibre,
-			material.String(),
-			false, // ground is bare
-		)
-		if err != nil {
-			return dto.MemoriaOutput{}, fmt.Errorf("obtener diámetro tierra: %w", err)
-		}
-
-		// Build charola input
-		charolaInput := dto.CharolaEspaciadoInput{
-			HilosPorFase:     input.HilosPorFase,
-			SistemaElectrico: string(sistemaElectrico),
-			DiametroFaseMM:   diametroFase,
-			DiametroTierraMM: diametroTierra,
-		}
-
-		// Handle optional control diameter
-		if input.DiametroControlMM != nil && *input.DiametroControlMM > 0 {
-			charolaInput.DiametroControlMM = input.DiametroControlMM
-		}
-
-		var resultadoCanalizacion dto.CharolaEspaciadoOutput
-
-		switch tipoCanalizacion {
-		case entity.TipoCanalizacionCharolaCableTriangular:
-			// For triangular, use triangular use case
-			triangularInput := dto.CharolaTriangularInput{
-				HilosPorFase:     input.HilosPorFase,
-				DiametroFaseMM:   diametroFase,
-				DiametroTierraMM: diametroTierra,
-			}
-			if input.DiametroControlMM != nil && *input.DiametroControlMM > 0 {
-				triangularInput.DiametroControlMM = input.DiametroControlMM
-			}
-			resultadoTriangular, err := uc.calcularCharolaTriangularUC.Execute(ctx, triangularInput)
-			if err != nil {
-				return dto.MemoriaOutput{}, fmt.Errorf("paso 4 (charola triangular): %w", err)
-			}
-			// Map to compatible output
-			resultadoCanalizacion = dto.CharolaEspaciadoOutput{
-				Tipo:             resultadoTriangular.Tipo,
-				Tamano:           resultadoTriangular.Tamano,
-				TamanoPulgadas:   resultadoTriangular.TamanoPulgadas,
-				AnchoRequerido:   resultadoTriangular.AnchoRequerido,
-				AnchoComercialMM: resultadoTriangular.AnchoComercialMM,
-			}
-			// Poblar detalle con valores intermedios del triangular
-			output.DetalleCharola = &dto.DetalleCharola{
-				DiametroFaseMM:    resultadoTriangular.DiametroFaseMM,
-				DiametroTierraMM:  resultadoTriangular.DiametroTierraMM,
-				DiametroControlMM: resultadoTriangular.DiametroControlMM,
-				AnchoPotenciaMM:   resultadoTriangular.AnchoPotenciaMM,
-				EspacioFuerzaMM:   resultadoTriangular.EspacioFuerzaMM,
-				EspacioControlMM:  resultadoTriangular.EspacioControlMM,
-				AnchoControlMM:    resultadoTriangular.AnchoControlMM,
-				AnchoTierraMM:     resultadoTriangular.AnchoTierraMM,
-				FactorTriangular:  resultadoTriangular.FactorTriangular,
-			}
-
-		case entity.TipoCanalizacionCharolaCableEspaciado:
-			resultadoCharola, err := uc.calcularCharolaEspaciadoUC.Execute(ctx, charolaInput)
-			if err != nil {
-				return dto.MemoriaOutput{}, fmt.Errorf("paso 4 (charola espaciado): %w", err)
-			}
-			resultadoCanalizacion = resultadoCharola
-			// Poblar detalle con valores intermedios del espaciado
-			output.DetalleCharola = &dto.DetalleCharola{
-				DiametroFaseMM:    resultadoCharola.DiametroFaseMM,
-				DiametroTierraMM:  resultadoCharola.DiametroTierraMM,
-				DiametroControlMM: resultadoCharola.DiametroControlMM,
-				NumHilosTotal:     resultadoCharola.NumHilosTotal,
-				EspacioFuerzaMM:   resultadoCharola.EspacioFuerzaMM,
-				AnchoFuerzaMM:     resultadoCharola.AnchoFuerzaMM,
-				EspacioControlMM:  resultadoCharola.EspacioControlMM,
-				AnchoControlMM:    resultadoCharola.AnchoControlMM,
-				AnchoTierraMM:     resultadoCharola.AnchoTierraMM,
-			}
-
-		default:
-			return dto.MemoriaOutput{}, fmt.Errorf("tipo de canalización no soportado para charola: %s", tipoCanalizacion)
-		}
-
-		// Map charola result to output
-		output.Canalizacion = dto.ResultadoCanalizacion{
-			Tamano:           resultadoCanalizacion.Tamano,
-			AnchoComercialMM: resultadoCanalizacion.AnchoComercialMM,
-			AreaRequeridaMM2: resultadoCanalizacion.AnchoRequerido,
-			NumeroDeTubos:    1,
-		}
-
 		output.Pasos = append(output.Pasos, dto.PasoMemoria{
 			Numero:      4,
 			Nombre:      "Dimensionamiento de Charola",
 			Descripcion: "Cálculo de tamaño de charola según configuración",
-			Resultado:   resultadoCanalizacion,
+			Resultado:   detalleCharola,
 		})
-
 	} else {
-		// For TUBERIA types: use tuberia use case
-
-		// Calcular número de hilos de tierra según normativa NOM
-		numTierras := calcularNumHilosTierra(tipoCanalizacion, input.NumTuberias)
-
-		tuberiaInput := dto.TuberiaInput{
-			NumFases:         sistemaElectrico.CantidadFases(),
-			CalibreFase:      output.ConductorAlimentacion.Calibre,
-			NumNeutros:       numNeutros,
-			CalibreNeutro:    output.ConductorAlimentacion.Calibre, // Same as fase for now
-			CalibreTierra:    output.ConductorTierra.Calibre,
-			TipoCanalizacion: input.TipoCanalizacion,
-			NumTuberias:      input.NumTuberias,
-			NumTierras:       numTierras,
-			HilosPorFase:     input.HilosPorFase, // Necesario para calcular conductores por tubo
-		}
-
-		resultadoTuberia, err := uc.calcularTamanioTuberiaUC.Execute(ctx, tuberiaInput)
-		if err != nil {
-			return dto.MemoriaOutput{}, fmt.Errorf("paso 4 (tubería): %w", err)
-		}
-
-		// Poblar DetalleTuberia con valores intermedios
-		// NumFasesPorTubo y NumNeutrosPorTubo vienen ya calculados correctamente
-		// desde el UseCase (considera HilosPorFase y NumTuberias)
-		output.DetalleTuberia = &dto.DetalleTuberia{
-			AreaFaseMM2:          resultadoTuberia.AreaFaseMM2,
-			AreaNeutroMM2:        resultadoTuberia.AreaNeutroMM2,
-			AreaTierraMM2:        resultadoTuberia.AreaTierraMM2,
-			NumFasesPorTubo:      resultadoTuberia.NumFasesPorTubo,
-			NumNeutrosPorTubo:    resultadoTuberia.NumNeutrosPorTubo,
-			NumTierras:           resultadoTuberia.NumTierras,
-			AreaOcupacionTuboMM2: resultadoTuberia.AreaOcupacionTuboMM2,
-			DesignacionMetrica:   resultadoTuberia.DesignacionMetrica,
-			FillFactor:           resultadoTuberia.FillFactor,
-		}
-
-		output.Canalizacion = dto.ResultadoCanalizacion{
-			Tamano:           resultadoTuberia.TuberiaRecomendada,
-			AreaTotalMM2:     resultadoTuberia.AreaPorTuboMM2,
-			AreaRequeridaMM2: 0, // Not directly provided by this use case
-			NumeroDeTubos:    resultadoTuberia.NumTuberias,
-		}
-
-		// Asignar fill factor
-		output.FillFactor = resultadoTuberia.FillFactor
-
 		output.Pasos = append(output.Pasos, dto.PasoMemoria{
 			Numero:      4,
 			Nombre:      "Dimensionamiento de Tubería",
 			Descripcion: "Cálculo de tamaño de tubería según área de conductores",
-			Resultado:   resultadoTuberia,
+			Resultado:   detalleTuberia,
 		})
 	}
 
@@ -408,34 +278,17 @@ func (uc *OrquestadorMemoriaCalculoUseCase) Execute(
 	// ============================================================
 	// STEP 5: Calculate Voltage Drop
 	// ============================================================
-	// Get voltage reference for calculation
-	// According to NOM: MONOFASICO, BIFASICO, ESTRELLA use Vfn; DELTA uses Vff
-	// If user provided Vff but system needs Vfn, convert
-	tensionReferencia := float64(tension.Valor())
-
-	// Adjust voltage reference based on tipo voltaje and system type
-	if sistemaElectrico == entity.SistemaElectricoDelta && tipoVoltaje.EsFaseNeutro() {
-		// User provided Vfn but DELTA needs Vff: Vff = Vfn * √3
-		tensionReferencia = tensionReferencia * math.Sqrt(3)
-	} else if (sistemaElectrico == entity.SistemaElectricoMonofasico ||
-		sistemaElectrico == entity.SistemaElectricoBifasico ||
-		sistemaElectrico == entity.SistemaElectricoEstrella) && tipoVoltaje.EsFaseFase() {
-		// User provided Vff but system needs Vfn: Vfn = Vff / √3
-		tensionReferencia = tensionReferencia / math.Sqrt(3)
-	}
-
-	tensionReferenciaVO, err := valueobject.NewTension(tensionReferencia, "V")
-	if err != nil {
-		return dto.MemoriaOutput{}, fmt.Errorf("tensión de referencia inválida: %w", err)
-	}
-
+	// Pasar la tensión tal como la ingresó el usuario (sin convertir).
+	// La conversión Vfn↔Vff la realiza internamente el domain service
+	// calcularVoltajeReferencia usando tipoVoltaje + sistemaElectrico.
+	// Hacer la conversión aquí causaría doble conversión → %caída incorrecto.
 	resultadoCaidaTension, err := uc.calcularCaidaTensionUC.Execute(
 		ctx,
 		output.ConductorAlimentacion.Calibre,
 		material,
-		corrienteAjustada,
+		corrienteNominalVO, // NOM-001-SEDE: caída de tensión usa corriente nominal, no ajustada
 		input.LongitudCircuito, // already in meters from input
-		tensionReferenciaVO,
+		tension,
 		input.PorcentajeCaidaMaximo,
 		tipoCanalizacion,
 		sistemaElectrico,
@@ -453,6 +306,8 @@ func (uc *OrquestadorMemoriaCalculoUseCase) Execute(
 		Cumple:           resultadoCaidaTension.Cumple,
 		LimitePorcentaje: resultadoCaidaTension.LimitePorcentaje,
 		Impedancia:       resultadoCaidaTension.Impedancia,
+		Resistencia:      resultadoCaidaTension.Resistencia,
+		Reactancia:       resultadoCaidaTension.Reactancia,
 	}
 
 	output.Pasos = append(output.Pasos, dto.PasoMemoria{
@@ -461,6 +316,86 @@ func (uc *OrquestadorMemoriaCalculoUseCase) Execute(
 		Descripcion: "Cálculo de caída de tensión según NOM-001",
 		Resultado:   resultadoCaidaTension,
 	})
+
+	// ============================================================
+	// STEP 5b: Recálculo por caída de tensión
+	// Si el conductor de ampacidad no cumple la caída de tensión,
+	// buscar el calibre superior mínimo que cumpla (NOM-001-SEDE).
+	// ============================================================
+	if !output.CaidaTension.Cumple {
+		resultadoRecalc, err := uc.seleccionarConductorCaidaTensionUC.Execute(
+			ctx,
+			output.ConductorAlimentacion.Calibre,
+			material,
+			corrienteNominalVO,
+			input.LongitudCircuito,
+			tension,
+			input.PorcentajeCaidaMaximo,
+			tipoCanalizacion,
+			sistemaElectrico,
+			tipoVoltaje,
+			input.HilosPorFase,
+			input.FactorPotencia,
+			temperaturaUsada,
+		)
+		if err != nil {
+			output.Observaciones = append(output.Observaciones,
+				fmt.Sprintf("No se pudo recalcular calibre por caída de tensión: %v", err))
+		}
+		if err == nil && resultadoRecalc.Cumple {
+			// Override conductor de alimentación con el calibre superior
+			calibreOriginal := output.ConductorAlimentacion.Calibre
+			output.ConductorAlimentacion.Calibre = resultadoRecalc.CalibreSeleccionado
+			output.ConductorAlimentacion.SeccionMM2 = resultadoRecalc.SeccionMM2
+			output.ConductorAlimentacion.Capacidad = resultadoRecalc.Capacidad
+			output.ConductorAlimentacion.TipoAislamiento = resultadoRecalc.TipoAislamiento
+			output.ConductorAlimentacion.SeleccionPorCaidaTension = true
+			output.ConductorAlimentacion.CalibreOriginalAmpacidad = calibreOriginal
+			output.ConductorAlimentacion.NotaSeleccion = resultadoRecalc.Nota
+
+			// Override caída de tensión con el resultado del nuevo calibre
+			output.CaidaTension = dto.ResultadoCaidaTension{
+				Porcentaje:       resultadoRecalc.CaidaTension.Porcentaje,
+				CaidaVolts:       resultadoRecalc.CaidaTension.CaidaVolts,
+				Cumple:           resultadoRecalc.CaidaTension.Cumple,
+				LimitePorcentaje: resultadoRecalc.CaidaTension.LimitePorcentaje,
+				Impedancia:       resultadoRecalc.CaidaTension.Impedancia,
+				Resistencia:      resultadoRecalc.CaidaTension.Resistencia,
+				Reactancia:       resultadoRecalc.CaidaTension.Reactancia,
+			}
+
+			// Re-ejecutar canalización con el nuevo calibre
+			canalizacionRecalc, detalleCharolaRecalc, detalleTuberiaRecalc, fillFactorRecalc, errCanal := uc.calcularCanalizacion(
+				ctx,
+				resultadoRecalc.CalibreSeleccionado,
+				output.ConductorTierra.Calibre,
+				material,
+				tipoCanalizacion,
+				sistemaElectrico,
+				input,
+				numNeutros,
+			)
+			if errCanal != nil {
+				// No es error fatal: mantener canalización original
+				output.Observaciones = append(output.Observaciones,
+					fmt.Sprintf("No se pudo recalcular canalización con calibre %s: %v",
+						resultadoRecalc.CalibreSeleccionado, errCanal))
+			} else {
+				output.Canalizacion = canalizacionRecalc
+				output.DetalleCharola = detalleCharolaRecalc
+				output.DetalleTuberia = detalleTuberiaRecalc
+				output.FillFactor = fillFactorRecalc
+			}
+
+			output.Pasos = append(output.Pasos, dto.PasoMemoria{
+				Numero:      6,
+				Nombre:      "Recálculo por Caída de Tensión",
+				Descripcion: "Calibre aumentado al siguiente superior para cumplir caída de tensión NOM-001-SEDE",
+				Resultado:   resultadoRecalc,
+			})
+		}
+		// Si resultadoRecalc.Cumple == false: se agotaron calibres, mantener original con Cumple=false
+	}
 
 	// ============================================================
 	// Final Assembly: CumpleNormativa and Observaciones
@@ -509,4 +444,170 @@ func (uc *OrquestadorMemoriaCalculoUseCase) generarObservaciones(memoria dto.Mem
 	}
 
 	return obs
+}
+
+// calcularCanalizacion ejecuta el paso 4 de dimensionamiento de canalización.
+// Es llamado tanto en el flujo principal como en el recálculo por caída de tensión.
+func (uc *OrquestadorMemoriaCalculoUseCase) calcularCanalizacion(
+	ctx              context.Context,
+	calibreFase      string,
+	calibreTierra    string,
+	material         valueobject.MaterialConductor,
+	tipoCanalizacion entity.TipoCanalizacion,
+	sistemaElectrico entity.SistemaElectrico,
+	input            dto.EquipoInput,
+	numNeutros       int,
+) (canalizacion dto.ResultadoCanalizacion, detalleCharola *dto.DetalleCharola, detalleTuberia *dto.DetalleTuberia, fillFactor float64, err error) {
+
+	if tipoCanalizacion.EsCharola() {
+		// For CHAROLA: need to look up diameters first
+		diametroFase, err := uc.tablaRepo.ObtenerDiametroConductor(
+			ctx,
+			calibreFase,
+			material.String(),
+			true, // with insulation
+		)
+		if err != nil {
+			return dto.ResultadoCanalizacion{}, nil, nil, 0, fmt.Errorf("obtener diámetro fase: %w", err)
+		}
+
+		diametroTierra, err := uc.tablaRepo.ObtenerDiametroConductor(
+			ctx,
+			calibreTierra,
+			material.String(),
+			false, // ground is bare
+		)
+		if err != nil {
+			return dto.ResultadoCanalizacion{}, nil, nil, 0, fmt.Errorf("obtener diámetro tierra: %w", err)
+		}
+
+		// Build charola input
+		charolaInput := dto.CharolaEspaciadoInput{
+			HilosPorFase:     input.HilosPorFase,
+			SistemaElectrico: string(sistemaElectrico),
+			DiametroFaseMM:   diametroFase,
+			DiametroTierraMM: diametroTierra,
+		}
+
+		// Handle optional control diameter
+		if input.DiametroControlMM != nil && *input.DiametroControlMM > 0 {
+			charolaInput.DiametroControlMM = input.DiametroControlMM
+		}
+
+		var resultadoCanalizacion dto.CharolaEspaciadoOutput
+
+		switch tipoCanalizacion {
+		case entity.TipoCanalizacionCharolaCableTriangular:
+			// For triangular, use triangular use case
+			triangularInput := dto.CharolaTriangularInput{
+				HilosPorFase:     input.HilosPorFase,
+				DiametroFaseMM:   diametroFase,
+				DiametroTierraMM: diametroTierra,
+			}
+			if input.DiametroControlMM != nil && *input.DiametroControlMM > 0 {
+				triangularInput.DiametroControlMM = input.DiametroControlMM
+			}
+			resultadoTriangular, err := uc.calcularCharolaTriangularUC.Execute(ctx, triangularInput)
+			if err != nil {
+				return dto.ResultadoCanalizacion{}, nil, nil, 0, fmt.Errorf("charola triangular: %w", err)
+			}
+			// Map to compatible output
+			resultadoCanalizacion = dto.CharolaEspaciadoOutput{
+				Tipo:             resultadoTriangular.Tipo,
+				Tamano:           resultadoTriangular.Tamano,
+				TamanoPulgadas:   resultadoTriangular.TamanoPulgadas,
+				AnchoRequerido:   resultadoTriangular.AnchoRequerido,
+				AnchoComercialMM: resultadoTriangular.AnchoComercialMM,
+			}
+			// Poblar detalle con valores intermedios del triangular
+			detalleCharola = &dto.DetalleCharola{
+				DiametroFaseMM:    resultadoTriangular.DiametroFaseMM,
+				DiametroTierraMM:  resultadoTriangular.DiametroTierraMM,
+				DiametroControlMM: resultadoTriangular.DiametroControlMM,
+				AnchoPotenciaMM:   resultadoTriangular.AnchoPotenciaMM,
+				EspacioFuerzaMM:   resultadoTriangular.EspacioFuerzaMM,
+				EspacioControlMM:  resultadoTriangular.EspacioControlMM,
+				AnchoControlMM:    resultadoTriangular.AnchoControlMM,
+				AnchoTierraMM:     resultadoTriangular.AnchoTierraMM,
+				FactorTriangular:  resultadoTriangular.FactorTriangular,
+			}
+
+		case entity.TipoCanalizacionCharolaCableEspaciado:
+			resultadoCharola, err := uc.calcularCharolaEspaciadoUC.Execute(ctx, charolaInput)
+			if err != nil {
+				return dto.ResultadoCanalizacion{}, nil, nil, 0, fmt.Errorf("charola espaciado: %w", err)
+			}
+			resultadoCanalizacion = resultadoCharola
+			// Poblar detalle con valores intermedios del espaciado
+			detalleCharola = &dto.DetalleCharola{
+				DiametroFaseMM:    resultadoCharola.DiametroFaseMM,
+				DiametroTierraMM:  resultadoCharola.DiametroTierraMM,
+				DiametroControlMM: resultadoCharola.DiametroControlMM,
+				NumHilosTotal:     resultadoCharola.NumHilosTotal,
+				EspacioFuerzaMM:   resultadoCharola.EspacioFuerzaMM,
+				AnchoFuerzaMM:     resultadoCharola.AnchoFuerzaMM,
+				EspacioControlMM:  resultadoCharola.EspacioControlMM,
+				AnchoControlMM:    resultadoCharola.AnchoControlMM,
+				AnchoTierraMM:     resultadoCharola.AnchoTierraMM,
+			}
+
+		default:
+			return dto.ResultadoCanalizacion{}, nil, nil, 0, fmt.Errorf("tipo de canalización no soportado para charola: %s", tipoCanalizacion)
+		}
+
+		// Map charola result to output
+		canalizacion = dto.ResultadoCanalizacion{
+			Tamano:           resultadoCanalizacion.Tamano,
+			AnchoComercialMM: resultadoCanalizacion.AnchoComercialMM,
+			AreaRequeridaMM2: resultadoCanalizacion.AnchoRequerido,
+			NumeroDeTubos:    1,
+		}
+
+		return canalizacion, detalleCharola, nil, 0, nil
+
+	} else {
+		// For TUBERIA types: use tuberia use case
+
+		// Calcular número de hilos de tierra según normativa NOM
+		numTierras := calcularNumHilosTierra(tipoCanalizacion, input.NumTuberias)
+
+		tuberiaInput := dto.TuberiaInput{
+			NumFases:         sistemaElectrico.CantidadFases(),
+			CalibreFase:      calibreFase,
+			NumNeutros:       numNeutros,
+			CalibreNeutro:    calibreFase, // Same as fase for now
+			CalibreTierra:    calibreTierra,
+			TipoCanalizacion: input.TipoCanalizacion,
+			NumTuberias:      input.NumTuberias,
+			NumTierras:       numTierras,
+			HilosPorFase:     input.HilosPorFase, // Necesario para calcular conductores por tubo
+		}
+
+		resultadoTuberia, err := uc.calcularTamanioTuberiaUC.Execute(ctx, tuberiaInput)
+		if err != nil {
+			return dto.ResultadoCanalizacion{}, nil, nil, 0, fmt.Errorf("tubería: %w", err)
+		}
+
+		// Poblar DetalleTuberia con valores intermedios
+		detalleTuberia = &dto.DetalleTuberia{
+			AreaFaseMM2:          resultadoTuberia.AreaFaseMM2,
+			AreaNeutroMM2:        resultadoTuberia.AreaNeutroMM2,
+			AreaTierraMM2:        resultadoTuberia.AreaTierraMM2,
+			NumFasesPorTubo:      resultadoTuberia.NumFasesPorTubo,
+			NumNeutrosPorTubo:    resultadoTuberia.NumNeutrosPorTubo,
+			NumTierras:           resultadoTuberia.NumTierras,
+			AreaOcupacionTuboMM2: resultadoTuberia.AreaOcupacionTuboMM2,
+			DesignacionMetrica:   resultadoTuberia.DesignacionMetrica,
+			FillFactor:           resultadoTuberia.FillFactor,
+		}
+
+		canalizacion = dto.ResultadoCanalizacion{
+			Tamano:           resultadoTuberia.TuberiaRecomendada,
+			AreaTotalMM2:     resultadoTuberia.AreaPorTuboMM2,
+			AreaRequeridaMM2: 0, // Not directly provided by this use case
+			NumeroDeTubos:    resultadoTuberia.NumTuberias,
+		}
+
+		return canalizacion, nil, detalleTuberia, resultadoTuberia.FillFactor, nil
+	}
 }

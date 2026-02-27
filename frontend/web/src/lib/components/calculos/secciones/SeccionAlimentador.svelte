@@ -36,16 +36,21 @@
 	let numHilosAlimentacion = $derived(memoria.hilos_por_fase || 1);
 
 	// Verificación de capacidad
-	let capacidadPorHilo = $derived(memoria.conductor_alimentacion.Capacidad);
+	let capacidadPorHilo = $derived(memoria.conductor_alimentacion.capacidad);
 	let capacidadTotal = $derived(
 		numHilosAlimentacion > 1
-			? memoria.conductor_alimentacion.Capacidad * numHilosAlimentacion
-			: memoria.conductor_alimentacion.Capacidad
+			? memoria.conductor_alimentacion.capacidad * numHilosAlimentacion
+			: memoria.conductor_alimentacion.capacidad
 	);
 	let cumpleCapacidad = $derived(capacidadTotal >= memoria.corriente_ajustada);
 
 	// Verificar si es charola (no aplica agrupamiento)
 	let esCharola = $derived(memoria.tipo_canalizacion.includes('CHAROLA'));
+
+	// Verificar si el conductor fue seleccionado por caída de tensión
+	let seleccionPorCaidaTension = $derived(
+		memoria.conductor_alimentacion.seleccion_por_caida_tension === true
+	);
 </script>
 
 <section class="rounded-lg border border-border bg-card p-6">
@@ -126,7 +131,7 @@
 			<div class="space-y-1 text-sm">
 				<p class="text-foreground">
 					<strong>Cantidad de Conductores:</strong>
-					{#if memoria.canalizacion.NumeroDeTubos > 1 && memoria.conductores_por_tubo}
+					{#if memoria.canalizacion.numero_de_tubos > 1 && memoria.conductores_por_tubo}
 						{memoria.conductores_por_tubo} conductores por tubo
 						<span class="text-muted-foreground">({memoria.cantidad_conductores} total)</span>
 					{:else}
@@ -202,7 +207,7 @@
 					<tr>
 						<td class="px-4 py-2 text-muted-foreground">Calibre</td>
 						<td class="px-4 py-2 font-mono font-medium text-foreground">
-							{memoria.conductor_alimentacion.Calibre}
+							{memoria.conductor_alimentacion.calibre}
 							{#if numHilosAlimentacion > 1}
 								<span class="ml-1 text-xs text-muted-foreground">× {numHilosAlimentacion}</span>
 							{/if}
@@ -211,7 +216,7 @@
 					<tr>
 						<td class="px-4 py-2 text-muted-foreground">Material</td>
 						<td class="px-4 py-2 text-foreground">
-							{memoria.conductor_alimentacion.Material?.toUpperCase() === 'CU'
+							{memoria.conductor_alimentacion.material?.toUpperCase() === 'CU'
 								? 'Cobre (Cu)'
 								: 'Aluminio (Al)'}
 						</td>
@@ -219,11 +224,11 @@
 					<tr>
 						<td class="px-4 py-2 text-muted-foreground">Sección</td>
 						<td class="px-4 py-2 text-foreground">
-							{memoria.conductor_alimentacion.SeccionMM2.toFixed(2)} mm²
+							{memoria.conductor_alimentacion.seccion_mm2.toFixed(2)} mm²
 							{#if numHilosAlimentacion > 1}
 								<span class="ml-1 text-xs text-muted-foreground"
 									>(× {numHilosAlimentacion} = {(
-										memoria.conductor_alimentacion.SeccionMM2 * numHilosAlimentacion
+										memoria.conductor_alimentacion.seccion_mm2 * numHilosAlimentacion
 									).toFixed(2)} mm² total)</span
 								>
 							{/if}
@@ -232,7 +237,7 @@
 					<tr>
 						<td class="px-4 py-2 text-muted-foreground">Tipo de Aislamiento</td>
 						<td class="px-4 py-2 text-foreground">
-							{memoria.conductor_alimentacion.TipoAislamiento || 'THWN'}
+							{memoria.conductor_alimentacion.tipo_aislamiento || 'THWN'}
 						</td>
 					</tr>
 					<tr>
@@ -248,15 +253,15 @@
 					<tr>
 						<td class="px-4 py-2 text-muted-foreground">Ampacidad por Hilo</td>
 						<td class="px-4 py-2 font-medium text-foreground">
-							{memoria.conductor_alimentacion.Capacidad} A
+							{memoria.conductor_alimentacion.capacidad} A
 						</td>
 					</tr>
 					{#if numHilosAlimentacion > 1}
 						<tr>
 							<td class="px-4 py-2 text-muted-foreground">Capacidad Total</td>
 							<td class="px-4 py-2 font-medium text-foreground">
-								{memoria.conductor_alimentacion.Capacidad} A × {numHilosAlimentacion} = {(
-									memoria.conductor_alimentacion.Capacidad * numHilosAlimentacion
+								{memoria.conductor_alimentacion.capacidad} A × {numHilosAlimentacion} = {(
+									memoria.conductor_alimentacion.capacidad * numHilosAlimentacion
 								).toFixed(0)} A
 							</td>
 						</tr>
@@ -264,6 +269,29 @@
 				</tbody>
 			</table>
 		</div>
+
+		<!-- Indicador de selección por caída de tensión -->
+		{#if seleccionPorCaidaTension}
+			<div class="mt-4 rounded border border-warning/40 bg-warning/10 p-3">
+				<div class="flex items-center gap-2">
+					<span class="rounded bg-warning px-2 py-0.5 text-xs font-medium text-warning-foreground">
+						Caída de Tensión
+					</span>
+				</div>
+				{#if memoria.conductor_alimentacion.calibre_original_ampacidad}
+					<p class="mt-2 text-sm text-foreground">
+						<strong>Calibre ajustado:</strong>
+						{memoria.conductor_alimentacion.calibre_original_ampacidad} → {memoria
+							.conductor_alimentacion.calibre}
+					</p>
+				{/if}
+				{#if memoria.conductor_alimentacion.nota_seleccion}
+					<p class="mt-1 text-sm text-muted-foreground">
+						{memoria.conductor_alimentacion.nota_seleccion}
+					</p>
+				{/if}
+			</div>
+		{/if}
 	</div>
 
 	<!-- Verificación -->
@@ -280,7 +308,7 @@
 				<span class="font-medium text-success">✓</span>
 				{#if numHilosAlimentacion > 1}
 					<span class="text-foreground">
-						La ampacidad total ({capacidadTotal} A = {memoria.conductor_alimentacion.Capacidad} A × {numHilosAlimentacion}
+						La ampacidad total ({capacidadTotal} A = {memoria.conductor_alimentacion.capacidad} A × {numHilosAlimentacion}
 						hilos) es mayor o igual a la corriente ajustada ({memoria.corriente_ajustada.toFixed(2)} A).
 						Cada hilo transporta {memoria.corriente_por_hilo.toFixed(2)} A (≤ {capacidadPorHilo} A).
 					</span>

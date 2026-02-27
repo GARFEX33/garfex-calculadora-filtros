@@ -11,12 +11,20 @@ type PasoMemoria struct {
 
 // ResultadoConductor contiene la información del conductor seleccionado.
 type ResultadoConductor struct {
-	Calibre         string
-	Material        string
-	SeccionMM2      float64
-	TipoAislamiento string
-	Capacidad       float64
-	NumHilos        int // Número de hilos de tierra (1 para charola/tubería≤2, 2 para tubería>2)
+	Calibre         string  `json:"calibre"`
+	Material        string  `json:"material"`
+	SeccionMM2      float64 `json:"seccion_mm2"`
+	TipoAislamiento string  `json:"tipo_aislamiento"`
+	Capacidad       float64 `json:"capacidad"`
+	NumHilos        int     `json:"num_hilos"` // Número de hilos de tierra (1 para charola/tubería≤2, 2 para tubería>2)
+
+	// Selección por caída de tensión (NOM-001-SEDE)
+	// SeleccionPorCaidaTension indica si el calibre fue aumentado por caída de tensión
+	SeleccionPorCaidaTension bool   `json:"seleccion_por_caida_tension"`
+	// CalibreOriginalAmpacidad es el calibre que hubiera correspondido solo por ampacidad
+	CalibreOriginalAmpacidad string `json:"calibre_original_ampacidad,omitempty"`
+	// NotaSeleccion explica el motivo del aumento de calibre
+	NotaSeleccion            string `json:"nota_seleccion,omitempty"`
 }
 
 // ResultadoConductores contiene los conductores seleccionados.
@@ -26,13 +34,34 @@ type ResultadoConductores struct {
 	TablaUsada   string
 }
 
+// ResultadoConductorCaidaTension contiene el resultado de la selección de conductor
+// por criterio de caída de tensión (NOM-001-SEDE).
+// Se utiliza cuando el conductor seleccionado por ampacidad no cumple la caída de tensión.
+type ResultadoConductorCaidaTension struct {
+	// CalibreOriginal es el calibre seleccionado originalmente por ampacidad
+	CalibreOriginal     string `json:"calibre_original"`
+	// CalibreSeleccionado es el calibre superior que cumple la caída de tensión
+	CalibreSeleccionado string `json:"calibre_seleccionado"`
+	SeccionMM2          float64               `json:"seccion_mm2"`
+	TipoAislamiento     string                `json:"tipo_aislamiento"`
+	Capacidad           float64               `json:"capacidad"`
+	// CaidaTension es el resultado de caída de tensión ya verificado con el nuevo calibre
+	CaidaTension ResultadoCaidaTension `json:"caida_tension"`
+	// Nota describe el motivo del aumento: "Calibre aumentado de X a Y por caída de tensión (NOM-001-SEDE)"
+	Nota string `json:"nota"`
+	// Cumple indica si se encontró un calibre que cumple. False si se agotaron los intentos.
+	Cumple bool `json:"cumple"`
+	// IntentosRealizados es el número de calibres probados antes de encontrar uno válido
+	IntentosRealizados int `json:"intentos_realizados"`
+}
+
 // ResultadoCanalizacion contiene la información de la canalización.
 type ResultadoCanalizacion struct {
-	Tamano           string
+	Tamano           string  `json:"tamano"`
 	AnchoComercialMM float64 `json:"ancho_comercial_mm,omitempty"`
-	AreaTotalMM2     float64
-	AreaRequeridaMM2 float64
-	NumeroDeTubos    int
+	AreaTotalMM2     float64 `json:"area_total_mm2"`
+	AreaRequeridaMM2 float64 `json:"area_requerida_mm2"`
+	NumeroDeTubos    int     `json:"numero_de_tubos"`
 }
 
 // DetalleCharola contiene los valores intermedios del cálculo de charola
@@ -79,11 +108,13 @@ type DetalleTuberia struct {
 
 // ResultadoCaidaTension contiene el resultado del cálculo de caída.
 type ResultadoCaidaTension struct {
-	Porcentaje       float64
-	CaidaVolts       float64
-	Cumple           bool
-	LimitePorcentaje float64
-	Impedancia       float64
+	Porcentaje       float64 `json:"porcentaje"`
+	CaidaVolts       float64 `json:"caida_volts"`
+	Cumple           bool    `json:"cumple"`
+	LimitePorcentaje float64 `json:"limite_porcentaje"`
+	Impedancia       float64 `json:"impedancia"`
+	Resistencia      float64 `json:"resistencia"`
+	Reactancia       float64 `json:"reactancia"`
 }
 
 // EntradaDimensionarCanalizacion es el DTO de entrada para DimensionarCanalizacionUseCase.
