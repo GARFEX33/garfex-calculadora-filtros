@@ -8,7 +8,7 @@
 	let { memoria }: Props = $props();
 
 	let canalizacion = $derived(memoria.canalizacion);
-	let tipo = $derived(memoria.tipo_canalizacion);
+	let tipo = $derived(memoria.instalacion.tipo_canalizacion);
 
 	// Clasificación del tipo de canalización
 	let esTuberia = $derived(
@@ -41,29 +41,29 @@
 	});
 
 	// Fill factor como porcentaje (solo tubería)
-	let fillFactorPorcentaje = $derived((memoria.fill_factor * 100).toFixed(0));
+	let fillFactorPorcentaje = $derived((memoria.canalizacion.fill_factor * 100).toFixed(0));
 
 	// Control conductor — optional
 	let tieneControl = $derived(
-		!!memoria.detalle_charola?.diametro_control_mm &&
-			memoria.detalle_charola.diametro_control_mm > 0
+		!!memoria.canalizacion.detalle_charola?.diametro_control_mm &&
+			memoria.canalizacion.detalle_charola.diametro_control_mm > 0
 	);
 
 	// Detalle charola — valores intermedios para el desarrollo con números reales
-	let detalle = $derived(memoria.detalle_charola);
+	let detalle = $derived(memoria.canalizacion.detalle_charola);
 
 	// Detalle tubería — valores intermedios para el desarrollo con números reales
-	let detalleTuberia = $derived(memoria.detalle_tuberia);
+	let detalleTuberia = $derived(memoria.canalizacion.detalle_tuberia);
 
 	// Labels legibles de material y sistema eléctrico
 	let materialLabel = $derived(
-		memoria.conductor_alimentacion.material?.toUpperCase() === 'CU' ? 'Cobre (Cu)' : 'Aluminio (Al)'
+		memoria.cable_fase.material?.toUpperCase() === 'CU' ? 'Cobre (Cu)' : 'Aluminio (Al)'
 	);
 	let materialTierraLabel = $derived(
-		memoria.conductor_tierra.material?.toUpperCase() === 'CU' ? 'Cobre (Cu)' : 'Aluminio (Al)'
+		memoria.cable_tierra.material?.toUpperCase() === 'CU' ? 'Cobre (Cu)' : 'Aluminio (Al)'
 	);
 	let sistemaLabel = $derived.by(() => {
-		switch (memoria.sistema_electrico) {
+		switch (memoria.instalacion.sistema_electrico) {
 			case 'DELTA':
 				return 'Trifásico Delta (3F-3H)';
 			case 'ESTRELLA':
@@ -73,7 +73,7 @@
 			case 'MONOFASICO':
 				return 'Monofásico (1F-2H)';
 			default:
-				return memoria.sistema_electrico;
+				return memoria.instalacion.sistema_electrico;
 		}
 	});
 
@@ -113,27 +113,27 @@
 			<div class="mb-3 grid grid-cols-3 gap-2 text-sm">
 				<div
 					class="rounded border border-border p-2 text-center"
-					class:border-primary={memoria.fill_factor === 0.53}
-					class:bg-primary={memoria.fill_factor === 0.53}
-					class:text-primary-foreground={memoria.fill_factor === 0.53}
+					class:border-primary={memoria.canalizacion.fill_factor === 0.53}
+					class:bg-primary={memoria.canalizacion.fill_factor === 0.53}
+					class:text-primary-foreground={memoria.canalizacion.fill_factor === 0.53}
 				>
 					<p class="font-mono font-bold">53%</p>
 					<p class="text-xs">1 conductor</p>
 				</div>
 				<div
 					class="rounded border border-border p-2 text-center"
-					class:border-primary={memoria.fill_factor === 0.31}
-					class:bg-primary={memoria.fill_factor === 0.31}
-					class:text-primary-foreground={memoria.fill_factor === 0.31}
+					class:border-primary={memoria.canalizacion.fill_factor === 0.31}
+					class:bg-primary={memoria.canalizacion.fill_factor === 0.31}
+					class:text-primary-foreground={memoria.canalizacion.fill_factor === 0.31}
 				>
 					<p class="font-mono font-bold">31%</p>
 					<p class="text-xs">2 conductores</p>
 				</div>
 				<div
 					class="rounded border border-border p-2 text-center"
-					class:border-primary={memoria.fill_factor === 0.4}
-					class:bg-primary={memoria.fill_factor === 0.4}
-					class:text-primary-foreground={memoria.fill_factor === 0.4}
+					class:border-primary={memoria.canalizacion.fill_factor === 0.4}
+					class:bg-primary={memoria.canalizacion.fill_factor === 0.4}
+					class:text-primary-foreground={memoria.canalizacion.fill_factor === 0.4}
 				>
 					<p class="font-mono font-bold">40%</p>
 					<p class="text-xs">3+ conductores</p>
@@ -143,7 +143,7 @@
 				<hr class="my-3 border-border/60" />
 				<!-- Fórmula simbólica -->
 				<p class="font-mono text-sm text-muted-foreground">
-					{#if canalizacion.numero_de_tubos > 1}
+					{#if canalizacion.resultado.numero_de_tubos > 1}
 						{#if detalleTuberia.area_neutro_mm2}
 							A<sub>req</sub> = (N<sub>fases</sub>/N<sub>tubos</sub>) × A<sub>fase</sub> + (N<sub
 								>neutros</sub
@@ -186,7 +186,7 @@
 					</tr>
 					<tr>
 						<td class="px-4 py-2 text-muted-foreground">Hilos por fase</td>
-						<td class="px-4 py-2 font-medium text-foreground">{memoria.hilos_por_fase}</td>
+						<td class="px-4 py-2 font-medium text-foreground">{memoria.instalacion.hilos_por_fase}</td>
 					</tr>
 					<!-- Separador visual -->
 					<tr class="bg-muted/40">
@@ -200,7 +200,7 @@
 					<tr>
 						<td class="px-4 py-2 text-muted-foreground">Fase</td>
 						<td class="px-4 py-2 text-foreground">
-							<span class="font-mono font-medium">{memoria.conductor_alimentacion.calibre}</span>
+							<span class="font-mono font-medium">{memoria.cable_fase.calibre}</span>
 							<span class="ml-1 text-muted-foreground">{materialLabel}</span>
 						</td>
 					</tr>
@@ -208,7 +208,7 @@
 					<tr>
 						<td class="px-4 py-2 text-muted-foreground">Tierra</td>
 						<td class="px-4 py-2 text-foreground">
-							<span class="font-mono font-medium">{memoria.conductor_tierra.calibre}</span>
+							<span class="font-mono font-medium">{memoria.cable_tierra.calibre}</span>
 							<span class="ml-1 text-muted-foreground">{materialTierraLabel}</span>
 							<span
 								class="ml-2 rounded bg-muted px-1 py-0.5 text-xs font-medium text-muted-foreground"
@@ -227,7 +227,7 @@
 				<div class="space-y-1.5 rounded bg-muted/30 p-3 font-mono text-sm">
 					<!-- Sistema -->
 					<p class="text-muted-foreground">
-						{sistemaLabel} — {memoria.hilos_por_fase} conductor(es) por fase — {canalizacion.numero_de_tubos}
+						{sistemaLabel} — {memoria.instalacion.hilos_por_fase} conductor(es) por fase — {canalizacion.resultado.numero_de_tubos}
 						tubo(s)
 					</p>
 
@@ -239,7 +239,7 @@
 							2
 						)} mm²
 						<span class="font-sans text-xs text-muted-foreground">
-							({memoria.conductor_alimentacion.calibre} — Tabla 5 NOM)
+							({memoria.cable_fase.calibre} — Tabla 5 NOM)
 						</span>
 						=
 						<strong
@@ -254,7 +254,7 @@
 								2
 							)} mm²
 							<span class="font-sans text-xs text-muted-foreground">
-								({memoria.conductor_alimentacion.calibre} — Tabla 5 NOM)
+								({memoria.cable_fase.calibre} — Tabla 5 NOM)
 							</span>
 							=
 							<strong
@@ -269,7 +269,7 @@
 							2
 						)} mm²
 						<span class="font-sans text-xs text-muted-foreground">
-							({memoria.conductor_tierra.calibre} Desnudo — Tabla 8 NOM)
+							({memoria.cable_tierra.calibre} Desnudo — Tabla 8 NOM)
 						</span>
 						=
 						<strong
@@ -284,10 +284,10 @@
 						Tabla NOM Cap. 9 — seleccionar primer tubo donde Área<sub
 							>ocup. {fillFactorPorcentaje}%</sub
 						>
-						≥ {canalizacion.area_total_mm2.toFixed(2)} mm²:
+						≥ {canalizacion.resultado.area_total_mm2.toFixed(2)} mm²:
 					</p>
 					<p class="text-lg font-bold text-primary">
-						Tubo: {canalizacion.tamano}" / {detalleTuberia.designacion_metrica} mm — Área<sub
+						Tubo: {canalizacion.resultado.tamano}" / {detalleTuberia.designacion_metrica} mm — Área<sub
 							>ocup.</sub
 						>
 						= {detalleTuberia.area_ocupacion_tubo_mm2.toFixed(0)} mm²
@@ -311,7 +311,7 @@
 						<tr>
 							<td class="px-4 py-2 text-muted-foreground">Tamaño Comercial</td>
 							<td class="px-4 py-2 font-mono font-bold text-foreground">
-								{canalizacion?.tamano || '—'}
+								{canalizacion.resultado?.tamano || '—'}
 							</td>
 						</tr>
 						<tr>
@@ -325,13 +325,13 @@
 						<tr>
 							<td class="px-4 py-2 text-muted-foreground">Número de Tubos</td>
 							<td class="px-4 py-2 font-medium text-foreground">
-								{canalizacion?.numero_de_tubos ?? 1}
+								{canalizacion.resultado?.numero_de_tubos ?? 1}
 							</td>
 						</tr>
 						<tr>
 							<td class="px-4 py-2 text-muted-foreground">Área Total de Cables</td>
 							<td class="px-4 py-2 font-mono text-foreground">
-								{canalizacion?.area_total_mm2?.toFixed(2) ?? '—'} mm²
+								{canalizacion.resultado?.area_total_mm2?.toFixed(2) ?? '—'} mm²
 							</td>
 						</tr>
 						<tr>
@@ -361,14 +361,6 @@
 			conforme a NOM-001-SEDE-2012 Art. 310-15(b)(17). El ancho de charola se determina sumando los
 			espacios de fuerza, control (si aplica) y tierra.
 		</p>
-
-		<!-- Norma de referencia -->
-		<div class="mb-4 rounded border border-primary/30 bg-primary/10 p-3">
-			<p class="text-sm font-medium text-primary">
-				Referencia: NOM-001-SEDE-2012 Art. 392 / 310-15(b)(17) — Cables en charola con espaciado de
-				1 diámetro
-			</p>
-		</div>
 
 		<!-- Fórmula general -->
 		<div class="mb-4 rounded bg-muted p-4">
@@ -421,7 +413,7 @@
 					</tr>
 					<tr>
 						<td class="px-4 py-2 text-muted-foreground">Hilos por fase</td>
-						<td class="px-4 py-2 font-medium text-foreground">{memoria.hilos_por_fase}</td>
+						<td class="px-4 py-2 font-medium text-foreground">{memoria.instalacion.hilos_por_fase}</td>
 					</tr>
 					<!-- Separador visual -->
 					<tr class="bg-muted/40">
@@ -435,7 +427,7 @@
 					<tr>
 						<td class="px-4 py-2 text-muted-foreground">Fase</td>
 						<td class="px-4 py-2 text-foreground">
-							<span class="font-mono font-medium">{memoria.conductor_alimentacion.calibre}</span>
+							<span class="font-mono font-medium">{memoria.cable_fase.calibre}</span>
 							<span class="ml-1 text-muted-foreground">{materialLabel}</span>
 							{#if detalle}
 								<span class="ml-2 text-xs text-muted-foreground"
@@ -448,7 +440,7 @@
 					<tr>
 						<td class="px-4 py-2 text-muted-foreground">Tierra</td>
 						<td class="px-4 py-2 text-foreground">
-							<span class="font-mono font-medium">{memoria.conductor_tierra.calibre}</span>
+							<span class="font-mono font-medium">{memoria.cable_tierra.calibre}</span>
 							<span class="ml-1 text-muted-foreground">{materialLabel}</span>
 							{#if detalle}
 								<span class="ml-2 text-xs text-muted-foreground"
@@ -521,7 +513,7 @@
 						</p>
 					{/if}
 					<p class="text-lg font-bold text-primary">
-						A<sub>req</sub> = {canalizacion?.area_requerida_mm2?.toFixed(2) ?? '—'} mm
+						A<sub>req</sub> = {canalizacion.resultado?.area_requerida_mm2?.toFixed(2) ?? '—'} mm
 					</p>
 				</div>
 			</div>
@@ -542,20 +534,20 @@
 						<tr>
 							<td class="px-4 py-2 text-muted-foreground">Ancho Requerido (A<sub>req</sub>)</td>
 							<td class="px-4 py-2 font-mono text-foreground">
-								{canalizacion?.area_requerida_mm2?.toFixed(1) ?? '—'} mm
+								{canalizacion.resultado?.area_requerida_mm2?.toFixed(1) ?? '—'} mm
 							</td>
 						</tr>
 						<tr>
 							<td class="px-4 py-2 text-muted-foreground">Ancho Comercial Seleccionado</td>
 							<td class="px-4 py-2 font-mono font-bold text-primary">
-								{canalizacion?.tamano || '—'}
+								{canalizacion.resultado?.tamano || '—'}
 							</td>
 						</tr>
-						{#if canalizacion?.ancho_comercial_mm && canalizacion.ancho_comercial_mm > 0}
+						{#if canalizacion.resultado?.ancho_comercial_mm && canalizacion.resultado.ancho_comercial_mm > 0}
 							<tr>
-								<td class="px-4 py-2 text-muted-foreground">Ancho Comercial Seleccionado</td>
+								<td class="px-4 py-2 text-muted-foreground">Ancho Comercial (mm)</td>
 								<td class="px-4 py-2 font-mono font-bold text-primary">
-									{canalizacion.ancho_comercial_mm.toFixed(1)} mm
+									{canalizacion.resultado.ancho_comercial_mm.toFixed(1)} mm
 								</td>
 							</tr>
 						{/if}
@@ -648,7 +640,7 @@
 					</tr>
 					<tr>
 						<td class="px-4 py-2 text-muted-foreground">Hilos por fase</td>
-						<td class="px-4 py-2 font-medium text-foreground">{memoria.hilos_por_fase}</td>
+						<td class="px-4 py-2 font-medium text-foreground">{memoria.instalacion.hilos_por_fase}</td>
 					</tr>
 					<!-- Separador visual -->
 					<tr class="bg-muted/40">
@@ -662,7 +654,7 @@
 					<tr>
 						<td class="px-4 py-2 text-muted-foreground">Fase</td>
 						<td class="px-4 py-2 text-foreground">
-							<span class="font-mono font-medium">{memoria.conductor_alimentacion.calibre}</span>
+							<span class="font-mono font-medium">{memoria.cable_fase.calibre}</span>
 							<span class="ml-1 text-muted-foreground">{materialLabel}</span>
 							{#if detalle}
 								<span class="ml-2 text-xs text-muted-foreground"
@@ -675,7 +667,7 @@
 					<tr>
 						<td class="px-4 py-2 text-muted-foreground">Tierra</td>
 						<td class="px-4 py-2 text-foreground">
-							<span class="font-mono font-medium">{memoria.conductor_tierra.calibre}</span>
+							<span class="font-mono font-medium">{memoria.cable_tierra.calibre}</span>
 							<span class="ml-1 text-muted-foreground">{materialLabel}</span>
 							{#if detalle}
 								<span class="ml-2 text-xs text-muted-foreground"
@@ -713,11 +705,11 @@
 				<h3 class="mb-2 font-semibold text-foreground">Desarrollo</h3>
 				<div class="space-y-1.5 rounded bg-muted/30 p-3 font-mono text-sm">
 					<p class="text-foreground">
-						A<sub>p</sub> = 2 × {detalle.diametro_fase_mm.toFixed(2)} mm × {memoria.hilos_por_fase}
+						A<sub>p</sub> = 2 × {detalle.diametro_fase_mm.toFixed(2)} mm × {memoria.instalacion.hilos_por_fase}
 						hilos = <strong>{detalle.ancho_potencia_mm?.toFixed(2) ?? '—'} mm</strong>
 					</p>
 					<p class="text-foreground">
-						E<sub>f</sub> = ({memoria.hilos_por_fase} − 1) × {detalle.factor_triangular?.toFixed(2)} ×
+						E<sub>f</sub> = ({memoria.instalacion.hilos_por_fase} − 1) × {detalle.factor_triangular?.toFixed(2)} ×
 						{detalle.diametro_fase_mm.toFixed(2)} mm =
 						<strong>{detalle.espacio_fuerza_mm.toFixed(2)} mm</strong>
 					</p>
@@ -750,7 +742,7 @@
 						</p>
 					{/if}
 					<p class="text-lg font-bold text-primary">
-						A<sub>req</sub> = {canalizacion?.area_requerida_mm2?.toFixed(2) ?? '—'} mm
+						A<sub>req</sub> = {canalizacion.resultado?.area_requerida_mm2?.toFixed(2) ?? '—'} mm
 					</p>
 				</div>
 			</div>
@@ -775,20 +767,20 @@
 						<tr>
 							<td class="px-4 py-2 text-muted-foreground">Ancho Requerido (A<sub>req</sub>)</td>
 							<td class="px-4 py-2 font-mono text-foreground">
-								{canalizacion?.area_requerida_mm2?.toFixed(1) ?? '—'} mm
+								{canalizacion.resultado?.area_requerida_mm2?.toFixed(1) ?? '—'} mm
 							</td>
 						</tr>
 						<tr>
 							<td class="px-4 py-2 text-muted-foreground">Ancho Comercial Seleccionado</td>
 							<td class="px-4 py-2 font-mono font-bold text-primary">
-								{canalizacion?.tamano || '—'}
+								{canalizacion.resultado?.tamano || '—'}
 							</td>
 						</tr>
-						{#if canalizacion?.ancho_comercial_mm && canalizacion.ancho_comercial_mm > 0}
+						{#if canalizacion.resultado?.ancho_comercial_mm && canalizacion.resultado.ancho_comercial_mm > 0}
 							<tr>
-								<td class="px-4 py-2 text-muted-foreground">Ancho Comercial Seleccionado</td>
+								<td class="px-4 py-2 text-muted-foreground">Ancho Comercial (mm)</td>
 								<td class="px-4 py-2 font-mono font-bold text-primary">
-									{canalizacion.ancho_comercial_mm.toFixed(1)} mm
+									{canalizacion.resultado.ancho_comercial_mm.toFixed(1)} mm
 								</td>
 							</tr>
 						{/if}

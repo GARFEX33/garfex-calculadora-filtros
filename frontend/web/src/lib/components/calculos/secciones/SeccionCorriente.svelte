@@ -9,7 +9,7 @@
 
 	// Determine if three-phase or single-phase
 	let esTrifasico = $derived(
-		memoria.sistema_electrico === 'ESTRELLA' || memoria.sistema_electrico === 'DELTA'
+		memoria.instalacion.sistema_electrico === 'ESTRELLA' || memoria.instalacion.sistema_electrico === 'DELTA'
 	);
 
 	// Get equipment type
@@ -22,7 +22,7 @@
 		desarrollo: string[];
 		valores: Record<string, string>;
 	} {
-		const tensionV = memoria.tension;
+		const tensionV = memoria.instalacion.tension;
 		const fp = memoria.factor_potencia ?? 1;
 
 		// FILTRO_ACTIVO - amperaje directo
@@ -30,9 +30,9 @@
 			return {
 				tipo: 'Amperaje directo',
 				formula: 'I = Iₙominal',
-				desarrollo: [`I = ${memoria.corriente_nominal.toFixed(2)} A (dato del equipo)`],
+				desarrollo: [`I = ${memoria.corrientes.corriente_nominal.toFixed(2)} A (dato del equipo)`],
 				valores: {
-					Amperaje: `${memoria.equipo?.amperaje ?? memoria.corriente_nominal.toFixed(2)} A`,
+					Amperaje: `${memoria.equipo?.amperaje ?? memoria.corrientes.corriente_nominal.toFixed(2)} A`,
 					Tipo: 'Filtro Activo (FP = 1.0)'
 				}
 			};
@@ -40,7 +40,7 @@
 
 		// TRANSFORMADOR - I = KVA / (kV × √3)
 		if (tipoEquipo === 'TRANSFORMADOR') {
-			const kva = (memoria.corriente_nominal * tensionV * Math.sqrt(3)) / 1000;
+			const kva = (memoria.corrientes.corriente_nominal * tensionV * Math.sqrt(3)) / 1000;
 			const kv = tensionV / 1000;
 			return {
 				tipo: 'Desde KVA (Transformador)',
@@ -48,7 +48,7 @@
 				desarrollo: [
 					`I = ${kva.toFixed(2)} kVA / (${kv.toFixed(3)} kV × 1.732)`,
 					`I = ${kva.toFixed(2)} / ${(kv * Math.sqrt(3)).toFixed(3)}`,
-					`I = ${memoria.corriente_nominal.toFixed(2)} A`
+					`I = ${memoria.corrientes.corriente_nominal.toFixed(2)} A`
 				],
 				valores: {
 					KVA: `${kva.toFixed(2)} kVA`,
@@ -60,7 +60,7 @@
 
 		// FILTRO_RECHAZO - I = KVAR / (kV × √3)
 		if (tipoEquipo === 'FILTRO_RECHAZO') {
-			const kvar = (memoria.corriente_nominal * tensionV * Math.sqrt(3)) / 1000;
+			const kvar = (memoria.corrientes.corriente_nominal * tensionV * Math.sqrt(3)) / 1000;
 			const kv = tensionV / 1000;
 			return {
 				tipo: 'Desde KVAR (Filtro de Rechazo)',
@@ -68,7 +68,7 @@
 				desarrollo: [
 					`I = ${kvar.toFixed(2)} kVAR / (${kv.toFixed(3)} kV × 1.732)`,
 					`I = ${kvar.toFixed(2)} / ${(kv * Math.sqrt(3)).toFixed(3)}`,
-					`I = ${memoria.corriente_nominal.toFixed(2)} A`
+					`I = ${memoria.corrientes.corriente_nominal.toFixed(2)} A`
 				],
 				valores: {
 					KVAR: `${kvar.toFixed(2)} kVAR`,
@@ -81,7 +81,7 @@
 		// CARGA o MANUAL_POTENCIA - depends on system type
 		if (esTrifasico) {
 			// Trifásico: I = W / (V × √3 × FP)
-			const potenciaKW = (memoria.corriente_nominal * tensionV * Math.sqrt(3) * fp) / 1000;
+			const potenciaKW = (memoria.corrientes.corriente_nominal * tensionV * Math.sqrt(3) * fp) / 1000;
 			const potenciaW = potenciaKW * 1000;
 			return {
 				tipo: 'Desde Potencia (Sistema Trifásico)',
@@ -90,19 +90,19 @@
 					`P = ${potenciaKW.toFixed(2)} kW = ${potenciaW.toFixed(0)} W`,
 					`I = ${potenciaW.toFixed(0)} / (${tensionV} × 1.732 × ${fp.toFixed(2)})`,
 					`I = ${potenciaW.toFixed(0)} / ${(tensionV * Math.sqrt(3) * fp).toFixed(2)}`,
-					`I = ${memoria.corriente_nominal.toFixed(2)} A`
+					`I = ${memoria.corrientes.corriente_nominal.toFixed(2)} A`
 				],
 				valores: {
 					Potencia: `${potenciaKW.toFixed(2)} kW`,
 					Voltaje: `${tensionV} V`,
 					'Factor de Potencia': fp.toFixed(2),
-					Sistema: memoria.sistema_electrico,
+					Sistema: memoria.instalacion.sistema_electrico,
 					Fórmula: 'I = P / (V × √3 × cosθ)'
 				}
 			};
 		} else {
 			// Monofásico/Bifásico: I = W / (V × FP)
-			const potenciaKW = (memoria.corriente_nominal * tensionV * fp) / 1000;
+			const potenciaKW = (memoria.corrientes.corriente_nominal * tensionV * fp) / 1000;
 			const potenciaW = potenciaKW * 1000;
 			return {
 				tipo: 'Desde Potencia (Sistema Monofásico)',
@@ -111,13 +111,13 @@
 					`P = ${potenciaKW.toFixed(2)} kW = ${potenciaW.toFixed(0)} W`,
 					`I = ${potenciaW.toFixed(0)} / (${tensionV} × ${fp.toFixed(2)})`,
 					`I = ${potenciaW.toFixed(0)} / ${(tensionV * fp).toFixed(2)}`,
-					`I = ${memoria.corriente_nominal.toFixed(2)} A`
+					`I = ${memoria.corrientes.corriente_nominal.toFixed(2)} A`
 				],
 				valores: {
 					Potencia: `${potenciaKW.toFixed(2)} kW`,
 					Voltaje: `${tensionV} V`,
 					'Factor de Potencia': fp.toFixed(2),
-					Sistema: memoria.sistema_electrico,
+					Sistema: memoria.instalacion.sistema_electrico,
 					Fórmula: 'I = P / (V × cosθ)'
 				}
 			};
@@ -171,7 +171,7 @@
 	<div class="rounded border border-success/30 bg-success/10 p-4">
 		<h3 class="mb-2 font-semibold text-success">Resultado</h3>
 		<p class="text-2xl font-bold text-foreground">
-			I<sub>n</sub> = {memoria.corriente_nominal.toFixed(2)} A
+			I<sub>n</sub> = {memoria.corrientes.corriente_nominal.toFixed(2)} A
 		</p>
 	</div>
 
@@ -179,11 +179,11 @@
 	<div class="mt-4 grid grid-cols-2 gap-4 text-sm">
 		<div>
 			<span class="text-muted-foreground">Sistema:</span>
-			<span class="ml-2 font-medium text-foreground">{memoria.sistema_electrico}</span>
+			<span class="ml-2 font-medium text-foreground">{memoria.instalacion.sistema_electrico}</span>
 		</div>
 		<div>
 			<span class="text-muted-foreground">Voltaje:</span>
-			<span class="ml-2 font-medium text-foreground">{memoria.tension} V</span>
+			<span class="ml-2 font-medium text-foreground">{memoria.instalacion.tension} V</span>
 		</div>
 		{#if info.valores['Factor de Potencia']}
 			<div>

@@ -1,5 +1,10 @@
 <script lang="ts">
-	import type { TipoEquipo, UnidadPotencia } from '$lib/types/calculos.types';
+	import type {
+		TipoEquipo,
+		UnidadPotencia,
+		TipoVoltaje,
+		SistemaElectrico
+	} from '$lib/types/calculos.types';
 
 	export interface FormularioManualData {
 		tipo_equipo: TipoEquipo | '';
@@ -8,6 +13,9 @@
 		potencia_unidad: UnidadPotencia;
 		factor_potencia: number | undefined;
 		itm: number | undefined;
+		tension: number;
+		tipo_voltaje: TipoVoltaje;
+		sistema_electrico: SistemaElectrico | '';
 	}
 
 	interface Props {
@@ -31,6 +39,18 @@
 		{ value: 'KW', label: 'kW' },
 		{ value: 'KVA', label: 'kVA' },
 		{ value: 'KVAR', label: 'kVAR' }
+	];
+
+	const tipoVoltajeOptions: { value: TipoVoltaje; label: string }[] = [
+		{ value: 'FASE_NEUTRO', label: 'Fase-Neutro (FN)' },
+		{ value: 'FASE_FASE', label: 'Fase-Fase (FF)' }
+	];
+
+	const sistemaElectricoOptions: { value: SistemaElectrico; label: string }[] = [
+		{ value: 'ESTRELLA', label: 'Trifásico Estrella (4 hilos)' },
+		{ value: 'DELTA', label: 'Trifásico Delta (3 hilos)' },
+		{ value: 'MONOFASICO', label: 'Monofásico (2 hilos)' },
+		{ value: 'BIFASICO', label: 'Bifásico (3 hilos)' }
 	];
 
 	// Using derived to conditionally show fields
@@ -116,19 +136,67 @@
 		</div>
 	{/if}
 
+	<!-- Tensión ( siempre visible en modos manuales) -->
+	<div class="flex flex-col gap-1.5">
+		<label for="tension" class="text-sm font-medium text-foreground">Tensión (V)</label>
+		<input
+			type="number"
+			id="tension"
+			required
+			placeholder="220"
+			value={datos.tension ?? ''}
+			oninput={(e) =>
+				updateDatos('tension', e.currentTarget.value ? Number(e.currentTarget.value) : 0)}
+			class="w-full rounded-md border border-input-border bg-input px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:outline-none"
+		/>
+	</div>
+
+	<!-- Tipo de Voltaje (siempre visible en modos manuales) -->
+	<div class="flex flex-col gap-1.5">
+		<label for="tipo_voltaje" class="text-sm font-medium text-foreground">Tipo de Voltaje</label>
+		<select
+			id="tipo_voltaje"
+			value={datos.tipo_voltaje}
+			onchange={(e) => updateDatos('tipo_voltaje', e.currentTarget.value as TipoVoltaje)}
+			class="w-full rounded-md border border-input-border bg-input px-3 py-2 text-sm text-foreground focus:ring-2 focus:ring-ring focus:outline-none"
+		>
+			{#each tipoVoltajeOptions as opt}
+				<option value={opt.value}>{opt.label}</option>
+			{/each}
+		</select>
+	</div>
+
+	<!-- Sistema Eléctrico (siempre visible en modos manuales) -->
+	<div class="flex flex-col gap-1.5">
+		<label for="sistema_electrico" class="text-sm font-medium text-foreground"
+			>Sistema Eléctrico</label
+		>
+		<select
+			id="sistema_electrico"
+			value={datos.sistema_electrico}
+			onchange={(e) =>
+				updateDatos('sistema_electrico', e.currentTarget.value as SistemaElectrico | '')}
+			class="w-full rounded-md border border-input-border bg-input px-3 py-2 text-sm text-foreground focus:ring-2 focus:ring-ring focus:outline-none"
+		>
+			<option value="">Seleccionar...</option>
+			{#each sistemaElectricoOptions as opt}
+				<option value={opt.value}>{opt.label}</option>
+			{/each}
+		</select>
+	</div>
+
 	<!-- Factor de Potencia (solo modo MANUAL_POTENCIA + tipo CARGA) -->
 	{#if mostrarFactorPotencia}
 		<div class="flex flex-col gap-1.5">
 			<label for="factor_potencia" class="text-sm font-medium text-foreground"
-				>Factor de Potencia (0-1)</label
+				>Factor de Potencia (%)</label
 			>
 			<input
 				type="number"
 				id="factor_potencia"
-				step="0.01"
-				min="0"
-				max="1"
-				placeholder="0.9"
+				min="1"
+				max="100"
+				placeholder="98"
 				value={datos.factor_potencia ?? ''}
 				oninput={(e) =>
 					updateDatos(
@@ -137,6 +205,7 @@
 					)}
 				class="w-full rounded-md border border-input-border bg-input px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:outline-none"
 			/>
+			<p class="text-xs text-muted-foreground">Ingrese valor entre 1 y 100 (ej: 98 = 98%)</p>
 		</div>
 	{/if}
 

@@ -15,9 +15,25 @@
 
 	// Check individual criteria
 	let cumpleAmpacidad = $derived(
-		memoria.conductor_alimentacion.capacidad >= memoria.corriente_por_hilo
+		memoria.cable_fase.capacidad >= memoria.corrientes.corriente_por_hilo
 	);
 	let cumpleCaida = $derived(memoria.caida_tension?.cumple ?? false);
+
+	// Circuito completo
+	let sistemaElectrico = $derived(memoria.instalacion.sistema_electrico);
+	let numFases = $derived(
+		sistemaElectrico === 'MONOFASICO' ? 1 : sistemaElectrico === 'BIFASICO' ? 2 : 3
+	);
+	let calibreFinal = $derived(memoria.cable_fase.calibre);
+	let hilosPorFase = $derived(memoria.instalacion.hilos_por_fase ?? 1);
+	let calibreTierra = $derived(memoria.cable_tierra?.calibre ?? '');
+	let canalizacionLabel = $derived.by(() => {
+		const tipo = memoria.instalacion.tipo_canalizacion;
+		const tamano = memoria.canalizacion.resultado?.tamano || '';
+		if (tipo === 'CHAROLA_CABLE_ESPACIADO') return `Charola ${tamano} en Arreglo Espaciado`;
+		if (tipo === 'CHAROLA_CABLE_TRIANGULAR') return `Charola ${tamano} en Arreglo Triangular`;
+		return `Tubería ${tamano}`;
+	});
 </script>
 
 <section class="rounded-lg border border-border bg-card p-6">
@@ -39,6 +55,16 @@
 				? 'EL DISEÑO CUMPLE CON LA NOM-001-SEDE-2012'
 				: 'EL DISEÑO REQUIERE REVISIÓN'}
 		</h3>
+	</div>
+
+	<!-- Circuito Completo -->
+	<div class="mt-6 rounded-lg border border-primary/30 bg-primary/10 p-4">
+		<h3 class="mb-2 font-semibold text-primary">Circuito Completo</h3>
+		<p class="font-mono text-base text-foreground">
+			{numFases} fase{numFases > 1 ? 's' : ''} de {calibreFinal} AWG{hilosPorFase > 1
+				? ` × ${hilosPorFase}`
+				: ''} + 1 tierra de {calibreTierra} en {canalizacionLabel}
+		</p>
 	</div>
 
 	<!-- Criteria checklist -->
@@ -85,17 +111,6 @@
 			</ul>
 		</div>
 	{/if}
-
-	<!-- Final statement -->
-	<div class="mt-6 rounded border border-primary/30 bg-primary/10 p-4">
-		<p class="text-sm text-foreground">
-			<strong>Resumen:</strong> Se aplicaron las fórmulas técnicas correctas para el ejemplo
-			presentado. El sistema{' '}
-			{cumpleAmpacidad ? 'cumple' : 'no cumple'} los criterios de ampacidad, y la{' '}
-			{cumpleCaida ? 'caída de tensión está dentro' : 'caída de tensión excede'} los límites recomendados.
-			El diseño {cumpleNormativa ? 'cumple' : 'no cumple'} con la NOM-001-SEDE-2012.
-		</p>
-	</div>
 
 	<!-- Signature area -->
 	<div class="mt-8 grid grid-cols-2 gap-8 pt-8">

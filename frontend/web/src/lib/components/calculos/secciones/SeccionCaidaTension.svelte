@@ -9,10 +9,10 @@
 	let { memoria }: Props = $props();
 
 	// Sistema eléctrico
-	let esMonofasico = $derived(memoria.sistema_electrico === 'MONOFASICO');
-	let esBifasico = $derived(memoria.sistema_electrico === 'BIFASICO');
-	let esEstrella = $derived(memoria.sistema_electrico === 'ESTRELLA');
-	let esDelta = $derived(memoria.sistema_electrico === 'DELTA');
+	let esMonofasico = $derived(memoria.instalacion.sistema_electrico === 'MONOFASICO');
+	let esBifasico = $derived(memoria.instalacion.sistema_electrico === 'BIFASICO');
+	let esEstrella = $derived(memoria.instalacion.sistema_electrico === 'ESTRELLA');
+	let esDelta = $derived(memoria.instalacion.sistema_electrico === 'DELTA');
 
 	// Voltage reference: Mono/Bifasico → Vfn; Estrella/Delta → Vff
 	let voltajeRefLabel = $derived(esMonofasico || esBifasico ? 'Vfn' : 'Vff');
@@ -30,11 +30,11 @@
 
 	// Recálculo por caída de tensión
 	let recalculoPorCaida = $derived(
-		memoria.conductor_alimentacion.seleccion_por_caida_tension === true
+		memoria.cable_fase.seleccion_por_caida_tension === true
 	);
-	let calibreOriginal = $derived(memoria.conductor_alimentacion.calibre_original_ampacidad ?? '');
-	let calibreFinal = $derived(memoria.conductor_alimentacion.calibre);
-	let notaRecalculo = $derived(memoria.conductor_alimentacion.nota_seleccion ?? '');
+	let calibreOriginal = $derived(memoria.cable_fase.calibre_original_ampacidad ?? '');
+	let calibreFinal = $derived(memoria.cable_fase.calibre);
+	let notaRecalculo = $derived(memoria.cable_fase.nota_seleccion ?? '');
 
 	// Caso donde se agotaron todos los calibres disponibles y ninguno cumple
 	let agotadoCalibre = $derived(!cumple && !recalculoPorCaida);
@@ -43,12 +43,12 @@
 	let R = $derived(caida?.resistencia?.toFixed(4) ?? '—');
 	let X = $derived(caida?.reactancia?.toFixed(4) ?? '—');
 	let Zef = $derived(caida?.impedancia?.toFixed(4) ?? '—');
-	let I = $derived(memoria.corriente_nominal.toFixed(2));
-	let L = $derived(memoria.longitud_circuito.toFixed(2));
-	let V = $derived(memoria.tension);
+	let I = $derived(memoria.corrientes.corriente_nominal.toFixed(2));
+	let L = $derived(memoria.instalacion.longitud_circuito.toFixed(2));
+	let V = $derived(memoria.instalacion.tension);
 
 	// Derived values for Desarrollo section (Task 3.4)
-	let L_km = $derived((memoria.longitud_circuito / 1000).toFixed(3));
+	let L_km = $derived((memoria.instalacion.longitud_circuito / 1000).toFixed(3));
 	let caida_volts = $derived(caida?.caida_volts?.toFixed(4) ?? '—');
 </script>
 
@@ -195,9 +195,9 @@
 				{#if cumple}
 					<span class="font-medium text-success">✓ CUMPLE</span>
 					<span class="text-foreground">
-						- La caída de tensión ({porcentaje.toFixed(2)}%) está dentro del límite permitido ({limite.toFixed(
+						- La caída de tensión ({porcentaje.toFixed(2)}%) cumple con el límite máximo de {limite.toFixed(
 							1
-						)}%)
+						)}% establecido en la NOM-001-SEDE
 					</span>
 				{:else}
 					<span class="font-medium text-destructive">✗ NO CUMPLE</span>
@@ -216,14 +216,10 @@
 		<div class="mt-4 rounded border border-warning/40 bg-warning/10 p-4">
 			<h3 class="mb-2 flex items-center gap-2 font-semibold text-foreground">
 				<span class="rounded bg-warning px-2 py-0.5 text-xs font-medium text-warning-foreground">
-					Recálculo NOM-001-SEDE
+					Verificación NOM-001-SEDE
 				</span>
-				Ajuste automático de calibre por caída de tensión
+				Ajuste por caída de tensión
 			</h3>
-			<p class="mb-2 text-sm text-muted-foreground">
-				El calibre seleccionado por ampacidad no cumplió con el límite de caída de tensión. Se
-				aumentó automáticamente al siguiente calibre superior que sí cumple.
-			</p>
 			{#if calibreOriginal}
 				<div class="flex items-center gap-3 font-mono text-sm">
 					<span class="rounded bg-destructive/10 px-2 py-1 text-destructive"
@@ -234,9 +230,12 @@
 						>{calibreFinal} AWG</span
 					>
 				</div>
+				<p class="mt-2 text-sm text-foreground">
+					Calibre ajustado por verificación de caída de tensión conforme a NOM-001-SEDE-2012
+				</p>
 			{/if}
 			{#if notaRecalculo}
-				<p class="mt-2 text-xs text-muted-foreground">{notaRecalculo}</p>
+				<p class="mt-1 text-xs text-muted-foreground italic">{notaRecalculo}</p>
 			{/if}
 		</div>
 	{/if}

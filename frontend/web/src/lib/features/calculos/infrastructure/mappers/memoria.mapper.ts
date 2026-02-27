@@ -17,7 +17,11 @@ import type {
 	DetalleTuberia,
 	ResultadoConductor,
 	ResultadoCanalizacion,
-	ResultadoCaidaTension
+	ResultadoCaidaTension,
+	DatosInstalacion,
+	DatosCorrientes,
+	DatosCanalizacion,
+	DatosProteccion
 } from '../../domain/types/memoria.types';
 import type {
 	ApiMemoriaRequest,
@@ -26,7 +30,12 @@ import type {
 	ApiResultadoCanalizacion,
 	ApiResultadoCaidaTension,
 	ApiDetalleCharola,
-	ApiDetalleTuberia
+	ApiDetalleTuberia,
+	ApiDatosInstalacion,
+	ApiDatosCorrientes,
+	ApiDatosCanalizacion,
+	ApiDatosProteccion,
+	ApiDatosEquipo
 } from '../api/memoria.api';
 import type { SistemaElectrico, TipoVoltaje } from '../../domain/types/memoria.types';
 
@@ -166,49 +175,76 @@ export function mapMemoriaInputToApi(domain: MemoriaRequest): ApiMemoriaRequest 
 /**
  * Maps API response to domain MemoriaOutput.
  * Uses type assertion pattern for optional fields to satisfy exactOptionalPropertyTypes.
+ *
+ * La nueva estructura agrupada del backend coincide casi 1:1 con el domain,
+ * así que el mapper es principalmente un pass-through con validaciones.
  */
 export function mapApiToMemoriaOutput(api: ApiMemoriaOutput): MemoriaOutput {
+	// Verificar campos obligatorios
+	if (!api.equipo) {
+		throw new Error('API response missing required field: equipo');
+	}
+	if (!api.instalacion) {
+		throw new Error('API response missing required field: instalacion');
+	}
+	if (!api.corrientes) {
+		throw new Error('API response missing required field: corrientes');
+	}
+	if (!api.cable_fase) {
+		throw new Error('API response missing required field: cable_fase');
+	}
+	if (!api.cable_tierra) {
+		throw new Error('API response missing required field: cable_tierra');
+	}
+	if (!api.canalizacion) {
+		throw new Error('API response missing required field: canalizacion');
+	}
+	if (!api.canalizacion.resultado) {
+		throw new Error('API response missing required field: canalizacion.resultado');
+	}
+	if (!api.proteccion) {
+		throw new Error('API response missing required field: proteccion');
+	}
+	if (!api.caida_tension) {
+		throw new Error('API response missing required field: caida_tension');
+	}
+
 	const result: MemoriaOutput = {
+		// Datos del equipo
 		equipo: mapApiToDatosEquipo(api.equipo),
 		tipo_equipo: api.tipo_equipo,
-		tension: api.tension,
 		factor_potencia: api.factor_potencia,
 		estado: api.estado,
-		temperatura_ambiente: api.temperatura_ambiente,
-		sistema_electrico: api.sistema_electrico,
-		cantidad_conductores: api.cantidad_conductores,
-		corriente_nominal: api.corriente_nominal,
-		corriente_ajustada: api.corriente_ajustada,
-		factor_temperatura: api.factor_temperatura,
-		factor_agrupamiento: api.factor_agrupamiento,
-		factor_total_ajuste: api.factor_total_ajuste,
-		hilos_por_fase: api.hilos_por_fase,
-		corriente_por_hilo: api.corriente_por_hilo,
-		tipo_canalizacion: api.tipo_canalizacion,
-		material: api.material,
-		temperatura_usada: api.temperatura_usada,
-		conductor_alimentacion: mapApiToResultadoConductor(api.conductor_alimentacion),
-		tabla_ampacidad_usada: api.tabla_ampacidad_usada,
-		conductor_tierra: mapApiToResultadoConductor(api.conductor_tierra),
-		itm: api.itm,
-		canalizacion: mapApiToResultadoCanalizacion(api.canalizacion),
-		fill_factor: api.fill_factor,
-		longitud_circuito: api.longitud_circuito,
-		caida_tension: mapApiToResultadoCaidaTension(api.caida_tension),
-		cumple_normativa: api.cumple_normativa,
-		observaciones: api.observaciones
-	};
 
-	// Optional fields - add only if present
-	if (api.conductores_por_tubo !== undefined) {
-		result.conductores_por_tubo = api.conductores_por_tubo;
-	}
-	if (api.detalle_charola) {
-		result.detalle_charola = mapApiToDetalleCharola(api.detalle_charola);
-	}
-	if (api.detalle_tuberia) {
-		result.detalle_tuberia = mapApiToDetalleTuberia(api.detalle_tuberia);
-	}
+		// Parámetros de instalación
+		instalacion: mapApiToDatosInstalacion(api.instalacion),
+
+		// Cálculos de corriente
+		corrientes: mapApiToDatosCorrientes(api.corrientes),
+
+		// Conductores
+		cable_fase: mapApiToResultadoConductor(api.cable_fase),
+		cable_tierra: mapApiToResultadoConductor(api.cable_tierra),
+
+		// Cable neutro es opcional (nil para sistemas DELTA)
+		cable_neutro: api.cable_neutro
+			? mapApiToResultadoConductor(api.cable_neutro)
+			: undefined,
+
+		// Canalización
+		canalizacion: mapApiToDatosCanalizacion(api.canalizacion),
+
+		// Protección
+		proteccion: mapApiToDatosProteccion(api.proteccion),
+
+		// Caída de tensión
+		caida_tension: mapApiToResultadoCaidaTension(api.caida_tension),
+
+		// Resumen y metadatos
+		cumple_normativa: api.cumple_normativa,
+		observaciones: api.observaciones ?? [],
+		pasos: api.pasos ?? []
+	};
 
 	return result;
 }
@@ -217,7 +253,7 @@ export function mapApiToMemoriaOutput(api: ApiMemoriaOutput): MemoriaOutput {
  * Maps API DatosEquipo to domain DatosEquipo.
  * Handles optional 'bornes' field.
  */
-function mapApiToDatosEquipo(api: ApiMemoriaOutput['equipo']): DatosEquipo {
+function mapApiToDatosEquipo(api: ApiDatosEquipo): DatosEquipo {
 	const result: DatosEquipo = {
 		clave: api.clave,
 		tipo: api.tipo,
@@ -231,6 +267,71 @@ function mapApiToDatosEquipo(api: ApiMemoriaOutput['equipo']): DatosEquipo {
 	}
 
 	return result;
+}
+
+/**
+ * Maps API DatosInstalacion to domain DatosInstalacion.
+ */
+function mapApiToDatosInstalacion(api: ApiDatosInstalacion): DatosInstalacion {
+	return {
+		tension: api.tension,
+		sistema_electrico: api.sistema_electrico,
+		tipo_canalizacion: api.tipo_canalizacion,
+		material: api.material,
+		longitud_circuito: api.longitud_circuito,
+		hilos_por_fase: api.hilos_por_fase,
+		porcentaje_caida_maximo: api.porcentaje_caida_maximo
+	};
+}
+
+/**
+ * Maps API DatosCorrientes to domain DatosCorrientes.
+ */
+function mapApiToDatosCorrientes(api: ApiDatosCorrientes): DatosCorrientes {
+	return {
+		corriente_nominal: api.corriente_nominal,
+		corriente_ajustada: api.corriente_ajustada,
+		corriente_por_hilo: api.corriente_por_hilo,
+		factor_temperatura: api.factor_temperatura,
+		factor_agrupamiento: api.factor_agrupamiento,
+		factor_total_ajuste: api.factor_total_ajuste,
+		temperatura_ambiente: api.temperatura_ambiente,
+		temperatura_referencia: api.temperatura_referencia,
+		conductores_por_tubo: api.conductores_por_tubo,
+		cantidad_conductores: api.cantidad_conductores,
+		tabla_ampacidad_usada: api.tabla_ampacidad_usada
+	};
+}
+
+/**
+ * Maps API DatosCanalizacion to domain DatosCanalizacion.
+ */
+function mapApiToDatosCanalizacion(api: ApiDatosCanalizacion): DatosCanalizacion {
+	const result: DatosCanalizacion = {
+		resultado: mapApiToResultadoCanalizacion(api.resultado),
+		fill_factor: api.fill_factor
+	};
+
+	// Optional: detalle_charola
+	if (api.detalle_charola) {
+		result.detalle_charola = mapApiToDetalleCharola(api.detalle_charola);
+	}
+
+	// Optional: detalle_tuberia
+	if (api.detalle_tuberia) {
+		result.detalle_tuberia = mapApiToDetalleTuberia(api.detalle_tuberia);
+	}
+
+	return result;
+}
+
+/**
+ * Maps API DatosProteccion to domain DatosProteccion.
+ */
+function mapApiToDatosProteccion(api: ApiDatosProteccion): DatosProteccion {
+	return {
+		itm: api.itm
+	};
 }
 
 /**

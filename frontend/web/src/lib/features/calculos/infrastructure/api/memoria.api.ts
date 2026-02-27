@@ -57,6 +57,38 @@ export interface ApiDatosEquipo {
 }
 
 /**
+ * Datos de instalación en formato API.
+ * Agrupados bajo 'instalacion' en la respuesta.
+ */
+export interface ApiDatosInstalacion {
+	tension: number;
+	sistema_electrico: 'DELTA' | 'ESTRELLA' | 'BIFASICO' | 'MONOFASICO';
+	tipo_canalizacion: string;
+	material: string;
+	longitud_circuito: number;
+	hilos_por_fase: number;
+	porcentaje_caida_maximo: number;
+}
+
+/**
+ * Datos de corrientes en formato API.
+ * Agrupados bajo 'corrientes' en la respuesta.
+ */
+export interface ApiDatosCorrientes {
+	corriente_nominal: number;
+	corriente_ajustada: number;
+	corriente_por_hilo: number;
+	factor_temperatura: number;
+	factor_agrupamiento: number;
+	factor_total_ajuste: number;
+	temperatura_ambiente: number;
+	temperatura_referencia: number;
+	conductores_por_tubo: number;
+	cantidad_conductores: number;
+	tabla_ampacidad_usada: string;
+}
+
+/**
  * Conductor result from API — backend serializes in snake_case.
  */
 export interface ApiResultadoConductor {
@@ -115,6 +147,23 @@ export interface ApiDetalleTuberia {
 }
 
 /**
+ * Datos de canalización agrupados (resultado + detalles).
+ */
+export interface ApiDatosCanalizacion {
+	resultado: ApiResultadoCanalizacion;
+	fill_factor: number;
+	detalle_charola?: ApiDetalleCharola;
+	detalle_tuberia?: ApiDetalleTuberia;
+}
+
+/**
+ * Datos de protección en formato API.
+ */
+export interface ApiDatosProteccion {
+	itm: number;
+}
+
+/**
  * Voltage drop result from API.
  */
 export interface ApiResultadoCaidaTension {
@@ -128,41 +177,67 @@ export interface ApiResultadoCaidaTension {
 }
 
 /**
+ * Paso de memoria - detalle del cálculo.
+ */
+export interface ApiPasoMemoria {
+	numero: number;
+	nombre: string;
+	descripcion: string;
+	resultado: unknown;
+}
+
+/**
  * Full calculation output from API response data field.
  * Uses snake_case as returned by backend.
+ * Nueva estructura agrupada por entidad.
  */
 export interface ApiMemoriaOutput {
+	// ═══════════════════════════════════════════════════════════════════════
+	// DATOS DEL EQUIPO
+	// ═══════════════════════════════════════════════════════════════════════
 	equipo: ApiDatosEquipo;
 	tipo_equipo: string;
-	tension: number;
 	factor_potencia: number;
 	estado: string;
-	temperatura_ambiente: number;
-	sistema_electrico: 'DELTA' | 'ESTRELLA' | 'BIFASICO' | 'MONOFASICO';
-	cantidad_conductores: number;
-	conductores_por_tubo?: number;
-	corriente_nominal: number;
-	corriente_ajustada: number;
-	factor_temperatura: number;
-	factor_agrupamiento: number;
-	factor_total_ajuste: number;
-	hilos_por_fase: number;
-	corriente_por_hilo: number;
-	tipo_canalizacion: string;
-	material: string;
-	temperatura_usada: number;
-	conductor_alimentacion: ApiResultadoConductor;
-	tabla_ampacidad_usada: string;
-	conductor_tierra: ApiResultadoConductor;
-	itm: number;
-	canalizacion: ApiResultadoCanalizacion;
-	fill_factor: number;
-	detalle_charola?: ApiDetalleCharola;
-	detalle_tuberia?: ApiDetalleTuberia;
-	longitud_circuito: number;
+
+	// ═══════════════════════════════════════════════════════════════════════
+	// PARÁMETROS DE INSTALACIÓN
+	// ═══════════════════════════════════════════════════════════════════════
+	instalacion: ApiDatosInstalacion;
+
+	// ═══════════════════════════════════════════════════════════════════════
+	// CÁLCULOS DE CORRIENTE
+	// ═══════════════════════════════════════════════════════════════════════
+	corrientes: ApiDatosCorrientes;
+
+	// ═══════════════════════════════════════════════════════════════════════
+	// CONDUCTORES
+	// ═══════════════════════════════════════════════════════════════════════
+	cable_fase: ApiResultadoConductor;
+	cable_neutro?: ApiResultadoConductor; // nil para sistemas DELTA
+	cable_tierra: ApiResultadoConductor;
+
+	// ═══════════════════════════════════════════════════════════════════════
+	// CANALIZACIÓN
+	// ═══════════════════════════════════════════════════════════════════════
+	canalizacion: ApiDatosCanalizacion;
+
+	// ═══════════════════════════════════════════════════════════════════════
+	// PROTECCIÓN
+	// ═══════════════════════════════════════════════════════════════════════
+	proteccion: ApiDatosProteccion;
+
+	// ═══════════════════════════════════════════════════════════════════════
+	// CAÍDA DE TENSIÓN
+	// ═══════════════════════════════════════════════════════════════════════
 	caida_tension: ApiResultadoCaidaTension;
+
+	// ═══════════════════════════════════════════════════════════════════════
+	// RESUMEN Y METADATOS
+	// ═══════════════════════════════════════════════════════════════════════
 	cumple_normativa: boolean;
 	observaciones: string[];
+	pasos: ApiPasoMemoria[];
 }
 
 /**

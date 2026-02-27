@@ -15,7 +15,7 @@
 		hilos_por_fase: number;
 		porcentaje_caida_maximo: number;
 		temperatura_override: number | undefined;
-		diametro_control_mm?: number;
+		diametro_control_mm: number | undefined;
 	}
 
 	interface Props {
@@ -26,6 +26,7 @@
 	let { datos = $bindable(), onDatosChange }: Props = $props();
 
 	let mostrarAvanzadas = $state(false);
+	let autocompletadoOnce = $state(false);
 
 	const estadosMexico = [
 		'Aguascalientes',
@@ -73,12 +74,34 @@
 	// Derivar si el tipo de canalización es tubería
 	const esTuberia = $derived(datos.tipo_canalizacion?.startsWith('TUBERIA_') ?? false);
 
+	// Mostrar num_tuberias solo cuando es tubería Y hay más de 1 hilo por fase
+	const mostrarNumTuberias = $derived(esTuberia && datos.hilos_por_fase > 1);
+
+	// Derivar si el tipo de canalización es charola
+	const esCharola = $derived(datos.tipo_canalizacion?.startsWith('CHAROLA_') ?? false);
+
+	// Autocompletar num_tuberias con hilos_por_fase solo la primera vez que aparece el campo
+	$effect(() => {
+		if (mostrarNumTuberias) {
+			if (!autocompletadoOnce) {
+				datos.num_tuberias = datos.hilos_por_fase;
+				autocompletadoOnce = true;
+			}
+		} else {
+			// Resetear el flag cuando el campo se oculta
+			// para que la próxima vez que aparezca vuelva a autocompletar
+			autocompletadoOnce = false;
+		}
+	});
+
 	// Resetear num_tuberias cuando cambia a CHAROLA_*
 	function handleTipoCanalizacionChange(e: Event) {
 		const target = e.target as HTMLSelectElement;
 		const value = target.value as TipoCanalizacion | '';
 		if (value.startsWith('CHAROLA_')) {
 			datos.num_tuberias = undefined;
+		} else {
+			datos.diametro_control_mm = undefined;
 		}
 		updateDatos('tipo_canalizacion', value);
 	}
@@ -141,26 +164,6 @@
 				</select>
 			</div>
 
-			<!-- Número de tubes (solo para TUBERIA_*) -->
-			{#if esTuberia}
-				<div class="flex flex-col gap-1.5">
-					<label for="num_tuberias" class="text-sm text-muted-foreground">Número de tubos</label>
-					<input
-						type="number"
-						id="num_tuberias"
-						min="1"
-						placeholder="1"
-						value={datos.num_tuberias ?? ''}
-						oninput={(e) =>
-							updateDatos(
-								'num_tuberias',
-								e.currentTarget.value ? Number(e.currentTarget.value) : undefined
-							)}
-						class="w-full rounded-md border border-input-border bg-input px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:outline-none"
-					/>
-				</div>
-			{/if}
-
 			<!-- Longitud del Circuito -->
 			<div class="flex flex-col gap-1.5">
 				<label for="longitud_circuito" class="text-sm text-muted-foreground"
@@ -214,6 +217,25 @@
 					/>
 				</div>
 
+				<!-- Número de tubes (solo para TUBERIA_* con más de 1 hilo por fase) -->
+				{#if mostrarNumTuberias}
+					<div class="flex flex-col gap-1.5">
+						<label for="num_tuberias" class="text-sm text-muted-foreground">Número de tubos</label>
+						<input
+							type="number"
+							id="num_tuberias"
+							min="1"
+							value={datos.num_tuberias ?? ''}
+							oninput={(e) =>
+								updateDatos(
+									'num_tuberias',
+									e.currentTarget.value ? Number(e.currentTarget.value) : undefined
+								)}
+							class="w-full rounded-md border border-input-border bg-input px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:outline-none"
+						/>
+					</div>
+				{/if}
+
 				<!-- % Caída Máximo -->
 				<div class="flex flex-col gap-1.5">
 					<label for="porcentaje_caida_maximo" class="text-sm text-muted-foreground"
@@ -247,26 +269,28 @@
 					/>
 				</div>
 
-				<!-- Diámetro Cable de Control -->
-				<div class="flex flex-col gap-1.5">
-					<label for="diametro_control_mm" class="text-sm text-muted-foreground"
-						>Diámetro Cable Control (mm)</label
-					>
-					<input
-						type="number"
-						id="diametro_control_mm"
-						step="0.1"
-						min="0"
-						placeholder="Opcional"
-						value={datos.diametro_control_mm ?? ''}
-						oninput={(e) =>
-							updateDatos(
-								'diametro_control_mm',
-								e.currentTarget.value ? Number(e.currentTarget.value) : undefined
-							)}
-						class="w-full rounded-md border border-input-border bg-input px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:outline-none"
-					/>
-				</div>
+				<!-- Diámetro Cable de Control (solo para CHAROLA_*) -->
+				{#if esCharola}
+					<div class="flex flex-col gap-1.5">
+						<label for="diametro_control_mm" class="text-sm text-muted-foreground"
+							>Diámetro Cable Control (mm)</label
+						>
+						<input
+							type="number"
+							id="diametro_control_mm"
+							step="0.1"
+							min="0"
+							placeholder="Opcional"
+							value={datos.diametro_control_mm ?? ''}
+							oninput={(e) =>
+								updateDatos(
+									'diametro_control_mm',
+									e.currentTarget.value ? Number(e.currentTarget.value) : undefined
+								)}
+							class="w-full rounded-md border border-input-border bg-input px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:outline-none"
+						/>
+					</div>
+				{/if}
 			</div>
 		{/if}
 	</div>

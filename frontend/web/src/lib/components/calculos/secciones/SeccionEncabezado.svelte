@@ -10,7 +10,7 @@
 	// Calcular capacidad en kVA si es posible
 	let capacidadKVA = $derived(() => {
 		if (memoria.factor_potencia && memoria.factor_potencia > 0) {
-			const potencia = (memoria.corriente_nominal * memoria.tension * Math.sqrt(3)) / 1000;
+			const potencia = (memoria.corrientes.corriente_nominal * memoria.instalacion.tension * Math.sqrt(3)) / 1000;
 			return (potencia / memoria.factor_potencia).toFixed(2);
 		}
 		return null;
@@ -48,26 +48,26 @@
 				{#if capacidadKVA()}
 					{capacidadKVA()} kVA
 				{:else}
-					{memoria.corriente_nominal.toFixed(2)} A
+					{memoria.corrientes.corriente_nominal.toFixed(2)} A
 				{/if}
 			</dd>
 		</div>
 
 		<div class="border-l-2 border-primary pl-4">
 			<dt class="text-xs tracking-wide text-muted-foreground uppercase">Voltaje de Operación</dt>
-			<dd class="font-medium text-foreground">{memoria.tension} V</dd>
+			<dd class="font-medium text-foreground">{memoria.instalacion.tension} V</dd>
 		</div>
 
 		<div class="border-l-2 border-primary pl-4">
 			<dt class="text-xs tracking-wide text-muted-foreground uppercase">Sistema Eléctrico</dt>
-			<dd class="font-medium text-foreground">{memoria.sistema_electrico}</dd>
+			<dd class="font-medium text-foreground">{memoria.instalacion.sistema_electrico}</dd>
 		</div>
 
 		<div class="border-l-2 border-primary pl-4">
 			<dt class="text-xs tracking-wide text-muted-foreground uppercase">
 				Longitud del Alimentador
 			</dt>
-			<dd class="font-medium text-foreground">{memoria.longitud_circuito.toFixed(2)} m</dd>
+			<dd class="font-medium text-foreground">{memoria.instalacion.longitud_circuito.toFixed(2)} m</dd>
 		</div>
 
 		<div class="border-l-2 border-primary pl-4">
@@ -77,7 +77,7 @@
 
 		<div class="border-l-2 border-primary pl-4">
 			<dt class="text-xs tracking-wide text-muted-foreground uppercase">Temperatura Ambiente</dt>
-			<dd class="font-medium text-foreground">{memoria.temperatura_ambiente} °C</dd>
+			<dd class="font-medium text-foreground">{memoria.corrientes.temperatura_ambiente} °C</dd>
 		</div>
 	</dl>
 </section>

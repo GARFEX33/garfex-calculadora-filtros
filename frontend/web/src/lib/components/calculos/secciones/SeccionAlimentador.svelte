@@ -24,7 +24,7 @@
 	);
 
 	// Numerador intermedio (corriente nominal × factor de uso)
-	let numeradorIntermedio = $derived(memoria.corriente_nominal * factorUso);
+	let numeradorIntermedio = $derived(memoria.corrientes.corriente_nominal * factorUso);
 
 	let justificacionFactorUso = $derived(
 		memoria.tipo_equipo === 'FILTRO_ACTIVO' || memoria.tipo_equipo === 'FILTRO_RECHAZO'
@@ -33,24 +33,27 @@
 	);
 
 	// Número de hilos del conductor de alimentación (del backend)
-	let numHilosAlimentacion = $derived(memoria.hilos_por_fase || 1);
+	let numHilosAlimentacion = $derived(memoria.instalacion.hilos_por_fase || 1);
 
 	// Verificación de capacidad
-	let capacidadPorHilo = $derived(memoria.conductor_alimentacion.capacidad);
+	let capacidadPorHilo = $derived(memoria.cable_fase.capacidad);
 	let capacidadTotal = $derived(
 		numHilosAlimentacion > 1
-			? memoria.conductor_alimentacion.capacidad * numHilosAlimentacion
-			: memoria.conductor_alimentacion.capacidad
+			? memoria.cable_fase.capacidad * numHilosAlimentacion
+			: memoria.cable_fase.capacidad
 	);
-	let cumpleCapacidad = $derived(capacidadTotal >= memoria.corriente_ajustada);
+	let cumpleCapacidad = $derived(capacidadTotal >= memoria.corrientes.corriente_ajustada);
 
 	// Verificar si es charola (no aplica agrupamiento)
-	let esCharola = $derived(memoria.tipo_canalizacion.includes('CHAROLA'));
+	let esCharola = $derived(memoria.instalacion.tipo_canalizacion.includes('CHAROLA'));
 
 	// Verificar si el conductor fue seleccionado por caída de tensión
 	let seleccionPorCaidaTension = $derived(
-		memoria.conductor_alimentacion.seleccion_por_caida_tension === true
+		memoria.cable_fase.seleccion_por_caida_tension === true
 	);
+
+	// Temperatura de referencia (antes temperatura_usada)
+	let temperaturaReferencia = $derived(memoria.corrientes.temperatura_referencia);
 </script>
 
 <section class="rounded-lg border border-border bg-card p-6">
@@ -107,16 +110,16 @@
 			<div class="space-y-1 text-sm">
 				<p class="text-foreground">
 					<strong>Temperatura Ambiente:</strong>
-					{memoria.temperatura_ambiente} °C
+					{memoria.corrientes.temperatura_ambiente} °C
 					<span class="text-muted-foreground">(Estado: {memoria.estado})</span>
 				</p>
 				<p class="text-foreground">
 					<strong>Temperatura del Conductor:</strong>
-					{memoria.temperatura_usada} °C
+					{temperaturaReferencia} °C
 				</p>
 				<p class="text-foreground">
 					<strong>Factor de Temperatura:</strong>
-					{memoria.factor_temperatura.toFixed(2)}
+					{memoria.corrientes.factor_temperatura.toFixed(2)}
 				</p>
 				<p class="text-muted-foreground">Referencia: Tabla 310-15(b)(2)(A)</p>
 			</div>
@@ -131,16 +134,16 @@
 			<div class="space-y-1 text-sm">
 				<p class="text-foreground">
 					<strong>Cantidad de Conductores:</strong>
-					{#if memoria.canalizacion.numero_de_tubos > 1 && memoria.conductores_por_tubo}
-						{memoria.conductores_por_tubo} conductores por tubo
-						<span class="text-muted-foreground">({memoria.cantidad_conductores} total)</span>
+					{#if memoria.canalizacion.resultado.numero_de_tubos > 1 && memoria.corrientes.conductores_por_tubo}
+						{memoria.corrientes.conductores_por_tubo} conductores por tubo
+						<span class="text-muted-foreground">({memoria.corrientes.cantidad_conductores} total)</span>
 					{:else}
-						{memoria.cantidad_conductores}
+						{memoria.corrientes.cantidad_conductores}
 					{/if}
 				</p>
 				<p class="text-foreground">
 					<strong>Factor de Agrupamiento:</strong>
-					{memoria.factor_agrupamiento.toFixed(2)}
+					{memoria.corrientes.factor_agrupamiento.toFixed(2)}
 				</p>
 				<p class="text-muted-foreground">
 					{#if esCharola}
@@ -168,16 +171,16 @@
 		<h3 class="mb-2 font-semibold text-foreground">Desarrollo</h3>
 		<div class="space-y-2 font-mono text-sm">
 			<p class="text-foreground">
-				I<sub>ajustada</sub> = {memoria.corriente_nominal.toFixed(2)} A × {factorUso.toFixed(2)} / ({memoria.factor_temperatura.toFixed(
+				I<sub>ajustada</sub> = {memoria.corrientes.corriente_nominal.toFixed(2)} A × {factorUso.toFixed(2)} / ({memoria.corrientes.factor_temperatura.toFixed(
 					2
-				)} × {memoria.factor_agrupamiento.toFixed(2)})
+				)} × {memoria.corrientes.factor_agrupamiento.toFixed(2)})
 			</p>
 			<p class="text-foreground">
 				I<sub>ajustada</sub> = {numeradorIntermedio.toFixed(2)} A /
-				{memoria.factor_total_ajuste.toFixed(3)}
+				{memoria.corrientes.factor_total_ajuste.toFixed(3)}
 			</p>
 			<p class="text-lg font-bold text-primary">
-				I<sub>ajustada</sub> = {memoria.corriente_ajustada.toFixed(2)} A
+				I<sub>ajustada</sub> = {memoria.corrientes.corriente_ajustada.toFixed(2)} A
 			</p>
 			{#if numHilosAlimentacion > 1}
 				<hr class="my-2 border-border" />
@@ -185,8 +188,8 @@
 					<strong>{numHilosAlimentacion}</strong> hilos por fase en paralelo
 				</p>
 				<p class="text-foreground">
-					I<sub>hilo</sub> = {memoria.corriente_ajustada.toFixed(2)} A / {numHilosAlimentacion} =
-					<strong>{memoria.corriente_por_hilo.toFixed(2)} A</strong> por hilo
+					I<sub>hilo</sub> = {memoria.corrientes.corriente_ajustada.toFixed(2)} A / {numHilosAlimentacion} =
+					<strong>{memoria.corrientes.corriente_por_hilo.toFixed(2)} A</strong> por hilo
 				</p>
 			{/if}
 		</div>
@@ -207,7 +210,7 @@
 					<tr>
 						<td class="px-4 py-2 text-muted-foreground">Calibre</td>
 						<td class="px-4 py-2 font-mono font-medium text-foreground">
-							{memoria.conductor_alimentacion.calibre}
+							{memoria.cable_fase.calibre}
 							{#if numHilosAlimentacion > 1}
 								<span class="ml-1 text-xs text-muted-foreground">× {numHilosAlimentacion}</span>
 							{/if}
@@ -216,7 +219,7 @@
 					<tr>
 						<td class="px-4 py-2 text-muted-foreground">Material</td>
 						<td class="px-4 py-2 text-foreground">
-							{memoria.conductor_alimentacion.material?.toUpperCase() === 'CU'
+							{memoria.cable_fase.material?.toUpperCase() === 'CU'
 								? 'Cobre (Cu)'
 								: 'Aluminio (Al)'}
 						</td>
@@ -224,11 +227,11 @@
 					<tr>
 						<td class="px-4 py-2 text-muted-foreground">Sección</td>
 						<td class="px-4 py-2 text-foreground">
-							{memoria.conductor_alimentacion.seccion_mm2.toFixed(2)} mm²
+							{memoria.cable_fase.seccion_mm2.toFixed(2)} mm²
 							{#if numHilosAlimentacion > 1}
 								<span class="ml-1 text-xs text-muted-foreground"
 									>(× {numHilosAlimentacion} = {(
-										memoria.conductor_alimentacion.seccion_mm2 * numHilosAlimentacion
+										memoria.cable_fase.seccion_mm2 * numHilosAlimentacion
 									).toFixed(2)} mm² total)</span
 								>
 							{/if}
@@ -237,7 +240,7 @@
 					<tr>
 						<td class="px-4 py-2 text-muted-foreground">Tipo de Aislamiento</td>
 						<td class="px-4 py-2 text-foreground">
-							{memoria.conductor_alimentacion.tipo_aislamiento || 'THWN'}
+							{memoria.cable_fase.tipo_aislamiento || 'THWN'}
 						</td>
 					</tr>
 					<tr>
@@ -248,20 +251,20 @@
 					</tr>
 					<tr>
 						<td class="px-4 py-2 text-muted-foreground">Temperatura de Referencia</td>
-						<td class="px-4 py-2 text-foreground">{memoria.temperatura_usada} °C</td>
+						<td class="px-4 py-2 text-foreground">{temperaturaReferencia} °C</td>
 					</tr>
 					<tr>
 						<td class="px-4 py-2 text-muted-foreground">Ampacidad por Hilo</td>
 						<td class="px-4 py-2 font-medium text-foreground">
-							{memoria.conductor_alimentacion.capacidad} A
+							{memoria.cable_fase.capacidad} A
 						</td>
 					</tr>
 					{#if numHilosAlimentacion > 1}
 						<tr>
 							<td class="px-4 py-2 text-muted-foreground">Capacidad Total</td>
 							<td class="px-4 py-2 font-medium text-foreground">
-								{memoria.conductor_alimentacion.capacidad} A × {numHilosAlimentacion} = {(
-									memoria.conductor_alimentacion.capacidad * numHilosAlimentacion
+								{memoria.cable_fase.capacidad} A × {numHilosAlimentacion} = {(
+									memoria.cable_fase.capacidad * numHilosAlimentacion
 								).toFixed(0)} A
 							</td>
 						</tr>
@@ -278,16 +281,16 @@
 						Caída de Tensión
 					</span>
 				</div>
-				{#if memoria.conductor_alimentacion.calibre_original_ampacidad}
+				{#if memoria.cable_fase.calibre_original_ampacidad}
 					<p class="mt-2 text-sm text-foreground">
 						<strong>Calibre ajustado:</strong>
-						{memoria.conductor_alimentacion.calibre_original_ampacidad} → {memoria
-							.conductor_alimentacion.calibre}
+						{memoria.cable_fase.calibre_original_ampacidad} → {memoria
+							.cable_fase.calibre}
 					</p>
 				{/if}
-				{#if memoria.conductor_alimentacion.nota_seleccion}
+				{#if memoria.cable_fase.nota_seleccion}
 					<p class="mt-1 text-sm text-muted-foreground">
-						{memoria.conductor_alimentacion.nota_seleccion}
+						{memoria.cable_fase.nota_seleccion}
 					</p>
 				{/if}
 			</div>
@@ -308,13 +311,13 @@
 				<span class="font-medium text-success">✓</span>
 				{#if numHilosAlimentacion > 1}
 					<span class="text-foreground">
-						La ampacidad total ({capacidadTotal} A = {memoria.conductor_alimentacion.capacidad} A × {numHilosAlimentacion}
-						hilos) es mayor o igual a la corriente ajustada ({memoria.corriente_ajustada.toFixed(2)} A).
-						Cada hilo transporta {memoria.corriente_por_hilo.toFixed(2)} A (≤ {capacidadPorHilo} A).
+						La ampacidad total ({capacidadTotal} A = {memoria.cable_fase.capacidad} A × {numHilosAlimentacion}
+						hilos) es mayor o igual a la corriente ajustada ({memoria.corrientes.corriente_ajustada.toFixed(2)} A).
+						Cada hilo transporta {memoria.corrientes.corriente_por_hilo.toFixed(2)} A (≤ {capacidadPorHilo} A).
 					</span>
 				{:else}
 					<span class="text-foreground">
-						La ampacidad ({capacidadTotal} A) es mayor o igual a la corriente ajustada ({memoria.corriente_ajustada.toFixed(
+						La ampacidad ({capacidadTotal} A) es mayor o igual a la corriente ajustada ({memoria.corrientes.corriente_ajustada.toFixed(
 							2
 						)} A). El conductor cumple.
 					</span>
@@ -322,7 +325,7 @@
 			{:else}
 				<span class="font-medium text-destructive">✗</span>
 				<span class="text-foreground">
-					La ampacidad ({capacidadTotal} A) es menor a la corriente ajustada ({memoria.corriente_ajustada.toFixed(
+					La ampacidad ({capacidadTotal} A) es menor a la corriente ajustada ({memoria.corrientes.corriente_ajustada.toFixed(
 						2
 					)} A). El conductor NO cumple.
 				</span>
@@ -333,6 +336,6 @@
 	<!-- Tabla utilizada -->
 	<div class="mt-4 text-sm">
 		<span class="text-muted-foreground">Tabla de Ampacidad Utilizada:</span>
-		<span class="ml-2 font-medium text-foreground">{memoria.tabla_ampacidad_usada}</span>
+		<span class="ml-2 font-medium text-foreground">{memoria.corrientes.tabla_ampacidad_usada}</span>
 	</div>
 </section>

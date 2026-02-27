@@ -60,6 +60,36 @@ export interface CalcularMemoriaRequest {
  */
 export type MemoriaRequest = CalcularMemoriaRequest;
 
+// ═══════════════════════════════════════════════════════════════════════════
+// NUEVA ESTRUCTURA AGRUPADA (Phase 1) — Coincide con backend reorganizado
+// ═══════════════════════════════════════════════════════════════════════════
+
+// Datos de instalación — agrupados bajo 'instalacion'
+export interface DatosInstalacion {
+	tension: number;
+	sistema_electrico: import('./calculo.enums.js').SistemaElectrico;
+	tipo_canalizacion: string;
+	material: string;
+	longitud_circuito: number;
+	hilos_por_fase: number;
+	porcentaje_caida_maximo: number;
+}
+
+// Datos de corrientes — agrupados bajo 'corrientes'
+export interface DatosCorrientes {
+	corriente_nominal: number;
+	corriente_ajustada: number;
+	corriente_por_hilo: number;
+	factor_temperatura: number;
+	factor_agrupamiento: number;
+	factor_total_ajuste: number;
+	temperatura_ambiente: number;
+	temperatura_referencia: number;
+	conductores_por_tubo: number;
+	cantidad_conductores: number;
+	tabla_ampacidad_usada: string;
+}
+
 // Conductor result — backend serializes in snake_case
 export interface ResultadoConductor {
 	calibre: string;
@@ -119,6 +149,19 @@ export interface DetalleTuberia {
 	fill_factor: number;
 }
 
+// Canalización agrupada — resultado + detalles
+export interface DatosCanalizacion {
+	resultado: ResultadoCanalizacion;
+	fill_factor: number;
+	detalle_charola?: DetalleCharola;
+	detalle_tuberia?: DetalleTuberia;
+}
+
+// Datos de protección
+export interface DatosProteccion {
+	itm: number;
+}
+
 // Voltage drop result
 export interface ResultadoCaidaTension {
 	porcentaje: number;
@@ -131,38 +174,38 @@ export interface ResultadoCaidaTension {
 }
 
 // Full calculation result (from POST response data field)
+// Nueva estructura agrupada por entidad — coincide con backend reorganizado
 export interface MemoriaOutput {
+	// Datos del equipo
 	equipo: DatosEquipo;
 	tipo_equipo: string;
-	tension: number;
 	factor_potencia: number;
 	estado: string;
-	temperatura_ambiente: number;
-	sistema_electrico: import('./calculo.enums.js').SistemaElectrico;
-	cantidad_conductores: number;
-	conductores_por_tubo?: number;
-	corriente_nominal: number;
-	corriente_ajustada: number;
-	factor_temperatura: number;
-	factor_agrupamiento: number;
-	factor_total_ajuste: number;
-	hilos_por_fase: number;
-	corriente_por_hilo: number;
-	tipo_canalizacion: string;
-	material: string;
-	temperatura_usada: number;
-	conductor_alimentacion: ResultadoConductor;
-	tabla_ampacidad_usada: string;
-	conductor_tierra: ResultadoConductor;
-	itm: number;
-	canalizacion: ResultadoCanalizacion;
-	fill_factor: number;
-	detalle_charola?: DetalleCharola;
-	detalle_tuberia?: DetalleTuberia;
-	longitud_circuito: number;
+
+	// Parámetros de instalación
+	instalacion: DatosInstalacion;
+
+	// Cálculos de corriente
+	corrientes: DatosCorrientes;
+
+	// Conductores
+	cable_fase: ResultadoConductor;
+	cable_neutro?: ResultadoConductor;
+	cable_tierra: ResultadoConductor;
+
+	// Canalización
+	canalizacion: DatosCanalizacion;
+
+	// Protección
+	proteccion: DatosProteccion;
+
+	// Caída de tensión
 	caida_tension: ResultadoCaidaTension;
+
+	// Resumen y metadatos
 	cumple_normativa: boolean;
 	observaciones: string[];
+	pasos: unknown[];
 }
 
 // API response wrapper (backend wraps in { success, data })
