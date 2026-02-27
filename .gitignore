@@ -1,5 +1,6 @@
 # Binarios
 /garfex-calculadora-filtros
+/api
 *.exe
 *.exe~
 *.dll
@@ -36,6 +37,13 @@ go.work.sum
 # OS
 .DS_Store
 Thumbs.db
+nul
+
+# Logs
+*.log
+
+# Test artifacts
+tests/*.svg
 
 # Git worktrees
 .worktrees/
