@@ -6,6 +6,10 @@ import (
 	"github.com/garfex/calculadora-filtros/internal/calculos/infrastructure/adapter/driver/http"
 	"github.com/garfex/calculadora-filtros/internal/calculos/infrastructure/adapter/driver/http/middleware"
 	"github.com/gin-gonic/gin"
+
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
+	_ "github.com/garfex/calculadora-filtros/docs" // generated swagger docs
 )
 
 // NewRouter crea y configura el router Gin.
@@ -32,6 +36,9 @@ func NewRouter(
 	router.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{"status": "ok"})
 	})
+
+	// Swagger UI
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	// API v1
 	v1 := router.Group("/api/v1")

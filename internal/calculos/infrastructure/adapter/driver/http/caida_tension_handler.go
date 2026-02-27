@@ -88,6 +88,17 @@ type CaidaTensionResponseError struct {
 }
 
 // CalcularCaidaTension POST /api/v1/calculos/caida-tension
+// @Summary Calcular caída de tensión
+// @Description Calcula la caída de tensión en un circuito según IEEE-141. Requiere factor_potencia (cosθ) en rango (0, 1].
+// @Tags Caída de Tensión
+// @Accept json
+// @Produce json
+// @Param request body CaidaTensionRequest true "Datos del circuito y conductor"
+// @Success 200 {object} CaidaTensionResponse "Caída de tensión calculada"
+// @Failure 400 {object} CaidaTensionResponseError "Error de validación o datos inválidos"
+// @Failure 422 {object} CaidaTensionResponseError "No se encontró la impedancia para el calibre y canalización"
+// @Failure 500 {object} CaidaTensionResponseError "Error interno del servidor"
+// @Router /calculos/caida-tension [post]
 // Calcula la caída de tensión en un circuito según IEEE-141.
 func (h *CaidaTensionHandler) CalcularCaidaTension(c *gin.Context) {
 	var req CaidaTensionRequest

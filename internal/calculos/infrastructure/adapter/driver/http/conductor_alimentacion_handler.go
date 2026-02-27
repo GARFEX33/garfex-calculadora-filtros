@@ -48,6 +48,17 @@ type ConductorAlimentacionResponseError struct {
 }
 
 // SeleccionarConductorAlimentacion POST /api/v1/calculos/conductor-alimentacion
+// @Summary Seleccionar conductor de alimentación
+// @Description Selecciona el conductor de alimentación (fase) según la corriente ajustada y tipo de canalización
+// @Tags Conductor
+// @Accept json
+// @Produce json
+// @Param request body ConductorAlimentacionRequest true "Datos de corriente y canalización"
+// @Success 200 {object} ConductorAlimentacionResponse "Conductor seleccionado exitosamente"
+// @Failure 400 {object} ConductorAlimentacionResponseError "Error de validación o datos inválidos"
+// @Failure 422 {object} ConductorAlimentacionResponseError "No se encontró conductor adecuado"
+// @Failure 500 {object} ConductorAlimentacionResponseError "Error interno del servidor"
+// @Router /calculos/conductor-alimentacion [post]
 func (h *ConductorAlimentacionHandler) SeleccionarConductorAlimentacion(c *gin.Context) {
 	var req ConductorAlimentacionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {

@@ -1,6 +1,13 @@
 // cmd/api/main.go
 package main
 
+// @title Garfex Calculadora de Filtros API
+// @version 1.0
+// @description API para memorias de cálculo de instalaciones eléctricas según normativa NOM (México)
+// @host localhost:8080
+// @BasePath /api/v1
+// @schemes http https
+
 import (
 	"context"
 	"log"

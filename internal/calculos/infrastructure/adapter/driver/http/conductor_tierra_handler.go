@@ -46,6 +46,17 @@ type ConductorTierraResponseError struct {
 }
 
 // SeleccionarConductorTierra POST /api/v1/calculos/conductor-tierra
+// @Summary Seleccionar conductor de tierra
+// @Description Selecciona el conductor de tierra según el ITM (interruptor termomagnético) y material
+// @Tags Conductor
+// @Accept json
+// @Produce json
+// @Param request body ConductorTierraRequest true "ITM y material del conductor"
+// @Success 200 {object} ConductorTierraResponse "Conductor de tierra seleccionado"
+// @Failure 400 {object} ConductorTierraResponseError "Error de validación"
+// @Failure 422 {object} ConductorTierraResponseError "No se encontró conductor de tierra adecuado"
+// @Failure 500 {object} ConductorTierraResponseError "Error interno del servidor"
+// @Router /calculos/conductor-tierra [post]
 func (h *ConductorTierraHandler) SeleccionarConductorTierra(c *gin.Context) {
 	var req ConductorTierraRequest
 	if err := c.ShouldBindJSON(&req); err != nil {

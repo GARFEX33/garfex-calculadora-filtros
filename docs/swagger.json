@@ -1,0 +1,1809 @@
+{
+    "schemes": [
+        "http",
+        "https"
+    ],
+    "swagger": "2.0",
+    "info": {
+        "description": "API para memorias de cálculo de instalaciones eléctricas según normativa NOM (México)",
+        "title": "Garfex Calculadora de Filtros API",
+        "contact": {},
+        "version": "1.0"
+    },
+    "host": "localhost:8080",
+    "basePath": "/api/v1",
+    "paths": {
+        "/calculos/amperaje": {
+            "post": {
+                "description": "Calcula el amperaje nominal de un equipo a partir de su potencia y factor de potencia",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Corriente"
+                ],
+                "summary": "Calcular amperaje nominal",
+                "parameters": [
+                    {
+                        "description": "Datos de potencia y sistema",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/http.CalcularAmperajeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Amperaje calculado exitosamente",
+                        "schema": {
+                            "$ref": "#/definitions/http.CalcularAmperajeResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Error de validación",
+                        "schema": {
+                            "$ref": "#/definitions/http.CalcularAmperajeResponseError"
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "$ref": "#/definitions/http.CalcularAmperajeResponseError"
+                        }
+                    }
+                }
+            }
+        },
+        "/calculos/caida-tension": {
+            "post": {
+                "description": "Calcula la caída de tensión en un circuito según IEEE-141. Requiere factor_potencia (cosθ) en rango (0, 1].",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Caída de Tensión"
+                ],
+                "summary": "Calcular caída de tensión",
+                "parameters": [
+                    {
+                        "description": "Datos del circuito y conductor",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/http.CaidaTensionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Caída de tensión calculada",
+                        "schema": {
+                            "$ref": "#/definitions/http.CaidaTensionResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Error de validación o datos inválidos",
+                        "schema": {
+                            "$ref": "#/definitions/http.CaidaTensionResponseError"
+                        }
+                    },
+                    "422": {
+                        "description": "No se encontró la impedancia para el calibre y canalización",
+                        "schema": {
+                            "$ref": "#/definitions/http.CaidaTensionResponseError"
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "$ref": "#/definitions/http.CaidaTensionResponseError"
+                        }
+                    }
+                }
+            }
+        },
+        "/calculos/charola/espaciado": {
+            "post": {
+                "description": "Calcula el espaciado requerido entre conductores en charola tipo escalera",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Canalización"
+                ],
+                "summary": "Calcular espaciado en charola",
+                "parameters": [
+                    {
+                        "description": "Datos de hilos y diámetro de conductores",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/http.CharolaEspaciadoRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Espaciado calculado",
+                        "schema": {
+                            "$ref": "#/definitions/http.CharolaEspaciadoResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Error de validación",
+                        "schema": {
+                            "$ref": "#/definitions/http.CharolaEspaciadoResponseError"
+                        }
+                    },
+                    "422": {
+                        "description": "No se pudo calcular el tamaño de charola",
+                        "schema": {
+                            "$ref": "#/definitions/http.CharolaEspaciadoResponseError"
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "$ref": "#/definitions/http.CharolaEspaciadoResponseError"
+                        }
+                    }
+                }
+            }
+        },
+        "/calculos/charola/triangular": {
+            "post": {
+                "description": "Calcula el ancho de charola en configuración triangular (cables en posición Herculana)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Canalización"
+                ],
+                "summary": "Calcular configuración triangular",
+                "parameters": [
+                    {
+                        "description": "Datos de hilos y diámetro de conductores",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/http.CharolaTriangularRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Configuración triangular calculada",
+                        "schema": {
+                            "$ref": "#/definitions/http.CharolaTriangularResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Error de validación",
+                        "schema": {
+                            "$ref": "#/definitions/http.CharolaTriangularResponseError"
+                        }
+                    },
+                    "422": {
+                        "description": "No se pudo calcular el tamaño de charola",
+                        "schema": {
+                            "$ref": "#/definitions/http.CharolaTriangularResponseError"
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "$ref": "#/definitions/http.CharolaTriangularResponseError"
+                        }
+                    }
+                }
+            }
+        },
+        "/calculos/conductor-alimentacion": {
+            "post": {
+                "description": "Selecciona el conductor de alimentación (fase) según la corriente ajustada y tipo de canalización",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Conductor"
+                ],
+                "summary": "Seleccionar conductor de alimentación",
+                "parameters": [
+                    {
+                        "description": "Datos de corriente y canalización",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/http.ConductorAlimentacionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Conductor seleccionado exitosamente",
+                        "schema": {
+                            "$ref": "#/definitions/http.ConductorAlimentacionResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Error de validación o datos inválidos",
+                        "schema": {
+                            "$ref": "#/definitions/http.ConductorAlimentacionResponseError"
+                        }
+                    },
+                    "422": {
+                        "description": "No se encontró conductor adecuado",
+                        "schema": {
+                            "$ref": "#/definitions/http.ConductorAlimentacionResponseError"
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "$ref": "#/definitions/http.ConductorAlimentacionResponseError"
+                        }
+                    }
+                }
+            }
+        },
+        "/calculos/conductor-tierra": {
+            "post": {
+                "description": "Selecciona el conductor de tierra según el ITM (interruptor termomagnético) y material",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Conductor"
+                ],
+                "summary": "Seleccionar conductor de tierra",
+                "parameters": [
+                    {
+                        "description": "ITM y material del conductor",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/http.ConductorTierraRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Conductor de tierra seleccionado",
+                        "schema": {
+                            "$ref": "#/definitions/http.ConductorTierraResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Error de validación",
+                        "schema": {
+                            "$ref": "#/definitions/http.ConductorTierraResponseError"
+                        }
+                    },
+                    "422": {
+                        "description": "No se encontró conductor de tierra adecuado",
+                        "schema": {
+                            "$ref": "#/definitions/http.ConductorTierraResponseError"
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "$ref": "#/definitions/http.ConductorTierraResponseError"
+                        }
+                    }
+                }
+            }
+        },
+        "/calculos/corriente-ajustada": {
+            "post": {
+                "description": "Ajusta la corriente nominal por factores de temperatura, agrupamiento y uso según NOM",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Corriente"
+                ],
+                "summary": "Calcular corriente ajustada",
+                "parameters": [
+                    {
+                        "description": "Datos de instalación y equipo",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/http.CorrienteAjustadaRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Corriente ajustada calculada",
+                        "schema": {
+                            "$ref": "#/definitions/http.CorrienteAjustadaResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Error de validación o datos inválidos",
+                        "schema": {
+                            "$ref": "#/definitions/http.CorrienteAjustadaResponseError"
+                        }
+                    },
+                    "422": {
+                        "description": "No se pudo calcular el ajuste",
+                        "schema": {
+                            "$ref": "#/definitions/http.CorrienteAjustadaResponseError"
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "$ref": "#/definitions/http.CorrienteAjustadaResponseError"
+                        }
+                    }
+                }
+            }
+        },
+        "/calculos/memoria": {
+            "post": {
+                "description": "Calcula la memoria de cálculo completa para una instalación eléctrica según normativa NOM (México). Orquesta: corriente nominal → ajuste → conductor alimentación → conductor tierra → canalización → caída de tensión.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Memoria"
+                ],
+                "summary": "Memoria de cálculo completa",
+                "parameters": [
+                    {
+                        "description": "Datos del equipo e instalación",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/http.CalcularMemoriaRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Memoria de cálculo exitosa",
+                        "schema": {
+                            "$ref": "#/definitions/http.CalcularMemoriaResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Error de validación o datos inválidos",
+                        "schema": {
+                            "$ref": "#/definitions/http.CalcularMemoriaResponseError"
+                        }
+                    },
+                    "422": {
+                        "description": "No se encontró conductor o canalización adecuada",
+                        "schema": {
+                            "$ref": "#/definitions/http.CalcularMemoriaResponseError"
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "$ref": "#/definitions/http.CalcularMemoriaResponseError"
+                        }
+                    }
+                }
+            }
+        },
+        "/calculos/tuberia": {
+            "post": {
+                "description": "Dimensiona el tamaño de tubería requerido según los calibres de conductores",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Canalización"
+                ],
+                "summary": "Dimensionar tubería",
+                "parameters": [
+                    {
+                        "description": "Datos de conductores y tubería",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/http.CalcularTuberiaRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Tamaño de tubería calculado",
+                        "schema": {
+                            "$ref": "#/definitions/http.CalcularTuberiaResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Error de validación",
+                        "schema": {
+                            "$ref": "#/definitions/http.CalcularTuberiaResponseError"
+                        }
+                    },
+                    "422": {
+                        "description": "Conductor no encontrado o tubería no disponible",
+                        "schema": {
+                            "$ref": "#/definitions/http.CalcularTuberiaResponseError"
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno del servidor",
+                        "schema": {
+                            "$ref": "#/definitions/http.CalcularTuberiaResponseError"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "dto.CharolaEspaciadoOutput": {
+            "type": "object",
+            "properties": {
+                "ancho_comercial_mm": {
+                    "type": "number"
+                },
+                "ancho_control_mm": {
+                    "type": "number"
+                },
+                "ancho_fuerza_mm": {
+                    "type": "number"
+                },
+                "ancho_requerido_mm": {
+                    "type": "number"
+                },
+                "ancho_tierra_mm": {
+                    "type": "number"
+                },
+                "diametro_control_mm": {
+                    "type": "number"
+                },
+                "diametro_fase_mm": {
+                    "description": "Valores intermedios del desarrollo — para mostrar en memoria de cálculo",
+                    "type": "number"
+                },
+                "diametro_tierra_mm": {
+                    "type": "number"
+                },
+                "espacio_control_mm": {
+                    "type": "number"
+                },
+                "espacio_fuerza_mm": {
+                    "type": "number"
+                },
+                "num_hilos_total": {
+                    "type": "integer"
+                },
+                "tamano": {
+                    "type": "string"
+                },
+                "tamano_pulgadas": {
+                    "type": "string"
+                },
+                "tipo": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.CharolaTriangularOutput": {
+            "type": "object",
+            "properties": {
+                "ancho_comercial_mm": {
+                    "type": "number"
+                },
+                "ancho_control_mm": {
+                    "type": "number"
+                },
+                "ancho_potencia_mm": {
+                    "type": "number"
+                },
+                "ancho_requerido_mm": {
+                    "type": "number"
+                },
+                "ancho_tierra_mm": {
+                    "type": "number"
+                },
+                "diametro_control_mm": {
+                    "type": "number"
+                },
+                "diametro_fase_mm": {
+                    "description": "Valores intermedios del desarrollo — para mostrar en memoria de cálculo",
+                    "type": "number"
+                },
+                "diametro_tierra_mm": {
+                    "type": "number"
+                },
+                "espacio_control_mm": {
+                    "type": "number"
+                },
+                "espacio_fuerza_mm": {
+                    "type": "number"
+                },
+                "factor_triangular": {
+                    "type": "number"
+                },
+                "tamano": {
+                    "type": "string"
+                },
+                "tamano_pulgadas": {
+                    "type": "string"
+                },
+                "tipo": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.ConductorAlimentacionOutput": {
+            "type": "object",
+            "properties": {
+                "calibre": {
+                    "description": "Calibre es el calibre del conductor seleccionado (ej: \"4 AWG\", \"250 MCM\").",
+                    "type": "string"
+                },
+                "capacidad_nominal": {
+                    "description": "CapacidadNominal es la ampacidad del conductor segun la tabla.",
+                    "type": "number"
+                },
+                "material": {
+                    "description": "Material es el material del conductor (\"Cu\" o \"Al\").",
+                    "type": "string"
+                },
+                "seccion_mm2": {
+                    "description": "SeccionMM2 es la seccion transversal en mm2.",
+                    "type": "number"
+                },
+                "tabla_usada": {
+                    "description": "TablaUsada es el nombre descriptivo de la tabla NOM utilizada.",
+                    "type": "string"
+                },
+                "tipo_aislamiento": {
+                    "description": "TipoAislamiento es el tipo de aislamiento (ej: \"THHN/THHW\").",
+                    "type": "string"
+                }
+            }
+        },
+        "dto.ConductorTierraOutput": {
+            "type": "object",
+            "properties": {
+                "calibre": {
+                    "description": "Calibre es el calibre del conductor seleccionado (ej: \"12 AWG\", \"2 AWG\").",
+                    "type": "string"
+                },
+                "itm_hasta": {
+                    "description": "ITMHasta es el ITM máximo para el cual aplica este calibre.",
+                    "type": "integer"
+                },
+                "material": {
+                    "description": "Material es el material del conductor (\"Cu\" o \"Al\").",
+                    "type": "string"
+                },
+                "num_hilos": {
+                    "description": "NumHilos es el número de hilos de tierra (1 para charola/tubería≤2, 2 para tubería\u003e2).",
+                    "type": "integer"
+                },
+                "seccion_mm2": {
+                    "description": "SeccionMM2 es la sección transversal en mm².",
+                    "type": "number"
+                }
+            }
+        },
+        "dto.DatosCanalizacionCompleta": {
+            "type": "object",
+            "properties": {
+                "detalle_charola": {
+                    "description": "DetalleCharola contiene los valores intermedios del cálculo de charola.\nEs nil cuando la canalización es tubería.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/dto.DetalleCharola"
+                        }
+                    ]
+                },
+                "detalle_tuberia": {
+                    "description": "DetalleTuberia contiene los valores intermedios del cálculo de tubería.\nEs nil cuando la canalización es charola.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/dto.DetalleTuberia"
+                        }
+                    ]
+                },
+                "fill_factor": {
+                    "description": "FillFactor es el factor de llenado calculado (área ocupante / área disponible).\nDebe ser ≤ 0.40 para más de 2 conductores según NOM.",
+                    "type": "number"
+                },
+                "resultado": {
+                    "description": "Resultado contiene el resultado del dimensionamiento de canalización.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/dto.ResultadoCanalizacion"
+                        }
+                    ]
+                }
+            }
+        },
+        "dto.DatosCorrientes": {
+            "type": "object",
+            "properties": {
+                "cantidad_conductores": {
+                    "description": "CantidadConductores es el total de conductores en el sistema.\nCalculado según el sistema eléctrico (DELTA, ESTRELLA, etc.) y hilos por fase.",
+                    "type": "integer"
+                },
+                "conductores_por_tubo": {
+                    "description": "ConductoresPorTubo es el número de conductores por tubo o canal.\nValor de entrada del usuario o calculado según el sistema eléctrico.",
+                    "type": "integer"
+                },
+                "corriente_ajustada": {
+                    "description": "CorrienteAjustada es la corriente ajustada por factores de corrección en el paso 2 (Step 2).\nCalculada: CorrienteNominal / (FactorTemperatura × FactorAgrupamiento × FactorUso)",
+                    "type": "number"
+                },
+                "corriente_nominal": {
+                    "description": "CorrienteNominal es la corriente nominal calculada en el paso 1 (Step 1).\nCalculada a partir de la potencia o amperaje del equipo.",
+                    "type": "number"
+                },
+                "corriente_por_hilo": {
+                    "description": "CorrientePorHilo es la corriente que circula por cada hilo cuando hay conductores en paralelo.\nCalculada: CorrienteAjustada / HilosPorFase",
+                    "type": "number"
+                },
+                "factor_agrupamiento": {
+                    "description": "FactorAgrupamiento es el factor de corrección por agrupamiento de circuitos.\nValor de las tablas NOM según cantidad de conductores.",
+                    "type": "number"
+                },
+                "factor_temperatura": {
+                    "description": "FactorTemperatura es el factor de corrección por temperatura ambiente.\nValor de las tablas NOM según temperatura ambiente y temperatura del cable.",
+                    "type": "number"
+                },
+                "factor_total_ajuste": {
+                    "description": "FactorTotalAjuste es el factor total combinado de corrección.\nCalculado: FactorTemperatura × FactorAgrupamiento × FactorUso",
+                    "type": "number"
+                },
+                "tabla_ampacidad_usada": {
+                    "description": "TablaAmpacidadUsada es la tabla NOM utilizada para la selección de ampacidad.\nEjemplo: \"Tabla 310-16\" o \"Tabla 310-17\".",
+                    "type": "string"
+                },
+                "temperatura_ambiente": {
+                    "description": "TemperaturaAmbiente es la temperatura ambiente en grados Celsius.\nValor de entrada del usuario (determinado por el estado de la República).",
+                    "type": "integer"
+                },
+                "temperatura_referencia": {
+                    "description": "TemperaturaReferencia es la temperatura de operación del cable seleccionada (60, 75 o 90°C).\nDeterminada por el tipo de aislamiento y las tablas NOM.",
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.DatosEquipo": {
+            "type": "object",
+            "properties": {
+                "amperaje": {
+                    "description": "Qn/In - amperaje nominal o KVA/KVAR según tipo",
+                    "type": "integer"
+                },
+                "bornes": {
+                    "description": "Número de bornes (opcional)",
+                    "type": "integer"
+                },
+                "clave": {
+                    "description": "Clave comercial (ej: ACTISINE48D400MMB)",
+                    "type": "string"
+                },
+                "itm": {
+                    "description": "Interruptor termomagnético",
+                    "type": "integer"
+                },
+                "tipo": {
+                    "description": "\"A\", \"KVA\", \"KVAR\"",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/dto.TipoFiltro"
+                        }
+                    ]
+                },
+                "voltaje": {
+                    "description": "Voltaje nominal (ej: 480)",
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.DatosInstalacion": {
+            "type": "object",
+            "properties": {
+                "hilos_por_fase": {
+                    "description": "HilosPorFase es el número de conductores por fase en paralelo.\nValor de entrada del usuario (default: 1).",
+                    "type": "integer"
+                },
+                "longitud_circuito": {
+                    "description": "LongitudCircuito es la longitud del circuito en metros.\nValor de entrada del usuario.",
+                    "type": "number"
+                },
+                "material": {
+                    "description": "Material es el material del conductor (CU para cobre, AL para aluminio).\nValor de entrada del usuario.",
+                    "type": "string"
+                },
+                "porcentaje_caida_maximo": {
+                    "description": "PorcentajeCaidaMaximo es el límite de caída de tensión permitido en porcentaje.\nValor de entrada del usuario (default: 3.0%).",
+                    "type": "number"
+                },
+                "sistema_electrico": {
+                    "description": "SistemaElectrico indica el tipo de sistema eléctrico (DELTA, ESTRELLA, BIFASICO, MONOFASICO).\nValor de entrada del usuario.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/dto.SistemaElectrico"
+                        }
+                    ]
+                },
+                "tension": {
+                    "description": "Tension es el voltaje de operación en volts.\nValor de entrada del usuario.",
+                    "type": "integer"
+                },
+                "tipo_canalizacion": {
+                    "description": "TipoCanalizacion indica el tipo de canalización a utilizar (TUBERIA_PVC, CHAROLA_CABLE_ESPACIADO, etc.).\nValor de entrada del usuario.",
+                    "type": "string"
+                }
+            }
+        },
+        "dto.DatosProteccion": {
+            "type": "object",
+            "properties": {
+                "itm": {
+                    "description": "ITM es el interruptor termomagnético en Amperes.\nValor de entrada del usuario o obtenido del catálogo de equipos.",
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.DetalleCharola": {
+            "type": "object",
+            "properties": {
+                "ancho_control_mm": {
+                    "type": "number"
+                },
+                "ancho_fuerza_mm": {
+                    "type": "number"
+                },
+                "ancho_potencia_mm": {
+                    "description": "Charola triangular (adicional)",
+                    "type": "number"
+                },
+                "ancho_tierra_mm": {
+                    "type": "number"
+                },
+                "diametro_control_mm": {
+                    "type": "number"
+                },
+                "diametro_fase_mm": {
+                    "description": "Diámetros de los conductores (mm)",
+                    "type": "number"
+                },
+                "diametro_tierra_mm": {
+                    "type": "number"
+                },
+                "espacio_control_mm": {
+                    "type": "number"
+                },
+                "espacio_fuerza_mm": {
+                    "type": "number"
+                },
+                "factor_triangular": {
+                    "type": "number"
+                },
+                "num_hilos_total": {
+                    "description": "Charola espaciado",
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.DetalleTuberia": {
+            "type": "object",
+            "properties": {
+                "area_fase_mm2": {
+                    "description": "Áreas físicas de conductores (mm²)\nFase: Tabla 5 NOM (área con aislamiento THW)\nTierra: Tabla 8 NOM (conductor desnudo)",
+                    "type": "number"
+                },
+                "area_neutro_mm2": {
+                    "description": "nil si DELTA (sin neutro)",
+                    "type": "number"
+                },
+                "area_ocupacion_tubo_mm2": {
+                    "description": "Tubo seleccionado de la tabla NOM (Cap. 9)",
+                    "type": "number"
+                },
+                "area_tierra_mm2": {
+                    "type": "number"
+                },
+                "designacion_metrica": {
+                    "description": "ej: \"63\" → mostrar como \"63 mm\"",
+                    "type": "string"
+                },
+                "fill_factor": {
+                    "description": "0.40 para \u003e2 conductores",
+                    "type": "number"
+                },
+                "num_fases_por_tubo": {
+                    "description": "Distribución de conductores por tubo",
+                    "type": "integer"
+                },
+                "num_neutros_por_tubo": {
+                    "description": "0 si DELTA",
+                    "type": "integer"
+                },
+                "num_tierras": {
+                    "description": "1 o 2 según NOM",
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.MemoriaOutput": {
+            "type": "object",
+            "properties": {
+                "cable_fase": {
+                    "description": "CableFase es el conductor de alimentación (fase).\nResultado del paso 4 de selección de conductor.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/dto.ResultadoConductor"
+                        }
+                    ]
+                },
+                "cable_neutro": {
+                    "description": "CableNeutro es el conductor neutro.\nEs nil para sistemas DELTA (sin neutro).",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/dto.ResultadoConductor"
+                        }
+                    ]
+                },
+                "cable_tierra": {
+                    "description": "CableTierra es el conductor de tierra.\nResultado del paso 5 de selección de conductor de tierra.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/dto.ResultadoConductor"
+                        }
+                    ]
+                },
+                "caida_tension": {
+                    "description": "CaidaTension contiene el resultado del cálculo de caída de tensión.\nResultado del paso 7.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/dto.ResultadoCaidaTension"
+                        }
+                    ]
+                },
+                "canalizacion": {
+                    "description": "Canalizacion agrupa el resultado del dimensionamiento de canalización.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/dto.DatosCanalizacionCompleta"
+                        }
+                    ]
+                },
+                "corrientes": {
+                    "description": "Corrientes agrupa los datos de corrientes y factores de ajuste.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/dto.DatosCorrientes"
+                        }
+                    ]
+                },
+                "cumple_normativa": {
+                    "description": "CumpleNormativa indica si la instalación cumple toda la normativa NOM.\nEs true si todos los criterios de selección son válidos.",
+                    "type": "boolean"
+                },
+                "equipo": {
+                    "description": "Equipo contiene los datos del equipo/filtro del catálogo.\nValor de entrada del usuario (modo LISTADO).",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/dto.DatosEquipo"
+                        }
+                    ]
+                },
+                "estado": {
+                    "description": "Estado indica el estado de la República Mexicana para determinar la temperatura ambiente.\nValor de entrada del usuario.",
+                    "type": "string"
+                },
+                "factor_potencia": {
+                    "description": "FactorPotencia es el factor de potencia del equipo (cosθ ∈ (0, 1]).\nValor de entrada del usuario (solo para modo MANUAL_POTENCIA).",
+                    "type": "number"
+                },
+                "instalacion": {
+                    "description": "Instalacion agrupa los parámetros de instalación ingresados por el usuario.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/dto.DatosInstalacion"
+                        }
+                    ]
+                },
+                "observaciones": {
+                    "description": "Observaciones contiene notas y advertencias sobre la instalación.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "pasos": {
+                    "description": "Pasos contiene el detalle de todos los pasos del cálculo para debugging.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.PasoMemoria"
+                    }
+                },
+                "proteccion": {
+                    "description": "Proteccion agrupa los datos de protección eléctrica.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/dto.DatosProteccion"
+                        }
+                    ]
+                },
+                "tipo_equipo": {
+                    "description": "TipoEquipo indica el tipo de equipo (FILTRO_ACTIVO, TRANSFORMADOR, FILTRO_RECHAZO, CARGA).\nValor de entrada del usuario.",
+                    "type": "string"
+                }
+            }
+        },
+        "dto.ModoCalculo": {
+            "type": "string",
+            "enum": [
+                "LISTADO",
+                "MANUAL_AMPERAJE",
+                "MANUAL_POTENCIA"
+            ],
+            "x-enum-varnames": [
+                "ModoListado",
+                "ModoManualAmperaje",
+                "ModoManualPotencia"
+            ]
+        },
+        "dto.PasoMemoria": {
+            "type": "object",
+            "properties": {
+                "descripcion": {
+                    "type": "string"
+                },
+                "nombre": {
+                    "type": "string"
+                },
+                "numero": {
+                    "type": "integer"
+                },
+                "resultado": {}
+            }
+        },
+        "dto.ResultadoAjusteCorriente": {
+            "type": "object",
+            "properties": {
+                "cantidad_conductores_total": {
+                    "type": "integer"
+                },
+                "conductores_por_tubo": {
+                    "type": "integer"
+                },
+                "corriente_ajustada": {
+                    "type": "number"
+                },
+                "factor_agrupamiento": {
+                    "type": "number"
+                },
+                "factor_temperatura": {
+                    "type": "number"
+                },
+                "factor_total": {
+                    "type": "number"
+                },
+                "factor_uso": {
+                    "type": "number"
+                },
+                "temperatura": {
+                    "type": "integer"
+                },
+                "temperatura_ambiente": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dto.ResultadoCaidaTension": {
+            "type": "object",
+            "properties": {
+                "caida_volts": {
+                    "type": "number"
+                },
+                "cumple": {
+                    "type": "boolean"
+                },
+                "impedancia": {
+                    "type": "number"
+                },
+                "limite_porcentaje": {
+                    "type": "number"
+                },
+                "porcentaje": {
+                    "type": "number"
+                },
+                "reactancia": {
+                    "type": "number"
+                },
+                "resistencia": {
+                    "type": "number"
+                }
+            }
+        },
+        "dto.ResultadoCanalizacion": {
+            "type": "object",
+            "properties": {
+                "ancho_comercial_mm": {
+                    "type": "number"
+                },
+                "area_requerida_mm2": {
+                    "type": "number"
+                },
+                "area_total_mm2": {
+                    "type": "number"
+                },
+                "numero_de_tubos": {
+                    "type": "integer"
+                },
+                "tamano": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.ResultadoConductor": {
+            "type": "object",
+            "properties": {
+                "calibre": {
+                    "type": "string"
+                },
+                "calibre_original_ampacidad": {
+                    "description": "CalibreOriginalAmpacidad es el calibre que hubiera correspondido solo por ampacidad",
+                    "type": "string"
+                },
+                "capacidad": {
+                    "type": "number"
+                },
+                "material": {
+                    "type": "string"
+                },
+                "nota_seleccion": {
+                    "description": "NotaSeleccion explica el motivo del aumento de calibre",
+                    "type": "string"
+                },
+                "num_hilos": {
+                    "description": "Número de hilos de tierra (1 para charola/tubería≤2, 2 para tubería\u003e2)",
+                    "type": "integer"
+                },
+                "seccion_mm2": {
+                    "type": "number"
+                },
+                "seleccion_por_caida_tension": {
+                    "description": "Selección por caída de tensión (NOM-001-SEDE)\nSeleccionPorCaidaTension indica si el calibre fue aumentado por caída de tensión",
+                    "type": "boolean"
+                },
+                "tipo_aislamiento": {
+                    "type": "string"
+                }
+            }
+        },
+        "dto.SistemaElectrico": {
+            "type": "string",
+            "enum": [
+                "DELTA",
+                "ESTRELLA",
+                "BIFASICO",
+                "MONOFASICO"
+            ],
+            "x-enum-varnames": [
+                "SistemaElectricoDelta",
+                "SistemaElectricoEstrella",
+                "SistemaElectricoBifasico",
+                "SistemaElectricoMonofasico"
+            ]
+        },
+        "dto.TipoFiltro": {
+            "type": "string",
+            "enum": [
+                "A",
+                "KVA",
+                "KVAR"
+            ],
+            "x-enum-comments": {
+                "TipoFiltroA": "Filtro activo en Amperes",
+                "TipoFiltroKVA": "Filtro calificado en KVA",
+                "TipoFiltroKVAR": "Filtro de rechazo en KVAR"
+            },
+            "x-enum-varnames": [
+                "TipoFiltroA",
+                "TipoFiltroKVA",
+                "TipoFiltroKVAR"
+            ]
+        },
+        "dto.TuberiaOutput": {
+            "type": "object",
+            "properties": {
+                "area_fase_mm2": {
+                    "description": "Nuevos campos para el desarrollo detallado",
+                    "type": "number"
+                },
+                "area_neutro_mm2": {
+                    "description": "nil si no hay neutro (DELTA)",
+                    "type": "number"
+                },
+                "area_ocupacion_tubo_mm2": {
+                    "type": "number"
+                },
+                "area_por_tubo_mm2": {
+                    "type": "number"
+                },
+                "area_tierra_mm2": {
+                    "type": "number"
+                },
+                "designacion_metrica": {
+                    "type": "string"
+                },
+                "fill_factor": {
+                    "type": "number"
+                },
+                "num_fases_por_tubo": {
+                    "type": "integer"
+                },
+                "num_neutros_por_tubo": {
+                    "type": "integer"
+                },
+                "num_tierras": {
+                    "type": "integer"
+                },
+                "num_tuberias": {
+                    "type": "integer"
+                },
+                "tipo_canalizacion": {
+                    "type": "string"
+                },
+                "tuberia_recomendada": {
+                    "type": "string"
+                }
+            }
+        },
+        "http.CaidaTensionRequest": {
+            "type": "object",
+            "required": [
+                "calibre",
+                "corriente_nominal",
+                "factor_potencia",
+                "hilos_por_fase",
+                "limite_caida",
+                "longitud_circuito",
+                "material",
+                "sistema_electrico",
+                "tension",
+                "tipo_canalizacion",
+                "tipo_voltaje"
+            ],
+            "properties": {
+                "calibre": {
+                    "description": "Calibre es el calibre del conductor (ej: \"2 AWG\", \"250 MCM\")",
+                    "type": "string"
+                },
+                "corriente_nominal": {
+                    "description": "CorrienteNominal es la corriente nominal del circuito en amperes",
+                    "type": "number"
+                },
+                "factor_potencia": {
+                    "description": "FactorPotencia es el coseno del ángulo de desfasamiento (cosθ)\nRepresenta el factor de potencia del circuito: 0 \u003c FP ≤ 1\nEjemplos: 0.85 (motores típicos), 0.9 (cargas mixtas), 1.0 (carga resistiva pura)",
+                    "type": "number",
+                    "maximum": 1
+                },
+                "hilos_por_fase": {
+                    "description": "HilosPorFase es el número de hilos por fase",
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "limite_caida": {
+                    "description": "LimiteCaida es el límite de caída de tensión en porcentaje",
+                    "type": "number"
+                },
+                "longitud_circuito": {
+                    "description": "LongitudCircuito es la longitud del circuito en metros",
+                    "type": "number"
+                },
+                "material": {
+                    "description": "Material es el material del conductor (\"Cu\" = cobre, \"Al\" = aluminio)",
+                    "type": "string"
+                },
+                "sistema_electrico": {
+                    "description": "SistemaElectrico es el tipo de sistema eléctrico\nValores: \"MONOFASICO\", \"BIFASICO\", \"DELTA\", \"ESTRELLA\"",
+                    "type": "string"
+                },
+                "tension": {
+                    "description": "Tension es la tensión del sistema en volts",
+                    "type": "integer"
+                },
+                "tipo_canalizacion": {
+                    "description": "TipoCanalizacion es el tipo de canalización\nValores: \"TUBERIA_PVC\", \"TUBERIA_METALICA\", \"CHAROLA\"",
+                    "type": "string"
+                },
+                "tipo_voltaje": {
+                    "description": "TipoVoltaje indica si el voltaje ingresado es fase-neutro o fase-fase\nValores: \"FASE_NEUTRO\" (Vfn), \"FASE_FASE\" (Vff), también acepta \"FN\" o \"FF\"\nEjemplos: 127V es típicamente Vfn, 220V es típicamente Vff",
+                    "type": "string"
+                }
+            }
+        },
+        "http.CaidaTensionResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/dto.ResultadoCaidaTension"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "http.CaidaTensionResponseError": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "details": {
+                    "type": "string"
+                },
+                "error": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "http.CalcularAmperajeRequest": {
+            "type": "object",
+            "required": [
+                "factor_potencia",
+                "potencia_watts",
+                "sistema_electrico",
+                "tension",
+                "tipo_carga"
+            ],
+            "properties": {
+                "factor_potencia": {
+                    "description": "FactorPotencia es el factor de potencia (requerido, \u003e 0 y \u003c= 1)",
+                    "type": "number",
+                    "maximum": 1
+                },
+                "potencia_watts": {
+                    "description": "PotenciaWatts es la potencia activa en Watts (requerido, \u003e 0)",
+                    "type": "number"
+                },
+                "sistema_electrico": {
+                    "description": "SistemaElectrico indica el tipo de sistema eléctrico (requerido)\nValores: \"ESTRELLA\" | \"DELTA\"",
+                    "type": "string"
+                },
+                "tension": {
+                    "description": "Tension es la tensión del circuito en volts (requerido)",
+                    "type": "integer"
+                },
+                "tipo_carga": {
+                    "description": "TipoCarga indica el tipo de carga eléctrica (requerido)\nValores: \"MONOFASICA\" | \"TRIFASICA\"",
+                    "type": "string"
+                }
+            }
+        },
+        "http.CalcularAmperajeResponse": {
+            "type": "object",
+            "properties": {
+                "amperaje": {
+                    "type": "number"
+                },
+                "success": {
+                    "type": "boolean"
+                },
+                "unidad": {
+                    "type": "string"
+                }
+            }
+        },
+        "http.CalcularAmperajeResponseError": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "details": {
+                    "type": "string"
+                },
+                "error": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "http.CalcularMemoriaRequest": {
+            "type": "object",
+            "required": [
+                "estado",
+                "longitud_circuito",
+                "modo",
+                "sistema_electrico",
+                "tension",
+                "tipo_canalizacion",
+                "tipo_voltaje"
+            ],
+            "properties": {
+                "amperaje_nominal": {
+                    "type": "number"
+                },
+                "diametro_control_mm": {
+                    "type": "number"
+                },
+                "equipo": {
+                    "description": "Equipo completo (modo LISTADO)",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/dto.DatosEquipo"
+                        }
+                    ]
+                },
+                "estado": {
+                    "type": "string"
+                },
+                "factor_potencia": {
+                    "type": "number"
+                },
+                "hilos_por_fase": {
+                    "type": "integer"
+                },
+                "itm": {
+                    "description": "Requerido en MANUAL_*, opcional en LISTADO (usa equipo.itm)",
+                    "type": "integer"
+                },
+                "longitud_circuito": {
+                    "type": "number"
+                },
+                "material": {
+                    "description": "material: Cu (cobre), Al (aluminio)",
+                    "type": "string"
+                },
+                "modo": {
+                    "description": "Modo de cálculo (required)\nValues: LISTADO, MANUAL_AMPERAJE, MANUAL_POTENCIA",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/dto.ModoCalculo"
+                        }
+                    ]
+                },
+                "num_tuberias": {
+                    "type": "integer"
+                },
+                "porcentaje_caida_maximo": {
+                    "type": "number"
+                },
+                "potencia_nominal": {
+                    "type": "number"
+                },
+                "potencia_unidad": {
+                    "description": "potencia_unidad: W, KW, KVA, KVAR",
+                    "type": "string"
+                },
+                "sistema_electrico": {
+                    "description": "Sistema eléctrico\nValues: DELTA, ESTRELLA, BIFASICO, MONOFASICO",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/dto.SistemaElectrico"
+                        }
+                    ]
+                },
+                "temperatura_override": {
+                    "type": "integer"
+                },
+                "tension": {
+                    "description": "═══════════════════════════════════════════════════════════════════════\nDATOS DE INSTALACIÓN (comunes a todos los modos)\n═══════════════════════════════════════════════════════════════════════",
+                    "type": "number"
+                },
+                "tension_unidad": {
+                    "type": "string"
+                },
+                "tipo_canalizacion": {
+                    "description": "tipo_canalizacion: TUBERIA_PVC, TUBERIA_ALUMINIO, TUBERIA_ACERO_PG, TUBERIA_ACERO_PD, CHAROLA_CABLE_ESPACIADO, CHAROLA_CABLE_TRIANGULAR",
+                    "type": "string"
+                },
+                "tipo_equipo": {
+                    "description": "Datos manuales (modo MANUAL_*)\ntipo_equipo: FILTRO_ACTIVO, TRANSFORMADOR, FILTRO_RECHAZO, CARGA",
+                    "type": "string"
+                },
+                "tipo_voltaje": {
+                    "description": "tipo_voltaje: FASE_NEUTRO, FASE_FASE",
+                    "type": "string"
+                }
+            }
+        },
+        "http.CalcularMemoriaResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/dto.MemoriaOutput"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "http.CalcularMemoriaResponseError": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "details": {
+                    "type": "string"
+                },
+                "error": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "http.CalcularTuberiaRequest": {
+            "type": "object",
+            "required": [
+                "calibre_fase",
+                "calibre_tierra",
+                "num_fases",
+                "num_tuberias",
+                "tipo_canalizacion"
+            ],
+            "properties": {
+                "calibre_fase": {
+                    "type": "string"
+                },
+                "calibre_neutral": {
+                    "type": "string"
+                },
+                "calibre_tierra": {
+                    "type": "string"
+                },
+                "num_fases": {
+                    "type": "integer"
+                },
+                "num_neutros": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "num_tuberias": {
+                    "type": "integer"
+                },
+                "tipo_canalizacion": {
+                    "type": "string"
+                }
+            }
+        },
+        "http.CalcularTuberiaResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/dto.TuberiaOutput"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "http.CalcularTuberiaResponseError": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "details": {
+                    "type": "string"
+                },
+                "error": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "http.CharolaEspaciadoRequest": {
+            "type": "object",
+            "required": [
+                "diametro_fase_mm",
+                "diametro_tierra_mm",
+                "hilos_por_fase",
+                "sistema_electrico"
+            ],
+            "properties": {
+                "diametro_control_mm": {
+                    "type": "number"
+                },
+                "diametro_fase_mm": {
+                    "type": "number"
+                },
+                "diametro_tierra_mm": {
+                    "type": "number"
+                },
+                "hilos_por_fase": {
+                    "type": "integer"
+                },
+                "sistema_electrico": {
+                    "type": "string"
+                }
+            }
+        },
+        "http.CharolaEspaciadoResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/dto.CharolaEspaciadoOutput"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "http.CharolaEspaciadoResponseError": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "details": {
+                    "type": "string"
+                },
+                "error": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "http.CharolaTriangularRequest": {
+            "type": "object",
+            "required": [
+                "diametro_fase_mm",
+                "diametro_tierra_mm",
+                "hilos_por_fase"
+            ],
+            "properties": {
+                "diametro_control_mm": {
+                    "type": "number"
+                },
+                "diametro_fase_mm": {
+                    "type": "number"
+                },
+                "diametro_tierra_mm": {
+                    "type": "number"
+                },
+                "hilos_por_fase": {
+                    "type": "integer"
+                }
+            }
+        },
+        "http.CharolaTriangularResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/dto.CharolaTriangularOutput"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "http.CharolaTriangularResponseError": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "details": {
+                    "type": "string"
+                },
+                "error": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "http.ConductorAlimentacionRequest": {
+            "type": "object",
+            "required": [
+                "corriente_ajustada",
+                "tipo_canalizacion"
+            ],
+            "properties": {
+                "corriente_ajustada": {
+                    "type": "number"
+                },
+                "hilos_por_fase": {
+                    "type": "integer"
+                },
+                "material": {
+                    "type": "string"
+                },
+                "temperatura": {
+                    "type": "integer"
+                },
+                "tipo_canalizacion": {
+                    "type": "string"
+                }
+            }
+        },
+        "http.ConductorAlimentacionResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/dto.ConductorAlimentacionOutput"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "http.ConductorAlimentacionResponseError": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "details": {
+                    "type": "string"
+                },
+                "error": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "http.ConductorTierraRequest": {
+            "type": "object",
+            "required": [
+                "itm"
+            ],
+            "properties": {
+                "itm": {
+                    "description": "ITM es el Interruptor Termomagnético en amperes (requerido, \u003e 0).",
+                    "type": "integer"
+                },
+                "material": {
+                    "description": "Material es el material del conductor (\"Cu\" o \"Al\").\nSi está vacío, se usa \"Cu\" por defecto.",
+                    "type": "string"
+                }
+            }
+        },
+        "http.ConductorTierraResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/dto.ConductorTierraOutput"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "http.ConductorTierraResponseError": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "details": {
+                    "type": "string"
+                },
+                "error": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "http.CorrienteAjustadaRequest": {
+            "type": "object",
+            "required": [
+                "corriente_nominal",
+                "estado",
+                "sistema_electrico",
+                "tipo_canalizacion",
+                "tipo_equipo"
+            ],
+            "properties": {
+                "corriente_nominal": {
+                    "type": "number"
+                },
+                "estado": {
+                    "type": "string"
+                },
+                "hilos_por_fase": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "num_tuberias": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "sistema_electrico": {
+                    "type": "string"
+                },
+                "tipo_canalizacion": {
+                    "type": "string"
+                },
+                "tipo_equipo": {
+                    "type": "string"
+                }
+            }
+        },
+        "http.CorrienteAjustadaResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/dto.ResultadoAjusteCorriente"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "http.CorrienteAjustadaResponseError": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "details": {
+                    "type": "string"
+                },
+                "error": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        }
+    }
+}

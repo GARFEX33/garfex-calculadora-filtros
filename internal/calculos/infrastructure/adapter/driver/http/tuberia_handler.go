@@ -48,6 +48,17 @@ type CalcularTuberiaResponseError struct {
 }
 
 // CalcularTuberia POST /api/v1/calculos/tuberia
+// @Summary Dimensionar tubería
+// @Description Dimensiona el tamaño de tubería requerido según los calibres de conductores
+// @Tags Canalización
+// @Accept json
+// @Produce json
+// @Param request body CalcularTuberiaRequest true "Datos de conductores y tubería"
+// @Success 200 {object} CalcularTuberiaResponse "Tamaño de tubería calculado"
+// @Failure 400 {object} CalcularTuberiaResponseError "Error de validación"
+// @Failure 422 {object} CalcularTuberiaResponseError "Conductor no encontrado o tubería no disponible"
+// @Failure 500 {object} CalcularTuberiaResponseError "Error interno del servidor"
+// @Router /calculos/tuberia [post]
 func (h *TuberiaHandler) CalcularTuberia(c *gin.Context) {
 	var req CalcularTuberiaRequest
 	if err := c.ShouldBindJSON(&req); err != nil {

@@ -27,6 +27,7 @@ func NewMemoriaHandler(orquestadorUC *usecase.OrquestadorMemoriaCalculoUseCase) 
 // CalcularMemoriaRequest represents the request body for the memoria endpoint.
 type CalcularMemoriaRequest struct {
 	// Modo de cálculo (required)
+	// Values: LISTADO, MANUAL_AMPERAJE, MANUAL_POTENCIA
 	Modo dto.ModoCalculo `json:"modo" binding:"required"`
 
 	// ═══════════════════════════════════════════════════════════════════════
@@ -40,9 +41,11 @@ type CalcularMemoriaRequest struct {
 	Equipo dto.DatosEquipo `json:"equipo"`
 
 	// Datos manuales (modo MANUAL_*)
+	// tipo_equipo: FILTRO_ACTIVO, TRANSFORMADOR, FILTRO_RECHAZO, CARGA
 	TipoEquipo      string  `json:"tipo_equipo"`
 	AmperajeNominal float64 `json:"amperaje_nominal"`
 	PotenciaNominal float64 `json:"potencia_nominal"`
+	// potencia_unidad: W, KW, KVA, KVAR
 	PotenciaUnidad  string  `json:"potencia_unidad"`
 	FactorPotencia  float64 `json:"factor_potencia"`
 
@@ -52,18 +55,22 @@ type CalcularMemoriaRequest struct {
 	Tension               float64  `json:"tension" binding:"required,gt=0"`
 	TensionUnidad         string   `json:"tension_unidad"`
 	ITM                   int      `json:"itm"` // Requerido en MANUAL_*, opcional en LISTADO (usa equipo.itm)
+	// tipo_canalizacion: TUBERIA_PVC, TUBERIA_ALUMINIO, TUBERIA_ACERO_PG, TUBERIA_ACERO_PD, CHAROLA_CABLE_ESPACIADO, CHAROLA_CABLE_TRIANGULAR
 	TipoCanalizacion      string   `json:"tipo_canalizacion" binding:"required"`
 	TemperaturaOverride   *int     `json:"temperatura_override,omitempty"`
 	HilosPorFase          int      `json:"hilos_por_fase"`
 	NumTuberias           int      `json:"num_tuberias"`
+	// material: Cu (cobre), Al (aluminio)
 	Material              string   `json:"material"`
 	LongitudCircuito      float64  `json:"longitud_circuito" binding:"required,gt=0"`
 	PorcentajeCaidaMaximo float64  `json:"porcentaje_caida_maximo"`
 	DiametroControlMM     *float64 `json:"diametro_control_mm,omitempty"`
 
 	// Sistema eléctrico
+	// Values: DELTA, ESTRELLA, BIFASICO, MONOFASICO
 	SistemaElectrico dto.SistemaElectrico `json:"sistema_electrico" binding:"required"`
 	Estado           string               `json:"estado" binding:"required"`
+	// tipo_voltaje: FASE_NEUTRO, FASE_FASE
 	TipoVoltaje      string               `json:"tipo_voltaje" binding:"required"`
 }
 
@@ -82,6 +89,17 @@ type CalcularMemoriaResponseError struct {
 }
 
 // CalcularMemoria POST /api/v1/calculos/memoria
+// @Summary Memoria de cálculo completa
+// @Description Calcula la memoria de cálculo completa para una instalación eléctrica según normativa NOM (México). Orquesta: corriente nominal → ajuste → conductor alimentación → conductor tierra → canalización → caída de tensión.
+// @Tags Memoria
+// @Accept json
+// @Produce json
+// @Param request body CalcularMemoriaRequest true "Datos del equipo e instalación"
+// @Success 200 {object} CalcularMemoriaResponse "Memoria de cálculo exitosa"
+// @Failure 400 {object} CalcularMemoriaResponseError "Error de validación o datos inválidos"
+// @Failure 422 {object} CalcularMemoriaResponseError "No se encontró conductor o canalización adecuada"
+// @Failure 500 {object} CalcularMemoriaResponseError "Error interno del servidor"
+// @Router /calculos/memoria [post]
 func (h *MemoriaHandler) CalcularMemoria(c *gin.Context) {
 	var req CalcularMemoriaRequest
 	if err := c.ShouldBindJSON(&req); err != nil {

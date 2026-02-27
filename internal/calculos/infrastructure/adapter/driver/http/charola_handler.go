@@ -55,6 +55,17 @@ type CharolaEspaciadoResponseError struct {
 }
 
 // PostCharolaEspaciado POST /api/v1/calculos/charola/espaciado
+// @Summary Calcular espaciado en charola
+// @Description Calcula el espaciado requerido entre conductores en charola tipo escalera
+// @Tags Canalización
+// @Accept json
+// @Produce json
+// @Param request body CharolaEspaciadoRequest true "Datos de hilos y diámetro de conductores"
+// @Success 200 {object} CharolaEspaciadoResponse "Espaciado calculado"
+// @Failure 400 {object} CharolaEspaciadoResponseError "Error de validación"
+// @Failure 422 {object} CharolaEspaciadoResponseError "No se pudo calcular el tamaño de charola"
+// @Failure 500 {object} CharolaEspaciadoResponseError "Error interno del servidor"
+// @Router /calculos/charola/espaciado [post]
 func (h *CharolaHandler) PostCharolaEspaciado(c *gin.Context) {
 	var req CharolaEspaciadoRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -117,6 +128,17 @@ type CharolaTriangularResponseError struct {
 }
 
 // PostCharolaTriangular POST /api/v1/calculos/charola/triangular
+// @Summary Calcular configuración triangular
+// @Description Calcula el ancho de charola en configuración triangular (cables en posición Herculana)
+// @Tags Canalización
+// @Accept json
+// @Produce json
+// @Param request body CharolaTriangularRequest true "Datos de hilos y diámetro de conductores"
+// @Success 200 {object} CharolaTriangularResponse "Configuración triangular calculada"
+// @Failure 400 {object} CharolaTriangularResponseError "Error de validación"
+// @Failure 422 {object} CharolaTriangularResponseError "No se pudo calcular el tamaño de charola"
+// @Failure 500 {object} CharolaTriangularResponseError "Error interno del servidor"
+// @Router /calculos/charola/triangular [post]
 func (h *CharolaHandler) PostCharolaTriangular(c *gin.Context) {
 	var req CharolaTriangularRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
