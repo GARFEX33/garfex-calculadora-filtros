@@ -69,6 +69,16 @@ type CalcularAmperajeResponseError struct {
 }
 
 // CalcularAmperaje POST /api/v1/calculos/amperaje
+// @Summary Calcular amperaje nominal
+// @Description Calcula el amperaje nominal de un equipo a partir de su potencia y factor de potencia
+// @Tags Corriente
+// @Accept json
+// @Produce json
+// @Param request body CalcularAmperajeRequest true "Datos de potencia y sistema"
+// @Success 200 {object} CalcularAmperajeResponse "Amperaje calculado exitosamente"
+// @Failure 400 {object} CalcularAmperajeResponseError "Error de validación"
+// @Failure 500 {object} CalcularAmperajeResponseError "Error interno del servidor"
+// @Router /calculos/amperaje [post]
 // Usa el modo MANUAL_POTENCIA del CalcularCorrienteUseCase existente.
 func (h *CalculoHandler) CalcularAmperaje(c *gin.Context) {
 	var req CalcularAmperajeRequest
@@ -114,7 +124,7 @@ func (h *CalculoHandler) CalcularAmperaje(c *gin.Context) {
 
 	c.JSON(http.StatusOK, CalcularAmperajeResponse{
 		Success:  true,
-		Amperaje: output.CorrienteNominal,
+		Amperaje: 	output.CorrienteNominal,
 		Unidad:   "A",
 	})
 }
@@ -179,6 +189,17 @@ type CorrienteAjustadaResponseError struct {
 }
 
 // CalcularCorrienteAjustada POST /api/v1/calculos/corriente-ajustada
+// @Summary Calcular corriente ajustada
+// @Description Ajusta la corriente nominal por factores de temperatura, agrupamiento y uso según NOM
+// @Tags Corriente
+// @Accept json
+// @Produce json
+// @Param request body CorrienteAjustadaRequest true "Datos de instalación y equipo"
+// @Success 200 {object} CorrienteAjustadaResponse "Corriente ajustada calculada"
+// @Failure 400 {object} CorrienteAjustadaResponseError "Error de validación o datos inválidos"
+// @Failure 422 {object} CorrienteAjustadaResponseError "No se pudo calcular el ajuste"
+// @Failure 500 {object} CorrienteAjustadaResponseError "Error interno del servidor"
+// @Router /calculos/corriente-ajustada [post]
 func (h *CalculoHandler) CalcularCorrienteAjustada(c *gin.Context) {
 	var req CorrienteAjustadaRequest
 	if err := c.ShouldBindJSON(&req); err != nil {

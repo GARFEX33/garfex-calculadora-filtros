@@ -9,6 +9,10 @@ type PasoMemoria struct {
 	Resultado   interface{}
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// ESTRUCTURAS EXISTENTES (sin cambios)
+// ═══════════════════════════════════════════════════════════════════════════
+
 // ResultadoConductor contiene la información del conductor seleccionado.
 type ResultadoConductor struct {
 	Calibre         string  `json:"calibre"`
@@ -143,67 +147,202 @@ type ResultadoCorriente struct {
 	CorrienteNominal float64 `json:"corriente_nominal"`
 }
 
-// MemoriaOutput contiene el resultado completo de la memoria de cálculo.
-type MemoriaOutput struct {
-	// ═══════════════════════════════════════════════════════════════════════
-	// DATOS DEL EQUIPO (reflejan el input)
-	// ═══════════════════════════════════════════════════════════════════════
-	Equipo DatosEquipo `json:"equipo"`
+// ═══════════════════════════════════════════════════════════════════════════
+// NUEVAS ESTRUCTURAS AGRUPADAS (Phase 1)
+// ═══════════════════════════════════════════════════════════════════════════
 
-	// Información del cálculo
-	TipoEquipo          string           `json:"tipo_equipo"`
-	Tension             int              `json:"tension"`
-	FactorPotencia      float64          `json:"factor_potencia"`
-	Estado              string           `json:"estado"`
-	TemperaturaAmbiente int              `json:"temperatura_ambiente"`
-	SistemaElectrico    SistemaElectrico `json:"sistema_electrico"`
-	CantidadConductores int              `json:"cantidad_conductores"`
+// DatosInstalacion agrupa los parámetros de instalación ingresados por el usuario.
+// Refleja los valores de entrada más algunos cálculos derivados del entorno.
+type DatosInstalacion struct {
+	// Tension es el voltaje de operación en volts.
+	// Valor de entrada del usuario.
+	Tension int `json:"tension"`
 
-	// Factores calculados
-	FactorTemperaturaCalculado  float64 `json:"factor_temperatura_calculato"`
-	FactorAgrupamientoCalculado float64 `json:"factor_agrupamiento_calculado"`
+	// SistemaElectrico indica el tipo de sistema eléctrico (DELTA, ESTRELLA, BIFASICO, MONOFASICO).
+	// Valor de entrada del usuario.
+	SistemaElectrico SistemaElectrico `json:"sistema_electrico"`
 
-	// Paso 1: Corriente Nominal
-	CorrienteNominal float64 `json:"corriente_nominal"`
-
-	// Paso 2: Ajuste de Corriente
-	FactorAgrupamiento float64 `json:"factor_agrupamiento"`
-	FactorTemperatura  float64 `json:"factor_temperatura"`
-	FactorTotalAjuste  float64 `json:"factor_total_ajuste"`
-	CorrienteAjustada  float64 `json:"corriente_ajustada"`
-	HilosPorFase       int     `json:"hilos_por_fase"`
-	CorrientePorHilo   float64 `json:"corriente_por_hilo"`
-	ConductoresPorTubo int     `json:"conductores_por_tubo"`
-
-	// Paso 3: Tipo de Canalización
+	// TipoCanalizacion indica el tipo de canalización a utilizar (TUBERIA_PVC, CHAROLA_CABLE_ESPACIADO, etc.).
+	// Valor de entrada del usuario.
 	TipoCanalizacion string `json:"tipo_canalizacion"`
 
-	// Material del conductor
+	// Material es el material del conductor (CU para cobre, AL para aluminio).
+	// Valor de entrada del usuario.
 	Material string `json:"material"`
 
-	// Paso 4: Conductor de Alimentación
-	TemperaturaUsada      int                `json:"temperatura_usada"`
-	ConductorAlimentacion ResultadoConductor `json:"conductor_alimentacion"`
-	TablaAmpacidadUsada   string             `json:"tabla_ampacidad_usada"`
+	// LongitudCircuito es la longitud del circuito en metros.
+	// Valor de entrada del usuario.
+	LongitudCircuito float64 `json:"longitud_circuito"`
 
-	// Paso 5: Conductor de Tierra
-	ConductorTierra ResultadoConductor `json:"conductor_tierra"`
-	ITM             int                `json:"itm"`
+	// HilosPorFase es el número de conductores por fase en paralelo.
+	// Valor de entrada del usuario (default: 1).
+	HilosPorFase int `json:"hilos_por_fase"`
 
-	// Paso 6: Canalización
-	Canalizacion   ResultadoCanalizacion `json:"canalizacion"`
-	FillFactor     float64               `json:"fill_factor"`
-	DetalleCharola *DetalleCharola       `json:"detalle_charola,omitempty"`
-	DetalleTuberia *DetalleTuberia       `json:"detalle_tuberia,omitempty"`
+	// PorcentajeCaidaMaximo es el límite de caída de tensión permitido en porcentaje.
+	// Valor de entrada del usuario (default: 3.0%).
+	PorcentajeCaidaMaximo float64 `json:"porcentaje_caida_maximo"`
+}
 
-	// Paso 7: Caída de Tensión
-	LongitudCircuito float64               `json:"longitud_circuito"`
-	CaidaTension     ResultadoCaidaTension `json:"caida_tension"`
+// DatosCorrientes agrupa todos los cálculos relacionados con corriente eléctrica,
+// incluyendo la corriente nominal, ajustada, y los factores de corrección.
+type DatosCorrientes struct {
+	// CorrienteNominal es la corriente nominal calculada en el paso 1 (Step 1).
+	// Calculada a partir de la potencia o amperaje del equipo.
+	CorrienteNominal float64 `json:"corriente_nominal"`
 
-	// Resumen de cumplimiento
-	CumpleNormativa bool     `json:"cumple_normativa"`
-	Observaciones   []string `json:"observaciones"`
+	// CorrienteAjustada es la corriente ajustada por factores de corrección en el paso 2 (Step 2).
+	// Calculada: CorrienteNominal / (FactorTemperatura × FactorAgrupamiento × FactorUso)
+	CorrienteAjustada float64 `json:"corriente_ajustada"`
 
-	// Todos los pasos para el reporte
+	// CorrientePorHilo es la corriente que circula por cada hilo cuando hay conductores en paralelo.
+	// Calculada: CorrienteAjustada / HilosPorFase
+	CorrientePorHilo float64 `json:"corriente_por_hilo"`
+
+	// FactorTemperatura es el factor de corrección por temperatura ambiente.
+	// Valor de las tablas NOM según temperatura ambiente y temperatura del cable.
+	FactorTemperatura float64 `json:"factor_temperatura"`
+
+	// FactorAgrupamiento es el factor de corrección por agrupamiento de circuitos.
+	// Valor de las tablas NOM según cantidad de conductores.
+	FactorAgrupamiento float64 `json:"factor_agrupamiento"`
+
+	// FactorTotalAjuste es el factor total combinado de corrección.
+	// Calculado: FactorTemperatura × FactorAgrupamiento × FactorUso
+	FactorTotalAjuste float64 `json:"factor_total_ajuste"`
+
+	// TemperaturaAmbiente es la temperatura ambiente en grados Celsius.
+	// Valor de entrada del usuario (determinado por el estado de la República).
+	TemperaturaAmbiente int `json:"temperatura_ambiente"`
+
+	// TemperaturaReferencia es la temperatura de operación del cable seleccionada (60, 75 o 90°C).
+	// Determinada por el tipo de aislamiento y las tablas NOM.
+	TemperaturaReferencia int `json:"temperatura_referencia"`
+
+	// ConductoresPorTubo es el número de conductores por tubo o canal.
+	// Valor de entrada del usuario o calculado según el sistema eléctrico.
+	ConductoresPorTubo int `json:"conductores_por_tubo"`
+
+	// CantidadConductores es el total de conductores en el sistema.
+	// Calculado según el sistema eléctrico (DELTA, ESTRELLA, etc.) y hilos por fase.
+	CantidadConductores int `json:"cantidad_conductores"`
+
+	// TablaAmpacidadUsada es la tabla NOM utilizada para la selección de ampacidad.
+	// Ejemplo: "Tabla 310-16" o "Tabla 310-17".
+	TablaAmpacidadUsada string `json:"tabla_ampacidad_usada"`
+}
+
+// DatosCanalizacionCompleta agrupa el resultado del dimensionamiento de canalización
+// junto con los detalles de cálculo (charola o tubería).
+type DatosCanalizacionCompleta struct {
+	// Resultado contiene el resultado del dimensionamiento de canalización.
+	Resultado ResultadoCanalizacion `json:"resultado"`
+
+	// FillFactor es el factor de llenado calculado (área ocupante / área disponible).
+	// Debe ser ≤ 0.40 para más de 2 conductores según NOM.
+	FillFactor float64 `json:"fill_factor"`
+
+	// DetalleCharola contiene los valores intermedios del cálculo de charola.
+	// Es nil cuando la canalización es tubería.
+	DetalleCharola *DetalleCharola `json:"detalle_charola,omitempty"`
+
+	// DetalleTuberia contiene los valores intermedios del cálculo de tubería.
+	// Es nil cuando la canalización es charola.
+	DetalleTuberia *DetalleTuberia `json:"detalle_tuberia,omitempty"`
+}
+
+// DatosProteccion agrupa los datos de protección eléctrica del circuito.
+type DatosProteccion struct {
+	// ITM es el interruptor termomagnético en Amperes.
+	// Valor de entrada del usuario o obtenido del catálogo de equipos.
+	ITM int `json:"itm"`
+}
+
+// MemoriaOutput contiene el resultado completo de la memoria de cálculo.
+// Estructura reorganizada por entidad de dominio en lugar de pasos secuenciales.
+type MemoriaOutput struct {
+	// ═══════════════════════════════════════════════════════════════════════
+	// DATOS DEL EQUIPO
+	// ═══════════════════════════════════════════════════════════════════════
+
+	// Equipo contiene los datos del equipo/filtro del catálogo.
+	// Valor de entrada del usuario (modo LISTADO).
+	Equipo DatosEquipo `json:"equipo"`
+
+	// TipoEquipo indica el tipo de equipo (FILTRO_ACTIVO, TRANSFORMADOR, FILTRO_RECHAZO, CARGA).
+	// Valor de entrada del usuario.
+	TipoEquipo string `json:"tipo_equipo"`
+
+	// FactorPotencia es el factor de potencia del equipo (cosθ ∈ (0, 1]).
+	// Valor de entrada del usuario (solo para modo MANUAL_POTENCIA).
+	FactorPotencia float64 `json:"factor_potencia"`
+
+	// Estado indica el estado de la República Mexicana para determinar la temperatura ambiente.
+	// Valor de entrada del usuario.
+	Estado string `json:"estado"`
+
+	// ═══════════════════════════════════════════════════════════════════════
+	// PARÁMETROS DE INSTALACIÓN
+	// ═══════════════════════════════════════════════════════════════════════
+
+	// Instalacion agrupa los parámetros de instalación ingresados por el usuario.
+	Instalacion DatosInstalacion `json:"instalacion"`
+
+	// ═══════════════════════════════════════════════════════════════════════
+	// CÁLCULOS DE CORRIENTE
+	// ═══════════════════════════════════════════════════════════════════════
+
+	// Corrientes agrupa los datos de corrientes y factores de ajuste.
+	Corrientes DatosCorrientes `json:"corrientes"`
+
+	// ═══════════════════════════════════════════════════════════════════════
+	// CONDUCTORES
+	// ═══════════════════════════════════════════════════════════════════════
+
+	// CableFase es el conductor de alimentación (fase).
+	// Resultado del paso 4 de selección de conductor.
+	CableFase ResultadoConductor `json:"cable_fase"`
+
+	// CableNeutro es el conductor neutro.
+	// Es nil para sistemas DELTA (sin neutro).
+	CableNeutro *ResultadoConductor `json:"cable_neutro,omitempty"`
+
+	// CableTierra es el conductor de tierra.
+	// Resultado del paso 5 de selección de conductor de tierra.
+	CableTierra ResultadoConductor `json:"cable_tierra"`
+
+	// ═══════════════════════════════════════════════════════════════════════
+	// CANALIZACIÓN
+	// ═══════════════════════════════════════════════════════════════════════
+
+	// Canalizacion agrupa el resultado del dimensionamiento de canalización.
+	Canalizacion DatosCanalizacionCompleta `json:"canalizacion"`
+
+	// ═══════════════════════════════════════════════════════════════════════
+	// PROTECCIÓN
+	// ═══════════════════════════════════════════════════════════════════════
+
+	// Proteccion agrupa los datos de protección eléctrica.
+	Proteccion DatosProteccion `json:"proteccion"`
+
+	// ═══════════════════════════════════════════════════════════════════════
+	// CAÍDA DE TENSIÓN
+	// ═══════════════════════════════════════════════════════════════════════
+
+	// CaidaTension contiene el resultado del cálculo de caída de tensión.
+	// Resultado del paso 7.
+	CaidaTension ResultadoCaidaTension `json:"caida_tension"`
+
+	// ═══════════════════════════════════════════════════════════════════════
+	// RESUMEN Y METADATOS
+	// ═══════════════════════════════════════════════════════════════════════
+
+	// CumpleNormativa indica si la instalación cumple toda la normativa NOM.
+	// Es true si todos los criterios de selección son válidos.
+	CumpleNormativa bool `json:"cumple_normativa"`
+
+	// Observaciones contiene notas y advertencias sobre la instalación.
+	Observaciones []string `json:"observaciones"`
+
+	// Pasos contiene el detalle de todos los pasos del cálculo para debugging.
 	Pasos []PasoMemoria `json:"pasos"`
 }

@@ -19,10 +19,10 @@ func GenerarObservaciones(output dto.MemoriaOutput) []string {
 		))
 	}
 
-	if output.HilosPorFase > 1 {
+	if output.Instalacion.HilosPorFase > 1 {
 		obs = append(obs, fmt.Sprintf(
 			"Se usan %d hilos por fase en paralelo",
-			output.HilosPorFase,
+			output.Instalacion.HilosPorFase,
 		))
 	}
 

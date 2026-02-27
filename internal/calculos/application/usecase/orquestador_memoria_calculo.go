@@ -124,19 +124,28 @@ func (uc *OrquestadorMemoriaCalculoUseCase) Execute(
 	// Get ITM according to mode
 	itm := input.Equipo.ITM
 
-	// Prepare output structure
+	// Prepare output structure with new grouped structure
 	output := dto.MemoriaOutput{
-		Equipo:           input.Equipo,
-		TipoEquipo:       string(tipoEquipo),
-		Tension:          tension.Valor(),
-		FactorPotencia:   input.FactorPotencia,
-		Estado:           input.Estado,
-		SistemaElectrico: input.SistemaElectrico,
-		HilosPorFase:     input.HilosPorFase,
-		TipoCanalizacion: input.TipoCanalizacion,
-		Material:         input.Material,
-		LongitudCircuito: input.LongitudCircuito,
-		ITM:              itm,
+		Equipo:         input.Equipo,
+		TipoEquipo:     string(tipoEquipo),
+		FactorPotencia: input.FactorPotencia,
+		Estado:         input.Estado,
+
+		// Datos de instalación (agrupados en Instalacion)
+		Instalacion: dto.DatosInstalacion{
+			Tension:                 tension.Valor(),
+			SistemaElectrico:       input.SistemaElectrico,
+			TipoCanalizacion:       input.TipoCanalizacion,
+			Material:               input.Material,
+			LongitudCircuito:      input.LongitudCircuito,
+			HilosPorFase:           input.HilosPorFase,
+			PorcentajeCaidaMaximo: input.PorcentajeCaidaMaximo,
+		},
+
+		// Datos de protección
+		Proteccion: dto.DatosProteccion{
+			ITM: itm,
+		},
 	}
 
 	// Determine neutral count from system type
@@ -149,7 +158,7 @@ func (uc *OrquestadorMemoriaCalculoUseCase) Execute(
 	if err != nil {
 		return dto.MemoriaOutput{}, fmt.Errorf("paso 1 (corriente nominal): %w", err)
 	}
-	output.CorrienteNominal = resultadoCorriente.CorrienteNominal
+	output.Corrientes.CorrienteNominal = resultadoCorriente.CorrienteNominal
 	output.Pasos = append(output.Pasos, dto.PasoMemoria{
 		Numero:      1,
 		Nombre:      "Corriente Nominal",
@@ -160,7 +169,7 @@ func (uc *OrquestadorMemoriaCalculoUseCase) Execute(
 	// ============================================================
 	// STEP 2: Adjust Current (temperature, grouping, usage factors)
 	// ============================================================
-	corrienteNominalVO, err := valueobject.NewCorriente(output.CorrienteNominal)
+	corrienteNominalVO, err := valueobject.NewCorriente(output.Corrientes.CorrienteNominal)
 	if err != nil {
 		return dto.MemoriaOutput{}, fmt.Errorf("corriente nominal inválida: %w", err)
 	}
@@ -178,14 +187,14 @@ func (uc *OrquestadorMemoriaCalculoUseCase) Execute(
 	if err != nil {
 		return dto.MemoriaOutput{}, fmt.Errorf("paso 2 (ajuste de corriente): %w", err)
 	}
-	output.CorrienteAjustada = resultadoAjuste.CorrienteAjustada
-	output.CorrientePorHilo = resultadoAjuste.CorrienteAjustada / float64(input.HilosPorFase)
-	output.FactorTemperatura = resultadoAjuste.FactorTemperatura
-	output.FactorAgrupamiento = resultadoAjuste.FactorAgrupamiento
-	output.FactorTotalAjuste = resultadoAjuste.FactorTotal
-	output.TemperaturaAmbiente = resultadoAjuste.TemperaturaAmbiente
-	output.CantidadConductores = resultadoAjuste.CantidadConductoresTotal
-	output.ConductoresPorTubo = resultadoAjuste.ConductoresPorTubo
+	output.Corrientes.CorrienteAjustada = resultadoAjuste.CorrienteAjustada
+	output.Corrientes.CorrientePorHilo = resultadoAjuste.CorrienteAjustada / float64(input.HilosPorFase)
+	output.Corrientes.FactorTemperatura = resultadoAjuste.FactorTemperatura
+	output.Corrientes.FactorAgrupamiento = resultadoAjuste.FactorAgrupamiento
+	output.Corrientes.FactorTotalAjuste = resultadoAjuste.FactorTotal
+	output.Corrientes.TemperaturaAmbiente = resultadoAjuste.TemperaturaAmbiente
+	output.Corrientes.CantidadConductores = resultadoAjuste.CantidadConductoresTotal
+	output.Corrientes.ConductoresPorTubo = resultadoAjuste.ConductoresPorTubo
 	output.Pasos = append(output.Pasos, dto.PasoMemoria{
 		Numero:      2,
 		Nombre:      "Ajuste de Corriente",
@@ -216,10 +225,10 @@ func (uc *OrquestadorMemoriaCalculoUseCase) Execute(
 	if err != nil {
 		return dto.MemoriaOutput{}, fmt.Errorf("paso 3 (seleccionar conductor): %w", err)
 	}
-	output.ConductorAlimentacion = resultadoConductores.Alimentacion
-	output.ConductorTierra = resultadoConductores.Tierra
-	output.TablaAmpacidadUsada = resultadoConductores.TablaUsada
-	output.TemperaturaUsada = temperaturaUsada.Valor()
+	output.CableFase = resultadoConductores.Alimentacion
+	output.CableTierra = resultadoConductores.Tierra
+	output.Corrientes.TablaAmpacidadUsada = resultadoConductores.TablaUsada
+	output.Corrientes.TemperaturaReferencia = temperaturaUsada.Valor()
 	output.Pasos = append(output.Pasos, dto.PasoMemoria{
 		Numero:      3,
 		Nombre:      "Selección de Conductores",
@@ -232,8 +241,8 @@ func (uc *OrquestadorMemoriaCalculoUseCase) Execute(
 	// ============================================================
 	canalizacion, detalleCharola, detalleTuberia, fillFactor, err := uc.calcularCanalizacion(
 		ctx,
-		output.ConductorAlimentacion.Calibre,
-		output.ConductorTierra.Calibre,
+		output.CableFase.Calibre,
+		output.CableTierra.Calibre,
 		material,
 		tipoCanalizacion,
 		sistemaElectrico,
@@ -243,10 +252,10 @@ func (uc *OrquestadorMemoriaCalculoUseCase) Execute(
 	if err != nil {
 		return dto.MemoriaOutput{}, fmt.Errorf("paso 4 (canalización): %w", err)
 	}
-	output.Canalizacion = canalizacion
-	output.DetalleCharola = detalleCharola
-	output.DetalleTuberia = detalleTuberia
-	output.FillFactor = fillFactor
+	output.Canalizacion.Resultado = canalizacion
+	output.Canalizacion.DetalleCharola = detalleCharola
+	output.Canalizacion.DetalleTuberia = detalleTuberia
+	output.Canalizacion.FillFactor = fillFactor
 
 	// Append the appropriate paso based on canalization type
 	if tipoCanalizacion.EsCharola() {
@@ -273,7 +282,7 @@ func (uc *OrquestadorMemoriaCalculoUseCase) Execute(
 	// - Tubería ≤2 tubos: 1 hilo
 	// - Tubería >2 tubos: 2 hilos
 	numHilosTierra := calcularNumHilosTierra(tipoCanalizacion, input.NumTuberias)
-	output.ConductorTierra.NumHilos = numHilosTierra
+	output.CableTierra.NumHilos = numHilosTierra
 
 	// ============================================================
 	// STEP 5: Calculate Voltage Drop
@@ -284,7 +293,7 @@ func (uc *OrquestadorMemoriaCalculoUseCase) Execute(
 	// Hacer la conversión aquí causaría doble conversión → %caída incorrecto.
 	resultadoCaidaTension, err := uc.calcularCaidaTensionUC.Execute(
 		ctx,
-		output.ConductorAlimentacion.Calibre,
+		output.CableFase.Calibre,
 		material,
 		corrienteNominalVO, // NOM-001-SEDE: caída de tensión usa corriente nominal, no ajustada
 		input.LongitudCircuito, // already in meters from input
@@ -325,7 +334,7 @@ func (uc *OrquestadorMemoriaCalculoUseCase) Execute(
 	if !output.CaidaTension.Cumple {
 		resultadoRecalc, err := uc.seleccionarConductorCaidaTensionUC.Execute(
 			ctx,
-			output.ConductorAlimentacion.Calibre,
+			output.CableFase.Calibre,
 			material,
 			corrienteNominalVO,
 			input.LongitudCircuito,
@@ -344,14 +353,14 @@ func (uc *OrquestadorMemoriaCalculoUseCase) Execute(
 		}
 		if err == nil && resultadoRecalc.Cumple {
 			// Override conductor de alimentación con el calibre superior
-			calibreOriginal := output.ConductorAlimentacion.Calibre
-			output.ConductorAlimentacion.Calibre = resultadoRecalc.CalibreSeleccionado
-			output.ConductorAlimentacion.SeccionMM2 = resultadoRecalc.SeccionMM2
-			output.ConductorAlimentacion.Capacidad = resultadoRecalc.Capacidad
-			output.ConductorAlimentacion.TipoAislamiento = resultadoRecalc.TipoAislamiento
-			output.ConductorAlimentacion.SeleccionPorCaidaTension = true
-			output.ConductorAlimentacion.CalibreOriginalAmpacidad = calibreOriginal
-			output.ConductorAlimentacion.NotaSeleccion = resultadoRecalc.Nota
+			calibreOriginal := output.CableFase.Calibre
+			output.CableFase.Calibre = resultadoRecalc.CalibreSeleccionado
+			output.CableFase.SeccionMM2 = resultadoRecalc.SeccionMM2
+			output.CableFase.Capacidad = resultadoRecalc.Capacidad
+			output.CableFase.TipoAislamiento = resultadoRecalc.TipoAislamiento
+			output.CableFase.SeleccionPorCaidaTension = true
+			output.CableFase.CalibreOriginalAmpacidad = calibreOriginal
+			output.CableFase.NotaSeleccion = resultadoRecalc.Nota
 
 			// Override caída de tensión con el resultado del nuevo calibre
 			output.CaidaTension = dto.ResultadoCaidaTension{
@@ -368,7 +377,7 @@ func (uc *OrquestadorMemoriaCalculoUseCase) Execute(
 			canalizacionRecalc, detalleCharolaRecalc, detalleTuberiaRecalc, fillFactorRecalc, errCanal := uc.calcularCanalizacion(
 				ctx,
 				resultadoRecalc.CalibreSeleccionado,
-				output.ConductorTierra.Calibre,
+				output.CableTierra.Calibre,
 				material,
 				tipoCanalizacion,
 				sistemaElectrico,
@@ -381,10 +390,10 @@ func (uc *OrquestadorMemoriaCalculoUseCase) Execute(
 					fmt.Sprintf("No se pudo recalcular canalización con calibre %s: %v",
 						resultadoRecalc.CalibreSeleccionado, errCanal))
 			} else {
-				output.Canalizacion = canalizacionRecalc
-				output.DetalleCharola = detalleCharolaRecalc
-				output.DetalleTuberia = detalleTuberiaRecalc
-				output.FillFactor = fillFactorRecalc
+				output.Canalizacion.Resultado = canalizacionRecalc
+				output.Canalizacion.DetalleCharola = detalleCharolaRecalc
+				output.Canalizacion.DetalleTuberia = detalleTuberiaRecalc
+				output.Canalizacion.FillFactor = fillFactorRecalc
 			}
 
 			output.Pasos = append(output.Pasos, dto.PasoMemoria{
@@ -426,54 +435,54 @@ func (uc *OrquestadorMemoriaCalculoUseCase) generarObservaciones(memoria dto.Mem
 	}
 
 	// 2. Conductor de alimentación — con hilos en paralelo si aplica
-	hilosFase := memoria.HilosPorFase
+	hilosFase := memoria.Instalacion.HilosPorFase
 	if hilosFase <= 0 {
 		hilosFase = 1
 	}
 	if hilosFase > 1 {
 		obs = append(obs, fmt.Sprintf(
 			"Conductor de alimentación: %s %s (%s, %.2f mm²) — %d hilos por fase en paralelo",
-			memoria.ConductorAlimentacion.Material,
-			memoria.ConductorAlimentacion.Calibre,
-			memoria.ConductorAlimentacion.TipoAislamiento,
-			memoria.ConductorAlimentacion.SeccionMM2,
+			memoria.CableFase.Material,
+			memoria.CableFase.Calibre,
+			memoria.CableFase.TipoAislamiento,
+			memoria.CableFase.SeccionMM2,
 			hilosFase,
 		))
 	} else {
 		obs = append(obs, fmt.Sprintf(
 			"Conductor de alimentación: %s %s (%s, %.2f mm²)",
-			memoria.ConductorAlimentacion.Material,
-			memoria.ConductorAlimentacion.Calibre,
-			memoria.ConductorAlimentacion.TipoAislamiento,
-			memoria.ConductorAlimentacion.SeccionMM2,
+			memoria.CableFase.Material,
+			memoria.CableFase.Calibre,
+			memoria.CableFase.TipoAislamiento,
+			memoria.CableFase.SeccionMM2,
 		))
 	}
 
 	// 3. Conductor de tierra — con cantidad de hilos si hay múltiples tubos
 	// NumHilos es int (no puntero); valor 0 se trata como 1 (un conductor)
-	numHilosTierra := memoria.ConductorTierra.NumHilos
+	numHilosTierra := memoria.CableTierra.NumHilos
 	if numHilosTierra <= 0 {
 		numHilosTierra = 1
 	}
 	if numHilosTierra > 1 {
 		obs = append(obs, fmt.Sprintf(
 			"Conductor de tierra: %s %s (%.2f mm²) — %d conductores",
-			memoria.ConductorTierra.Material,
-			memoria.ConductorTierra.Calibre,
-			memoria.ConductorTierra.SeccionMM2,
+			memoria.CableTierra.Material,
+			memoria.CableTierra.Calibre,
+			memoria.CableTierra.SeccionMM2,
 			numHilosTierra,
 		))
 	} else {
 		obs = append(obs, fmt.Sprintf(
 			"Conductor de tierra: %s %s (%.2f mm²)",
-			memoria.ConductorTierra.Material,
-			memoria.ConductorTierra.Calibre,
-			memoria.ConductorTierra.SeccionMM2,
+			memoria.CableTierra.Material,
+			memoria.CableTierra.Calibre,
+			memoria.CableTierra.SeccionMM2,
 		))
 	}
 
 	// 4. Canalización — con número de tubos si hay más de uno
-	numTubos := memoria.Canalizacion.NumeroDeTubos
+	numTubos := memoria.Canalizacion.Resultado.NumeroDeTubos
 	if numTubos <= 0 {
 		numTubos = 1
 	}
@@ -481,20 +490,20 @@ func (uc *OrquestadorMemoriaCalculoUseCase) generarObservaciones(memoria dto.Mem
 		obs = append(obs, fmt.Sprintf(
 			"Canalización: %d tubos de %s",
 			numTubos,
-			memoria.Canalizacion.Tamano,
+			memoria.Canalizacion.Resultado.Tamano,
 		))
 	} else {
 		obs = append(obs, fmt.Sprintf(
 			"Canalización: %s",
-			memoria.Canalizacion.Tamano,
+			memoria.Canalizacion.Resultado.Tamano,
 		))
 	}
 
 	// 5. Factores aplicados (solo si hay corrección significativa)
-	if memoria.FactorTotalAjuste < 1.0 {
+	if memoria.Corrientes.FactorTotalAjuste < 1.0 {
 		obs = append(obs, fmt.Sprintf(
 			"Factores aplicados: Temperatura=%.2f, Agrupamiento=%.2f, Uso=%.2f",
-			memoria.FactorTemperatura, memoria.FactorAgrupamiento, memoria.FactorTotalAjuste,
+			memoria.Corrientes.FactorTemperatura, memoria.Corrientes.FactorAgrupamiento, memoria.Corrientes.FactorTotalAjuste,
 		))
 	}
 
