@@ -149,7 +149,14 @@ func (uc *MiUseCase) Execute(ctx context.Context, input dto.MiInput) (dto.MiOutp
 - Si un use case hace 2+ cosas distintas → separar
 - El orquestador coordina múltiples use cases
 
-## Referencias
+## DTOs de Charola
 
-- Estructura y reglas: [docs/reference/structure.md](../../../docs/reference/structure.md)
-- QA Checklist: [QA_CHECKLIST.md](QA_CHECKLIST.md)
+Los DTOs de salida para charola incluyen el campo `FactorControl`:
+
+| DTO                        | Campo                      | Descripción                |
+| -------------------------- | -------------------------- | -------------------------- |
+| `CharolaTriangularOutput`  | `FactorControl float64`   | Siempre 1.0 para cables control |
+| `CharolaEspaciadoOutput`   | `FactorControl float64`   | Siempre 1.0 para cables control |
+| `DetalleCharola` (memoria_output.go) | `FactorControl float64 \`json:"factor_control"\`` | Incluido en respuesta API |
+
+**Regla:** Los use cases NO recalculan valores que el domain service ya calculó — el campo viene mapeado directamente desde el servicio de dominio.

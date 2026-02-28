@@ -67,6 +67,10 @@ El adapter consulta la tabla `equipos_filtros` y convierte cada registro a la en
 - **MemoriaHandler** — orquestador completo
   - `POST /api/v1/calculos/memoria` — memoria de cálculo completa (orquesta todos los pasos)
 
+- **Swagger/OpenAPI**
+  - `GET /swagger/index.html` — UI de Swagger
+  - `GET /swagger/doc.json` — Especificación OpenAPI 3.0
+
 #### Body: POST /api/v1/calculos/caida-tension
 
 ```json

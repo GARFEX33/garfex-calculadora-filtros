@@ -64,6 +64,7 @@ frontend/web/
 │   │   │           ├── SeccionCorriente.svelte
 │   │   │           ├── SeccionEncabezado.svelte
 │   │   │           └── SeccionTierra.svelte
+> **Nota SeccionCanalizacion:** Este componente usa el campo `factor_control` del DTO `DetalleCharola` en la fórmula E_c (no hardcodeado). El tipo `DetalleCharola` incluye `factor_control?: number`.
 │   │   ├── types/
 │   │   │   ├── index.ts           # Re-exporta todos los tipos
 │   │   │   └── api.types.ts       # ApiResponse, ApiError, ApiResult, etc.
@@ -140,18 +141,26 @@ components/    → application/ (usa stores, NO lógica de negocio)
 ### Capas explicadas
 
 #### domain/
+
 - **Qué va aquí**: Tipos, enums, validadores puros
 - **Qué NO va aquí**: `fetch`, `console.log`, referencias a `window`, estados reactivos
 - **Ejemplo**:
+
   ```typescript
   // ✓ Correcto: tipo puro
-  export interface EquipoFiltro { id: string; clave: string; }
-  
+  export interface EquipoFiltro {
+  	id: string;
+  	clave: string;
+  }
+
   // ✗ Incorrecto:依赖 externa
-  export interface EquipoConFetch extends EquipoFiltro { fetch: () => Promise }
+  export interface EquipoConFetch extends EquipoFiltro {
+  	fetch: () => Promise;
+  }
   ```
 
 #### infrastructure/
+
 - **Qué va aquí**: Llamadas API, transformaciones de datos, configuraciones externas
 - **Qué NO va aquí**: Lógica de negocio, estados reactivos
 - **Ejemplo**:
@@ -161,6 +170,7 @@ components/    → application/ (usa stores, NO lógica de negocio)
   ```
 
 #### application/
+
 - **Qué va aquí**: Stores con `$state`, servicios que orquestan múltiples llamadas
 - **Qué NO va aquí**: Tipos definidos (usar los del domain)
 - **Ejemplo**:
@@ -184,13 +194,13 @@ components/    → application/ (usa stores, NO lógica de negocio)
 
 ### Auto-invocación de Skills
 
-| Contexto                          | Skill                                |
-| --------------------------------- | ------------------------------------ |
-| Crear/modificar .svelte           | `svelte5-best-practices`             |
-| Crear store con $state            | `svelte5-best-practices`             |
-| Tipos domain, validadores puros   | `typescript-advanced-types`          |
-| Client API, mapeos                | `api-design-principles`              |
-| Componente con diseño responsivo  | `tailwind-design-system`             |
+| Contexto                         | Skill                       |
+| -------------------------------- | --------------------------- |
+| Crear/modificar .svelte          | `svelte5-best-practices`    |
+| Crear store con $state           | `svelte5-best-practices`    |
+| Tipos domain, validadores puros  | `typescript-advanced-types` |
+| Client API, mapeos               | `api-design-principles`     |
+| Componente con diseño responsivo | `tailwind-design-system`    |
 
 ### Compatibilidad con re-exports
 

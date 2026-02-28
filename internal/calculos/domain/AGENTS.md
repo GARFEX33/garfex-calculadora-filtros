@@ -68,6 +68,17 @@ e = factor × (I/N) × L × (R × cosθ + X × sinθ)
 2. Sin I/O (no leer archivos, no HTTP, no DB)
 3. Puro Go + lógica de negocio
 
-## Referencias
+## Convenciones de Cálculo — Charola
 
-- Estructura y reglas: [docs/reference/structure.md](../../../docs/reference/structure.md)
+### Factores de ocupación por tipo de cable
+
+| Tipo cable    | Factor (triangular) | Factor (espaciado) |
+| ------------- | ------------------- | ------------------ |
+| FUERZA        | 2.15               | 2.0               |
+| CONTROL       | **1.0** (no 2.15)  | **1.0** (no 2.0)  |
+
+**Servicios afectados:**
+- `calcular_charola_triangular.go`: factor CONTROL = 1.0
+- `calcular_charola_espaciado.go`: factor CONTROL = 1.0
+
+> Los cables de control ocupan menos espacio que los de fuerza debido a su sección y amperaje.
