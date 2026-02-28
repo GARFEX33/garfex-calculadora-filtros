@@ -226,10 +226,8 @@ export function mapApiToMemoriaOutput(api: ApiMemoriaOutput): MemoriaOutput {
 		cable_fase: mapApiToResultadoConductor(api.cable_fase),
 		cable_tierra: mapApiToResultadoConductor(api.cable_tierra),
 
-		// Cable neutro es opcional (nil para sistemas DELTA)
-		cable_neutro: api.cable_neutro
-			? mapApiToResultadoConductor(api.cable_neutro)
-			: undefined,
+		// Cable neutro es opcional (nil para sistemas DELTA) - omitir si no existe
+		...(api.cable_neutro && { cable_neutro: mapApiToResultadoConductor(api.cable_neutro) }),
 
 		// Canalización
 		canalizacion: mapApiToDatosCanalizacion(api.canalizacion),
@@ -344,10 +342,10 @@ function mapApiToResultadoConductor(api: ApiResultadoConductor): ResultadoConduc
 		material: api.material,
 		seccion_mm2: api.seccion_mm2,
 		tipo_aislamiento: api.tipo_aislamiento,
-		capacidad: api.capacidad
+		capacidad: api.capacidad,
+		num_hilos: api.num_hilos // Obligatorio según DTO backend
 	};
 
-	if (api.num_hilos !== undefined) result.num_hilos = api.num_hilos;
 	if (api.seleccion_por_caida_tension !== undefined)
 		result.seleccion_por_caida_tension = api.seleccion_por_caida_tension;
 	if (api.calibre_original_ampacidad !== undefined)
@@ -411,6 +409,7 @@ function mapApiToDetalleCharola(api: ApiDetalleCharola): DetalleCharola {
 	if (api.ancho_control_mm !== undefined) result.ancho_control_mm = api.ancho_control_mm;
 	if (api.ancho_potencia_mm !== undefined) result.ancho_potencia_mm = api.ancho_potencia_mm;
 	if (api.factor_triangular !== undefined) result.factor_triangular = api.factor_triangular;
+	if (api.factor_control !== undefined) result.factor_control = api.factor_control;
 
 	return result;
 }

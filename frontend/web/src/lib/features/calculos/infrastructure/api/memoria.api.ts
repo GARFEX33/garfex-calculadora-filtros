@@ -97,7 +97,7 @@ export interface ApiResultadoConductor {
 	seccion_mm2: number;
 	tipo_aislamiento: string;
 	capacidad: number;
-	num_hilos?: number;
+	num_hilos: number; // Obligatorio: 1 para charola/tubería≤2, 2 para tubería>2
 	seleccion_por_caida_tension?: boolean;
 	calibre_original_ampacidad?: string;
 	nota_seleccion?: string;
@@ -129,6 +129,7 @@ export interface ApiDetalleCharola {
 	ancho_tierra_mm: number;
 	ancho_potencia_mm?: number;
 	factor_triangular?: number;
+	factor_control?: number;
 }
 
 /**
@@ -254,6 +255,8 @@ export interface ApiMemoriaResponse {
  * @param input - Request data in API format
  * @returns Result with response data or error
  */
-export async function calcularMemoria(input: ApiMemoriaRequest): Promise<ApiResult<ApiMemoriaResponse>> {
+export async function calcularMemoria(
+	input: ApiMemoriaRequest
+): Promise<ApiResult<ApiMemoriaResponse>> {
 	return apiClient.post<ApiMemoriaResponse>('/api/v1/calculos/memoria', input);
 }

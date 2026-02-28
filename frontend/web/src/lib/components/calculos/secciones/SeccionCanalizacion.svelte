@@ -17,28 +17,9 @@
 			tipo === 'TUBERIA_ACERO_PG' ||
 			tipo === 'TUBERIA_ACERO_PD'
 	);
+
 	let esCharolaEspaciado = $derived(tipo === 'CHAROLA_CABLE_ESPACIADO');
 	let esCharolaTriangular = $derived(tipo === 'CHAROLA_CABLE_TRIANGULAR');
-
-	// Etiqueta legible del tipo
-	let tipoLabel = $derived.by(() => {
-		switch (tipo) {
-			case 'TUBERIA_PVC':
-				return 'Tubería PVC';
-			case 'TUBERIA_ALUMINIO':
-				return 'Tubería Aluminio';
-			case 'TUBERIA_ACERO_PG':
-				return 'Tubería Acero Pared Gruesa (Rígida)';
-			case 'TUBERIA_ACERO_PD':
-				return 'Tubería Acero Pared Delgada (EMT)';
-			case 'CHAROLA_CABLE_ESPACIADO':
-				return 'Charola de Cable — Espaciado (1 diámetro de separación)';
-			case 'CHAROLA_CABLE_TRIANGULAR':
-				return 'Charola de Cable — Arreglo Triangular';
-			default:
-				return tipo;
-		}
-	});
 
 	// Fill factor como porcentaje (solo tubería)
 	let fillFactorPorcentaje = $derived((memoria.canalizacion.fill_factor * 100).toFixed(0));
@@ -54,6 +35,9 @@
 
 	// Detalle tubería — valores intermedios para el desarrollo con números reales
 	let detalleTuberia = $derived(memoria.canalizacion.detalle_tuberia);
+
+	// Factor de control — usa el valor del API o default 1.0
+	let factorControl = $derived(detalle?.factor_control ?? 1);
 
 	// Labels legibles de material y sistema eléctrico
 	let materialLabel = $derived(
@@ -76,28 +60,12 @@
 				return memoria.instalacion.sistema_electrico;
 		}
 	});
-
-	// Referencia normativa según tipo
-	let referencianom = $derived.by(() => {
-		if (esTuberia) return 'NOM-001-SEDE — Cap. 9, Tabla 4';
-		if (esCharolaEspaciado) return 'NOM-001-SEDE — 310-15(b)(17)';
-		if (esCharolaTriangular) return 'NOM-001-SEDE — 310-15(b)(20)';
-		return 'NOM-001-SEDE';
-	});
 </script>
 
 <section class="rounded-lg border border-border bg-card p-6">
 	<h2 class="mb-4 border-b border-border pb-2 text-xl font-semibold text-card-foreground">
 		5. Cálculo de Canalización
 	</h2>
-
-	<!-- Tipo de canalización -->
-	<div class="mb-4 rounded border border-primary/30 bg-primary/10 p-3">
-		<p class="text-sm font-medium text-primary">
-			Tipo de Canalización: {tipoLabel}
-		</p>
-		<p class="mt-1 text-xs text-muted-foreground">Referencia: {referencianom}</p>
-	</div>
 
 	<!-- ═══════════════════════════════════════════════════════════
 	     TUBERÍA (PVC / Aluminio / Acero PG / Acero PD)
@@ -186,7 +154,9 @@
 					</tr>
 					<tr>
 						<td class="px-4 py-2 text-muted-foreground">Hilos por fase</td>
-						<td class="px-4 py-2 font-medium text-foreground">{memoria.instalacion.hilos_por_fase}</td>
+						<td class="px-4 py-2 font-medium text-foreground"
+							>{memoria.instalacion.hilos_por_fase}</td
+						>
 					</tr>
 					<!-- Separador visual -->
 					<tr class="bg-muted/40">
@@ -227,7 +197,8 @@
 				<div class="space-y-1.5 rounded bg-muted/30 p-3 font-mono text-sm">
 					<!-- Sistema -->
 					<p class="text-muted-foreground">
-						{sistemaLabel} — {memoria.instalacion.hilos_por_fase} conductor(es) por fase — {canalizacion.resultado.numero_de_tubos}
+						{sistemaLabel} — {memoria.instalacion.hilos_por_fase} conductor(es) por fase — {canalizacion
+							.resultado.numero_de_tubos}
 						tubo(s)
 					</p>
 
@@ -374,8 +345,9 @@
 				</p>
 				{#if tieneControl}
 					<p>
-						<strong>E<sub>c</sub></strong> = Espacio de control = 2 × Ø<sub>control</sub>
-						<span class="text-muted-foreground">(uno a cada lado)</span>
+						<strong>E<sub>c</sub></strong> = Espacio de control = f<sub>c</sub> × Ø<sub>control</sub
+						>
+						<span class="text-muted-foreground">(factor de control)</span>
 					</p>
 					<p>
 						<strong>A<sub>c</sub></strong> = Ancho de control = Ø<sub>control</sub>
@@ -413,7 +385,9 @@
 					</tr>
 					<tr>
 						<td class="px-4 py-2 text-muted-foreground">Hilos por fase</td>
-						<td class="px-4 py-2 font-medium text-foreground">{memoria.instalacion.hilos_por_fase}</td>
+						<td class="px-4 py-2 font-medium text-foreground"
+							>{memoria.instalacion.hilos_por_fase}</td
+						>
 					</tr>
 					<!-- Separador visual -->
 					<tr class="bg-muted/40">
@@ -487,8 +461,11 @@
 					</p>
 					{#if tieneControl && detalle.diametro_control_mm}
 						<p class="text-foreground">
-							E<sub>c</sub> = 2 × {detalle.diametro_control_mm.toFixed(2)} mm =
+							E<sub>c</sub> = f<sub>c</sub> × {detalle.diametro_control_mm.toFixed(2)} mm =
 							<strong>{detalle.espacio_control_mm?.toFixed(2) ?? '—'} mm</strong>
+							<span class="font-sans text-xs text-muted-foreground">
+								(f_c = {factorControl.toFixed(2)})</span
+							>
 						</p>
 						<p class="text-foreground">
 							A<sub>c</sub> = <strong>{detalle.ancho_control_mm?.toFixed(2) ?? '—'} mm</strong>
@@ -567,26 +544,10 @@
 	     CHAROLA TRIANGULAR
 	     ═══════════════════════════════════════════════════════════ -->
 	{:else if esCharolaTriangular}
-		<!-- Advertencia temperatura -->
-		<div class="mb-4 rounded border border-warning/40 bg-warning/10 p-3">
-			<p class="text-sm font-medium text-warning-foreground">
-				⚠ Temperatura mínima: 75 °C — Esta configuración no tiene columna de 60 °C en la tabla de
-				ampacidad (310-15(b)(20))
-			</p>
-		</div>
-
 		<p class="mb-4 text-sm text-muted-foreground">
 			Los cables se instalan en disposición triangular, tocándose entre sí. Se aplica un factor de
 			espaciado triangular de 2.15 conforme a NOM-001-SEDE-2012 Art. 310-15(b)(20).
 		</p>
-
-		<!-- Norma de referencia -->
-		<div class="mb-4 rounded border border-primary/30 bg-primary/10 p-3">
-			<p class="text-sm font-medium text-primary">
-				Referencia: NOM-001-SEDE-2012 Art. 392 / 310-15(b)(20) — Cables en charola, arreglo
-				triangular
-			</p>
-		</div>
 
 		<!-- Fórmula general -->
 		<div class="mb-4 rounded bg-muted p-4">
@@ -604,8 +565,9 @@
 				</p>
 				{#if tieneControl}
 					<p>
-						<strong>E<sub>c</sub></strong> = Espacio de control = 2.15 × Ø<sub>control</sub>
-						<span class="text-muted-foreground">(a cada lado)</span>
+						<strong>E<sub>c</sub></strong> = Espacio de control = f<sub>c</sub> × Ø<sub>control</sub
+						>
+						<span class="text-muted-foreground">(factor de control)</span>
 					</p>
 					<p>
 						<strong>A<sub>c</sub></strong> = Ancho de control = Ø<sub>control</sub>
@@ -640,7 +602,9 @@
 					</tr>
 					<tr>
 						<td class="px-4 py-2 text-muted-foreground">Hilos por fase</td>
-						<td class="px-4 py-2 font-medium text-foreground">{memoria.instalacion.hilos_por_fase}</td>
+						<td class="px-4 py-2 font-medium text-foreground"
+							>{memoria.instalacion.hilos_por_fase}</td
+						>
 					</tr>
 					<!-- Separador visual -->
 					<tr class="bg-muted/40">
@@ -690,7 +654,7 @@
 								>
 								<span
 									class="ml-2 rounded bg-muted px-1 py-0.5 text-xs font-medium text-muted-foreground"
-									>Factor 2.15 a cada lado</span
+									>Factor de control</span
 								>
 							</td>
 						</tr>
@@ -705,19 +669,24 @@
 				<h3 class="mb-2 font-semibold text-foreground">Desarrollo</h3>
 				<div class="space-y-1.5 rounded bg-muted/30 p-3 font-mono text-sm">
 					<p class="text-foreground">
-						A<sub>p</sub> = 2 × {detalle.diametro_fase_mm.toFixed(2)} mm × {memoria.instalacion.hilos_por_fase}
+						A<sub>p</sub> = 2 × {detalle.diametro_fase_mm.toFixed(2)} mm × {memoria.instalacion
+							.hilos_por_fase}
 						hilos = <strong>{detalle.ancho_potencia_mm?.toFixed(2) ?? '—'} mm</strong>
 					</p>
 					<p class="text-foreground">
-						E<sub>f</sub> = ({memoria.instalacion.hilos_por_fase} − 1) × {detalle.factor_triangular?.toFixed(2)} ×
+						E<sub>f</sub> = ({memoria.instalacion.hilos_por_fase} − 1) × {detalle.factor_triangular?.toFixed(
+							2
+						)} ×
 						{detalle.diametro_fase_mm.toFixed(2)} mm =
 						<strong>{detalle.espacio_fuerza_mm.toFixed(2)} mm</strong>
 					</p>
 					{#if tieneControl && detalle.diametro_control_mm}
 						<p class="text-foreground">
-							E<sub>c</sub> = {detalle.factor_triangular?.toFixed(2)} × {detalle.diametro_control_mm.toFixed(
-								2
-							)} mm = <strong>{detalle.espacio_control_mm?.toFixed(2) ?? '—'} mm</strong>
+							E<sub>c</sub> = f<sub>c</sub> × {detalle.diametro_control_mm.toFixed(2)} mm =
+							<strong>{detalle.espacio_control_mm?.toFixed(2) ?? '—'} mm</strong>
+							<span class="font-sans text-xs text-muted-foreground">
+								(f_c = {factorControl.toFixed(2)})</span
+							>
 						</p>
 						<p class="text-foreground">
 							A<sub>c</sub> = <strong>{detalle.ancho_control_mm?.toFixed(2) ?? '—'} mm</strong>

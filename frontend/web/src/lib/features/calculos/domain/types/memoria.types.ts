@@ -5,9 +5,26 @@
 
 import type { TipoCanalizacion } from './tipo-canalizacion.js';
 import type { MaterialConductor } from './material-conductor.js';
+import type {
+	ModoCalculo,
+	TipoFiltro,
+	TipoEquipo,
+	SistemaElectrico,
+	TipoVoltaje,
+	UnidadPotencia,
+	UnidadTension
+} from './calculo.enums.js';
 
 // Enums / union types
-export type { ModoCalculo, TipoFiltro, TipoEquipo, SistemaElectrico, TipoVoltaje, UnidadPotencia, UnidadTension } from './calculo.enums.js';
+export type {
+	ModoCalculo,
+	TipoFiltro,
+	TipoEquipo,
+	SistemaElectrico,
+	TipoVoltaje,
+	UnidadPotencia,
+	UnidadTension
+} from './calculo.enums.js';
 export type { TipoCanalizacion } from './tipo-canalizacion.js';
 export type { MaterialConductor } from './material-conductor.js';
 
@@ -18,7 +35,7 @@ export { MATERIAL_CONDUCTOR_LABELS } from './material-conductor.js';
 // Equipment data (sent in LISTADO mode)
 export interface DatosEquipo {
 	clave: string;
-	tipo: import('./calculo.enums.js').TipoFiltro;
+	tipo: TipoFiltro;
 	voltaje: number;
 	amperaje: number;
 	itm: number;
@@ -27,24 +44,24 @@ export interface DatosEquipo {
 
 // Request body for POST /api/v1/calculos/memoria
 export interface CalcularMemoriaRequest {
-	modo: import('./calculo.enums.js').ModoCalculo;
+	modo: ModoCalculo;
 	// LISTADO mode
 	equipo?: DatosEquipo;
 	// MANUAL modes
-	tipo_equipo?: import('./calculo.enums.js').TipoEquipo;
+	tipo_equipo?: TipoEquipo;
 	amperaje_nominal?: number; // MANUAL_AMPERAJE
 	potencia_nominal?: number; // MANUAL_POTENCIA
-	potencia_unidad?: import('./calculo.enums.js').UnidadPotencia; // MANUAL_POTENCIA
+	potencia_unidad?: UnidadPotencia; // MANUAL_POTENCIA
 	factor_potencia?: number; // MANUAL_POTENCIA (0-1, required for CARGA)
 	// Common installation fields
 	tension: number;
-	tension_unidad?: import('./calculo.enums.js').UnidadTension;
+	tension_unidad?: UnidadTension;
 	itm?: number; // Required in MANUAL modes
-	sistema_electrico: import('./calculo.enums.js').SistemaElectrico;
+	sistema_electrico: SistemaElectrico;
 	estado: string;
 	tipo_canalizacion: TipoCanalizacion;
 	longitud_circuito: number;
-	tipo_voltaje: import('./calculo.enums.js').TipoVoltaje;
+	tipo_voltaje: TipoVoltaje;
 	// Optional
 	hilos_por_fase?: number;
 	num_tuberias?: number;
@@ -67,7 +84,7 @@ export type MemoriaRequest = CalcularMemoriaRequest;
 // Datos de instalación — agrupados bajo 'instalacion'
 export interface DatosInstalacion {
 	tension: number;
-	sistema_electrico: import('./calculo.enums.js').SistemaElectrico;
+	sistema_electrico: SistemaElectrico;
 	tipo_canalizacion: string;
 	material: string;
 	longitud_circuito: number;
@@ -97,7 +114,7 @@ export interface ResultadoConductor {
 	seccion_mm2: number;
 	tipo_aislamiento: string;
 	capacidad: number;
-	num_hilos?: number;
+	num_hilos: number; // Obligatorio: 1 para charola/tubería≤2, 2 para tubería>2
 	// Campos para recalculo por caída de tensión
 	seleccion_por_caida_tension?: boolean;
 	calibre_original_ampacidad?: string;
@@ -129,6 +146,8 @@ export interface DetalleCharola {
 	// Triangular
 	ancho_potencia_mm?: number;
 	factor_triangular?: number;
+	// Factor multiplicador del cable de control (1.0 para espaciado, configurable)
+	factor_control?: number;
 }
 
 // Detalle de tubería — valores intermedios del cálculo para el desarrollo en memoria
