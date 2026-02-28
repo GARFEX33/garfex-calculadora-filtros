@@ -12,7 +12,10 @@
 
 	import { memoriaStore } from '$lib/features/calculos/application/stores/memoria.store.svelte';
 	import { equiposStore } from '$lib/features/equipos/application/stores/equipos.store.svelte';
-	import { mapConexionToSistemaElectrico, mapTipoVoltajeToTipoVoltaje } from '$lib/features/calculos/infrastructure/mappers/memoria.mapper';
+	import {
+		mapConexionToSistemaElectrico,
+		mapTipoVoltajeToTipoVoltaje
+	} from '$lib/features/calculos/infrastructure/mappers/memoria.mapper';
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 
@@ -43,7 +46,7 @@
 		num_tuberias: undefined,
 		longitud_circuito: undefined,
 		tipo_voltaje: '',
-		material: 'Cu',
+		material: 'CU',
 		hilos_por_fase: 1,
 		porcentaje_caida_maximo: 3.0,
 		temperatura_override: undefined,
@@ -91,7 +94,7 @@
 				num_tuberias: undefined,
 				longitud_circuito: undefined,
 				tipo_voltaje: '',
-				material: 'Cu',
+				material: 'CU',
 				hilos_por_fase: 1,
 				porcentaje_caida_maximo: 3.0,
 				temperatura_override: undefined,
@@ -111,10 +114,13 @@
 		};
 
 		if (newDatos.tipo_equipo) update['tipo_equipo'] = newDatos.tipo_equipo;
-		if (newDatos.amperaje_nominal !== undefined) update['amperaje_nominal'] = newDatos.amperaje_nominal;
-		if (newDatos.potencia_nominal !== undefined) update['potencia_nominal'] = newDatos.potencia_nominal;
+		if (newDatos.amperaje_nominal !== undefined)
+			update['amperaje_nominal'] = newDatos.amperaje_nominal;
+		if (newDatos.potencia_nominal !== undefined)
+			update['potencia_nominal'] = newDatos.potencia_nominal;
 		if (newDatos.potencia_unidad) update['potencia_unidad'] = newDatos.potencia_unidad;
-		if (newDatos.factor_potencia !== undefined) update['factor_potencia'] = newDatos.factor_potencia;
+		if (newDatos.factor_potencia !== undefined)
+			update['factor_potencia'] = newDatos.factor_potencia;
 		if (newDatos.itm !== undefined) update['itm'] = newDatos.itm;
 
 		memoriaStore.actualizarInput(update as Parameters<typeof memoriaStore.actualizarInput>[0]);
@@ -168,6 +174,7 @@
 			// Since we can't set to undefined with exactOptionalPropertyTypes,
 			// we need to reset the entire input for this mode
 			const currentInput = memoriaStore.input;
+			// eslint-disable-next-line @typescript-eslint/no-unused-vars
 			const { equipo: _, ...inputWithoutEquipo } = currentInput;
 			memoriaStore.input = inputWithoutEquipo;
 		}
@@ -178,7 +185,8 @@
 
 		// Update store with installation fields
 		const update: Record<string, number | string | undefined> = {
-			tension: newDatos.tension ?? 0,
+			// Solo incluir tensión si tiene un valor válido (en modo MANUAL viene del formulario manual)
+			...(newDatos.tension !== undefined && newDatos.tension > 0 && { tension: newDatos.tension }),
 			tension_unidad: newDatos.tension_unidad,
 			sistema_electrico: newDatos.sistema_electrico || undefined,
 			estado: newDatos.estado,
@@ -209,9 +217,11 @@
 		await memoriaStore.calcular();
 
 		if (memoriaStore.output) {
-			// Redirect to results page with data (handle Unicode characters)
+			// Serializar output ANTES de resetear
 			const jsonStr = JSON.stringify(memoriaStore.output);
 			const encodedData = btoa(unescape(encodeURIComponent(jsonStr)));
+			// Resetear store para que al volver la página esté limpia
+			memoriaStore.resetear();
 			goto(`/calculos/resultado?data=${encodedData}`);
 		}
 	}
@@ -227,6 +237,39 @@
 		await equiposStore.cambiarPagina(pagina);
 	}
 
+	// Resetear store y estados locales al montar la página
+	// Garantiza formulario limpio si el usuario vuelve desde resultados
+	onMount(() => {
+		memoriaStore.resetear();
+		datosManual = {
+			tipo_equipo: '',
+			amperaje_nominal: undefined,
+			potencia_nominal: undefined,
+			potencia_unidad: 'KW',
+			factor_potencia: undefined,
+			itm: undefined,
+			tension: 220,
+			tipo_voltaje: 'FASE_NEUTRO',
+			sistema_electrico: ''
+		};
+		instalacion = {
+			tension: undefined,
+			tension_unidad: 'V',
+			sistema_electrico: '',
+			estado: '',
+			tipo_canalizacion: '',
+			num_tuberias: undefined,
+			longitud_circuito: undefined,
+			tipo_voltaje: '',
+			material: 'CU',
+			hilos_por_fase: 1,
+			porcentaje_caida_maximo: 3.0,
+			temperatura_override: undefined,
+			diametro_control_mm: undefined
+		};
+		equipoSeleccionado = undefined;
+	});
+
 	// Load equipos when mode changes to LISTADO
 	$effect(() => {
 		if (modo === 'LISTADO') {
@@ -234,6 +277,15 @@
 			if (equiposStore.equipos.length === 0 && !equiposStore.loading) {
 				void equiposStore.cargar();
 			}
+		}
+	});
+
+	// Sincronizar num_tuberias al store cuando cambia via binding desde CamposInstalacion
+	// (el $effect del hijo puede autocompletar sin dispara handleInstalacionChange)
+	$effect(() => {
+		const numTuberias = instalacion.num_tuberias;
+		if (numTuberias !== undefined && numTuberias > 0) {
+			memoriaStore.actualizarInput({ num_tuberias: numTuberias });
 		}
 	});
 </script>
@@ -312,6 +364,20 @@
 		{#if error}
 			<div class="mt-6 rounded-lg border border-destructive/50 bg-destructive/10 p-4">
 				<p class="text-sm font-medium text-destructive">{error}</p>
+			</div>
+		{/if}
+
+		<!-- Validation Errors Display -->
+		{#if memoriaStore.erroresValidacion.length > 0}
+			<div class="mt-4 rounded-lg border border-red-500 bg-red-50 p-4">
+				<p class="mb-2 text-sm font-medium text-red-800">
+					Por favor complete los siguientes campos:
+				</p>
+				<ul class="list-inside list-disc text-sm text-red-700">
+					{#each memoriaStore.erroresValidacion as err}
+						<li>{err.field}: {err.message}</li>
+					{/each}
+				</ul>
 			</div>
 		{/if}
 	</div>
