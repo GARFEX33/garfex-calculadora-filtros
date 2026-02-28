@@ -193,7 +193,13 @@ func (uc *OrquestadorMemoriaCalculoUseCase) Execute(
 	output.Corrientes.FactorAgrupamiento = resultadoAjuste.FactorAgrupamiento
 	output.Corrientes.FactorTotalAjuste = resultadoAjuste.FactorTotal
 	output.Corrientes.TemperaturaAmbiente = resultadoAjuste.TemperaturaAmbiente
-	output.Corrientes.CantidadConductores = resultadoAjuste.CantidadConductoresTotal
+	// Para charola: mostrar total del sistema (no hay concepto de "por tubo")
+	// Para tubería: mostrar conductores por tubo (es lo que determina el factor de agrupamiento NOM)
+	if tipoCanalizacion.EsCharola() {
+		output.Corrientes.CantidadConductores = resultadoAjuste.CantidadConductoresTotal
+	} else {
+		output.Corrientes.CantidadConductores = resultadoAjuste.ConductoresPorTubo
+	}
 	output.Corrientes.ConductoresPorTubo = resultadoAjuste.ConductoresPorTubo
 	output.Pasos = append(output.Pasos, dto.PasoMemoria{
 		Numero:      2,
@@ -594,6 +600,7 @@ func (uc *OrquestadorMemoriaCalculoUseCase) calcularCanalizacion(
 				AnchoControlMM:    resultadoTriangular.AnchoControlMM,
 				AnchoTierraMM:     resultadoTriangular.AnchoTierraMM,
 				FactorTriangular:  resultadoTriangular.FactorTriangular,
+				FactorControl:     resultadoTriangular.FactorControl,
 			}
 
 		case entity.TipoCanalizacionCharolaCableEspaciado:
@@ -613,6 +620,7 @@ func (uc *OrquestadorMemoriaCalculoUseCase) calcularCanalizacion(
 				EspacioControlMM:  resultadoCharola.EspacioControlMM,
 				AnchoControlMM:    resultadoCharola.AnchoControlMM,
 				AnchoTierraMM:     resultadoCharola.AnchoTierraMM,
+				FactorControl:     resultadoCharola.FactorControl,
 			}
 
 		default:

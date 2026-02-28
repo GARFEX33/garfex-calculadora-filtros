@@ -138,6 +138,7 @@ func (uc *CalcularCharolaEspaciadoUseCase) Execute(
 		EspacioControlMM: espacioControl,
 		AnchoControlMM:   anchoControl,
 		AnchoTierraMM:    input.DiametroTierraMM,
+		FactorControl:    1.0,
 	}
 	if input.DiametroControlMM != nil && *input.DiametroControlMM > 0 {
 		out.DiametroControlMM = input.DiametroControlMM

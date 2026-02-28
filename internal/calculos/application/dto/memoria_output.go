@@ -85,8 +85,9 @@ type DetalleCharola struct {
 	AnchoTierraMM    float64 `json:"ancho_tierra_mm"`
 
 	// Charola triangular (adicional)
-	AnchoPotenciaMM  float64 `json:"ancho_potencia_mm,omitempty"`
-	FactorTriangular float64 `json:"factor_triangular,omitempty"`
+	AnchoPotenciaMM   float64 `json:"ancho_potencia_mm,omitempty"`
+	FactorTriangular  float64 `json:"factor_triangular,omitempty"`
+	FactorControl     float64 `json:"factor_control,omitempty"`
 }
 
 // DetalleTuberia contiene los valores intermedios del cálculo de tubería

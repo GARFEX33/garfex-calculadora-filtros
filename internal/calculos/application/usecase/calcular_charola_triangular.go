@@ -108,6 +108,7 @@ func (uc *CalcularCharolaTriangularUseCase) Execute(
 		AnchoControlMM:   anchoControl,
 		AnchoTierraMM:    input.DiametroTierraMM,
 		FactorTriangular: factorTriangular,
+		FactorControl:    1.0,
 	}
 	if input.DiametroControlMM != nil && *input.DiametroControlMM > 0 {
 		out.DiametroControlMM = input.DiametroControlMM

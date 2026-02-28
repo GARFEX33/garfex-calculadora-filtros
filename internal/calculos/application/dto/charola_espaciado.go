@@ -47,4 +47,5 @@ type CharolaEspaciadoOutput struct {
 	EspacioControlMM  float64  `json:"espacio_control_mm,omitempty"`
 	AnchoControlMM    float64  `json:"ancho_control_mm,omitempty"`
 	AnchoTierraMM     float64  `json:"ancho_tierra_mm"`
+	FactorControl     float64  `json:"factor_control"`
 }
