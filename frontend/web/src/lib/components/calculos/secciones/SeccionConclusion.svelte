@@ -27,6 +27,8 @@
 	let calibreFinal = $derived(memoria.cable_fase.calibre);
 	let hilosPorFase = $derived(memoria.instalacion.hilos_por_fase ?? 1);
 	let calibreTierra = $derived(memoria.cable_tierra?.calibre ?? '');
+	let hilosTierra = $derived(memoria.cable_tierra.num_hilos ?? 1);
+	let numCanalizaciones = $derived(memoria.canalizacion.resultado.numero_de_tubos ?? 1);
 	let canalizacionLabel = $derived.by(() => {
 		const tipo = memoria.instalacion.tipo_canalizacion;
 		const tamano = memoria.canalizacion.resultado?.tamano || '';
@@ -61,9 +63,7 @@
 	<div class="mt-6 rounded-lg border border-primary/30 bg-primary/10 p-4">
 		<h3 class="mb-2 font-semibold text-primary">Circuito Completo</h3>
 		<p class="font-mono text-base text-foreground">
-			{numFases} fase{numFases > 1 ? 's' : ''} de {calibreFinal} AWG{hilosPorFase > 1
-				? ` × ${hilosPorFase}`
-				: ''} + 1 tierra de {calibreTierra} en {canalizacionLabel}
+			{hilosPorFase} set de {numFases}-{calibreFinal}, {hilosTierra}-{calibreTierra} desnudo, {numCanalizaciones}-{canalizacionLabel}"
 		</p>
 	</div>
 

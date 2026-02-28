@@ -279,15 +279,6 @@
 			}
 		}
 	});
-
-	// Sincronizar num_tuberias al store cuando cambia via binding desde CamposInstalacion
-	// (el $effect del hijo puede autocompletar sin dispara handleInstalacionChange)
-	$effect(() => {
-		const numTuberias = instalacion.num_tuberias;
-		if (numTuberias !== undefined && numTuberias > 0) {
-			memoriaStore.actualizarInput({ num_tuberias: numTuberias });
-		}
-	});
 </script>
 
 <svelte:head>

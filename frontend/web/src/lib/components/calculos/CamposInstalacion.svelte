@@ -84,8 +84,10 @@
 	$effect(() => {
 		if (mostrarNumTuberias) {
 			if (!autocompletadoOnce) {
-				datos.num_tuberias = datos.hilos_por_fase;
 				autocompletadoOnce = true;
+				// Use callback instead of direct mutation to avoid infinite loop
+				// with parent's $effect that syncs to store
+				onDatosChange({ ...datos, num_tuberias: datos.hilos_por_fase });
 			}
 		} else {
 			// Resetear el flag cuando el campo se oculta
@@ -98,12 +100,14 @@
 	function handleTipoCanalizacionChange(e: Event) {
 		const target = e.target as HTMLSelectElement;
 		const value = target.value as TipoCanalizacion | '';
+		// Build the full update without direct mutation of datos
+		const updates: Partial<CamposInstalacionData> = { tipo_canalizacion: value };
 		if (value.startsWith('CHAROLA_')) {
-			datos.num_tuberias = undefined;
+			updates.num_tuberias = undefined;
 		} else {
-			datos.diametro_control_mm = undefined;
+			updates.diametro_control_mm = undefined;
 		}
-		updateDatos('tipo_canalizacion', value);
+		onDatosChange({ ...datos, ...updates });
 	}
 
 	function updateDatos<K extends keyof CamposInstalacionData>(
