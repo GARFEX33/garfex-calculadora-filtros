@@ -81,15 +81,18 @@ func (uc *CalcularCharolaTriangularUseCase) Execute(
 	}
 
 	// 5. Convertir resultado domain a DTO output con valores intermedios para la memoria
-	const factorTriangular = 2.15
-	anchoPotencia := 2.0 * input.DiametroFaseMM * float64(input.HilosPorFase)
-	espacioFuerza := float64(input.HilosPorFase-1) * factorTriangular * input.DiametroFaseMM
-
+	// El domain calcula: espacioControl = 1.0 * diametro, anchoControl = diametro
+	// Usamos directamente los valores del input que coinciden con la lógica del domain
 	var espacioControl, anchoControl float64
 	if input.DiametroControlMM != nil && *input.DiametroControlMM > 0 {
-		espacioControl = factorTriangular * *input.DiametroControlMM
-		anchoControl = *input.DiametroControlMM
+		espacioControl = *input.DiametroControlMM // 1.0 * diametro (coincide con domain)
+		anchoControl = *input.DiametroControlMM    // diametro del cable (coincide con domain)
 	}
+
+	// Valores de fuerza obtenidos directamente del input (el domain no los retorna)
+	anchoPotencia := 2.0 * input.DiametroFaseMM * float64(input.HilosPorFase)
+	espacioFuerza := float64(input.HilosPorFase-1) * 2.15 * input.DiametroFaseMM
+	factorTriangular := 2.15
 
 	out := dto.CharolaTriangularOutput{
 		Tipo:             string(resultado.Tipo),

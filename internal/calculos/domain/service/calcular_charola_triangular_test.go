@@ -112,11 +112,11 @@ func TestCalcularCharolaTriangular(t *testing.T) {
 
 	t.Run("Con cables de control", func(t *testing.T) {
 		// Formula: anchoPotencia + espacioFuerza + espacioControl + anchoControl + tierra
-		// anchoPotencia = 2 * 10 = 20mm
+		// anchoPotencia = 2 * 10 * 1 = 20mm
 		// espacioFuerza = (1-1) * 2.15 * 10 = 0mm
-		// espacioControl = 2.15 * 4 = 8.6mm
+		// espacioControl = factor_CONTROL(1.0) * 4 = 4mm (antes: 2.15 * 4 = 8.6mm)
 		// anchoControl = 4mm
-		// Total = 20 + 0 + 8.6 + 4 + 5 = 37.6mm
+		// Total = 20 + 0 + 4 + 4 + 5 = 33mm (antes: 37.6mm)
 		// Charola 6" (152.4mm) es suficiente
 
 		conductorFase, _ := valueobject.NewConductorCharola(valueobject.ConductorCharolaParams{DiametroMM: 10.0})
@@ -137,7 +137,7 @@ func TestCalcularCharolaTriangular(t *testing.T) {
 		)
 
 		require.NoError(t, err)
-		anchoRequerido := 37.6
+		anchoRequerido := 33.0
 		assert.Equal(t, anchoRequerido, result.AnchoRequerido)
 		assert.Equal(t, "6", result.Tamano)
 	})

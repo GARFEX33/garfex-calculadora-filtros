@@ -179,9 +179,14 @@ func TestCalcularCharolaEspaciado(t *testing.T) {
 
 		require.NoError(t, err)
 		// Monofasico: 2 hilos (1 fase + 1 neutro), 1 cable control de 4mm
-		// Formula: 2*hilos*Ø_fase + 3*Ø_control + Ø_tierra
-		// Total = 2*2*10 + 3*4 + 5 = 40 + 12 + 5 = 57mm
-		anchoRequerido := 2.0*2.0*10.0 + 3.0*4.0 + 5.0
+		// Formula: EF + AF + EC + AC + tierra
+		// EF = totalHilos * Ø_fase = 2 * 10 = 20mm
+		// AF = totalHilos * Ø_fase = 2 * 10 = 20mm
+		// EC = factor_CONTROL(1.0) * Ø_control = 1.0 * 4 = 4mm
+		// AC = Ø_control = 4mm
+		// tierra = 5mm
+		// Total = 20 + 20 + 4 + 4 + 5 = 53mm
+		anchoRequerido := 20.0 + 20.0 + 4.0 + 4.0 + 5.0
 		assert.Equal(t, anchoRequerido, result.AnchoRequerido)
 	})
 }

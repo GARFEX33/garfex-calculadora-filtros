@@ -71,7 +71,7 @@ func CalcularCharolaEspaciado(
 	var anchoControl float64
 	for _, cable := range cablesControl {
 		if cable.Cantidad() > 0 && cable.DiametroMM() > 0 {
-			espacioControl += 2.0 * cable.DiametroMM() // espacio a cada lado
+			espacioControl += 1.0 * cable.DiametroMM() // espacio a cada lado
 			anchoControl += cable.DiametroMM()         // diametro del cable
 		}
 	}

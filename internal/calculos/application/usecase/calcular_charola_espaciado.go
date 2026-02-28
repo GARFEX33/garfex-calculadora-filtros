@@ -88,35 +88,41 @@ func (uc *CalcularCharolaEspaciadoUseCase) Execute(
 	}
 
 	// 5. Convertir resultado domain a DTO output
-	// Recalcular valores intermedios para el desarrollo de la memoria de cálculo
-	var numFases int
-	var tieneNeutro bool
-	switch sistema {
-	case entity.SistemaElectricoMonofasico:
+	// El domain calcula internamente: numFases, tieneNeutro, hilosFaseTotal, totalHilos
+	// y retorna el resultado con AnchoRequerido (que es el ancho total = EF + AF + EC + AC + tierra)
+	// Para la memoria de cálculo necesitamos los valores intermedios que el domain no retorna,
+	// así que los obtenemos directamente del input.
+	// Nota: espacioControl = 1.0 * diametro coincide con la lógica del domain
+	var espacioControl, anchoControl float64
+	if input.DiametroControlMM != nil && *input.DiametroControlMM > 0 {
+		espacioControl = *input.DiametroControlMM // 1.0 * diametro (coincide con domain)
+		anchoControl = *input.DiametroControlMM   // diametro del cable (coincide con domain)
+	}
+
+	// Calcular hilos totales basado en sistema eléctrico - el domain hace lo mismo internamente
+	numFases := 3 // default para Estrella
+	tieneNeutro := true
+	switch input.SistemaElectrico {
+	case "MONOFASICO":
 		numFases = 1
 		tieneNeutro = true
-	case entity.SistemaElectricoBifasico:
+	case "BIFASICO":
 		numFases = 2
 		tieneNeutro = true
-	case entity.SistemaElectricoDelta:
+	case "DELTA":
 		numFases = 3
 		tieneNeutro = false
-	default: // Estrella
-		numFases = 3
-		tieneNeutro = true
+	// ESTRELLA y otros: defaults arriba
 	}
+
 	hilosFaseTotal := numFases * input.HilosPorFase
 	if tieneNeutro {
 		hilosFaseTotal += input.HilosPorFase
 	}
+
+	// Valores de fuerza obtenidos directamente del input
 	espacioFuerza := float64(hilosFaseTotal) * input.DiametroFaseMM
 	anchoFuerza := espacioFuerza
-
-	var espacioControl, anchoControl float64
-	if input.DiametroControlMM != nil && *input.DiametroControlMM > 0 {
-		espacioControl = 2.0 * *input.DiametroControlMM
-		anchoControl = *input.DiametroControlMM
-	}
 
 	out := dto.CharolaEspaciadoOutput{
 		Tipo:             string(resultado.Tipo),
