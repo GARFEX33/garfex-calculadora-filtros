@@ -435,8 +435,9 @@ func rangoContiene(rango string, temp int) bool {
 // ObtenerDiametroConductor returns the diameter in mm for a given calibre, material, and insulation type.
 func (r *CSVTablaNOMRepository) ObtenerDiametroConductor(ctx context.Context, calibre string, material string, conAislamiento bool) (float64, error) {
 	// tablaDiametros tiene keys con sufijo " AWG" (tal como vienen del CSV)
+	// Los calibres MCM (250 MCM, 300 MCM, 500 MCM) ya tienen sufijo " MCM", no " AWG"
 	calibreKey := calibre
-	if !strings.HasSuffix(calibre, " AWG") {
+	if !strings.HasSuffix(calibre, " AWG") && !strings.HasSuffix(calibre, " MCM") {
 		calibreKey = calibre + " AWG"
 	}
 	entry, ok := r.tablaDiametros[calibreKey]
@@ -470,8 +471,9 @@ func (r *CSVTablaNOMRepository) ObtenerCharolaPorAncho(ctx context.Context, anch
 // ObtenerAreaConductor returns the area with insulation (area_tw_thw) for a given calibre.
 func (r *CSVTablaNOMRepository) ObtenerAreaConductor(ctx context.Context, calibre string) (float64, error) {
 	// tablaDiametros tiene keys con sufijo " AWG"
+	// Los calibres MCM (250 MCM, 300 MCM, 500 MCM) ya tienen sufijo " MCM", no " AWG"
 	calibreKey := calibre
-	if !strings.HasSuffix(calibre, " AWG") {
+	if !strings.HasSuffix(calibre, " AWG") && !strings.HasSuffix(calibre, " MCM") {
 		calibreKey = calibre + " AWG"
 	}
 	entry, ok := r.tablaDiametros[calibreKey]
@@ -489,8 +491,9 @@ func (r *CSVTablaNOMRepository) ObtenerAreaConductor(ctx context.Context, calibr
 // ObtenerAreaConductorDesnudo returns the area for bare conductor (Tabla 8) - used for ground conductors.
 func (r *CSVTablaNOMRepository) ObtenerAreaConductorDesnudo(ctx context.Context, calibre string) (float64, error) {
 	// tablaConductorDesnudo tiene keys con sufijo " AWG"
+	// Los calibres MCM (250 MCM, 300 MCM, 500 MCM) ya tienen sufijo " MCM", no " AWG"
 	calibreKey := calibre
-	if !strings.HasSuffix(calibre, " AWG") {
+	if !strings.HasSuffix(calibre, " AWG") && !strings.HasSuffix(calibre, " MCM") {
 		calibreKey = calibre + " AWG"
 	}
 	entry, ok := r.tablaConductorDesnudo[calibreKey]
