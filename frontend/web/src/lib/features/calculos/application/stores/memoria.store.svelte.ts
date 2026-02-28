@@ -14,7 +14,10 @@ import type { MemoriaRequest, MemoriaOutput } from '../../domain/types/memoria.t
 import { validarMemoriaRequest } from '../../domain/validators/validar-memoria-request';
 import type { ValidationError } from '../../domain/validators/validar-memoria-request';
 import { calcularMemoria } from '../../infrastructure/api/memoria.api';
-import { mapMemoriaInputToApi, mapApiToMemoriaOutput } from '../../infrastructure/mappers/memoria.mapper';
+import {
+	mapMemoriaInputToApi,
+	mapApiToMemoriaOutput
+} from '../../infrastructure/mappers/memoria.mapper';
 
 /**
  * Default values for MemoriaRequest.

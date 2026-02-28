@@ -9,7 +9,8 @@
 
 	// Determine if three-phase or single-phase
 	let esTrifasico = $derived(
-		memoria.instalacion.sistema_electrico === 'ESTRELLA' || memoria.instalacion.sistema_electrico === 'DELTA'
+		memoria.instalacion.sistema_electrico === 'ESTRELLA' ||
+			memoria.instalacion.sistema_electrico === 'DELTA'
 	);
 
 	// Get equipment type
@@ -81,7 +82,8 @@
 		// CARGA o MANUAL_POTENCIA - depends on system type
 		if (esTrifasico) {
 			// Trifásico: I = W / (V × √3 × FP)
-			const potenciaKW = (memoria.corrientes.corriente_nominal * tensionV * Math.sqrt(3) * fp) / 1000;
+			const potenciaKW =
+				(memoria.corrientes.corriente_nominal * tensionV * Math.sqrt(3) * fp) / 1000;
 			const potenciaW = potenciaKW * 1000;
 			return {
 				tipo: 'Desde Potencia (Sistema Trifásico)',

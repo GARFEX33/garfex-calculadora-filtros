@@ -9,7 +9,11 @@
  * but we still validate and normalize the data.
  */
 
-import type { EquipoFiltro, ListarEquiposData, EquiposPagination } from '../../domain/types/equipo.types';
+import type {
+	EquipoFiltro,
+	ListarEquiposData,
+	EquiposPagination
+} from '../../domain/types/equipo.types';
 
 /**
  * Raw API response for a single equipo.
@@ -114,7 +118,9 @@ function mapApiToPagination(api: ApiEquiposPagination): EquiposPagination {
 /**
  * Maps raw API list response to domain ListarEquiposData.
  */
-export function mapApiToListarEquiposData(api: ApiListarEquiposResponse['data']): ListarEquiposData {
+export function mapApiToListarEquiposData(
+	api: ApiListarEquiposResponse['data']
+): ListarEquiposData {
 	return {
 		equipos: api.equipos.map(mapApiToEquipo),
 		pagination: mapApiToPagination(api.pagination)

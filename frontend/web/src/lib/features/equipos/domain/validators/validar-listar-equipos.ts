@@ -70,7 +70,7 @@ export function validarListarEquiposParams(input: unknown): ValidationResult {
 
 	// Optional: tipo (must be valid TipoFiltroEquipo)
 	if (params.tipo !== undefined && !isValidEnum(params.tipo, TIPO_FILTRO_VALUES)) {
-		errors.push({ field: 'tipo', message: `Tipo de filtro inválido: ${params.tipo}` });
+		errors.push({ field: 'tipo', message: `Tipo de filtro inválido: ${String(params.tipo)}` });
 	}
 
 	// Optional: voltaje (must be > 0)

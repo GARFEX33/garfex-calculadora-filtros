@@ -10,7 +10,8 @@
 	// Calcular capacidad en kVA si es posible
 	let capacidadKVA = $derived(() => {
 		if (memoria.factor_potencia && memoria.factor_potencia > 0) {
-			const potencia = (memoria.corrientes.corriente_nominal * memoria.instalacion.tension * Math.sqrt(3)) / 1000;
+			const potencia =
+				(memoria.corrientes.corriente_nominal * memoria.instalacion.tension * Math.sqrt(3)) / 1000;
 			return (potencia / memoria.factor_potencia).toFixed(2);
 		}
 		return null;
@@ -67,7 +68,9 @@
 			<dt class="text-xs tracking-wide text-muted-foreground uppercase">
 				Longitud del Alimentador
 			</dt>
-			<dd class="font-medium text-foreground">{memoria.instalacion.longitud_circuito.toFixed(2)} m</dd>
+			<dd class="font-medium text-foreground">
+				{memoria.instalacion.longitud_circuito.toFixed(2)} m
+			</dd>
 		</div>
 
 		<div class="border-l-2 border-primary pl-4">

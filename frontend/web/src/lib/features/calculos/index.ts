@@ -15,7 +15,11 @@
 
 // Domain layer
 export * from './domain/types';
-export { validarMemoriaRequest, type ValidationError, type ValidationResult } from './domain/validators';
+export {
+	validarMemoriaRequest,
+	type ValidationError,
+	type ValidationResult
+} from './domain/validators';
 
 // Infrastructure layer
 export * from './infrastructure';

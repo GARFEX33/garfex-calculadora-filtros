@@ -29,9 +29,7 @@
 	let limite = $derived(caida?.limite_porcentaje ?? 3.0);
 
 	// Recálculo por caída de tensión
-	let recalculoPorCaida = $derived(
-		memoria.cable_fase.seleccion_por_caida_tension === true
-	);
+	let recalculoPorCaida = $derived(memoria.cable_fase.seleccion_por_caida_tension === true);
 	let calibreOriginal = $derived(memoria.cable_fase.calibre_original_ampacidad ?? '');
 	let calibreFinal = $derived(memoria.cable_fase.calibre);
 	let notaRecalculo = $derived(memoria.cable_fase.nota_seleccion ?? '');

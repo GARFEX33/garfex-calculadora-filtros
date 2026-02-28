@@ -34,7 +34,15 @@ export default [
 			globals: {
 				...globals.browser,
 				...globals.es2022,
-				...globals.node
+				...globals.node,
+				// Svelte 5 runes — compiler globals used in .svelte.ts files
+				$state: 'readonly',
+				$derived: 'readonly',
+				$effect: 'readonly',
+				$props: 'readonly',
+				$bindable: 'readonly',
+				$inspect: 'readonly',
+				$host: 'readonly'
 			}
 		},
 		plugins: {

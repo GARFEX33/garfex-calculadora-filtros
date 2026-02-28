@@ -3,7 +3,15 @@
  */
 
 // Enums and union types
-export type { ModoCalculo, TipoFiltro, TipoEquipo, SistemaElectrico, TipoVoltaje, UnidadPotencia, UnidadTension } from './calculo.enums.js';
+export type {
+	ModoCalculo,
+	TipoFiltro,
+	TipoEquipo,
+	SistemaElectrico,
+	TipoVoltaje,
+	UnidadPotencia,
+	UnidadTension
+} from './calculo.enums.js';
 export type { TipoCanalizacion, isTipoCanalizacion } from './tipo-canalizacion.js';
 export type { MaterialConductor, isMaterialConductor } from './material-conductor.js';
 

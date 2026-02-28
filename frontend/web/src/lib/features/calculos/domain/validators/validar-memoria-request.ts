@@ -5,12 +5,33 @@
  */
 
 import type { CalcularMemoriaRequest } from '../types/memoria.types.js';
-import type { ModoCalculo, TipoEquipo, SistemaElectrico, TipoVoltaje, TipoCanalizacion, MaterialConductor } from '../types/index.js';
+import type {
+	ModoCalculo,
+	TipoEquipo,
+	SistemaElectrico,
+	TipoVoltaje,
+	TipoCanalizacion,
+	MaterialConductor
+} from '../types/index.js';
 
 // Valid enum values
-const MODO_CALCULO_VALUES: readonly ModoCalculo[] = ['LISTADO', 'MANUAL_AMPERAJE', 'MANUAL_POTENCIA'];
-const TIPO_EQUIPO_VALUES: readonly TipoEquipo[] = ['FILTRO_ACTIVO', 'TRANSFORMADOR', 'FILTRO_RECHAZO', 'CARGA'];
-const SISTEMA_ELECTRICO_VALUES: readonly SistemaElectrico[] = ['DELTA', 'ESTRELLA', 'BIFASICO', 'MONOFASICO'];
+const MODO_CALCULO_VALUES: readonly ModoCalculo[] = [
+	'LISTADO',
+	'MANUAL_AMPERAJE',
+	'MANUAL_POTENCIA'
+];
+const TIPO_EQUIPO_VALUES: readonly TipoEquipo[] = [
+	'FILTRO_ACTIVO',
+	'TRANSFORMADOR',
+	'FILTRO_RECHAZO',
+	'CARGA'
+];
+const SISTEMA_ELECTRICO_VALUES: readonly SistemaElectrico[] = [
+	'DELTA',
+	'ESTRELLA',
+	'BIFASICO',
+	'MONOFASICO'
+];
 const TIPO_VOLTAJE_VALUES: readonly TipoVoltaje[] = ['FASE_NEUTRO', 'FASE_FASE'];
 const TIPO_CANALIZACION_VALUES: readonly TipoCanalizacion[] = [
 	'TUBERIA_PVC',
@@ -77,7 +98,7 @@ export function validarMemoriaRequest(input: unknown): ValidationResult {
 	if (!req.modo) {
 		errors.push({ field: 'modo', message: 'El modo de cálculo es requerido' });
 	} else if (!isValidEnum(req.modo, MODO_CALCULO_VALUES)) {
-		errors.push({ field: 'modo', message: `Modo inválido: ${req.modo}` });
+		errors.push({ field: 'modo', message: `Modo inválido: ${String(req.modo)}` });
 	}
 
 	// Validate mode-specific fields
@@ -91,10 +112,16 @@ export function validarMemoriaRequest(input: unknown): ValidationResult {
 				errors.push({ field: 'equipo.clave', message: 'La clave del equipo es requerida' });
 			}
 			if (typeof req.equipo.voltaje !== 'number' || req.equipo.voltaje <= 0) {
-				errors.push({ field: 'equipo.voltaje', message: 'El voltaje del equipo debe ser mayor a 0' });
+				errors.push({
+					field: 'equipo.voltaje',
+					message: 'El voltaje del equipo debe ser mayor a 0'
+				});
 			}
 			if (typeof req.equipo.amperaje !== 'number' || req.equipo.amperaje <= 0) {
-				errors.push({ field: 'equipo.amperaje', message: 'El amperaje del equipo debe ser mayor a 0' });
+				errors.push({
+					field: 'equipo.amperaje',
+					message: 'El amperaje del equipo debe ser mayor a 0'
+				});
 			}
 		}
 	} else if (req.modo === 'MANUAL_AMPERAJE') {
@@ -103,9 +130,15 @@ export function validarMemoriaRequest(input: unknown): ValidationResult {
 			errors.push({ field: 'amperaje_nominal', message: 'El amperaje nominal debe ser mayor a 0' });
 		}
 		if (!req.tipo_equipo) {
-			errors.push({ field: 'tipo_equipo', message: 'El tipo de equipo es requerido en modo MANUAL_AMPERAJE' });
+			errors.push({
+				field: 'tipo_equipo',
+				message: 'El tipo de equipo es requerido en modo MANUAL_AMPERAJE'
+			});
 		} else if (!isValidEnum(req.tipo_equipo, TIPO_EQUIPO_VALUES)) {
-			errors.push({ field: 'tipo_equipo', message: `Tipo de equipo inválido: ${req.tipo_equipo}` });
+			errors.push({
+				field: 'tipo_equipo',
+				message: `Tipo de equipo inválido: ${String(req.tipo_equipo)}`
+			});
 		}
 	} else if (req.modo === 'MANUAL_POTENCIA') {
 		// MANUAL_POTENCIA requires potencia_nominal and tipo_equipo
@@ -113,9 +146,15 @@ export function validarMemoriaRequest(input: unknown): ValidationResult {
 			errors.push({ field: 'potencia_nominal', message: 'La potencia nominal debe ser mayor a 0' });
 		}
 		if (!req.tipo_equipo) {
-			errors.push({ field: 'tipo_equipo', message: 'El tipo de equipo es requerido en modo MANUAL_POTENCIA' });
+			errors.push({
+				field: 'tipo_equipo',
+				message: 'El tipo de equipo es requerido en modo MANUAL_POTENCIA'
+			});
 		} else if (!isValidEnum(req.tipo_equipo, TIPO_EQUIPO_VALUES)) {
-			errors.push({ field: 'tipo_equipo', message: `Tipo de equipo inválido: ${req.tipo_equipo}` });
+			errors.push({
+				field: 'tipo_equipo',
+				message: `Tipo de equipo inválido: ${String(req.tipo_equipo)}`
+			});
 		}
 	}
 
@@ -128,14 +167,20 @@ export function validarMemoriaRequest(input: unknown): ValidationResult {
 	if (!req.tipo_voltaje) {
 		errors.push({ field: 'tipo_voltaje', message: 'El tipo de voltaje es requerido' });
 	} else if (!isValidEnum(req.tipo_voltaje, TIPO_VOLTAJE_VALUES)) {
-		errors.push({ field: 'tipo_voltaje', message: `Tipo de voltaje inválido: ${req.tipo_voltaje}` });
+		errors.push({
+			field: 'tipo_voltaje',
+			message: `Tipo de voltaje inválido: ${String(req.tipo_voltaje)}`
+		});
 	}
 
 	// Required: sistema_electrico
 	if (!req.sistema_electrico) {
 		errors.push({ field: 'sistema_electrico', message: 'El sistema eléctrico es requerido' });
 	} else if (!isValidEnum(req.sistema_electrico, SISTEMA_ELECTRICO_VALUES)) {
-		errors.push({ field: 'sistema_electrico', message: `Sistema eléctrico inválido: ${req.sistema_electrico}` });
+		errors.push({
+			field: 'sistema_electrico',
+			message: `Sistema eléctrico inválido: ${String(req.sistema_electrico)}`
+		});
 	}
 
 	// Required: estado (string, non-empty)
@@ -147,22 +192,31 @@ export function validarMemoriaRequest(input: unknown): ValidationResult {
 	if (!req.tipo_canalizacion) {
 		errors.push({ field: 'tipo_canalizacion', message: 'El tipo de canalización es requerido' });
 	} else if (!isValidEnum(req.tipo_canalizacion, TIPO_CANALIZACION_VALUES)) {
-		errors.push({ field: 'tipo_canalizacion', message: `Tipo de canalización inválido: ${req.tipo_canalizacion}` });
+		errors.push({
+			field: 'tipo_canalizacion',
+			message: `Tipo de canalización inválido: ${String(req.tipo_canalizacion)}`
+		});
 	}
 
 	// Required: longitud_circuito
 	if (typeof req.longitud_circuito !== 'number' || req.longitud_circuito <= 0) {
-		errors.push({ field: 'longitud_circuito', message: 'La longitud del circuito debe ser mayor a 0' });
+		errors.push({
+			field: 'longitud_circuito',
+			message: 'La longitud del circuito debe ser mayor a 0'
+		});
 	}
 
 	// Optional: hilos_por_fase (must be >= 1 if provided)
-	if (req.hilos_por_fase !== undefined && (typeof req.hilos_por_fase !== 'number' || req.hilos_por_fase < 1)) {
+	if (
+		req.hilos_por_fase !== undefined &&
+		(typeof req.hilos_por_fase !== 'number' || req.hilos_por_fase < 1)
+	) {
 		errors.push({ field: 'hilos_por_fase', message: 'Los hilos por fase deben ser al menos 1' });
 	}
 
 	// Optional: material (must be valid if provided)
 	if (req.material !== undefined && !isValidEnum(req.material, MATERIAL_CONDUCTOR_VALUES)) {
-		errors.push({ field: 'material', message: `Material inválido: ${req.material}` });
+		errors.push({ field: 'material', message: `Material inválido: ${String(req.material)}` });
 	}
 
 	// Optional: itm (must be > 0 if provided in MANUAL modes)
