@@ -12,6 +12,11 @@
 	let tieneObservaciones = $derived(resultado.observaciones && resultado.observaciones.length > 0);
 	let cumpleCaidaTension = $derived(resultado.caida_tension?.cumple ?? false);
 	let porcentajeCaida = $derived(resultado.caida_tension?.porcentaje ?? 0);
+
+	// Nueva estructura agrupada - accesos directos para facilitar lectura
+	let corrientes = $derived(resultado.corrientes);
+	let instalacion = $derived(resultado.instalacion);
+	let canalizacion = $derived(resultado.canalizacion);
 </script>
 
 <div class="flex flex-col gap-6">
@@ -36,15 +41,15 @@
 			</div>
 			<div class="flex justify-between md:block">
 				<dt class="text-muted-foreground">Corriente Nominal</dt>
-				<dd class="font-mono text-foreground">{resultado.corriente_nominal.toFixed(2)} A</dd>
+				<dd class="font-mono text-foreground">{corrientes.corriente_nominal.toFixed(2)} A</dd>
 			</div>
 			<div class="flex justify-between md:block">
 				<dt class="text-muted-foreground">Corriente Ajustada</dt>
-				<dd class="font-mono text-foreground">{resultado.corriente_ajustada.toFixed(2)} A</dd>
+				<dd class="font-mono text-foreground">{corrientes.corriente_ajustada.toFixed(2)} A</dd>
 			</div>
 			<div class="flex justify-between md:block">
 				<dt class="text-muted-foreground">Factor Total de Ajuste</dt>
-				<dd class="font-mono text-foreground">{resultado.factor_total_ajuste.toFixed(3)}</dd>
+				<dd class="font-mono text-foreground">{corrientes.factor_total_ajuste.toFixed(3)}</dd>
 			</div>
 		</dl>
 	</section>
@@ -59,11 +64,11 @@
 			</div>
 			<div>
 				<dt class="text-muted-foreground">Tensión</dt>
-				<dd class="text-foreground">{resultado.tension} V</dd>
+				<dd class="text-foreground">{instalacion.tension} V</dd>
 			</div>
 			<div>
 				<dt class="text-muted-foreground">Sistema Eléctrico</dt>
-				<dd class="text-foreground">{resultado.sistema_electrico}</dd>
+				<dd class="text-foreground">{instalacion.sistema_electrico}</dd>
 			</div>
 			<div>
 				<dt class="text-muted-foreground">Estado</dt>
@@ -71,7 +76,7 @@
 			</div>
 			<div>
 				<dt class="text-muted-foreground">Temperatura Ambiente</dt>
-				<dd class="text-foreground">{resultado.temperatura_ambiente} °C</dd>
+				<dd class="text-foreground">{corrientes.temperatura_ambiente} °C</dd>
 			</div>
 			<div>
 				<dt class="text-muted-foreground">Factor de Potencia</dt>
@@ -87,30 +92,30 @@
 			<div>
 				<dt class="text-muted-foreground">Calibre</dt>
 				<dd class="font-mono font-medium text-foreground">
-					{resultado.conductor_alimentacion.calibre}
+					{resultado.cable_fase.calibre}
 				</dd>
 			</div>
 			<div>
 				<dt class="text-muted-foreground">Material</dt>
-				<dd class="text-foreground">{resultado.conductor_alimentacion.material}</dd>
+				<dd class="text-foreground">{resultado.cable_fase.material}</dd>
 			</div>
 			<div>
 				<dt class="text-muted-foreground">Tipo de Aislamiento</dt>
 				<dd class="text-foreground">
-					{resultado.conductor_alimentacion.tipo_aislamiento || '—'}
+					{resultado.cable_fase.tipo_aislamiento || '—'}
 				</dd>
 			</div>
 			<div>
 				<dt class="text-muted-foreground">Capacidad</dt>
-				<dd class="text-foreground">{resultado.conductor_alimentacion.capacidad} A</dd>
+				<dd class="text-foreground">{resultado.cable_fase.capacidad} A</dd>
 			</div>
 			<div>
 				<dt class="text-muted-foreground">Sección</dt>
-				<dd class="text-foreground">{resultado.conductor_alimentacion.seccion_mm2} mm²</dd>
+				<dd class="text-foreground">{resultado.cable_fase.seccion_mm2} mm²</dd>
 			</div>
 			<div>
 				<dt class="text-muted-foreground">Tabla de Ampacidad</dt>
-				<dd class="text-foreground">{resultado.tabla_ampacidad_usada}</dd>
+				<dd class="text-foreground">{corrientes.tabla_ampacidad_usada}</dd>
 			</div>
 		</dl>
 	</section>
@@ -121,23 +126,23 @@
 		<dl class="grid grid-cols-2 gap-x-6 gap-y-3 text-sm md:grid-cols-3">
 			<div>
 				<dt class="text-muted-foreground">Calibre</dt>
-				<dd class="font-mono font-medium text-foreground">{resultado.conductor_tierra.calibre}</dd>
+				<dd class="font-mono font-medium text-foreground">{resultado.cable_tierra.calibre}</dd>
 			</div>
 			<div>
 				<dt class="text-muted-foreground">Material</dt>
-				<dd class="text-foreground">{resultado.conductor_tierra.material}</dd>
+				<dd class="text-foreground">{resultado.cable_tierra.material}</dd>
 			</div>
 			<div>
 				<dt class="text-muted-foreground">Tipo de Aislamiento</dt>
-				<dd class="text-foreground">{resultado.conductor_tierra.tipo_aislamiento || '—'}</dd>
+				<dd class="text-foreground">{resultado.cable_tierra.tipo_aislamiento || '—'}</dd>
 			</div>
 			<div>
 				<dt class="text-muted-foreground">Capacidad</dt>
-				<dd class="text-foreground">{resultado.conductor_tierra.capacidad} A</dd>
+				<dd class="text-foreground">{resultado.cable_tierra.capacidad} A</dd>
 			</div>
 			<div>
 				<dt class="text-muted-foreground">ITM</dt>
-				<dd class="text-foreground">{resultado.itm} A</dd>
+				<dd class="text-foreground">{resultado.proteccion.itm} A</dd>
 			</div>
 		</dl>
 	</section>
@@ -148,27 +153,27 @@
 		<dl class="grid grid-cols-2 gap-x-6 gap-y-3 text-sm md:grid-cols-3">
 			<div>
 				<dt class="text-muted-foreground">Tamaño</dt>
-				<dd class="font-mono font-medium text-foreground">{resultado.canalizacion.tamano}</dd>
+				<dd class="font-mono font-medium text-foreground">{canalizacion.resultado.tamano}</dd>
 			</div>
 			<div>
 				<dt class="text-muted-foreground">Tipo de Canalización</dt>
-				<dd class="text-foreground">{resultado.tipo_canalizacion}</dd>
+				<dd class="text-foreground">{instalacion.tipo_canalizacion}</dd>
 			</div>
 			<div>
 				<dt class="text-muted-foreground">Número de Tubos</dt>
-				<dd class="text-foreground">{resultado.canalizacion.numero_de_tubos}</dd>
+				<dd class="text-foreground">{canalizacion.resultado.numero_de_tubos}</dd>
 			</div>
 			<div>
 				<dt class="text-muted-foreground">Fill Factor</dt>
-				<dd class="text-foreground">{(resultado.fill_factor * 100).toFixed(1)}%</dd>
+				<dd class="text-foreground">{(canalizacion.fill_factor * 100).toFixed(1)}%</dd>
 			</div>
 			<div>
 				<dt class="text-muted-foreground">Área Total</dt>
-				<dd class="text-foreground">{resultado.canalizacion.area_total_mm2.toFixed(2)} mm²</dd>
+				<dd class="text-foreground">{canalizacion.resultado.area_total_mm2.toFixed(2)} mm²</dd>
 			</div>
 			<div>
 				<dt class="text-muted-foreground">Área Requerida</dt>
-				<dd class="text-foreground">{resultado.canalizacion.area_requerida_mm2.toFixed(2)} mm²</dd>
+				<dd class="text-foreground">{canalizacion.resultado.area_requerida_mm2.toFixed(2)} mm²</dd>
 			</div>
 		</dl>
 	</section>

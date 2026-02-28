@@ -16,7 +16,7 @@
 		CARGA: 'Carga General'
 	};
 
-	// Factor de uso según tipo de equipo (Artículo 460-8)
+	// Factor de uso según tipo de equipo
 	let factorUso = $derived(
 		memoria.tipo_equipo === 'FILTRO_ACTIVO' || memoria.tipo_equipo === 'FILTRO_RECHAZO'
 			? 1.35
@@ -26,9 +26,14 @@
 	// Numerador intermedio (corriente nominal × factor de uso)
 	let numeradorIntermedio = $derived(memoria.corrientes.corriente_nominal * factorUso);
 
+	// Denominador real de la fórmula: Ftemp × Fagr
+	let denominadorAjuste = $derived(
+		memoria.corrientes.factor_temperatura * memoria.corrientes.factor_agrupamiento
+	);
+
 	let justificacionFactorUso = $derived(
 		memoria.tipo_equipo === 'FILTRO_ACTIVO' || memoria.tipo_equipo === 'FILTRO_RECHAZO'
-			? 'Los conductores para capacitores deben tener al menos el 135% de la corriente nominal (Artículo 460-8)'
+			? 'Los conductores para capacitores deben tener al menos el 135% de la corriente nominal'
 			: 'Factor de diseño estándar para equipos de carga general (125%)'
 	);
 
@@ -48,9 +53,7 @@
 	let esCharola = $derived(memoria.instalacion.tipo_canalizacion.includes('CHAROLA'));
 
 	// Verificar si el conductor fue seleccionado por caída de tensión
-	let seleccionPorCaidaTension = $derived(
-		memoria.cable_fase.seleccion_por_caida_tension === true
-	);
+	let seleccionPorCaidaTension = $derived(memoria.cable_fase.seleccion_por_caida_tension === true);
 
 	// Temperatura de referencia (antes temperatura_usada)
 	let temperaturaReferencia = $derived(memoria.corrientes.temperatura_referencia);
@@ -67,19 +70,6 @@
 		de conductores.
 	</p>
 
-	<!-- Norma de referencia -->
-	<div class="mb-4 rounded border border-primary/30 bg-primary/10 p-3">
-		<p class="text-sm font-medium text-primary">
-			{#if memoria.tipo_equipo === 'FILTRO_ACTIVO' || memoria.tipo_equipo === 'FILTRO_RECHAZO'}
-				Referencias: Artículo 460-8 (Conductores para Capacitores) • Artículo 310-15(b)(2)(A)
-				(Temperatura) • Artículo 310-15(b)(3)(A) (Agrupamiento)
-			{:else}
-				Referencias: Artículo 215-2 (Conductores de Alimentación) • Artículo 310-15(b)(2)(A)
-				(Temperatura) • Artículo 310-15(b)(3)(A) (Agrupamiento)
-			{/if}
-		</p>
-	</div>
-
 	<!-- Factor de Uso -->
 	<div class="mb-4 rounded-lg border border-border bg-card p-4">
 		<h3 class="mb-2 flex items-center gap-2 font-semibold text-foreground">
@@ -95,7 +85,14 @@
 				<strong>Factor de Uso:</strong>
 				{(factorUso * 100).toFixed(0)}% ({factorUso})
 			</p>
-			<p class="text-muted-foreground">{justificacionFactorUso}</p>
+			<p class="text-muted-foreground">
+				{justificacionFactorUso}
+				{#if memoria.tipo_equipo === 'FILTRO_ACTIVO' || memoria.tipo_equipo === 'FILTRO_RECHAZO'}
+					— Ref: Art. 460-8
+				{:else}
+					— Ref: Art. 215-2
+				{/if}
+			</p>
 		</div>
 	</div>
 
@@ -136,7 +133,9 @@
 					<strong>Cantidad de Conductores:</strong>
 					{#if memoria.canalizacion.resultado.numero_de_tubos > 1 && memoria.corrientes.conductores_por_tubo}
 						{memoria.corrientes.conductores_por_tubo} conductores por tubo
-						<span class="text-muted-foreground">({memoria.corrientes.cantidad_conductores} total)</span>
+						<span class="text-muted-foreground"
+							>({memoria.corrientes.cantidad_conductores} total)</span
+						>
 					{:else}
 						{memoria.corrientes.cantidad_conductores}
 					{/if}
@@ -146,10 +145,9 @@
 					{memoria.corrientes.factor_agrupamiento.toFixed(2)}
 				</p>
 				<p class="text-muted-foreground">
+					Referencia: Tabla 310-15(b)(3)(A)
 					{#if esCharola}
-						Los cables en charola van separados, no aplica factor de agrupamiento
-					{:else}
-						Referencia: Tabla 310-15(b)(3)(A)
+						— Cables en charola separada, factor = 1.0
 					{/if}
 				</p>
 			</div>
@@ -171,13 +169,15 @@
 		<h3 class="mb-2 font-semibold text-foreground">Desarrollo</h3>
 		<div class="space-y-2 font-mono text-sm">
 			<p class="text-foreground">
-				I<sub>ajustada</sub> = {memoria.corrientes.corriente_nominal.toFixed(2)} A × {factorUso.toFixed(2)} / ({memoria.corrientes.factor_temperatura.toFixed(
+				I<sub>ajustada</sub> = {memoria.corrientes.corriente_nominal.toFixed(2)} A × {factorUso.toFixed(
 					2
-				)} × {memoria.corrientes.factor_agrupamiento.toFixed(2)})
+				)} / ({memoria.corrientes.factor_temperatura.toFixed(2)} × {memoria.corrientes.factor_agrupamiento.toFixed(
+					2
+				)})
 			</p>
 			<p class="text-foreground">
 				I<sub>ajustada</sub> = {numeradorIntermedio.toFixed(2)} A /
-				{memoria.corrientes.factor_total_ajuste.toFixed(3)}
+				{denominadorAjuste.toFixed(3)}
 			</p>
 			<p class="text-lg font-bold text-primary">
 				I<sub>ajustada</sub> = {memoria.corrientes.corriente_ajustada.toFixed(2)} A
@@ -188,7 +188,8 @@
 					<strong>{numHilosAlimentacion}</strong> hilos por fase en paralelo
 				</p>
 				<p class="text-foreground">
-					I<sub>hilo</sub> = {memoria.corrientes.corriente_ajustada.toFixed(2)} A / {numHilosAlimentacion} =
+					I<sub>hilo</sub> = {memoria.corrientes.corriente_ajustada.toFixed(2)} A / {numHilosAlimentacion}
+					=
 					<strong>{memoria.corrientes.corriente_por_hilo.toFixed(2)} A</strong> por hilo
 				</p>
 			{/if}
@@ -219,9 +220,7 @@
 					<tr>
 						<td class="px-4 py-2 text-muted-foreground">Material</td>
 						<td class="px-4 py-2 text-foreground">
-							{memoria.cable_fase.material?.toUpperCase() === 'CU'
-								? 'Cobre (Cu)'
-								: 'Aluminio (Al)'}
+							{memoria.cable_fase.material?.toUpperCase() === 'CU' ? 'Cobre (Cu)' : 'Aluminio (Al)'}
 						</td>
 					</tr>
 					<tr>
@@ -284,8 +283,7 @@
 				{#if memoria.cable_fase.calibre_original_ampacidad}
 					<p class="mt-2 text-sm text-foreground">
 						<strong>Calibre ajustado:</strong>
-						{memoria.cable_fase.calibre_original_ampacidad} → {memoria
-							.cable_fase.calibre}
+						{memoria.cable_fase.calibre_original_ampacidad} → {memoria.cable_fase.calibre}
 					</p>
 				{/if}
 				{#if memoria.cable_fase.nota_seleccion}
@@ -312,8 +310,10 @@
 				{#if numHilosAlimentacion > 1}
 					<span class="text-foreground">
 						La ampacidad total ({capacidadTotal} A = {memoria.cable_fase.capacidad} A × {numHilosAlimentacion}
-						hilos) es mayor o igual a la corriente ajustada ({memoria.corrientes.corriente_ajustada.toFixed(2)} A).
-						Cada hilo transporta {memoria.corrientes.corriente_por_hilo.toFixed(2)} A (≤ {capacidadPorHilo} A).
+						hilos) es mayor o igual a la corriente ajustada ({memoria.corrientes.corriente_ajustada.toFixed(
+							2
+						)} A). Cada hilo transporta {memoria.corrientes.corriente_por_hilo.toFixed(2)} A (≤ {capacidadPorHilo}
+						A).
 					</span>
 				{:else}
 					<span class="text-foreground">
