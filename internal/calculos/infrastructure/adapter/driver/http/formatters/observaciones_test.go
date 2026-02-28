@@ -21,7 +21,9 @@ func TestGenerarObservaciones(t *testing.T) {
 					LimitePorcentaje: 3.0,
 					Cumple:           false,
 				},
-				HilosPorFase: 1,
+				Instalacion: dto.DatosInstalacion{
+					HilosPorFase: 1,
+				},
 			},
 			expected: []string{"Caída de tensión 4.50% excede el límite de 3.00%"},
 		},
@@ -31,7 +33,9 @@ func TestGenerarObservaciones(t *testing.T) {
 				CaidaTension: dto.ResultadoCaidaTension{
 					Cumple: true,
 				},
-				HilosPorFase: 3,
+				Instalacion: dto.DatosInstalacion{
+					HilosPorFase: 3,
+				},
 			},
 			expected: []string{"Se usan 3 hilos por fase en paralelo"},
 		},
@@ -41,7 +45,9 @@ func TestGenerarObservaciones(t *testing.T) {
 				CaidaTension: dto.ResultadoCaidaTension{
 					Cumple: true,
 				},
-				HilosPorFase: 1,
+				Instalacion: dto.DatosInstalacion{
+					HilosPorFase: 1,
+				},
 			},
 			expected: nil,
 		},
