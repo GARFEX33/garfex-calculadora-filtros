@@ -109,6 +109,11 @@ type DetalleTuberia struct {
 	AreaOcupacionTuboMM2 float64 `json:"area_ocupacion_tubo_mm2"` // área_ocupacion_mm2 del CSV (40% interior ya aplicado)
 	DesignacionMetrica   string  `json:"designacion_metrica"`     // ej: "63" → mostrar como "63 mm"
 	FillFactor           float64 `json:"fill_factor"`             // 0.40 para >2 conductores
+
+	// Dimensiones físicas del tubo (para visualización SVG del diagrama de arreglo)
+	// Leídos de tuberia-pvc-dimensiones-fisicas.csv — referencia visual, no para cálculo NOM.
+	DiametroInteriorMM float64 `json:"diametro_interior_mm"`
+	DiametroExteriorMM float64 `json:"diametro_exterior_mm"`
 }
 
 // ResultadoCaidaTension contiene el resultado del cálculo de caída.

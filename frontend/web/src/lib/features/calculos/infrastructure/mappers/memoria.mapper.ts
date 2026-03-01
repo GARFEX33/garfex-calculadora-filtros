@@ -432,6 +432,10 @@ function mapApiToDetalleTuberia(api: ApiDetalleTuberia): DetalleTuberia {
 
 	// Optional fields - add only if present
 	if (api.area_neutro_mm2 !== undefined) result.area_neutro_mm2 = api.area_neutro_mm2;
+	if (api.diametro_interior_mm !== undefined)
+		result.diametro_interior_mm = api.diametro_interior_mm;
+	if (api.diametro_exterior_mm !== undefined)
+		result.diametro_exterior_mm = api.diametro_exterior_mm;
 
 	return result;
 }

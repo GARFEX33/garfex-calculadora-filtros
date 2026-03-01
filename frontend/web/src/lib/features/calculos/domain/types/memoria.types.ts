@@ -166,6 +166,10 @@ export interface DetalleTuberia {
 	area_ocupacion_tubo_mm2: number; // área de ocupación del CSV (40% del interior ya aplicado)
 	designacion_metrica: string; // ej: "63" → mostrar como "63 mm"
 	fill_factor: number;
+	// Dimensiones físicas del tubo (para diagrama SVG de arreglo de cables)
+	// Leídos de tuberia-pvc-diametros.csv — referencia visual, no para cálculo NOM.
+	diametro_interior_mm?: number;
+	diametro_exterior_mm?: number;
 }
 
 // Canalización agrupada — resultado + detalles

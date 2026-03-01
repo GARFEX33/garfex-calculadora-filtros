@@ -222,3 +222,114 @@ func TestCSVTablaNOMRepository_ObtenerFactorTemperatura(t *testing.T) {
 		})
 	}
 }
+
+func TestCSVTablaNOMRepository_GetTuberiaDimensionFisica(t *testing.T) {
+	repo, err := NewCSVTablaNOMRepository("testdata")
+	require.NoError(t, err)
+
+	ctx := context.Background()
+
+	// Test cases: tamano -> expected dimensions
+	tests := []struct {
+		name               string
+		tamano             string
+		wantDiametroExt    float64
+		wantEspesor        float64
+		wantDiametroInt    float64
+		wantTamanoPulgadas string
+		wantErr            bool
+	}{
+		{
+			name:               "1/2 pulgada",
+			tamano:             "1/2",
+			wantDiametroExt:    21.40,
+			wantEspesor:        2.80,
+			wantDiametroInt:    15.80,
+			wantTamanoPulgadas: "1/2",
+		},
+		{
+			name:               "3/4 pulgada",
+			tamano:             "3/4",
+			wantDiametroExt:    26.80,
+			wantEspesor:        2.90,
+			wantDiametroInt:    21.00,
+			wantTamanoPulgadas: "3/4",
+		},
+		{
+			name:               "1 pulgada",
+			tamano:             "1",
+			wantDiametroExt:    33.50,
+			wantEspesor:        3.40,
+			wantDiametroInt:    26.70,
+			wantTamanoPulgadas: "1",
+		},
+		{
+			name:               "1 1/4 pulgada",
+			tamano:             "1 1/4",
+			wantDiametroExt:    42.30,
+			wantEspesor:        3.60,
+			wantDiametroInt:    35.10,
+			wantTamanoPulgadas: "1 1/4",
+		},
+		{
+			name:               "2 pulgadas",
+			tamano:             "2",
+			wantDiametroExt:    60.30,
+			wantEspesor:        3.90,
+			wantDiametroInt:    52.50,
+			wantTamanoPulgadas: "2",
+		},
+		{
+			name:    "tamano no encontrado",
+			tamano:  "99",
+			wantErr: true,
+		},
+		{
+			name:    "tamano vacio",
+			tamano:  "",
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			dim, err := repo.GetTuberiaDimensionFisica(ctx, tt.tamano)
+
+			if tt.wantErr {
+				assert.Error(t, err)
+				assert.Nil(t, dim)
+				return
+			}
+
+			require.NoError(t, err)
+			assert.NotNil(t, dim)
+			assert.InDelta(t, tt.wantDiametroExt, dim.DiametroExteriorMM, 0.01)
+			assert.InDelta(t, tt.wantEspesor, dim.EspesorMinimoMM, 0.01)
+			assert.InDelta(t, tt.wantDiametroInt, dim.DiametroInteriorMM, 0.01)
+			assert.Equal(t, tt.wantTamanoPulgadas, dim.TamanoPulgadas)
+		})
+	}
+}
+
+func TestCSVTaberiaDimensionFisica_Consistency(t *testing.T) {
+	repo, err := NewCSVTablaNOMRepository("testdata")
+	require.NoError(t, err)
+
+	ctx := context.Background()
+
+	// Test that diametro_interior = diametro_exterior - 2 * espesor for all entries
+	knownSizes := []string{"1/2", "3/4", "1", "1 1/4", "1 1/2", "2", "2 1/2", "3", "4"}
+
+	for _, tamano := range knownSizes {
+		t.Run(tamano, func(t *testing.T) {
+			dim, err := repo.GetTuberiaDimensionFisica(ctx, tamano)
+			require.NoError(t, err)
+
+			// Consistency check: diametro_interior = diametro_exterior - 2 * espesor
+			expectedInterior := dim.DiametroExteriorMM - 2*dim.EspesorMinimoMM
+			assert.InDelta(t, expectedInterior, dim.DiametroInteriorMM, 0.01,
+				"Consistency check failed for %s: %.2f != %.2f",
+				tamano, expectedInterior, dim.DiametroInteriorMM)
+		})
+	}
+}

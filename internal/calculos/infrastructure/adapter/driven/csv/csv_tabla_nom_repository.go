@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/garfex/calculadora-filtros/internal/calculos/application/port"
 	"github.com/garfex/calculadora-filtros/internal/calculos/domain/entity"
 	"github.com/garfex/calculadora-filtros/internal/shared/kernel/valueobject"
 )
@@ -58,6 +59,10 @@ type conductorDesnudoEntry struct {
 	NumeroHilos         int
 }
 
+// TuberiaDimensionFisica contiene las dimensiones físicas reales de tubería PVC Schedule 40.
+// Se usa exclusivamente para la representación visual (diagrama SVG), no para cálculos NOM.
+// Note: The struct is defined in application/port, imported here via the port package.
+
 // tuboOcupacionEntry holds occupation table entries for conduits (40% fill).
 type tuboOcupacionEntry struct {
 	Tamano             string
@@ -80,6 +85,7 @@ type CSVTablaNOMRepository struct {
 	tablaDiametros         map[string]diametroConductorEntry
 	tablaConductorDesnudo  map[string]conductorDesnudoEntry // Tabla 8 - conductores desnudos
 	tablasOcupacionTuberia map[entity.TipoCanalizacion][]valueobject.EntradaTablaOcupacion
+	tablaTuberiaFisica     map[string]port.TuberiaDimensionFisica // Physical dimensions for SVG rendering
 }
 
 // NewCSVTablaNOMRepository creates a new repository and loads all tables into memory.
@@ -239,6 +245,13 @@ func NewCSVTablaNOMRepository(basePath string) (*CSVTablaNOMRepository, error) {
 		return nil, fmt.Errorf("failed to load tablas ocupacion tuberia: %w", err)
 	}
 	repo.tablasOcupacionTuberia = tablasOcupacion
+
+	// Load physical tube dimensions for SVG rendering
+	tablaTuberiaFisica, err := repo.loadTablaTuberiaFisica()
+	if err != nil {
+		return nil, fmt.Errorf("failed to load tuberia fisica dimensions: %w", err)
+	}
+	repo.tablaTuberiaFisica = tablaTuberiaFisica
 
 	return repo, nil
 }
@@ -1283,4 +1296,95 @@ func (r *CSVTablaNOMRepository) ObtenerSeccionConductor(ctx context.Context, cal
 	}
 
 	return entry.SeccionMM2, nil
+}
+
+// GetTuberiaDimensionFisica returns physical tube dimensions for a given trade size.
+// The data comes from tuberia-pvc-dimensiones-fisicas.csv (factory specs PVC Schedule 40).
+// Used for SVG diagram rendering only — same dimensions apply to PVC, Acero PG, and Acero PD.
+func (r *CSVTablaNOMRepository) GetTuberiaDimensionFisica(ctx context.Context, tamano string) (*port.TuberiaDimensionFisica, error) {
+	// Normalize tamano: trim spaces
+	tamanoNormalizado := strings.TrimSpace(tamano)
+
+	// Direct lookup in cache
+	entry, ok := r.tablaTuberiaFisica[tamanoNormalizado]
+	if !ok {
+		return nil, fmt.Errorf("tamaño de tubería no encontrado: %s", tamano)
+	}
+
+	return &entry, nil
+}
+
+// loadTablaTuberiaFisica loads the physical tube dimensions from CSV.
+func (r *CSVTablaNOMRepository) loadTablaTuberiaFisica() (map[string]port.TuberiaDimensionFisica, error) {
+	filePath := filepath.Join(r.basePath, "tuberia-pvc-dimensiones-fisicas.csv")
+	file, err := os.Open(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("cannot open tuberia-pvc-dimensiones-fisicas.csv: %w", err)
+	}
+	defer file.Close()
+
+	reader := csv.NewReader(file)
+	records, err := reader.ReadAll()
+	if err != nil {
+		return nil, fmt.Errorf("cannot read tuberia-pvc-dimensiones-fisicas.csv: %w", err)
+	}
+
+	if len(records) < 2 {
+		return nil, fmt.Errorf("tuberia-pvc-dimensiones-fisicas.csv is empty or missing header")
+	}
+
+	// Find column indices
+	header := records[0]
+	colIdx := make(map[string]int)
+	for i, col := range header {
+		colIdx[col] = i
+	}
+
+	tamanoIdx, ok := colIdx["tamano_pulgadas"]
+	if !ok {
+		return nil, fmt.Errorf("tuberia-pvc-dimensiones-fisicas.csv: missing column tamano_pulgadas")
+	}
+	diamExtIdx, ok := colIdx["diametro_exterior_mm"]
+	if !ok {
+		return nil, fmt.Errorf("tuberia-pvc-dimensiones-fisicas.csv: missing column diametro_exterior_mm")
+	}
+	espesorIdx, ok := colIdx["espesor_minimo_mm"]
+	if !ok {
+		return nil, fmt.Errorf("tuberia-pvc-dimensiones-fisicas.csv: missing column espesor_minimo_mm")
+	}
+	diamIntIdx, ok := colIdx["diametro_interior_mm"]
+	if !ok {
+		return nil, fmt.Errorf("tuberia-pvc-dimensiones-fisicas.csv: missing column diametro_interior_mm")
+	}
+
+	result := make(map[string]port.TuberiaDimensionFisica)
+	for _, record := range records[1:] {
+		if len(record) < len(header) {
+			continue
+		}
+
+		diamExt, err := strconv.ParseFloat(record[diamExtIdx], 64)
+		if err != nil {
+			return nil, fmt.Errorf("tuberia-pvc-dimensiones-fisicas.csv: invalid diametro_exterior_mm: %w", err)
+		}
+
+		espesor, err := strconv.ParseFloat(record[espesorIdx], 64)
+		if err != nil {
+			return nil, fmt.Errorf("tuberia-pvc-dimensiones-fisicas.csv: invalid espesor_minimo_mm: %w", err)
+		}
+
+		diamInt, err := strconv.ParseFloat(record[diamIntIdx], 64)
+		if err != nil {
+			return nil, fmt.Errorf("tuberia-pvc-dimensiones-fisicas.csv: invalid diametro_interior_mm: %w", err)
+		}
+
+		result[record[tamanoIdx]] = port.TuberiaDimensionFisica{
+			TamanoPulgadas:     record[tamanoIdx],
+			DiametroExteriorMM: diamExt,
+			EspesorMinimoMM:    espesor,
+			DiametroInteriorMM: diamInt,
+		}
+	}
+
+	return result, nil
 }

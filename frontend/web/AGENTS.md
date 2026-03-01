@@ -63,8 +63,16 @@ frontend/web/
 │   │   │           ├── SeccionConclusion.svelte
 │   │   │           ├── SeccionCorriente.svelte
 │   │   │           ├── SeccionEncabezado.svelte
-│   │   │           └── SeccionTierra.svelte
-> **Nota SeccionCanalizacion:** Este componente usa el campo `factor_control` del DTO `DetalleCharola` en la fórmula E_c (no hardcodeado). El tipo `DetalleCharola` incluye `factor_control?: number`.
+│   │   │           ├── SeccionTierra.svelte
+│   │   │           ├── DiagramaCable.svelte        # Router → selecciona diagrama por tipo
+│   │   │           └── diagramas/                  # Diagramas SVG de arreglo de cables
+│   │   │               ├── geometry.ts             # Funciones puras de geometría (posiciones, viewBox)
+│   │   │               ├── geometry.test.ts        # 46 unit/integration/edge tests (vitest)
+│   │   │               ├── DiagramaCharolaEspaciada.svelte
+│   │   │               ├── DiagramaCharolaTriangular.svelte
+│   │   │               ├── DiagramaTuberia.svelte
+│   │   │               └── LegendaConductores.svelte
+> **Nota SeccionCanalizacion:** Este componente usa el campo `factor_control` del DTO `DetalleCharola` en la fórmula E_c (no hardcodeado). El tipo `DetalleCharola` incluye `factor_control?: number`. Integra `DiagramaCable` para renderizar diagramas SVG inline de arreglo de cables (charola espaciada, triangular, tubería).
 │   │   ├── types/
 │   │   │   ├── index.ts           # Re-exporta todos los tipos
 │   │   │   └── api.types.ts       # ApiResponse, ApiError, ApiResult, etc.

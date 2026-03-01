@@ -145,6 +145,8 @@ export interface ApiDetalleTuberia {
 	area_ocupacion_tubo_mm2: number;
 	designacion_metrica: string;
 	fill_factor: number;
+	diametro_interior_mm?: number;
+	diametro_exterior_mm?: number;
 }
 
 /**

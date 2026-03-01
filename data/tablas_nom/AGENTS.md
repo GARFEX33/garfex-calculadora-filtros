@@ -47,6 +47,14 @@ Datos de normativa NOM en formato CSV. Leidos por `internal/calculos/infrastruct
 |---------|------|
 | `charola_dimensiones.csv` | Area y dimensiones por ancho de charola |
 
+### Dimensiones físicas de tubería (para diagrama SVG)
+
+| Archivo | Dato |
+|---------|------|
+| `tuberia-pvc-dimensiones-fisicas.csv` | Diámetro exterior, espesor pared, diámetro interior (mm) por tamaño comercial |
+
+> **Nota**: Esta tabla se usa SOLO para la representación visual SVG del arreglo de cables, NO para cálculos NOM de ocupación de tubo.
+
 ### Temperatura
 
 | Archivo | Dato |

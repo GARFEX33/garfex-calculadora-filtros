@@ -673,6 +673,14 @@ func (uc *OrquestadorMemoriaCalculoUseCase) calcularCanalizacion(
 			FillFactor:           resultadoTuberia.FillFactor,
 		}
 
+		// After tubería selection, get physical dimensions for SVG rendering
+		dimensionFisica, err := uc.tablaRepo.GetTuberiaDimensionFisica(ctx, resultadoTuberia.TuberiaRecomendada)
+		if err == nil && dimensionFisica != nil {
+			detalleTuberia.DiametroInteriorMM = dimensionFisica.DiametroInteriorMM
+			detalleTuberia.DiametroExteriorMM = dimensionFisica.DiametroExteriorMM
+		}
+		// Note: if dimensions not found, fields default to 0 — frontend handles gracefully
+
 		canalizacion = dto.ResultadoCanalizacion{
 			Tamano:           resultadoTuberia.TuberiaRecomendada,
 			AreaTotalMM2:     resultadoTuberia.AreaPorTuboMM2,

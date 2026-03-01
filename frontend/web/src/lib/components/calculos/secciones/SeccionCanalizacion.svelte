@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { MemoriaOutput } from '$lib/types/calculos.types';
+	import DiagramaCable from './DiagramaCable.svelte';
 
 	interface Props {
 		memoria: MemoriaOutput;
@@ -267,6 +268,20 @@
 			</div>
 		{/if}
 
+		<!-- Diagrama SVG de arreglo de cables -->
+		<div class="mb-6">
+			<DiagramaCable
+				tipoCanalizacion={memoria.instalacion.tipo_canalizacion}
+				detalleCharola={memoria.canalizacion.detalle_charola}
+				detalleTuberia={memoria.canalizacion.detalle_tuberia}
+				resultado={memoria.canalizacion.resultado}
+				sistemaElectrico={memoria.instalacion.sistema_electrico}
+				hilosPorFase={memoria.instalacion.hilos_por_fase}
+				calibreFase={memoria.cable_fase.calibre}
+				calibreTierra={memoria.cable_tierra.calibre}
+			/>
+		</div>
+
 		<!-- Resultado tubería -->
 		<div>
 			<h3 class="mb-2 font-semibold text-foreground">Tubería Seleccionada</h3>
@@ -496,6 +511,20 @@
 			</div>
 		{/if}
 
+		<!-- Diagrama SVG de arreglo de cables -->
+		<div class="mb-6">
+			<DiagramaCable
+				tipoCanalizacion={memoria.instalacion.tipo_canalizacion}
+				detalleCharola={memoria.canalizacion.detalle_charola}
+				detalleTuberia={memoria.canalizacion.detalle_tuberia}
+				resultado={memoria.canalizacion.resultado}
+				sistemaElectrico={memoria.instalacion.sistema_electrico}
+				hilosPorFase={memoria.instalacion.hilos_por_fase}
+				calibreFase={memoria.cable_fase.calibre}
+				calibreTierra={memoria.cable_tierra.calibre}
+			/>
+		</div>
+
 		<!-- Resultado charola espaciado -->
 		<div class="mb-6">
 			<h3 class="mb-2 font-semibold text-foreground">Charola Seleccionada</h3>
@@ -716,6 +745,20 @@
 				</div>
 			</div>
 		{/if}
+
+		<!-- Diagrama SVG de arreglo de cables -->
+		<div class="mb-6">
+			<DiagramaCable
+				tipoCanalizacion={memoria.instalacion.tipo_canalizacion}
+				detalleCharola={memoria.canalizacion.detalle_charola}
+				detalleTuberia={memoria.canalizacion.detalle_tuberia}
+				resultado={memoria.canalizacion.resultado}
+				sistemaElectrico={memoria.instalacion.sistema_electrico}
+				hilosPorFase={memoria.instalacion.hilos_por_fase}
+				calibreFase={memoria.cable_fase.calibre}
+				calibreTierra={memoria.cable_tierra.calibre}
+			/>
+		</div>
 
 		<!-- Resultado charola triangular -->
 		<div class="mb-6">

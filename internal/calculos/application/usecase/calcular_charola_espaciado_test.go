@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/garfex/calculadora-filtros/internal/calculos/application/dto"
+	"github.com/garfex/calculadora-filtros/internal/calculos/application/port"
 	"github.com/garfex/calculadora-filtros/internal/calculos/domain/entity"
 	"github.com/garfex/calculadora-filtros/internal/shared/kernel/valueobject"
 	"github.com/stretchr/testify/assert"
@@ -76,6 +77,10 @@ func (m *mockCharolaRepo) ObtenerTablaOcupacionTuberia(ctx context.Context, cana
 
 func (m *mockCharolaRepo) ObtenerSeccionConductor(ctx context.Context, calibre string) (float64, error) {
 	return 0, nil
+}
+
+func (m *mockCharolaRepo) GetTuberiaDimensionFisica(ctx context.Context, tamano string) (*port.TuberiaDimensionFisica, error) {
+	return nil, nil
 }
 
 // pointerToFloat64 returns a pointer to a float64 value (helper for tests)

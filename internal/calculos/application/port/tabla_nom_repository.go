@@ -8,6 +8,15 @@ import (
 	"github.com/garfex/calculadora-filtros/internal/shared/kernel/valueobject"
 )
 
+// TuberiaDimensionFisica contiene las dimensiones físicas reales de tubería PVC Schedule 40.
+// Se usa exclusivamente para la representación visual (diagrama SVG), no para cálculos NOM.
+type TuberiaDimensionFisica struct {
+	TamanoPulgadas     string
+	DiametroExteriorMM float64
+	EspesorMinimoMM    float64
+	DiametroInteriorMM float64
+}
+
 // TablaNOMRepository defines the contract for reading NOM tables.
 type TablaNOMRepository interface {
 	// ObtenerTablaAmpacidad returns ampacity table entries for the given conduit type, material, and temperature.
@@ -68,4 +77,9 @@ type TablaNOMRepository interface {
 
 	// ObtenerSeccionConductor returns the cross-sectional area in mm² for a given calibre.
 	ObtenerSeccionConductor(ctx context.Context, calibre string) (float64, error)
+
+	// GetTuberiaDimensionFisica returns physical tube dimensions for SVG rendering.
+	// The data comes from tuberia-pvc-dimensiones-fisicas.csv (factory specs PVC Schedule 40).
+	// Used for SVG diagram rendering only.
+	GetTuberiaDimensionFisica(ctx context.Context, tamano string) (*TuberiaDimensionFisica, error)
 }

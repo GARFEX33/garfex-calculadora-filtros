@@ -6,6 +6,7 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/garfex/calculadora-filtros/internal/calculos/application/port"
 	"github.com/garfex/calculadora-filtros/internal/calculos/domain/entity"
 	"github.com/garfex/calculadora-filtros/internal/shared/kernel/valueobject"
 	"github.com/stretchr/testify/assert"
@@ -100,6 +101,10 @@ func (m *mockTablaRepo) ObtenerTablaOcupacionTuberia(ctx context.Context, canali
 
 func (m *mockTablaRepo) ObtenerSeccionConductor(ctx context.Context, calibre string) (float64, error) {
 	return 0, nil
+}
+
+func (m *mockTablaRepo) GetTuberiaDimensionFisica(ctx context.Context, tamano string) (*port.TuberiaDimensionFisica, error) {
+	return nil, nil
 }
 
 type mockSeleccionarTempPort struct {
