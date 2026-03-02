@@ -5,6 +5,7 @@
 		TipoVoltaje,
 		SistemaElectrico
 	} from '$lib/types/calculos.types';
+	import { cn } from '$lib/utils';
 
 	export interface FormularioManualData {
 		tipo_equipo: TipoEquipo | '';
@@ -27,12 +28,37 @@
 	// Ajustar el tipo para que acepte los valores correctos
 	let { modo, datos = $bindable(), onDatosChange }: Props = $props();
 
-	const tipoEquipoOptions: { value: TipoEquipo; label: string }[] = [
+	// Task 1.1 — Filtered options derived
+	const ALL_TIPO_EQUIPO_OPTIONS: { value: TipoEquipo; label: string }[] = [
 		{ value: 'FILTRO_ACTIVO', label: 'Filtro Activo' },
 		{ value: 'TRANSFORMADOR', label: 'Transformador' },
 		{ value: 'FILTRO_RECHAZO', label: 'Filtro de Rechazo' },
 		{ value: 'CARGA', label: 'Carga General' }
 	];
+
+	const OPCIONES_POR_MODO: Record<'MANUAL_AMPERAJE' | 'MANUAL_POTENCIA', TipoEquipo[]> = {
+		MANUAL_AMPERAJE: ['FILTRO_ACTIVO', 'CARGA'],
+		MANUAL_POTENCIA: ['TRANSFORMADOR', 'FILTRO_RECHAZO', 'CARGA']
+	};
+
+	let tipoEquipoFiltrado = $derived(
+		ALL_TIPO_EQUIPO_OPTIONS.filter((opt) => OPCIONES_POR_MODO[modo].includes(opt.value))
+	);
+
+	// Task 1.2 — Field-specific locked deriveds
+	let tipoVoltajeLocked = $derived(
+		datos.tipo_equipo === 'FILTRO_ACTIVO' ||
+			datos.tipo_equipo === 'TRANSFORMADOR' ||
+			datos.tipo_equipo === 'FILTRO_RECHAZO'
+	);
+
+	let sistemaElectricoLocked = $derived(
+		datos.tipo_equipo === 'FILTRO_ACTIVO' || datos.tipo_equipo === 'FILTRO_RECHAZO'
+	);
+
+	let potenciaUnidadLocked = $derived(
+		datos.tipo_equipo === 'TRANSFORMADOR' || datos.tipo_equipo === 'FILTRO_RECHAZO'
+	);
 
 	const potenciaUnidadOptions: { value: UnidadPotencia; label: string }[] = [
 		{ value: 'W', label: 'W' },
@@ -64,20 +90,58 @@
 	) {
 		onDatosChange({ ...datos, [key]: value });
 	}
+
+	// Task 1.1 — handleTipoEquipoChange handler (extended)
+	function handleTipoEquipoChange(newTipo: TipoEquipo | '') {
+		if (newTipo === 'FILTRO_ACTIVO') {
+			onDatosChange({
+				...datos,
+				tipo_equipo: newTipo,
+				tipo_voltaje: 'FASE_FASE',
+				sistema_electrico: 'DELTA'
+			});
+		} else if (newTipo === 'TRANSFORMADOR') {
+			onDatosChange({
+				...datos,
+				tipo_equipo: newTipo,
+				potencia_unidad: 'KVA',
+				tipo_voltaje: 'FASE_FASE',
+				sistema_electrico: ''
+			});
+		} else if (newTipo === 'FILTRO_RECHAZO') {
+			onDatosChange({
+				...datos,
+				tipo_equipo: newTipo,
+				potencia_unidad: 'KVAR',
+				tipo_voltaje: 'FASE_FASE',
+				sistema_electrico: 'DELTA'
+			});
+		} else {
+			// CARGA or empty: reset all to defaults
+			onDatosChange({
+				...datos,
+				tipo_equipo: newTipo,
+				potencia_unidad: 'KW',
+				tipo_voltaje: 'FASE_NEUTRO',
+				sistema_electrico: ''
+			});
+		}
+	}
 </script>
 
 <div class="flex flex-col gap-6">
 	<!-- Tipo de Equipo -->
 	<div class="flex flex-col gap-1.5">
 		<label for="tipo_equipo" class="text-sm font-medium text-foreground">Tipo de Equipo</label>
+		<!-- Task 2.1 — Wire tipo_equipo select -->
 		<select
 			id="tipo_equipo"
 			value={datos.tipo_equipo}
-			onchange={(e) => updateDatos('tipo_equipo', e.currentTarget.value as TipoEquipo | '')}
+			onchange={(e) => handleTipoEquipoChange(e.currentTarget.value as TipoEquipo | '')}
 			class="w-full rounded-md border border-input-border bg-input px-3 py-2 text-sm text-foreground focus:ring-2 focus:ring-ring focus:outline-none"
 		>
 			<option value="">Seleccionar...</option>
-			{#each tipoEquipoOptions as opt}
+			{#each tipoEquipoFiltrado as opt}
 				<option value={opt.value}>{opt.label}</option>
 			{/each}
 		</select>
@@ -125,14 +189,21 @@
 				/>
 				<select
 					value={datos.potencia_unidad}
+					disabled={potenciaUnidadLocked}
 					onchange={(e) => updateDatos('potencia_unidad', e.currentTarget.value as UnidadPotencia)}
-					class="w-24 rounded-md border border-input-border bg-input px-2 py-2 text-sm text-foreground focus:ring-2 focus:ring-ring focus:outline-none"
+					class={cn(
+						'w-24 rounded-md border border-input-border bg-input px-2 py-2 text-sm text-foreground focus:ring-2 focus:ring-ring focus:outline-none',
+						potenciaUnidadLocked && 'cursor-not-allowed bg-muted opacity-60'
+					)}
 				>
 					{#each potenciaUnidadOptions as opt}
 						<option value={opt.value}>{opt.label}</option>
 					{/each}
 				</select>
 			</div>
+			{#if potenciaUnidadLocked}
+				<p class="text-xs text-muted-foreground">Auto-determinado por tipo de equipo</p>
+			{/if}
 		</div>
 	{/if}
 
@@ -152,21 +223,30 @@
 	</div>
 
 	<!-- Tipo de Voltaje (siempre visible en modos manuales) -->
+	<!-- Task 1.3 — Wire tipo_voltaje select (lock) -->
 	<div class="flex flex-col gap-1.5">
 		<label for="tipo_voltaje" class="text-sm font-medium text-foreground">Tipo de Voltaje</label>
 		<select
 			id="tipo_voltaje"
 			value={datos.tipo_voltaje}
+			disabled={tipoVoltajeLocked}
 			onchange={(e) => updateDatos('tipo_voltaje', e.currentTarget.value as TipoVoltaje)}
-			class="w-full rounded-md border border-input-border bg-input px-3 py-2 text-sm text-foreground focus:ring-2 focus:ring-ring focus:outline-none"
+			class={cn(
+				'w-full rounded-md border border-input-border bg-input px-3 py-2 text-sm text-foreground focus:ring-2 focus:ring-ring focus:outline-none',
+				tipoVoltajeLocked && 'cursor-not-allowed bg-muted opacity-60'
+			)}
 		>
 			{#each tipoVoltajeOptions as opt}
 				<option value={opt.value}>{opt.label}</option>
 			{/each}
 		</select>
+		{#if tipoVoltajeLocked}
+			<p class="text-xs text-muted-foreground">Auto-determinado por tipo de equipo</p>
+		{/if}
 	</div>
 
 	<!-- Sistema Eléctrico (siempre visible en modos manuales) -->
+	<!-- Task 1.3 — Wire sistema_electrico select (lock) -->
 	<div class="flex flex-col gap-1.5">
 		<label for="sistema_electrico" class="text-sm font-medium text-foreground"
 			>Sistema Eléctrico</label
@@ -174,15 +254,22 @@
 		<select
 			id="sistema_electrico"
 			value={datos.sistema_electrico}
+			disabled={sistemaElectricoLocked}
 			onchange={(e) =>
 				updateDatos('sistema_electrico', e.currentTarget.value as SistemaElectrico | '')}
-			class="w-full rounded-md border border-input-border bg-input px-3 py-2 text-sm text-foreground focus:ring-2 focus:ring-ring focus:outline-none"
+			class={cn(
+				'w-full rounded-md border border-input-border bg-input px-3 py-2 text-sm text-foreground focus:ring-2 focus:ring-ring focus:outline-none',
+				sistemaElectricoLocked && 'cursor-not-allowed bg-muted opacity-60'
+			)}
 		>
 			<option value="">Seleccionar...</option>
 			{#each sistemaElectricoOptions as opt}
 				<option value={opt.value}>{opt.label}</option>
 			{/each}
 		</select>
+		{#if sistemaElectricoLocked}
+			<p class="text-xs text-muted-foreground">Auto-determinado por tipo de equipo</p>
+		{/if}
 	</div>
 
 	<!-- Factor de Potencia (solo modo MANUAL_POTENCIA + tipo CARGA) -->
