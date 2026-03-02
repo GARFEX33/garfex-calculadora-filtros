@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { cn } from '$lib/utils';
 	import type { EquipoFiltro } from '$lib/types/equipos.types';
+	import { fade } from 'svelte/transition';
 
 	interface Props {
 		equipoSeleccionado: EquipoFiltro | undefined;
@@ -42,7 +43,7 @@
 
 	// Manejar búsqueda local (sin datos externos)
 	function handleSearchLocal() {
-		if (!externalData && onBusquedaChange) {
+		if (onBusquedaChange) {
 			onBusquedaChange(searchTerm);
 		}
 	}
@@ -65,16 +66,34 @@
 	// Debounce para búsqueda local
 	let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
-	$effect(() => {
-		// Solo hacer debounce si no hay datos externos
-		if (externalData) return;
+	// Track previous searchTerm to detect actual changes
+	let previousSearchTerm = $state('');
 
+	// Search effect — only triggers when searchTerm actually changes from user input
+	$effect(() => {
+		// Use snapshot to track the actual value change
+		const currentTerm = searchTerm;
+
+		// Skip if this is the initial render (first run with empty string)
+		// or if the value hasn't actually changed
+		if (currentTerm === previousSearchTerm) {
+			// On first run, just record the initial value
+			if (previousSearchTerm === '') {
+				previousSearchTerm = currentTerm;
+			}
+			return;
+		}
+
+		// Record the new value for next comparison
+		previousSearchTerm = currentTerm;
+
+		// Clear any pending search
 		if (debounceTimer) {
 			clearTimeout(debounceTimer);
 		}
 
+		// Debounce the actual search
 		debounceTimer = setTimeout(() => {
-			void searchTerm;
 			handleSearchLocal();
 		}, 300);
 	});
@@ -107,19 +126,29 @@
 			onkeydown={(e) => e.key === 'Enter' && handleSearchLocal()}
 			class="flex-1 rounded-md border border-input-border bg-input px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-ring focus:outline-none"
 		/>
-		<button
-			type="button"
-			onclick={handleSearchLocal}
-			class="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover"
-		>
-			Buscar
-		</button>
 	</div>
 
 	<!-- Estados: Loading, Error, Empty, Lista -->
 	{#if loading}
-		<div class="flex items-center justify-center py-8">
-			<p class="text-sm text-muted-foreground">Cargando equipos...</p>
+		<div class="space-y-2">
+			{#each Array(3) as _}
+				<div class="animate-pulse rounded-md border border-border bg-card p-3">
+					<div class="flex items-start gap-3">
+						<div class="mt-1 h-4 w-4 rounded-full bg-muted"></div>
+						<div class="flex-1 space-y-2">
+							<div class="flex items-center gap-2">
+								<div class="h-4 w-16 rounded bg-muted"></div>
+								<div class="h-4 w-8 rounded bg-muted"></div>
+							</div>
+							<div class="flex gap-3">
+								<div class="h-3 w-12 rounded bg-muted"></div>
+								<div class="h-3 w-16 rounded bg-muted"></div>
+								<div class="h-3 w-12 rounded bg-muted"></div>
+							</div>
+						</div>
+					</div>
+				</div>
+			{/each}
 		</div>
 	{:else if error}
 		<div class="flex flex-col items-center gap-2 py-8">
@@ -133,17 +162,34 @@
 			</button>
 		</div>
 	{:else if equipos.length === 0}
-		<div class="flex items-center justify-center py-8">
-			<p class="text-sm text-muted-foreground">No se encontraron equipos</p>
+		<div class="flex flex-col items-center justify-center py-8 text-center">
+			<svg
+				class="mb-3 h-10 w-10 text-muted-foreground"
+				fill="none"
+				viewBox="0 0 24 24"
+				stroke="currentColor"
+			>
+				<path
+					stroke-linecap="round"
+					stroke-linejoin="round"
+					stroke-width="1.5"
+					d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+				/>
+			</svg>
+			<p class="text-sm font-medium text-foreground">No se encontraron equipos</p>
+			<p class="text-xs text-muted-foreground">Try adjusting your search terms</p>
 		</div>
 	{:else}
 		<!-- Lista de equipos -->
-		<div class="max-h-64 overflow-y-auto rounded-md border border-border">
+		<div
+			class="max-h-64 overflow-y-auto rounded-md border border-border"
+			transition:fade={{ duration: 150 }}
+		>
 			{#each equipos as equipo}
 				<label
 					class={cn(
-						'flex cursor-pointer items-start gap-3 border-b border-border p-3 transition-colors last:border-b-0 hover:bg-muted',
-						equipoSeleccionado?.id === equipo.id && 'bg-primary/10'
+						'flex cursor-pointer items-start gap-3 border-b border-border p-3 transition-all last:border-b-0 hover:bg-muted',
+						equipoSeleccionado?.id === equipo.id ? 'border-l-2 border-l-primary bg-primary/5' : ''
 					)}
 				>
 					<input
