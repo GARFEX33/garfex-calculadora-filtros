@@ -9,7 +9,9 @@ import type { ApiError, ApiResult } from '$lib/types/index.js';
  * o los módulos específicos en src/lib/api/.
  */
 
-const BASE_URL = PUBLIC_API_URL ?? 'http://localhost:8080';
+// Usar URL relativa ('') para que el proxy de Vite intercepte las requests en dev
+// En prod, usar PUBLIC_API_URL si está definida
+const BASE_URL = PUBLIC_API_URL ?? '';
 
 interface RequestOptions extends Omit<RequestInit, 'body'> {
 	body?: unknown;
