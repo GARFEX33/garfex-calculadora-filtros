@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { cn } from '$lib/utils';
 	import type { TipoCanalizacion, MaterialConductor } from '$lib/types/calculos.types';
+	import { MATERIAL_CONDUCTOR_LABELS } from '$lib/features/calculos/domain/types/material-conductor.js';
 
 	export interface CamposInstalacionData {
 		tension: number | undefined;
@@ -164,6 +165,23 @@
 					<option value="">Seleccionar...</option>
 					{#each canalizacionOptions as opt}
 						<option value={opt.value}>{opt.label}</option>
+					{/each}
+				</select>
+			</div>
+
+			<!-- Material del Conductor -->
+			<div class="flex flex-col gap-1.5">
+				<label for="material" class="text-sm text-muted-foreground">Material del Conductor</label>
+				<select
+					id="material"
+					value={datos.material}
+					onchange={(e) =>
+						updateDatos('material', (e.currentTarget.value as MaterialConductor) || undefined)}
+					class="w-full rounded-md border border-input-border bg-input px-3 py-2 text-sm text-foreground focus:ring-2 focus:ring-ring focus:outline-none"
+				>
+					<option value="">Seleccionar...</option>
+					{#each Object.entries(MATERIAL_CONDUCTOR_LABELS) as [value, label]}
+						<option {value}>{label}</option>
 					{/each}
 				</select>
 			</div>
