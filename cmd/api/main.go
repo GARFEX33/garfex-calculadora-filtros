@@ -19,19 +19,28 @@ import (
 
 	"github.com/joho/godotenv"
 
-	"github.com/garfex/calculadora-filtros/internal/calculos/application/usecase"
 	calculosport "github.com/garfex/calculadora-filtros/internal/calculos/application/port"
+	"github.com/garfex/calculadora-filtros/internal/calculos/application/usecase"
 	"github.com/garfex/calculadora-filtros/internal/calculos/infrastructure"
 	"github.com/garfex/calculadora-filtros/internal/calculos/infrastructure/adapter/driven/csv"
-	calculospostgres "github.com/garfex/calculadora-filtros/internal/calculos/infrastructure/adapter/driven/postgres"
+	geometryadapter "github.com/garfex/calculadora-filtros/internal/calculos/infrastructure/adapter/driven/geometry"
 	calcmock "github.com/garfex/calculadora-filtros/internal/calculos/infrastructure/adapter/driven/mock"
+	calculospostgres "github.com/garfex/calculadora-filtros/internal/calculos/infrastructure/adapter/driven/postgres"
 
-	equiposusecase "github.com/garfex/calculadora-filtros/internal/equipos/application/usecase"
 	equiposport "github.com/garfex/calculadora-filtros/internal/equipos/application/port"
+	equiposusecase "github.com/garfex/calculadora-filtros/internal/equipos/application/usecase"
 	equiposinfra "github.com/garfex/calculadora-filtros/internal/equipos/infrastructure"
+	mockequipos "github.com/garfex/calculadora-filtros/internal/equipos/infrastructure/adapter/driven/mock"
 	equipospostgres "github.com/garfex/calculadora-filtros/internal/equipos/infrastructure/adapter/driven/postgres"
 	equipohttp "github.com/garfex/calculadora-filtros/internal/equipos/infrastructure/adapter/driver/http"
-	mockequipos "github.com/garfex/calculadora-filtros/internal/equipos/infrastructure/adapter/driven/mock"
+
+	pdfpkg "github.com/garfex/calculadora-filtros/internal/pdf"
+	pdfusecase "github.com/garfex/calculadora-filtros/internal/pdf/application/usecase"
+	pdfinfra "github.com/garfex/calculadora-filtros/internal/pdf/infrastructure"
+	htmltemplate "github.com/garfex/calculadora-filtros/internal/pdf/infrastructure/adapter/driven/template"
+	pdfwkhtmltopdf "github.com/garfex/calculadora-filtros/internal/pdf/infrastructure/adapter/driven/wkhtmltopdf"
+	pdfhttp "github.com/garfex/calculadora-filtros/internal/pdf/infrastructure/adapter/driver/http"
+
 	sharedpostgres "github.com/garfex/calculadora-filtros/internal/shared/infrastructure/postgres"
 )
 
@@ -98,6 +107,9 @@ func main() {
 	calcularCaidaTensionUC := usecase.NewCalcularCaidaTensionUseCase(tablaRepo)
 	seleccionarConductorCaidaTensionUC := usecase.NewSeleccionarConductorPorCaidaTensionUseCase(calcularCaidaTensionUC, tablaRepo)
 
+	// Geometry generator adapter for SVG diagrams
+	geometryGenerator := geometryadapter.NewGeometryGeneratorAdapter()
+
 	orquestadorMemoriaUC := usecase.NewOrquestadorMemoriaCalculoUseCase(
 		calcularCorrienteUC,
 		ajustarCorrienteUC,
@@ -108,6 +120,7 @@ func main() {
 		calcularCaidaTensionUC,
 		seleccionarConductorCaidaTensionUC,
 		tablaRepo,
+		geometryGenerator,
 	)
 
 	// ─── Equipos: use cases ───────────────────────────────────────────────────
@@ -126,6 +139,21 @@ func main() {
 		eliminarEquipoUC,
 	)
 
+	// ─── PDF: adapters, use case y handler ──────────────────────────────────
+
+	htmlRenderer, err := htmltemplate.NewHtmlRenderer(pdfpkg.TemplatesFS)
+	if err != nil {
+		log.Fatalf("Error inicializando renderer HTML del módulo PDF: %v", err)
+	}
+
+	pdfGenerator, err := pdfwkhtmltopdf.NewPdfGenerator(pdfpkg.TemplatesFS)
+	if err != nil {
+		log.Fatalf("Error inicializando generador PDF (wkhtmltopdf): %v", err)
+	}
+
+	generarMemoriaUC := pdfusecase.NewGenerarMemoriaPdf(htmlRenderer, pdfGenerator, 3)
+	pdfHandler := pdfhttp.NewPdfHandler(generarMemoriaUC)
+
 	// ─── Router principal ────────────────────────────────────────────────────
 
 	router := infrastructure.NewRouter(
@@ -141,9 +169,10 @@ func main() {
 		orquestadorMemoriaUC,
 	)
 
-	// Montar rutas de equipos bajo /api/v1
+	// Montar rutas de equipos y PDF bajo /api/v1
 	v1 := router.Group("/api/v1")
 	equiposinfra.RegisterEquiposRoutes(v1, equipoHandler)
+	pdfinfra.RegisterPdfRoutes(v1, pdfHandler)
 
 	// ─── Servidor HTTP ───────────────────────────────────────────────────────
 
