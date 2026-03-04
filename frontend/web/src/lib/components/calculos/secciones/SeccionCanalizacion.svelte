@@ -40,6 +40,15 @@
 	// Factor de control — usa el valor del API o default 1.0
 	let factorControl = $derived(detalle?.factor_control ?? 1);
 
+	// Props para DiagramaCable — solo incluir diagrama si existe valor
+	let propsDiagrama = $derived(
+		memoria.canalizacion.detalle_charola?.diagrama
+			? { diagrama: memoria.canalizacion.detalle_charola.diagrama }
+			: memoria.canalizacion.detalle_tuberia?.diagrama
+				? { diagrama: memoria.canalizacion.detalle_tuberia.diagrama }
+				: {}
+	);
+
 	// Labels legibles de material y sistema eléctrico
 	let materialLabel = $derived(
 		memoria.cable_fase.material?.toUpperCase() === 'CU' ? 'Cobre (Cu)' : 'Aluminio (Al)'
@@ -279,6 +288,7 @@
 				hilosPorFase={memoria.instalacion.hilos_por_fase}
 				calibreFase={memoria.cable_fase.calibre}
 				calibreTierra={memoria.cable_tierra.calibre}
+				{...propsDiagrama}
 			/>
 		</div>
 
@@ -522,6 +532,7 @@
 				hilosPorFase={memoria.instalacion.hilos_por_fase}
 				calibreFase={memoria.cable_fase.calibre}
 				calibreTierra={memoria.cable_tierra.calibre}
+				{...propsDiagrama}
 			/>
 		</div>
 
@@ -757,6 +768,7 @@
 				hilosPorFase={memoria.instalacion.hilos_por_fase}
 				calibreFase={memoria.cable_fase.calibre}
 				calibreTierra={memoria.cable_tierra.calibre}
+				{...propsDiagrama}
 			/>
 		</div>
 
