@@ -30,5 +30,8 @@ export type {
 	DetalleTuberia,
 	ResultadoCaidaTension,
 	MemoriaOutput,
-	CalcularMemoriaResponse
+	CalcularMemoriaResponse,
+	DiagramaPosicion,
+	DiagramaCota,
+	DiagramaOutput
 } from './memoria.types.js';

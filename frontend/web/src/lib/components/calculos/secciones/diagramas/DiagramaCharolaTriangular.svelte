@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { DetalleCharola, ResultadoCanalizacion } from '$lib/types/calculos.types';
 	import type { SistemaElectrico } from '$lib/features/calculos/domain/types/calculo.enums.js';
+	import type { DiagramaOutput } from '$lib/features/calculos/domain/types/index.js';
 	import { calcularPosicionesCharolaTriangular, PERALTE_CHAROLA_MM } from './geometry.js';
 
 	interface Props {
@@ -8,13 +9,19 @@
 		resultado: ResultadoCanalizacion;
 		sistemaElectrico: SistemaElectrico;
 		hilosPorFase: number;
-		calibreFase: string;
-		calibreTierra: string;
+		calibreFase?: string;
+		calibreTierra?: string;
+		diagrama?: DiagramaOutput;
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	let { detalle, resultado, sistemaElectrico, hilosPorFase, calibreFase, calibreTierra }: Props =
-		$props();
+	// Props destructured
+	let {
+		detalle,
+		resultado,
+		sistemaElectrico,
+		hilosPorFase,
+		diagrama = undefined
+	}: Props = $props();
 
 	// Constants for layout
 	const MARGEN_IZQ = 30; // margin before left flange
@@ -76,140 +83,148 @@
 </script>
 
 <figure class="my-4">
-	<svg
-		class="mx-auto h-auto w-full max-w-2xl"
-		viewBox={viewBoxStr}
-		preserveAspectRatio="xMidYMid meet"
-		role="img"
-		aria-label="Diagrama de arreglo de cables en charola triangular"
-	>
-		<!-- Charola U-profile with flanges -->
-		<path
-			d="M {flangeLeft},{charolaTop} L {charolaLeft},{charolaTop} L {charolaLeft},{charolaBottom} L {charolaRight},{charolaBottom} L {charolaRight},{charolaTop} L {flangeRight},{charolaTop}"
-			stroke="black"
-			stroke-width="2.5"
-			fill="none"
-			stroke-linejoin="round"
-		/>
-
-		<!-- W dimension: horizontal line above charola -->
-		<line
-			x1={charolaLeft}
-			y1={wLineY}
-			x2={charolaRight}
-			y2={wLineY}
-			stroke="black"
-			stroke-width="1.5"
-		/>
-		<!-- W ticks -->
-		<line
-			x1={charolaLeft}
-			y1={wLineY - 5}
-			x2={charolaLeft}
-			y2={wLineY + 5}
-			stroke="black"
-			stroke-width="1.5"
-		/>
-		<line
-			x1={charolaRight}
-			y1={wLineY - 5}
-			x2={charolaRight}
-			y2={wLineY + 5}
-			stroke="black"
-			stroke-width="1.5"
-		/>
-		<!-- W label -->
-		<text
-			x={wMidX}
-			y={wLineY - 6}
-			font-size="8"
-			text-anchor="middle"
-			fill="black"
-			font-family="Arial, sans-serif"
+	{#if diagrama?.svg}
+		{@html diagrama.svg}
+	{:else}
+		<svg
+			class="mx-auto h-auto w-full max-w-2xl"
+			viewBox={viewBoxStr}
+			preserveAspectRatio="xMidYMid meet"
+			role="img"
+			aria-label="Diagrama de arreglo de cables en charola triangular"
 		>
-			{anchoComercial.toFixed(1)} mm
-		</text>
+			<!-- Charola U-profile with flanges -->
+			<path
+				d="M {flangeLeft},{charolaTop} L {charolaLeft},{charolaTop} L {charolaLeft},{charolaBottom} L {charolaRight},{charolaBottom} L {charolaRight},{charolaTop} L {flangeRight},{charolaTop}"
+				stroke="black"
+				stroke-width="2.5"
+				fill="none"
+				stroke-linejoin="round"
+			/>
 
-		<!-- P dimension: vertical line to the right -->
-		<line
-			x1={pLineX}
-			y1={charolaTop}
-			x2={pLineX}
-			y2={charolaBottom}
-			stroke="black"
-			stroke-width="1.5"
-		/>
-		<!-- P ticks -->
-		<line
-			x1={pLineX - 5}
-			y1={charolaTop}
-			x2={pLineX + 5}
-			y2={charolaTop}
-			stroke="black"
-			stroke-width="1.5"
-		/>
-		<line
-			x1={pLineX - 5}
-			y1={charolaBottom}
-			x2={pLineX + 5}
-			y2={charolaBottom}
-			stroke="black"
-			stroke-width="1.5"
-		/>
-		<!-- P label -->
-		<text
-			x={pLineX + 8}
-			y={pMidY + 3}
-			font-size="8"
-			text-anchor="start"
-			fill="black"
-			font-family="Arial, sans-serif"
-		>
-			{peralte} mm
-		</text>
+			<!-- W dimension: horizontal line above charola -->
+			<line
+				x1={charolaLeft}
+				y1={wLineY}
+				x2={charolaRight}
+				y2={wLineY}
+				stroke="black"
+				stroke-width="1.5"
+			/>
+			<!-- W ticks -->
+			<line
+				x1={charolaLeft}
+				y1={wLineY - 5}
+				x2={charolaLeft}
+				y2={wLineY + 5}
+				stroke="black"
+				stroke-width="1.5"
+			/>
+			<line
+				x1={charolaRight}
+				y1={wLineY - 5}
+				x2={charolaRight}
+				y2={wLineY + 5}
+				stroke="black"
+				stroke-width="1.5"
+			/>
+			<!-- W label -->
+			<text
+				x={wMidX}
+				y={wLineY - 6}
+				font-size="8"
+				text-anchor="middle"
+				fill="black"
+				font-family="Arial, sans-serif"
+			>
+				{anchoComercial.toFixed(1)} mm
+			</text>
 
-		<!-- Floor pattern lines -->
-		<line
-			x1={charolaLeft}
-			y1={floorSolidY}
-			x2={charolaRight}
-			y2={floorSolidY}
-			stroke="black"
-			stroke-width="2"
-		/>
-		<line
-			x1={charolaLeft}
-			y1={floorDashedY}
-			x2={charolaRight}
-			y2={floorDashedY}
-			stroke="black"
-			stroke-width="2"
-			stroke-dasharray="8,5"
-		/>
+			<!-- P dimension: vertical line to the right -->
+			<line
+				x1={pLineX}
+				y1={charolaTop}
+				x2={pLineX}
+				y2={charolaBottom}
+				stroke="black"
+				stroke-width="1.5"
+			/>
+			<!-- P ticks -->
+			<line
+				x1={pLineX - 5}
+				y1={charolaTop}
+				x2={pLineX + 5}
+				y2={charolaTop}
+				stroke="black"
+				stroke-width="1.5"
+			/>
+			<line
+				x1={pLineX - 5}
+				y1={charolaBottom}
+				x2={pLineX + 5}
+				y2={charolaBottom}
+				stroke="black"
+				stroke-width="1.5"
+			/>
+			<!-- P label -->
+			<text
+				x={pLineX + 8}
+				y={pMidY + 3}
+				font-size="8"
+				text-anchor="start"
+				fill="black"
+				font-family="Arial, sans-serif"
+			>
+				{peralte} mm
+			</text>
 
-		<!-- Conductors: stroke-only circles with labels -->
-		<g stroke="black" stroke-width="2" fill="none">
-			{#each posiciones as conductor}
-				<!-- Cable circle: cx relative to inner left wall + charolaLeft offset -->
-				<!-- cy: floor offset - radio - vertical offset from floor (conductor.cy) -->
-				<circle
-					cx={charolaLeft + conductor.cx}
-					cy={charolaBottom - ESPESOR_PISO - conductor.radio - conductor.cy}
-					r={conductor.radio}
-				/>
-				<!-- Label inside circle -->
-				<text
-					x={charolaLeft + conductor.cx}
-					y={charolaBottom - ESPESOR_PISO - conductor.radio - conductor.cy + conductor.radio * 0.35}
-					font-size={Math.max(conductor.radio * 0.8, 4)}
-					text-anchor="middle"
-					stroke="none"
-					fill="black"
-					font-weight="bold"
-				>
-					{conductor.etiqueta}
-				</text>
-			{/each}
-		</g>
-	</svg>
+			<!-- Floor pattern lines -->
+			<line
+				x1={charolaLeft}
+				y1={floorSolidY}
+				x2={charolaRight}
+				y2={floorSolidY}
+				stroke="black"
+				stroke-width="2"
+			/>
+			<line
+				x1={charolaLeft}
+				y1={floorDashedY}
+				x2={charolaRight}
+				y2={floorDashedY}
+				stroke="black"
+				stroke-width="2"
+				stroke-dasharray="8,5"
+			/>
+
+			<!-- Conductors: stroke-only circles with labels -->
+			<g stroke="black" stroke-width="2" fill="none">
+				{#each posiciones as conductor}
+					<!-- Cable circle: cx relative to inner left wall + charolaLeft offset -->
+					<!-- cy: floor offset - radio - vertical offset from floor (conductor.cy) -->
+					<circle
+						cx={charolaLeft + conductor.cx}
+						cy={charolaBottom - ESPESOR_PISO - conductor.radio - conductor.cy}
+						r={conductor.radio}
+					/>
+					<!-- Label inside circle -->
+					<text
+						x={charolaLeft + conductor.cx}
+						y={charolaBottom -
+							ESPESOR_PISO -
+							conductor.radio -
+							conductor.cy +
+							conductor.radio * 0.35}
+						font-size={Math.max(conductor.radio * 0.8, 4)}
+						text-anchor="middle"
+						stroke="none"
+						fill="black"
+						font-weight="bold"
+					>
+						{conductor.etiqueta}
+					</text>
+				{/each}
+			</g>
+		</svg>
+	{/if}
 </figure>

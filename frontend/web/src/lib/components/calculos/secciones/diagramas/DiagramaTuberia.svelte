@@ -1,18 +1,20 @@
 <script lang="ts">
 	import type { DetalleTuberia, ResultadoCanalizacion } from '$lib/types/calculos.types';
 	import type { SistemaElectrico } from '$lib/features/calculos/domain/types/calculo.enums.js';
+	import type { DiagramaOutput } from '$lib/features/calculos/domain/types/index.js';
 	import { calcularPosicionesTuberia } from './geometry.js';
 
 	interface Props {
 		detalle: DetalleTuberia;
 		resultado: ResultadoCanalizacion;
 		sistemaElectrico: SistemaElectrico;
-		calibreFase: string;
-		calibreTierra: string;
+		calibreFase?: string;
+		calibreTierra?: string;
+		diagrama?: DiagramaOutput;
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	let { detalle, resultado, sistemaElectrico, calibreFase, calibreTierra }: Props = $props();
+	// Props destructured
+	let { detalle, resultado, sistemaElectrico, diagrama = undefined }: Props = $props();
 
 	// Tube dimensions
 	let diametroInterior = $derived(detalle.diametro_interior_mm ?? 0);
@@ -67,102 +69,106 @@
 </script>
 
 <figure class="my-4">
-	<svg
-		class="mx-auto h-auto w-full max-w-2xl"
-		viewBox={viewBoxStr}
-		preserveAspectRatio="xMidYMid meet"
-		role="img"
-		aria-label="Sección transversal de tubería"
-	>
-		{#each Array(numeroTubos) as _, idx}
-			{@const centerX = MARGEN + radioExterior + idx * (diametroExterior + ESPACIO_ENTRE_TUBOS)}
-			{@const dimY = centerY + radioExterior + 15}
+	{#if diagrama?.svg}
+		{@html diagrama.svg}
+	{:else}
+		<svg
+			class="mx-auto h-auto w-full max-w-2xl"
+			viewBox={viewBoxStr}
+			preserveAspectRatio="xMidYMid meet"
+			role="img"
+			aria-label="Sección transversal de tubería"
+		>
+			{#each Array(numeroTubos) as _, idx}
+				{@const centerX = MARGEN + radioExterior + idx * (diametroExterior + ESPACIO_ENTRE_TUBOS)}
+				{@const dimY = centerY + radioExterior + 15}
 
-			<g>
-				<!-- SINGLE thick circle for the tube (like real pipe cross-section) -->
-				<!-- r = midpoint of wall, stroke-width = actual wall thickness -->
-				<!-- Using midline radius ensures stroke edges align with interior and exterior -->
-				<circle
-					cx={centerX}
-					cy={centerY}
-					r={(radioInterior + radioExterior) / 2}
-					stroke="black"
-					stroke-width={wallThickness}
-					fill="none"
-				/>
+				<g>
+					<!-- SINGLE thick circle for the tube (like real pipe cross-section) -->
+					<!-- r = midpoint of wall, stroke-width = actual wall thickness -->
+					<!-- Using midline radius ensures stroke edges align with interior and exterior -->
+					<circle
+						cx={centerX}
+						cy={centerY}
+						r={(radioInterior + radioExterior) / 2}
+						stroke="black"
+						stroke-width={wallThickness}
+						fill="none"
+					/>
 
-				<!-- Conductors at the bottom of the tube -->
-				<g stroke="black" stroke-width="1" fill="none">
-					{#each posiciones as conductor}
-						<circle cx={centerX + conductor.cx} cy={centerY + conductor.cy} r={conductor.radio} />
-						<text
-							x={centerX + conductor.cx}
-							y={centerY + conductor.cy}
-							font-size={Math.max(conductor.radio * 0.9, 4)}
-							text-anchor="middle"
-							dominant-baseline="central"
-							stroke="none"
-							fill="black"
-							font-weight="bold"
-							font-family="Arial, sans-serif"
-						>
-							{conductor.etiqueta}
-						</text>
-					{/each}
-				</g>
+					<!-- Conductors at the bottom of the tube -->
+					<g stroke="black" stroke-width="1" fill="none">
+						{#each posiciones as conductor}
+							<circle cx={centerX + conductor.cx} cy={centerY + conductor.cy} r={conductor.radio} />
+							<text
+								x={centerX + conductor.cx}
+								y={centerY + conductor.cy}
+								font-size={Math.max(conductor.radio * 0.9, 4)}
+								text-anchor="middle"
+								dominant-baseline="central"
+								stroke="none"
+								fill="black"
+								font-weight="bold"
+								font-family="Arial, sans-serif"
+							>
+								{conductor.etiqueta}
+							</text>
+						{/each}
+					</g>
 
-				<!-- Diameter dimension line (horizontal across exterior) -->
-				<line
-					x1={centerX - radioExterior}
-					y1={dimY}
-					x2={centerX + radioExterior}
-					y2={dimY}
-					stroke="black"
-					stroke-width="1.5"
-				/>
-				<!-- Ticks -->
-				<line
-					x1={centerX - radioExterior}
-					y1={dimY - 5}
-					x2={centerX - radioExterior}
-					y2={dimY + 5}
-					stroke="black"
-					stroke-width="1.5"
-				/>
-				<line
-					x1={centerX + radioExterior}
-					y1={dimY - 5}
-					x2={centerX + radioExterior}
-					y2={dimY + 5}
-					stroke="black"
-					stroke-width="1.5"
-				/>
-				<!-- Dimension label -->
-				<text
-					x={centerX}
-					y={dimY + 12}
-					font-size="6"
-					text-anchor="middle"
-					fill="black"
-					font-family="Arial, sans-serif"
-				>
-					Ø {diametroExterior.toFixed(1)} mm
-				</text>
-
-				<!-- Tube label (only if multiple tubes) -->
-				{#if numeroTubos > 1}
+					<!-- Diameter dimension line (horizontal across exterior) -->
+					<line
+						x1={centerX - radioExterior}
+						y1={dimY}
+						x2={centerX + radioExterior}
+						y2={dimY}
+						stroke="black"
+						stroke-width="1.5"
+					/>
+					<!-- Ticks -->
+					<line
+						x1={centerX - radioExterior}
+						y1={dimY - 5}
+						x2={centerX - radioExterior}
+						y2={dimY + 5}
+						stroke="black"
+						stroke-width="1.5"
+					/>
+					<line
+						x1={centerX + radioExterior}
+						y1={dimY - 5}
+						x2={centerX + radioExterior}
+						y2={dimY + 5}
+						stroke="black"
+						stroke-width="1.5"
+					/>
+					<!-- Dimension label -->
 					<text
 						x={centerX}
-						y={dimY + 22}
-						font-size="5"
+						y={dimY + 12}
+						font-size="6"
 						text-anchor="middle"
 						fill="black"
 						font-family="Arial, sans-serif"
 					>
-						Tubo {idx + 1} de {numeroTubos}
+						Ø {diametroExterior.toFixed(1)} mm
 					</text>
-				{/if}
-			</g>
-		{/each}
-	</svg>
+
+					<!-- Tube label (only if multiple tubes) -->
+					{#if numeroTubos > 1}
+						<text
+							x={centerX}
+							y={dimY + 22}
+							font-size="5"
+							text-anchor="middle"
+							fill="black"
+							font-family="Arial, sans-serif"
+						>
+							Tubo {idx + 1} de {numeroTubos}
+						</text>
+					{/if}
+				</g>
+			{/each}
+		</svg>
+	{/if}
 </figure>

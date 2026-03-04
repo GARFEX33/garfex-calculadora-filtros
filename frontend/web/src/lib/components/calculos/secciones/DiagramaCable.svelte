@@ -5,6 +5,7 @@
 		ResultadoCanalizacion
 	} from '$lib/types/calculos.types';
 	import type { SistemaElectrico } from '$lib/features/calculos/domain/types/calculo.enums.js';
+	import type { DiagramaOutput } from '$lib/features/calculos/domain/types/index.js';
 	import DiagramaCharolaEspaciada from './diagramas/DiagramaCharolaEspaciada.svelte';
 	import DiagramaCharolaTriangular from './diagramas/DiagramaCharolaTriangular.svelte';
 	import DiagramaTuberia from './diagramas/DiagramaTuberia.svelte';
@@ -18,6 +19,7 @@
 		hilosPorFase: number;
 		calibreFase: string;
 		calibreTierra: string;
+		diagrama?: DiagramaOutput;
 	}
 
 	let {
@@ -28,7 +30,8 @@
 		sistemaElectrico,
 		hilosPorFase,
 		calibreFase,
-		calibreTierra
+		calibreTierra,
+		diagrama = undefined
 	}: Props = $props();
 
 	let esCharolaEspaciado = $derived(tipoCanalizacion === 'CHAROLA_CABLE_ESPACIADO');
@@ -39,6 +42,9 @@
 			tipoCanalizacion === 'TUBERIA_ACERO_PG' ||
 			tipoCanalizacion === 'TUBERIA_ACERO_PD'
 	);
+
+	// Props for child components (only include diagrama if it exists)
+	let propsCharola = $derived(diagrama ? { diagrama } : {});
 </script>
 
 <div class="rounded-lg border border-border bg-card">
@@ -50,6 +56,7 @@
 			{hilosPorFase}
 			{calibreFase}
 			{calibreTierra}
+			{...propsCharola}
 		/>
 	{:else if esCharolaTriangular && detalleCharola}
 		<DiagramaCharolaTriangular
@@ -59,6 +66,7 @@
 			{hilosPorFase}
 			{calibreFase}
 			{calibreTierra}
+			{...propsCharola}
 		/>
 	{:else if esTuberia && detalleTuberia}
 		<DiagramaTuberia
@@ -67,6 +75,7 @@
 			{sistemaElectrico}
 			{calibreFase}
 			{calibreTierra}
+			{...propsCharola}
 		/>
 	{:else}
 		<!-- Fallback para tipos no reconocidos o sin detalle -->

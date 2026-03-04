@@ -21,8 +21,14 @@ import {
 
 /**
  * Default values for MemoriaRequest.
+ *
+ * IMPORTANT: Required fields like longitud_circuito are intentionally omitted (undefined)
+ * so the validator can catch missing values instead of silently defaulting to invalid values like 0.
+ *
+ * With exactOptionalPropertyTypes, we use type assertion to create an object that omits
+ * optional fields the user must fill in. The validator will catch these as missing.
  */
-function getDefaultMemoriaRequest(): MemoriaRequest {
+function getDefaultMemoriaRequest(): Partial<MemoriaRequest> {
 	return {
 		modo: 'MANUAL_AMPERAJE',
 		tension: 220,
@@ -30,7 +36,7 @@ function getDefaultMemoriaRequest(): MemoriaRequest {
 		sistema_electrico: 'ESTRELLA',
 		estado: '',
 		tipo_canalizacion: 'TUBERIA_PVC',
-		longitud_circuito: 0,
+		// OMITTED: longitud_circuito - let user fill this in, validator will catch if missing
 		tipo_voltaje: 'FASE_NEUTRO',
 		material: 'CU',
 		hilos_por_fase: 1,
@@ -57,8 +63,9 @@ function getDefaultMemoriaRequest(): MemoriaRequest {
  */
 class MemoriaStore {
 	// ── State ─────────────────────────────────────────────────────────────────
-	// Input request data
-	input = $state<MemoriaRequest>(getDefaultMemoriaRequest());
+	// Input request data - using Partial to allow missing required fields
+	// The validator will catch any missing required fields before submission
+	input = $state<Partial<MemoriaRequest>>(getDefaultMemoriaRequest());
 
 	// Output result from API
 	output = $state<MemoriaOutput | null>(null);
