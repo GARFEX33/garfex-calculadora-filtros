@@ -1,0 +1,90 @@
+{
+  "memoria": {
+    "equipo": {
+      "clave": "ACTISINE48Y300MMB",
+      "tipo": "A",
+      "voltaje": 480,
+      "amperaje": 300,
+      "itm": 400,
+      "bornes": 2
+    },
+    "tipo_equipo": "FILTRO_ACTIVO",
+    "factor_potencia": 1,
+    "estado": "Aguascalientes",
+    "instalacion": {
+      "tension": 480,
+      "sistema_electrico": "DELTA",
+      "tipo_canalizacion": "CHAROLA_CABLE_TRIANGULAR",
+      "material": "CU",
+      "longitud_circuito": 21,
+      "hilos_por_fase": 2,
+      "porcentaje_caida_maximo": 3
+    },
+    "corrientes": {
+      "corriente_nominal": 300,
+      "corriente_ajustada": 430.85,
+      "corriente_por_hilo": 215.43,
+      "factor_temperatura": 0.94,
+      "factor_agrupamiento": 1,
+      "factor_total_ajuste": 1.44,
+      "temperatura_ambiente": 32,
+      "temperatura_referencia": 75,
+      "conductores_por_tubo": 6,
+      "cantidad_conductores": 6,
+      "tabla_ampacidad_usada": "NOM-310-15-B-20 (Cu, 75°C)"
+    },
+    "cable_fase": {
+      "calibre": "3/0 AWG",
+      "material": "CU",
+      "seccion_mm2": 85,
+      "capacidad": 245
+    },
+    "cable_tierra": {
+      "calibre": "2 AWG",
+      "material": "CU",
+      "seccion_mm2": 33.6
+    },
+    "canalizacion": {
+      "resultado": {
+        "tamano": "6",
+        "area_requerida_mm2": 140.39,
+        "numero_de_tubos": 1,
+        "ancho_comercial_mm": 152.4
+      },
+      "fill_factor": 0.4,
+      "detalle_charola": {
+        "diametro_fase_mm": 16,
+        "diametro_tierra_mm": 11.99,
+        "espacio_fuerza_mm": 34.4,
+        "ancho_tierra_mm": 11.99,
+        "diametro_control_mm": 15,
+        "ancho_control_mm": 15,
+        "ancho_potencia_mm": 64,
+        "factor_triangular": 2.15,
+        "factor_control": 1
+      }
+    },
+    "proteccion": {
+      "itm": 400
+    },
+    "caida_tension": {
+      "porcentaje": 0.29,
+      "caida_volts": 1.38,
+      "cumple": true,
+      "limite_porcentaje": 3,
+      "impedancia": 0.253
+    },
+    "cumple_normativa": true,
+    "observaciones": [
+      "La caída de tensión (0.29%) cumple con el límite de 3.0%",
+      "Conductor de alimentación: CU 3/0 AWG"
+    ]
+  },
+  "presentacion": {
+    "empresa_id": "summaa",
+    "nombre_proyecto": "DEACERO TLANEPANTLA",
+    "direccion_proyecto": "",
+    "responsable": "Juan Carlos Garcia Jimenez",
+    "nombre_equipo_override": "ACTISINE48Y300MMB"
+  }
+}
