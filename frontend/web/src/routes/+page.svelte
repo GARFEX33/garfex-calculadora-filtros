@@ -20,8 +20,8 @@
 	import { onMount } from 'svelte';
 
 	// ── Estado Local (solo UI) ───────────────────────────────────────────────────
-	// Modo - se sincroniza con el store
-	let modo = $state<ModoCalculo>(memoriaStore.input.modo);
+	// Modo - se sincroniza con el store (default to MANUAL_AMPERAJE if undefined)
+	let modo = $state<ModoCalculo>(memoriaStore.input.modo ?? 'MANUAL_AMPERAJE');
 
 	// Datos del formulario manual (UI state)
 	let datosManual = $state<FormularioManualData>({
@@ -184,6 +184,8 @@
 		instalacion = newDatos;
 
 		// Update store with installation fields
+		// IMPORTANT: Don't default missing values to 0 or empty strings - let the
+		// validator catch missing fields so the user sees clear error messages
 		const update: Record<string, number | string | undefined> = {
 			// Solo incluir tensión si tiene un valor válido (en modo MANUAL viene del formulario manual)
 			...(newDatos.tension !== undefined && newDatos.tension > 0 && { tension: newDatos.tension }),
@@ -191,7 +193,7 @@
 			sistema_electrico: newDatos.sistema_electrico || undefined,
 			estado: newDatos.estado,
 			tipo_canalizacion: newDatos.tipo_canalizacion,
-			longitud_circuito: newDatos.longitud_circuito ?? 0,
+			longitud_circuito: newDatos.longitud_circuito,
 			tipo_voltaje: newDatos.tipo_voltaje || undefined,
 			material: newDatos.material,
 			hilos_por_fase: newDatos.hilos_por_fase,
@@ -217,12 +219,18 @@
 		await memoriaStore.calcular();
 
 		if (memoriaStore.output) {
-			// Serializar output ANTES de resetear
-			const jsonStr = JSON.stringify(memoriaStore.output);
-			const encodedData = btoa(unescape(encodeURIComponent(jsonStr)));
-			// Resetear store para que al volver la página esté limpia
-			memoriaStore.resetear();
-			goto(`/calculos/resultado?data=${encodedData}`);
+			try {
+				// Generar ID único para almacenar en sessionStorage
+				const resultId = crypto.randomUUID();
+				sessionStorage.setItem(`memoria-${resultId}`, JSON.stringify(memoriaStore.output));
+				// Resetear store para que al volver la página esté limpia
+				memoriaStore.resetear();
+				goto(`/calculos/resultado?id=${resultId}`);
+			} catch (err) {
+				// Error en serialización - mostrar mensaje claro
+				console.error('Error al preparar los resultados:', err);
+				memoriaStore.error = 'Error al preparar los resultados. Por favor intenta de nuevo.';
+			}
 		}
 	}
 
