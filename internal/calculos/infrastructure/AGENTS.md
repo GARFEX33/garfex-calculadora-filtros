@@ -40,6 +40,22 @@ internal/calculos/infrastructure/
 - **CSVSeleccionarTemperatura** — temperaturas por estado
 - **CalcEquipoFiltroRepository** — consulta `equipos_filtros` en PostgreSQL y mapea a entidades de cálculo. Implementa `calculos/application/port.EquipoRepository`.
 
+### GeometryGeneratorAdapter — Generación de diagramas SVG
+
+El adapter `GeometryGeneratorAdapter` genera diagramas SVG de canalización para la memoria de cálculo. Implementa el puerto `GeometryGeneratorPort`.
+
+**Puertos implementados:**
+
+- `GenerarDiagramaCharola(diametroFaseMM, diametroTierraMM, diametroControlMM, numHilosControl, sistemaElectrico, hilosPorFase, anchoComercialMM, areaRequeridaMM2, tipoCanalizacion)` — Genera SVG para charolas
+  - Soporta `CHAROLA_CABLE_ESPACIADO` y `CHAROLA_CABLE_TRIANGULAR`
+  - Retorna: posiciones de conductores, viewBox, cotas y SVG renderizado
+
+- `GenerarDiagramaTuberia(areaFaseMM2, areaNeutroMM2, areaTierraMM2, numFasesPorTubo, numNeutrosPorTubo, numTierras, sistemaElectrico, diametroInteriorMM, diametroExteriorMM)` — Genera SVG para tuberías
+  - Soporta múltiples tubos (`numTubos` desde el resultado del cálculo)
+  - Retorna: posiciones de conductores, viewBox y SVG renderizado
+
+**Paquete interno:** `internal/pdf/geometry` contiene las funciones de cálculo de posiciones y generación SVG.
+
 ### CalcEquipoFiltroRepository — Mapeo de TipoFiltro a entidad
 
 El adapter consulta la tabla `equipos_filtros` y convierte cada registro a la entidad de dominio correcta:

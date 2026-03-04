@@ -84,6 +84,7 @@ frontend/web/
 │       ├── +page.svelte           # Home /
 │       ├── calculos/              # Rutas de cálculo eléctrico
 │       │   └── resultado/         # /calculos/resultado — memoria de cálculo completa
+> **Nota Resultados**: Los resultados de cálculo se pasan entre páginas usando `sessionStorage` (clave: `memoria-{uuid}`) en lugar de codificar en URL. Esto permite datos más grandes y evita problemas de encoding.
 │       └── equipos/               # Rutas de catálogo de filtros
 ├── static/                        # Assets estáticos públicos
 ├── .env                           # Variables de entorno locales (no commit)
