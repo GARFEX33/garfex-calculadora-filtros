@@ -5,9 +5,9 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"os"
 	"time"
 
+	"github.com/garfex/calculadora-filtros/internal/pdf"
 	"github.com/garfex/calculadora-filtros/internal/pdf/application/dto"
 	"github.com/garfex/calculadora-filtros/internal/pdf/application/port"
 	"github.com/garfex/calculadora-filtros/internal/pdf/domain"
@@ -59,9 +59,15 @@ func (uc *GenerarMemoriaPdfUseCase) Execute(
 		return nil, fmt.Errorf("%w: id=%q", domain.ErrEmpresaNoEncontrada, req.Presentacion.EmpresaID)
 	}
 
-	// 2. Cargar logo desde filesystem y codificar en base64
+	// 2. Cargar logos desde filesystem y codificar en base64
 	// Graceful degradation: si no se puede cargar, continuar sin logo
+	// - LogoBase64: logo completo para el header principal (garfex.png, summa.png, siemens.png)
+	// - LogoLetraBase64: solo para Garfex (lg.png), vacío para otras empresas
 	logoBase64 := cargarLogoBase64(empresa.LogoPath)
+	var logoLetraBase64 string
+	if empresa.ID == "garfex" {
+		logoLetraBase64 = cargarLogoBase64("assets/logos/lg.png")
+	}
 
 	// 3. Determinar nombre del equipo
 	nombreEquipo := req.Presentacion.NombreEquipoOverride
@@ -73,6 +79,7 @@ func (uc *GenerarMemoriaPdfUseCase) Execute(
 	data := dto.TemplateData{
 		Empresa:           empresa,
 		LogoBase64:        logoBase64,
+		LogoLetraBase64:   logoLetraBase64,
 		NombreProyecto:    req.Presentacion.NombreProyecto,
 		DireccionProyecto: req.Presentacion.DireccionProyecto,
 		Responsable:       req.Presentacion.Responsable,
@@ -105,14 +112,14 @@ func (uc *GenerarMemoriaPdfUseCase) Execute(
 	return pdfBytes, nil
 }
 
-// cargarLogoBase64 carga un archivo de imagen desde el filesystem y lo codifica en base64.
+// cargarLogoBase64 carga un archivo de imagen desde el filesystem embebido y lo codifica en base64.
 // Retorna una cadena vacía si el archivo no existe o no se puede leer (graceful degradation).
 func cargarLogoBase64(logoPath string) string {
 	if logoPath == "" {
 		return ""
 	}
 
-	data, err := os.ReadFile(logoPath)
+	data, err := pdf.AssetsFS.ReadFile(logoPath)
 	if err != nil {
 		// Graceful degradation: logo no encontrado → continuar sin logo
 		return ""

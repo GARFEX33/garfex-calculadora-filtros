@@ -44,7 +44,12 @@ type TemplateData struct {
 
 	// LogoBase64 es el logo de la empresa codificado en base64 para incrustar en el HTML.
 	// Si el logo no se puede cargar, este campo queda vacío (graceful degradation).
+	// Este es el logo completo (garfex.png, summa.png, siemens.png) para el header principal.
 	LogoBase64 string
+
+	// LogoLetraBase64 es el logo "lg.png" codificado en base64 para el branding de letra
+	// en el header secundario (header.html).
+	LogoLetraBase64 string
 
 	// NombreProyecto es el nombre del proyecto o instalación.
 	NombreProyecto string

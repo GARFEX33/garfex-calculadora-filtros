@@ -8,6 +8,7 @@ import (
 	htmpl "html/template"
 	"io/fs"
 	"math"
+	"strings"
 
 	"github.com/garfex/calculadora-filtros/internal/pdf/application/dto"
 )
@@ -22,6 +23,26 @@ type HtmlRendererAdapter struct {
 // Falla si algún template no puede ser parseado (fail-fast al inicio de la aplicación).
 func NewHtmlRenderer(templatesFS fs.FS) (*HtmlRendererAdapter, error) {
 	funcMap := htmpl.FuncMap{
+		// upper convierte un string a mayúsculas
+		"upper": func(s string) string {
+			return strings.ToUpper(s)
+		},
+		// capFirst retorna el primer carácter en mayúscula
+		// uso: {{capFirst .Empresa.ID}} retorna "G" para "garfex"
+		"capFirst": func(s string) string {
+			if s == "" {
+				return s
+			}
+			return strings.ToUpper(s[:1])
+		},
+		// slice retorna un substring desde start hasta end (exclusivo)
+		// uso: {{slice .Empresa.ID 0 1}} retorna el primer carácter
+		"slice": func(s string, start, end int) string {
+			if start < 0 || start > len(s) || end < start || end > len(s) {
+				return ""
+			}
+			return s[start:end]
+		},
 		// formatFloat formatea un float64 con n decimales
 		"formatFloat": func(f float64, decimals int) string {
 			format := fmt.Sprintf("%%.%df", decimals)
