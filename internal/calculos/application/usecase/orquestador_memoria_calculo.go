@@ -7,6 +7,7 @@ import (
 
 	"github.com/garfex/calculadora-filtros/internal/calculos/application/dto"
 	"github.com/garfex/calculadora-filtros/internal/calculos/application/port"
+	"github.com/garfex/calculadora-filtros/internal/calculos/application/usecase/helpers"
 	"github.com/garfex/calculadora-filtros/internal/calculos/domain/entity"
 	"github.com/garfex/calculadora-filtros/internal/shared/kernel/valueobject"
 )
@@ -15,17 +16,20 @@ import (
 // It chains all steps sequentially where each step's output feeds the next.
 type OrquestadorMemoriaCalculoUseCase struct {
 	// Use cases for each step
-	calcularCorrienteUC                  *CalcularCorrienteUseCase
-	ajustarCorrienteUC                   *AjustarCorrienteUseCase
-	seleccionarConductorUC               *SeleccionarConductorUseCase
-	calcularTamanioTuberiaUC             *CalcularTamanioTuberiaUseCase
-	calcularCharolaEspaciadoUC           *CalcularCharolaEspaciadoUseCase
-	calcularCharolaTriangularUC          *CalcularCharolaTriangularUseCase
-	calcularCaidaTensionUC               *CalcularCaidaTensionUseCase
-	seleccionarConductorCaidaTensionUC   *SeleccionarConductorPorCaidaTensionUseCase
+	calcularCorrienteUC                *CalcularCorrienteUseCase
+	ajustarCorrienteUC                 *AjustarCorrienteUseCase
+	seleccionarConductorUC             *SeleccionarConductorUseCase
+	calcularTamanioTuberiaUC           *CalcularTamanioTuberiaUseCase
+	calcularCharolaEspaciadoUC         *CalcularCharolaEspaciadoUseCase
+	calcularCharolaTriangularUC        *CalcularCharolaTriangularUseCase
+	calcularCaidaTensionUC             *CalcularCaidaTensionUseCase
+	seleccionarConductorCaidaTensionUC *SeleccionarConductorPorCaidaTensionUseCase
 
 	// Repository for diameter lookups (needed for charola)
 	tablaRepo port.TablaNOMRepository
+
+	// Port for generating SVG diagrams (nil if not needed)
+	geometryGeneratorPort port.GeometryGeneratorPort
 }
 
 // NewOrquestadorMemoriaCalculoUseCase creates a new orchestrator instance.
@@ -39,17 +43,19 @@ func NewOrquestadorMemoriaCalculoUseCase(
 	calcularCaidaTensionUC *CalcularCaidaTensionUseCase,
 	seleccionarConductorCaidaTensionUC *SeleccionarConductorPorCaidaTensionUseCase,
 	tablaRepo port.TablaNOMRepository,
+	geometryGeneratorPort port.GeometryGeneratorPort,
 ) *OrquestadorMemoriaCalculoUseCase {
 	return &OrquestadorMemoriaCalculoUseCase{
 		calcularCorrienteUC:                calcularCorrienteUC,
-		ajustarCorrienteUC:                ajustarCorrienteUC,
-		seleccionarConductorUC:            seleccionarConductorUC,
-		calcularTamanioTuberiaUC:          calcularTamanioTuberiaUC,
-		calcularCharolaEspaciadoUC:        calcularCharolaEspaciadoUC,
-		calcularCharolaTriangularUC:       calcularCharolaTriangularUC,
-		calcularCaidaTensionUC:            calcularCaidaTensionUC,
+		ajustarCorrienteUC:                 ajustarCorrienteUC,
+		seleccionarConductorUC:             seleccionarConductorUC,
+		calcularTamanioTuberiaUC:           calcularTamanioTuberiaUC,
+		calcularCharolaEspaciadoUC:         calcularCharolaEspaciadoUC,
+		calcularCharolaTriangularUC:        calcularCharolaTriangularUC,
+		calcularCaidaTensionUC:             calcularCaidaTensionUC,
 		seleccionarConductorCaidaTensionUC: seleccionarConductorCaidaTensionUC,
-		tablaRepo:                         tablaRepo,
+		tablaRepo:                          tablaRepo,
+		geometryGeneratorPort:              geometryGeneratorPort,
 	}
 }
 
@@ -133,12 +139,12 @@ func (uc *OrquestadorMemoriaCalculoUseCase) Execute(
 
 		// Datos de instalación (agrupados en Instalacion)
 		Instalacion: dto.DatosInstalacion{
-			Tension:                 tension.Valor(),
-			SistemaElectrico:       input.SistemaElectrico,
-			TipoCanalizacion:       input.TipoCanalizacion,
-			Material:               input.Material,
+			Tension:               tension.Valor(),
+			SistemaElectrico:      input.SistemaElectrico,
+			TipoCanalizacion:      input.TipoCanalizacion,
+			Material:              input.Material,
 			LongitudCircuito:      input.LongitudCircuito,
-			HilosPorFase:           input.HilosPorFase,
+			HilosPorFase:          input.HilosPorFase,
 			PorcentajeCaidaMaximo: input.PorcentajeCaidaMaximo,
 		},
 
@@ -165,6 +171,27 @@ func (uc *OrquestadorMemoriaCalculoUseCase) Execute(
 		Descripcion: "Cálculo de corriente nominal desde potencia o amperaje",
 		Resultado:   resultadoCorriente,
 	})
+
+	// ============================================================
+	// STEP 1b: Generate Current Calculation Development (for PDF)
+	// ============================================================
+	// Determine if trifásico (ESTRELLA or DELTA)
+	esTrifasico := sistemaElectrico == entity.SistemaElectricoEstrella || sistemaElectrico == entity.SistemaElectricoDelta
+
+	// Get amperaje from equipo (use current if not available)
+	amperajeEquipo := 0.0
+	if input.Equipo.Amperaje > 0 {
+		amperajeEquipo = float64(input.Equipo.Amperaje)
+	}
+
+	output.DesarrolloCorriente = helpers.GenerarDesarrolloCorriente(
+		string(tipoEquipo),
+		output.Corrientes.CorrienteNominal,
+		tension.Valor(),
+		input.FactorPotencia,
+		esTrifasico,
+		amperajeEquipo,
+	)
 
 	// ============================================================
 	// STEP 2: Adjust Current (temperature, grouping, usage factors)
@@ -263,6 +290,25 @@ func (uc *OrquestadorMemoriaCalculoUseCase) Execute(
 	output.Canalizacion.DetalleTuberia = detalleTuberia
 	output.Canalizacion.FillFactor = fillFactor
 
+	// Generate SVG diagrams if geometry generator is available
+	if tipoCanalizacion.EsCharola() && detalleCharola != nil {
+		diagramaCharola := uc.generarDiagramaCharola(
+			detalleCharola,
+			string(sistemaElectrico),
+			input.HilosPorFase,
+			canalizacion.AnchoComercialMM,
+			canalizacion.AreaRequeridaMM2,
+			string(tipoCanalizacion),
+		)
+		detalleCharola.Diagrama = diagramaCharola
+	} else if !tipoCanalizacion.EsCharola() && detalleTuberia != nil {
+		diagramaTuberia := uc.generarDiagramaTuberia(
+			detalleTuberia,
+			string(sistemaElectrico),
+		)
+		detalleTuberia.Diagrama = diagramaTuberia
+	}
+
 	// Append the appropriate paso based on canalization type
 	if tipoCanalizacion.EsCharola() {
 		output.Pasos = append(output.Pasos, dto.PasoMemoria{
@@ -301,7 +347,7 @@ func (uc *OrquestadorMemoriaCalculoUseCase) Execute(
 		ctx,
 		output.CableFase.Calibre,
 		material,
-		corrienteNominalVO, // NOM-001-SEDE: caída de tensión usa corriente nominal, no ajustada
+		corrienteNominalVO,     // NOM-001-SEDE: caída de tensión usa corriente nominal, no ajustada
 		input.LongitudCircuito, // already in meters from input
 		tension,
 		input.PorcentajeCaidaMaximo,
@@ -400,6 +446,25 @@ func (uc *OrquestadorMemoriaCalculoUseCase) Execute(
 				output.Canalizacion.DetalleCharola = detalleCharolaRecalc
 				output.Canalizacion.DetalleTuberia = detalleTuberiaRecalc
 				output.Canalizacion.FillFactor = fillFactorRecalc
+
+				// Generate SVG diagrams for recalculated canalization
+				if tipoCanalizacion.EsCharola() && detalleCharolaRecalc != nil {
+					diagramaCharolaRecalc := uc.generarDiagramaCharola(
+						detalleCharolaRecalc,
+						string(sistemaElectrico),
+						input.HilosPorFase,
+						canalizacionRecalc.AnchoComercialMM,
+						canalizacionRecalc.AreaRequeridaMM2,
+						string(tipoCanalizacion),
+					)
+					detalleCharolaRecalc.Diagrama = diagramaCharolaRecalc
+				} else if !tipoCanalizacion.EsCharola() && detalleTuberiaRecalc != nil {
+					diagramaTuberiaRecalc := uc.generarDiagramaTuberia(
+						detalleTuberiaRecalc,
+						string(sistemaElectrico),
+					)
+					detalleTuberiaRecalc.Diagrama = diagramaTuberiaRecalc
+				}
 			}
 
 			output.Pasos = append(output.Pasos, dto.PasoMemoria{
@@ -519,14 +584,14 @@ func (uc *OrquestadorMemoriaCalculoUseCase) generarObservaciones(memoria dto.Mem
 // calcularCanalizacion ejecuta el paso 4 de dimensionamiento de canalización.
 // Es llamado tanto en el flujo principal como en el recálculo por caída de tensión.
 func (uc *OrquestadorMemoriaCalculoUseCase) calcularCanalizacion(
-	ctx              context.Context,
-	calibreFase      string,
-	calibreTierra    string,
-	material         valueobject.MaterialConductor,
+	ctx context.Context,
+	calibreFase string,
+	calibreTierra string,
+	material valueobject.MaterialConductor,
 	tipoCanalizacion entity.TipoCanalizacion,
 	sistemaElectrico entity.SistemaElectrico,
-	input            dto.EquipoInput,
-	numNeutros       int,
+	input dto.EquipoInput,
+	numNeutros int,
 ) (canalizacion dto.ResultadoCanalizacion, detalleCharola *dto.DetalleCharola, detalleTuberia *dto.DetalleTuberia, fillFactor float64, err error) {
 
 	if tipoCanalizacion.EsCharola() {
@@ -668,6 +733,7 @@ func (uc *OrquestadorMemoriaCalculoUseCase) calcularCanalizacion(
 			NumFasesPorTubo:      resultadoTuberia.NumFasesPorTubo,
 			NumNeutrosPorTubo:    resultadoTuberia.NumNeutrosPorTubo,
 			NumTierras:           resultadoTuberia.NumTierras,
+			NumTuberias:          resultadoTuberia.NumTuberias,
 			AreaOcupacionTuboMM2: resultadoTuberia.AreaOcupacionTuboMM2,
 			DesignacionMetrica:   resultadoTuberia.DesignacionMetrica,
 			FillFactor:           resultadoTuberia.FillFactor,
@@ -689,5 +755,125 @@ func (uc *OrquestadorMemoriaCalculoUseCase) calcularCanalizacion(
 		}
 
 		return canalizacion, nil, detalleTuberia, resultadoTuberia.FillFactor, nil
+	}
+}
+
+// generarDiagramaCharola genera el diagrama SVG para la charola usando el puerto de geometry.
+// Retorna nil si el puerto no está configurado o si hay un error.
+func (uc *OrquestadorMemoriaCalculoUseCase) generarDiagramaCharola(
+	detalle *dto.DetalleCharola,
+	sistemaElectrico string,
+	hilosPorFase int,
+	anchoComercialMM float64,
+	areaRequeridaMM2 float64,
+	tipoCanalizacion string,
+) *dto.DiagramaCharola {
+	if uc.geometryGeneratorPort == nil || detalle == nil {
+		return nil
+	}
+
+	resultado, err := uc.geometryGeneratorPort.GenerarDiagramaCharola(
+		detalle.DiametroFaseMM,
+		detalle.DiametroTierraMM,
+		detalle.DiametroControlMM,
+		0, // numHilosControl - not stored in detalle, assume 0
+		sistemaElectrico,
+		hilosPorFase,
+		anchoComercialMM,
+		areaRequeridaMM2,
+		tipoCanalizacion,
+	)
+	if err != nil || resultado == nil {
+		// Silently fail - diagram is optional
+		return nil
+	}
+
+	// Map port types to DTO types
+	posiciones := make([]dto.ConductorPosicionDTO, len(resultado.Posiciones))
+	for i, pos := range resultado.Posiciones {
+		posiciones[i] = dto.ConductorPosicionDTO{
+			CX:       pos.CX,
+			CY:       pos.CY,
+			Radio:    pos.Radio,
+			Color:    pos.Color,
+			Etiqueta: pos.Etiqueta,
+			Tipo:     pos.Tipo,
+		}
+	}
+
+	cotas := make([]dto.LineaCotaDTO, len(resultado.Cotas))
+	for i, cota := range resultado.Cotas {
+		cotas[i] = dto.LineaCotaDTO{
+			X1:            cota.X1,
+			Y1:            cota.Y1,
+			X2:            cota.X2,
+			Y2:            cota.Y2,
+			Valor:         cota.Valor,
+			Texto:         cota.Texto,
+			PosicionTexto: cota.PosicionTexto,
+		}
+	}
+
+	return &dto.DiagramaCharola{
+		Posiciones:   posiciones,
+		AnchoOcupado: resultado.AnchoOcupado,
+		ViewBox:      resultado.ViewBox,
+		Cotas:        cotas,
+		SVG:          resultado.SVG,
+	}
+}
+
+// generarDiagramaTuberia genera el diagrama SVG para la tubería usando el puerto de geometry.
+// Retorna nil si el puerto no está configurado o si hay un error.
+func (uc *OrquestadorMemoriaCalculoUseCase) generarDiagramaTuberia(
+	detalle *dto.DetalleTuberia,
+	sistemaElectrico string,
+) *dto.DiagramaTuberia {
+	if uc.geometryGeneratorPort == nil || detalle == nil {
+		return nil
+	}
+
+	// Prepare optional neutro area
+	var areaNeutroMM2 *float64
+	if detalle.AreaNeutroMM2 != nil {
+		areaNeutroMM2 = detalle.AreaNeutroMM2
+	}
+
+	resultado, err := uc.geometryGeneratorPort.GenerarDiagramaTuberia(
+		detalle.AreaFaseMM2,
+		areaNeutroMM2,
+		detalle.AreaTierraMM2,
+		detalle.NumFasesPorTubo,
+		detalle.NumNeutrosPorTubo,
+		detalle.NumTierras,
+		sistemaElectrico,
+		detalle.DiametroInteriorMM,
+		detalle.DiametroExteriorMM,
+		detalle.NumTuberias,
+	)
+	if err != nil || resultado == nil {
+		// Silently fail - diagram is optional
+		return nil
+	}
+
+	// Map port types to DTO types
+	posiciones := make([]dto.ConductorPosicionDTO, len(resultado.Posiciones))
+	for i, pos := range resultado.Posiciones {
+		posiciones[i] = dto.ConductorPosicionDTO{
+			CX:       pos.CX,
+			CY:       pos.CY,
+			Radio:    pos.Radio,
+			Color:    pos.Color,
+			Etiqueta: pos.Etiqueta,
+			Tipo:     pos.Tipo,
+		}
+	}
+
+	return &dto.DiagramaTuberia{
+		Posiciones:       posiciones,
+		DiametroInterior: resultado.DiametroInterior,
+		DiametroExterior: resultado.DiametroExterior,
+		ViewBox:          resultado.ViewBox,
+		SVG:              resultado.SVG,
 	}
 }

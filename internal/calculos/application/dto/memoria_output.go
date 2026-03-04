@@ -13,6 +13,42 @@ type PasoMemoria struct {
 // ESTRUCTURAS EXISTENTES (sin cambios)
 // ═══════════════════════════════════════════════════════════════════════════
 
+// PasoDesarrollo representa un paso individual en el desarrollo del cálculo de corriente.
+type PasoDesarrollo struct {
+	// Numero es el número secuencial del paso (1, 2, 3, ...).
+	Numero int `json:"numero"`
+
+	// Descripcion describe qué se está calculando en este paso.
+	// Ejemplo: "P = 45.08 kW = 45080 W"
+	Descripcion string `json:"descripcion"`
+
+	// Resultado es el resultado parcial o final de este paso.
+	// Ejemplo: "I = 45.08 A"
+	Resultado string `json:"resultado"`
+}
+
+// DatosDesarrolloCorriente contiene el desarrollo paso a paso del cálculo de corriente nominal.
+type DatosDesarrolloCorriente struct {
+	// TipoCalculo describe el tipo de cálculo realizado.
+	// Valores posibles: "Amperaje directo", "Desde KVA (Transformador)",
+	// "Desde KVAR (Filtro de Rechazo)", "Desde Potencia (Sistema Trifásico)",
+	// "Desde Potencia (Sistema Monofásico)"
+	TipoCalculo string `json:"tipo_calculo"`
+
+	// FormulaUsada contiene la fórmula en formato legible.
+	// Ejemplo: "I = KVA / (kV × √3)"
+	FormulaUsada string `json:"formula_usada"`
+
+	// PasosDesarrollo contiene cada paso del cálculo en orden secuencial.
+	// Cada paso incluye la descripción y el resultado parcial.
+	PasosDesarrollo []PasoDesarrollo `json:"pasos_desarrollo"`
+
+	// ValoresReferencia contiene valores clave usados en el cálculo.
+	// Mapa de clave -> valor formateado.
+	// Incluye: KVA, KVAR, Potencia, Voltaje, Factor de Potencia, Sistema.
+	ValoresReferencia map[string]string `json:"valores_referencia"`
+}
+
 // ResultadoConductor contiene la información del conductor seleccionado.
 type ResultadoConductor struct {
 	Calibre         string  `json:"calibre"`
@@ -24,11 +60,11 @@ type ResultadoConductor struct {
 
 	// Selección por caída de tensión (NOM-001-SEDE)
 	// SeleccionPorCaidaTension indica si el calibre fue aumentado por caída de tensión
-	SeleccionPorCaidaTension bool   `json:"seleccion_por_caida_tension"`
+	SeleccionPorCaidaTension bool `json:"seleccion_por_caida_tension"`
 	// CalibreOriginalAmpacidad es el calibre que hubiera correspondido solo por ampacidad
 	CalibreOriginalAmpacidad string `json:"calibre_original_ampacidad,omitempty"`
 	// NotaSeleccion explica el motivo del aumento de calibre
-	NotaSeleccion            string `json:"nota_seleccion,omitempty"`
+	NotaSeleccion string `json:"nota_seleccion,omitempty"`
 }
 
 // ResultadoConductores contiene los conductores seleccionados.
@@ -43,12 +79,12 @@ type ResultadoConductores struct {
 // Se utiliza cuando el conductor seleccionado por ampacidad no cumple la caída de tensión.
 type ResultadoConductorCaidaTension struct {
 	// CalibreOriginal es el calibre seleccionado originalmente por ampacidad
-	CalibreOriginal     string `json:"calibre_original"`
+	CalibreOriginal string `json:"calibre_original"`
 	// CalibreSeleccionado es el calibre superior que cumple la caída de tensión
-	CalibreSeleccionado string `json:"calibre_seleccionado"`
-	SeccionMM2          float64               `json:"seccion_mm2"`
-	TipoAislamiento     string                `json:"tipo_aislamiento"`
-	Capacidad           float64               `json:"capacidad"`
+	CalibreSeleccionado string  `json:"calibre_seleccionado"`
+	SeccionMM2          float64 `json:"seccion_mm2"`
+	TipoAislamiento     string  `json:"tipo_aislamiento"`
+	Capacidad           float64 `json:"capacidad"`
 	// CaidaTension es el resultado de caída de tensión ya verificado con el nuevo calibre
 	CaidaTension ResultadoCaidaTension `json:"caida_tension"`
 	// Nota describe el motivo del aumento: "Calibre aumentado de X a Y por caída de tensión (NOM-001-SEDE)"
@@ -85,9 +121,48 @@ type DetalleCharola struct {
 	AnchoTierraMM    float64 `json:"ancho_tierra_mm"`
 
 	// Charola triangular (adicional)
-	AnchoPotenciaMM   float64 `json:"ancho_potencia_mm,omitempty"`
-	FactorTriangular  float64 `json:"factor_triangular,omitempty"`
-	FactorControl     float64 `json:"factor_control,omitempty"`
+	AnchoPotenciaMM  float64 `json:"ancho_potencia_mm,omitempty"`
+	FactorTriangular float64 `json:"factor_triangular,omitempty"`
+	FactorControl    float64 `json:"factor_control,omitempty"`
+
+	// Diagrama contiene el SVG generado para la charola
+	// Solo se填充 cuando se solicita explícitamente
+	Diagrama *DiagramaCharola `json:"diagrama,omitempty"`
+}
+
+// DiagramaCharola contiene los datos del diagrama SVG de una charola.
+type DiagramaCharola struct {
+	// Posiciones de los conductores en el diagrama (coordenadas mm)
+	Posiciones []ConductorPosicionDTO `json:"posiciones"`
+	// AnchoOcupado es el ancho total ocupado por los conductores en mm
+	AnchoOcupado float64 `json:"ancho_ocupado_mm"`
+	// ViewBox es el string del viewBox SVG
+	ViewBox string `json:"viewBox"`
+	// Cotas contiene las líneas de dimensión del diagrama
+	Cotas []LineaCotaDTO `json:"cotas"`
+	// SVG es el string completo del SVG generado
+	SVG string `json:"svg"`
+}
+
+// ConductorPosicionDTO es la versión DTO de la posición de conductor para JSON.
+type ConductorPosicionDTO struct {
+	CX       float64 `json:"cx"`
+	CY       float64 `json:"cy"`
+	Radio    float64 `json:"radio"`
+	Color    string  `json:"color"`
+	Etiqueta string  `json:"etiqueta"`
+	Tipo     string  `json:"tipo"`
+}
+
+// LineaCotaDTO es la versión DTO de una línea de cota para JSON.
+type LineaCotaDTO struct {
+	X1            float64 `json:"x1"`
+	Y1            float64 `json:"y1"`
+	X2            float64 `json:"x2"`
+	Y2            float64 `json:"y2"`
+	Valor         float64 `json:"valor"`
+	Texto         string  `json:"texto"`
+	PosicionTexto string  `json:"posicionTexto"`
 }
 
 // DetalleTuberia contiene los valores intermedios del cálculo de tubería
@@ -104,6 +179,7 @@ type DetalleTuberia struct {
 	NumFasesPorTubo   int `json:"num_fases_por_tubo"`
 	NumNeutrosPorTubo int `json:"num_neutros_por_tubo"` // 0 si DELTA
 	NumTierras        int `json:"num_tierras"`          // 1 o 2 según NOM
+	NumTuberias       int `json:"num_tuberias"`         // Número de tubos en paralelo
 
 	// Tubo seleccionado de la tabla NOM (Cap. 9)
 	AreaOcupacionTuboMM2 float64 `json:"area_ocupacion_tubo_mm2"` // área_ocupacion_mm2 del CSV (40% interior ya aplicado)
@@ -114,6 +190,24 @@ type DetalleTuberia struct {
 	// Leídos de tuberia-pvc-dimensiones-fisicas.csv — referencia visual, no para cálculo NOM.
 	DiametroInteriorMM float64 `json:"diametro_interior_mm"`
 	DiametroExteriorMM float64 `json:"diametro_exterior_mm"`
+
+	// Diagrama contiene el SVG generado para la tubería
+	// Solo se llena cuando se solicita explícitamente
+	Diagrama *DiagramaTuberia `json:"diagrama,omitempty"`
+}
+
+// DiagramaTuberia contiene los datos del diagrama SVG de una tubería.
+type DiagramaTuberia struct {
+	// Posiciones de los conductores en el diagrama (coordenadas mm)
+	Posiciones []ConductorPosicionDTO `json:"posiciones"`
+	// DiametroInterior es el diámetro interior del tubo en mm
+	DiametroInterior float64 `json:"diametro_interior_mm"`
+	// DiametroExterior es el diámetro exterior del tubo en mm
+	DiametroExterior float64 `json:"diametro_exterior_mm"`
+	// ViewBox es el string del viewBox SVG
+	ViewBox string `json:"viewBox"`
+	// SVG es el string completo del SVG generado
+	SVG string `json:"svg"`
 }
 
 // ResultadoCaidaTension contiene el resultado del cálculo de caída.
@@ -299,6 +393,10 @@ type MemoriaOutput struct {
 
 	// Corrientes agrupa los datos de corrientes y factores de ajuste.
 	Corrientes DatosCorrientes `json:"corrientes"`
+
+	// DesarrolloCorriente contiene el desarrollo paso a paso del cálculo de corriente.
+	// Calculado en el orquestador después de determinar la corriente nominal.
+	DesarrolloCorriente *DatosDesarrolloCorriente `json:"desarrollo_corriente,omitempty"`
 
 	// ═══════════════════════════════════════════════════════════════════════
 	// CONDUCTORES
