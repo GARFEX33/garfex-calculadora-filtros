@@ -192,3 +192,7 @@ Cada capa tiene su propio `AGENTS.md` con guías específicas:
 ## Licencia
 
 Proyecto privado - GARFEX
+
+// "model": "anthropic/claude-sonnet-4-6",
+// "model": "opencode/minimax-m2.5-free",
+// "model": "openrouter/minimax/minimax-m2.5",
