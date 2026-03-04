@@ -130,6 +130,7 @@ export interface ApiDetalleCharola {
 	ancho_potencia_mm?: number;
 	factor_triangular?: number;
 	factor_control?: number;
+	diagrama?: ApiDiagramaCharola;
 }
 
 /**
@@ -147,6 +148,7 @@ export interface ApiDetalleTuberia {
 	fill_factor: number;
 	diametro_interior_mm?: number;
 	diametro_exterior_mm?: number;
+	diagrama?: ApiDiagramaTuberia;
 }
 
 /**
@@ -187,6 +189,25 @@ export interface ApiPasoMemoria {
 	nombre: string;
 	descripcion: string;
 	resultado: unknown;
+}
+
+/**
+ * Paso de desarrollo - detalle paso a paso del cálculo de corriente.
+ */
+export interface ApiPasoDesarrollo {
+	numero: number;
+	descripcion: string;
+	resultado: unknown;
+}
+
+/**
+ * Datos del desarrollo paso a paso del cálculo de corriente.
+ */
+export interface ApiDatosDesarrolloCorriente {
+	tipo_calculo: string;
+	formula_usada: string;
+	pasos_desarrollo: ApiPasoDesarrollo[];
+	valores_referencia: Record<string, unknown>;
 }
 
 /**
@@ -236,6 +257,11 @@ export interface ApiMemoriaOutput {
 	caida_tension: ApiResultadoCaidaTension;
 
 	// ═══════════════════════════════════════════════════════════════════════
+	// DESARROLLO CORRIENTE (detalle paso a paso)
+	// ═══════════════════════════════════════════════════════════════════════
+	desarrollo_corriente?: ApiDatosDesarrolloCorriente;
+
+	// ═══════════════════════════════════════════════════════════════════════
 	// RESUMEN Y METADATOS
 	// ═══════════════════════════════════════════════════════════════════════
 	cumple_normativa: boolean;
@@ -249,6 +275,59 @@ export interface ApiMemoriaOutput {
 export interface ApiMemoriaResponse {
 	success: boolean;
 	data: ApiMemoriaOutput;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// DIAGRAMAS SVG — Tipos API (snake_case)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Posición de un conductor en el diagrama de sección transversal.
+ * API usa snake_case pero estos nombres cortos son idénticos en ambos formatos.
+ */
+export interface ApiDiagramaPosicion {
+	cx: number;
+	cy: number;
+	radio: number;
+	color: string;
+	etiqueta: string;
+	tipo: 'fase' | 'neutro' | 'tierra' | 'control';
+}
+
+/**
+ * Cota (dimensión lineal) en el diagrama SVG.
+ */
+export interface ApiDiagramaCota {
+	x1: number;
+	y1: number;
+	x2: number;
+	y2: number;
+	valor: number;
+	texto: string;
+	posicionTexto: 'arriba' | 'abajo';
+}
+
+/**
+ * Diagrama de charola - salida completa del diagrama SVG de sección transversal.
+ */
+export interface ApiDiagramaCharola {
+	posiciones: ApiDiagramaPosicion[];
+	ancho_ocupado_mm: number;
+	viewBox: string;
+	cotas: ApiDiagramaCota[];
+	svg: string;
+}
+
+/**
+ * Diagrama de tubería - salida completa del diagrama SVG de sección transversal.
+ */
+export interface ApiDiagramaTuberia {
+	posiciones: ApiDiagramaPosicion[];
+	diametro_interior_mm: number;
+	diametro_exterior_mm: number;
+	viewBox: string;
+	cotas?: ApiDiagramaCota[];
+	svg: string;
 }
 
 /**

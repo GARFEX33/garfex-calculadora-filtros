@@ -21,7 +21,9 @@ import type {
 	DatosInstalacion,
 	DatosCorrientes,
 	DatosCanalizacion,
-	DatosProteccion
+	DatosProteccion,
+	DatosDesarrolloCorriente,
+	PasoDesarrollo
 } from '../../domain/types/memoria.types';
 import type {
 	ApiMemoriaRequest,
@@ -35,9 +37,21 @@ import type {
 	ApiDatosCorrientes,
 	ApiDatosCanalizacion,
 	ApiDatosProteccion,
-	ApiDatosEquipo
+	ApiDatosEquipo,
+	ApiDatosDesarrolloCorriente,
+	ApiPasoDesarrollo,
+	ApiDiagramaCharola,
+	ApiDiagramaTuberia,
+	ApiDiagramaPosicion,
+	ApiDiagramaCota
 } from '../api/memoria.api';
-import type { SistemaElectrico, TipoVoltaje } from '../../domain/types/memoria.types';
+import type {
+	SistemaElectrico,
+	TipoVoltaje,
+	DiagramaOutput,
+	DiagramaPosicion,
+	DiagramaCota
+} from '../../domain/types/memoria.types';
 
 /**
  * Maps equipment connection type to SistemaElectrico.
@@ -76,21 +90,39 @@ export function mapTipoVoltajeToTipoVoltaje(
 /**
  * Maps domain MemoriaRequest to API request format.
  *
+ * IMPORTANT: This function is called AFTER validation passes, so we assume
+ * all required fields are present. The input is Partial<MemoriaRequest> because
+ * the store uses Partial internally to represent "not yet filled" state.
+ *
  * Transformations:
  * - factor_potencia: converts from percentage (e.g., 98) to decimal (0.98)
  * - MaterialConductor: domain uses 'CU'/'AL', API uses same format (no change)
  * - Handles optional field inclusion (only includes fields with actual values)
  */
-export function mapMemoriaInputToApi(domain: MemoriaRequest): ApiMemoriaRequest {
+export function mapMemoriaInputToApi(domain: Partial<MemoriaRequest>): ApiMemoriaRequest {
+	// TypeScript knows required fields are present because we call this
+	// only after validarMemoriaRequest() passes
+	type RequiredFields = Pick<
+		MemoriaRequest,
+		| 'modo'
+		| 'tension'
+		| 'tipo_voltaje'
+		| 'sistema_electrico'
+		| 'estado'
+		| 'tipo_canalizacion'
+		| 'longitud_circuito'
+	>;
+	const required = domain as RequiredFields;
+
 	// Start with required fields
 	const base: ApiMemoriaRequest = {
-		modo: domain.modo,
-		tension: domain.tension,
-		tipo_voltaje: domain.tipo_voltaje,
-		sistema_electrico: domain.sistema_electrico,
-		estado: domain.estado,
-		tipo_canalizacion: domain.tipo_canalizacion,
-		longitud_circuito: domain.longitud_circuito
+		modo: required.modo,
+		tension: required.tension,
+		tipo_voltaje: required.tipo_voltaje,
+		sistema_electrico: required.sistema_electrico,
+		estado: required.estado,
+		tipo_canalizacion: required.tipo_canalizacion,
+		longitud_circuito: required.longitud_circuito
 	};
 
 	// Optional: tension_unidad
@@ -237,6 +269,11 @@ export function mapApiToMemoriaOutput(api: ApiMemoriaOutput): MemoriaOutput {
 
 		// Caída de tensión
 		caida_tension: mapApiToResultadoCaidaTension(api.caida_tension),
+
+		// Desarrollo corriente (detalle paso a paso)
+		...(api.desarrollo_corriente && {
+			desarrollo_corriente: mapApiToDatosDesarrolloCorriente(api.desarrollo_corriente)
+		}),
 
 		// Resumen y metadatos
 		cumple_normativa: api.cumple_normativa,
@@ -411,6 +448,11 @@ function mapApiToDetalleCharola(api: ApiDetalleCharola): DetalleCharola {
 	if (api.factor_triangular !== undefined) result.factor_triangular = api.factor_triangular;
 	if (api.factor_control !== undefined) result.factor_control = api.factor_control;
 
+	// Diagrama SVG de sección transversal
+	if (api.diagrama !== undefined) {
+		result.diagrama = mapApiToDiagramaCharola(api.diagrama);
+	}
+
 	return result;
 }
 
@@ -437,5 +479,98 @@ function mapApiToDetalleTuberia(api: ApiDetalleTuberia): DetalleTuberia {
 	if (api.diametro_exterior_mm !== undefined)
 		result.diametro_exterior_mm = api.diametro_exterior_mm;
 
+	// Diagrama SVG de sección transversal
+	if (api.diagrama !== undefined) {
+		result.diagrama = mapApiToDiagramaTuberia(api.diagrama);
+	}
+
 	return result;
+}
+
+/**
+ * Maps API PasoDesarrollo to domain PasoDesarrollo.
+ */
+function mapApiToPasoDesarrollo(api: ApiPasoDesarrollo): PasoDesarrollo {
+	return {
+		numero: api.numero,
+		descripcion: api.descripcion,
+		resultado: api.resultado
+	};
+}
+
+/**
+ * Maps API DatosDesarrolloCorriente to domain DatosDesarrolloCorriente.
+ */
+export function mapApiToDatosDesarrolloCorriente(
+	api: ApiDatosDesarrolloCorriente
+): DatosDesarrolloCorriente {
+	return {
+		tipo_calculo: api.tipo_calculo,
+		formula_usada: api.formula_usada,
+		pasos_desarrollo: api.pasos_desarrollo.map(mapApiToPasoDesarrollo),
+		valores_referencia: api.valores_referencia
+	};
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// DIAGRAMAS SVG — Mappers API ↔ Domain
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Maps API DiagramaPosicion to domain DiagramaPosicion.
+ * Los nombres son idénticos (cx, cy, radio, etc.) porque son cortos.
+ */
+function mapApiToDiagramaPosicion(api: ApiDiagramaPosicion): DiagramaPosicion {
+	return {
+		cx: api.cx,
+		cy: api.cy,
+		radio: api.radio,
+		color: api.color,
+		etiqueta: api.etiqueta,
+		tipo: api.tipo
+	};
+}
+
+/**
+ * Maps API DiagramaCota to domain DiagramaCota.
+ * Convierte posicionTexto (camelCase del backend) -> posicionTexto (camelCase del domain).
+ */
+function mapApiToDiagramaCota(api: ApiDiagramaCota): DiagramaCota {
+	return {
+		x1: api.x1,
+		y1: api.y1,
+		x2: api.x2,
+		y2: api.y2,
+		valor: api.valor,
+		texto: api.texto,
+		posicionTexto: api.posicionTexto
+	};
+}
+
+/**
+ * Maps API DiagramaCharola to domain DiagramaOutput.
+ * Convierte viewBox (camelCase del backend) -> viewBox (camelCase del domain).
+ */
+export function mapApiToDiagramaCharola(api: ApiDiagramaCharola): DiagramaOutput {
+	return {
+		posiciones: api.posiciones.map(mapApiToDiagramaPosicion),
+		anchoOcupado: api.ancho_ocupado_mm,
+		viewBox: api.viewBox,
+		cotas: api.cotas.map(mapApiToDiagramaCota),
+		svg: api.svg
+	};
+}
+
+/**
+ * Maps API DiagramaTuberia to domain DiagramaOutput.
+ * Convierte viewBox (camelCase del backend) -> viewBox (camelCase del domain).
+ * Maneja cotas opcional (backend no siempre lo envía).
+ */
+export function mapApiToDiagramaTuberia(api: ApiDiagramaTuberia): DiagramaOutput {
+	return {
+		posiciones: api.posiciones.map(mapApiToDiagramaPosicion),
+		viewBox: api.viewBox,
+		cotas: api.cotas?.map(mapApiToDiagramaCota) ?? [],
+		svg: api.svg
+	};
 }

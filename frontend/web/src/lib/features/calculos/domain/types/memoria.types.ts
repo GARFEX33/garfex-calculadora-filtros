@@ -148,6 +148,8 @@ export interface DetalleCharola {
 	factor_triangular?: number;
 	// Factor multiplicador del cable de control (1.0 para espaciado, configurable)
 	factor_control?: number;
+	// Diagrama SVG de sección transversal
+	diagrama?: DiagramaOutput;
 }
 
 // Detalle de tubería — valores intermedios del cálculo para el desarrollo en memoria
@@ -170,6 +172,8 @@ export interface DetalleTuberia {
 	// Leídos de tuberia-pvc-diametros.csv — referencia visual, no para cálculo NOM.
 	diametro_interior_mm?: number;
 	diametro_exterior_mm?: number;
+	// Diagrama SVG de sección transversal
+	diagrama?: DiagramaOutput;
 }
 
 // Canalización agrupada — resultado + detalles
@@ -194,6 +198,25 @@ export interface ResultadoCaidaTension {
 	impedancia: number;
 	resistencia: number;
 	reactancia: number;
+}
+
+/**
+ * Paso de desarrollo - detalle paso a paso del cálculo de corriente.
+ */
+export interface PasoDesarrollo {
+	numero: number;
+	descripcion: string;
+	resultado: unknown;
+}
+
+/**
+ * Datos del desarrollo paso a paso del cálculo de corriente.
+ */
+export interface DatosDesarrolloCorriente {
+	tipo_calculo: string;
+	formula_usada: string;
+	pasos_desarrollo: PasoDesarrollo[];
+	valores_referencia: Record<string, unknown>;
 }
 
 // Full calculation result (from POST response data field)
@@ -225,6 +248,9 @@ export interface MemoriaOutput {
 	// Caída de tensión
 	caida_tension: ResultadoCaidaTension;
 
+	// Desarrollo corriente (detalle paso a paso)
+	desarrollo_corriente?: DatosDesarrolloCorriente;
+
 	// Resumen y metadatos
 	cumple_normativa: boolean;
 	observaciones: string[];
@@ -235,4 +261,47 @@ export interface MemoriaOutput {
 export interface CalcularMemoriaResponse {
 	success: boolean;
 	data: MemoriaOutput;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Diagramas SVG — Arreglo de cables en sección transversal
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Posición de un conductor en el diagrama de sección transversal.
+ * Representa un círculo en el SVG con coordenadas y atributos visuales.
+ */
+export interface DiagramaPosicion {
+	cx: number;
+	cy: number;
+	radio: number;
+	color: string;
+	etiqueta: string;
+	tipo: 'fase' | 'neutro' | 'tierra' | 'control';
+}
+
+/**
+ * Cota (dimensión lineal) en el diagrama SVG.
+ * Representa una línea de medición con valor y texto descriptivo.
+ */
+export interface DiagramaCota {
+	x1: number;
+	y1: number;
+	x2: number;
+	y2: number;
+	valor: number;
+	texto: string;
+	posicionTexto: 'arriba' | 'abajo';
+}
+
+/**
+ * Salida completa del diagrama SVG de sección transversal.
+ * Contiene posiciones de conductores, dimensiones y renderizado opcional.
+ */
+export interface DiagramaOutput {
+	posiciones: DiagramaPosicion[];
+	anchoOcupado?: number;
+	viewBox?: string;
+	cotas?: DiagramaCota[];
+	svg?: string;
 }
