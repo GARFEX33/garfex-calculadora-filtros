@@ -4,27 +4,19 @@
    ═══════════════════════════════════════════════════════════════════════════ */
 
 :root {
-  /* Tinta: Paleta Slate/Navy Profesional */
-  --primary: #1e40af;
-  /* Azul Navy */
-  --primary-light: #eff6ff;
-  /* Azul fondo tenue */
-  --text-main: #1e293b;
-  /* Slate 800 */
-  --text-muted: #64748b;
-  /* Slate 500 */
-  --linea: #e2e8f0;
-  /* Slate 200 */
+  /* Colores Corporativos Garfex */
+  --primary: #7C0000;           /* rojoGarfex */
+  --primary-light: #fef9e6;     /* Fondo tenue con tinte amarillo */
+  --text-main: #1C1C1C;         /* neutroOscuroGarfex */
+  --text-muted: #6E6E6E;        /* textoSecundario */
+  --linea: #EAEAEA;             /* bordesDivisores */
 
   /* Estados de cumplimiento */
-  --success: #059669;
-  /* Verde cumplimiento */
-  --success-bg: #dcfce7;
-  --error: #b91c1c;
-  /* Rojo rechazo */
-  --error-bg: #fee2e2;
+  --success: #2E7D32;           /* exito */
+  --success-bg: #e8f5e9;
+  --error: #D32F2F;             /* error */
+  --error-bg: #ffebee;
   --warning: #d97706;
-  /* Ámbar advertencia */
   --warning-bg: #fef3c7;
 
   /* Tipografía */

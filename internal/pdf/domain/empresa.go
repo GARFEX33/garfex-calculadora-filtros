@@ -23,18 +23,18 @@ var empresasCatalogo = map[string]EmpresaPresentacion{
 		Direccion:       "Av. Insurgentes Sur 1234, Col. Del Valle, CDMX, C.P. 03100",
 		Telefono:        "+52 55 1193-0515",
 		Email:           "jcgarcia@garfex.mx",
-		ColorPrimario:   "#1a3a5c",
-		ColorSecundario: "#2e7d32",
+		ColorPrimario:   "#7C0000", /* rojoGarfex */
+		ColorSecundario: "#F4CF00", /* amarilloGarfex */
 	},
-	"summa": {
-		ID:              "summa",
-		NombreCompleto:  "Summa Ingeniería Eléctrica S.A. de C.V.",
-		LogoPath:        "assets/logos/summa.png",
+	"summaa": {
+		ID:              "summaa",
+		NombreCompleto:  "Summaa S.A. de C.V.",
+		LogoPath:        "assets/logos/summaa.png",
 		Direccion:       "Blvd. Manuel Ávila Camacho 800, Lomas de Chapultepec, CDMX, C.P. 11000",
 		Telefono:        "+52 55 9876-5432",
-		Email:           "contacto@summa.mx",
-		ColorPrimario:   "#b71c1c",
-		ColorSecundario: "#fbc02d",
+		Email:           "ventas@summaa.com",
+		ColorPrimario:   "#004A99",
+		ColorSecundario: "#1B75BB",
 	},
 	"siemens": {
 		ID:              "siemens",
