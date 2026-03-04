@@ -1,0 +1,152 @@
+{{define "seccion_conclusion"}}
+<div class="seccion salto-pagina">
+  <h2>7. Conclusión Técnica</h2>
+
+  {{$cumple := .Memoria.CumpleNormativa}}
+  {{$caida := .Memoria.CaidaTension}}
+  {{$observaciones := .Memoria.Observaciones}}
+
+  <!-- Dictamen principal -->
+  {{if $cumple}}
+  <div class="dictamen cumple">
+    <div class="veredicto">EL DISEÑO CUMPLE CON LA NOM-001-SEDE-2012</div>
+    <div class="subtitulo">La instalación eléctrica cumple todos los criterios normativos aplicables</div>
+  </div>
+  {{else}}
+  <div class="dictamen no-cumple">
+    <div class="veredicto">EL DISEÑO REQUIERE REVISIÓN</div>
+    <div class="subtitulo">Uno o más criterios normativos no se cumplen — revisar observaciones</div>
+  </div>
+  {{end}}
+
+  <!-- Circuito completo -->
+  <div class="circuito-completo">
+    <div class="circuito-label">Circuito Completo</div>
+    <div class="circuito-valor">
+      {{.Memoria.Instalacion.HilosPorFase}} set de
+      {{if eq .Memoria.Instalacion.SistemaElectrico "MONOFASICO"}}1{{else if eq .Memoria.Instalacion.SistemaElectrico "BIFASICO"}}2{{else}}3{{end}}-{{.Memoria.CableFase.Calibre}},
+      {{.Memoria.CableTierra.NumHilos}}-{{.Memoria.CableTierra.Calibre}} desnudo,
+      {{.Memoria.Canalizacion.Resultado.NumeroDeTubos}}-{{if eq .Memoria.Instalacion.TipoCanalizacion "CHAROLA_CABLE_ESPACIADO"}}Charola {{.Memoria.Canalizacion.Resultado.Tamano}} Espaciado{{else if eq .Memoria.Instalacion.TipoCanalizacion "CHAROLA_CABLE_TRIANGULAR"}}Charola {{.Memoria.Canalizacion.Resultado.Tamano}} Triangular{{else}}Tubería {{.Memoria.Canalizacion.Resultado.Tamano}}"{{end}}
+    </div>
+  </div>
+
+  <!-- Criterios de cumplimiento -->
+  <h4 style="margin-top: 12pt; margin-bottom: 6pt;">Criterios de Cumplimiento</h4>
+  <div class="tabla-resumen">
+    <!-- Ampacidad del conductor -->
+    {{$cumpleAmpacidad := ge .Memoria.CableFase.Capacidad .Memoria.Corrientes.CorrientePorHilo}}
+    <table>
+      <thead>
+        <tr>
+          <th>Criterio Normativo</th>
+          <th style="width: 80pt; text-align: center;">Estado</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="etiqueta">Ampacidad del conductor de alimentación</td>
+          <td style="text-align: center;">
+            {{if $cumpleAmpacidad}}
+            <strong style="color: #1b5e20;">CUMPLE ✓</strong>
+            {{else}}
+            <strong style="color: #b71c1c;">NO CUMPLE ✗</strong>
+            {{end}}
+          </td>
+        </tr>
+        <tr>
+          <td class="etiqueta">
+            Caída de tensión dentro de límites ({{formatFloat2 $caida.LimitePorcentaje}}%)
+          </td>
+          <td style="text-align: center;">
+            {{if $caida.Cumple}}
+            <strong style="color: #1b5e20;">CUMPLE ✓</strong>
+            {{else}}
+            <strong style="color: #b71c1c;">NO CUMPLE ✗</strong>
+            {{end}}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Resumen de valores -->
+  <table style="margin-top: 8pt;">
+    <thead>
+      <tr><th colspan="2">Resumen de Valores Calculados</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="etiqueta">Corriente Nominal</td>
+        <td class="valor valor-numerico">{{formatFloat2 .Memoria.Corrientes.CorrienteNominal}} A</td>
+      </tr>
+      <tr>
+        <td class="etiqueta">Corriente Ajustada</td>
+        <td class="valor valor-numerico">{{formatFloat2 .Memoria.Corrientes.CorrienteAjustada}} A</td>
+      </tr>
+      <tr>
+        <td class="etiqueta">Conductor de Alimentación</td>
+        <td class="valor valor-numerico">{{.Memoria.CableFase.Calibre}} {{.Memoria.CableFase.Material}} — {{formatFloat2 .Memoria.CableFase.Capacidad}} A</td>
+      </tr>
+      <tr>
+        <td class="etiqueta">Conductor de Tierra</td>
+        <td class="valor valor-numerico">{{.Memoria.CableTierra.Calibre}} {{.Memoria.CableTierra.Material}} Desnudo</td>
+      </tr>
+      <tr>
+        <td class="etiqueta">Canalización</td>
+        <td class="valor valor-numerico">
+          {{if eq .Memoria.Instalacion.TipoCanalizacion "CHAROLA_CABLE_ESPACIADO"}}Charola {{.Memoria.Canalizacion.Resultado.Tamano}} Espaciado
+          {{else if eq .Memoria.Instalacion.TipoCanalizacion "CHAROLA_CABLE_TRIANGULAR"}}Charola {{.Memoria.Canalizacion.Resultado.Tamano}} Triangular
+          {{else}}Tubería {{.Memoria.Canalizacion.Resultado.Tamano}}"{{end}}
+          ({{.Memoria.Canalizacion.Resultado.NumeroDeTubos}} tubo(s))
+        </td>
+      </tr>
+      <tr>
+        <td class="etiqueta">Caída de Tensión</td>
+        <td class="valor valor-numerico">{{formatFloat2 $caida.Porcentaje}}% ({{formatFloat2 $caida.CaidaVolts}} V)</td>
+      </tr>
+      <tr>
+        <td class="etiqueta">ITM de Protección</td>
+        <td class="valor valor-numerico">{{.Memoria.Proteccion.ITM}} A</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Observaciones -->
+  {{if $observaciones}}
+  <div style="margin-top: 12pt;">
+    <h4>Observaciones</h4>
+    <ul class="observaciones-lista">
+      {{range $observaciones}}
+      <li>{{.}}</li>
+      {{end}}
+    </ul>
+  </div>
+  {{end}}
+
+  <!-- Bloque de firmas -->
+  <div class="firma-block">
+    <h4 style="margin-bottom: 16pt;">Firmas de Responsabilidad</h4>
+    <div class="firma-grid">
+      <div class="firma-col">
+        <div class="espacio-firma"></div>
+        <div class="linea-firma"></div>
+        <div class="nombre-firma">{{if .Responsable}}{{.Responsable}}{{else}}Responsable del Cálculo{{end}}</div>
+        <div class="rol-firma">Elaboró</div>
+      </div>
+      <div class="firma-col">
+        <div class="espacio-firma"></div>
+        <div class="linea-firma"></div>
+        <div class="nombre-firma">Responsable Técnico</div>
+        <div class="rol-firma">Revisó</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pie documental -->
+  <div style="margin-top: 16pt; padding-top: 8pt; border-top: 1pt solid #d0d0d0; font-size: 8pt; color: #6b6b6b; text-align: center;">
+    <p>Documento generado por Garfex Calculadora — {{.FechaGeneracion}}</p>
+    <p>{{.Empresa.NombreCompleto}} | {{.Empresa.Email}} | {{.Empresa.Telefono}}</p>
+    <p>{{.Empresa.Direccion}}</p>
+  </div>
+</div>
+{{end}}

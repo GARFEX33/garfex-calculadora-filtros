@@ -1,0 +1,85 @@
+{{define "seccion_tierra"}}
+<div class="seccion">
+  <h2>4. Conductor de Puesta a Tierra</h2>
+
+  <p style="font-size: 9.5pt; color: #6b6b6b; margin-bottom: 8pt;">
+    El conductor de puesta a tierra se dimensiona conforme a la Tabla 250-122 de la
+    NOM-001-SEDE-2012, en función de la corriente del dispositivo de protección (ITM).
+  </p>
+
+  <!-- Criterio de selección -->
+  <div class="bloque-calculo">
+    <h3>Criterio de Selección</h3>
+    <p class="desarrollo">
+      El calibre del conductor de tierra se selecciona según el valor del Interruptor
+      Termomagnético (ITM) que protege el circuito.
+    </p>
+    <p class="desarrollo" style="margin-top: 4pt;">
+      <strong>ITM del circuito:</strong>
+      <span class="resultado-destacado" style="font-size: 12pt;">{{.Memoria.Proteccion.ITM}} A</span>
+    </p>
+  </div>
+
+  <!-- Conductor de tierra seleccionado -->
+  <table>
+    <thead>
+      <tr>
+        <th colspan="2">Conductor de Tierra Seleccionado</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="etiqueta">Calibre</td>
+        <td class="valor valor-numerico">
+          {{.Memoria.CableTierra.Calibre}}
+          {{if gt .Memoria.CableTierra.NumHilos 1}}
+            × {{.Memoria.CableTierra.NumHilos}}
+          {{end}}
+        </td>
+      </tr>
+      <tr>
+        <td class="etiqueta">Material</td>
+        <td class="valor">
+          {{if or (eq .Memoria.CableTierra.Material "Cu") (eq .Memoria.CableTierra.Material "CU")}}Cobre (Cu){{else}}Aluminio (Al){{end}}
+        </td>
+      </tr>
+      <tr>
+        <td class="etiqueta">Sección</td>
+        <td class="valor valor-numerico">
+          {{formatFloat2 .Memoria.CableTierra.SeccionMM2}} mm²
+          {{if gt .Memoria.CableTierra.NumHilos 1}}
+            (× {{.Memoria.CableTierra.NumHilos}} = {{formatFloat2 (mulIntFloat .Memoria.CableTierra.NumHilos .Memoria.CableTierra.SeccionMM2)}} mm² total)
+          {{end}}
+        </td>
+      </tr>
+      <tr>
+        <td class="etiqueta">Tipo de Aislamiento</td>
+        <td class="valor">
+          {{if .Memoria.CableTierra.TipoAislamiento}}{{.Memoria.CableTierra.TipoAislamiento}}{{else}}Desnudo{{end}}
+        </td>
+      </tr>
+      <tr>
+        <td class="etiqueta">Número de Hilos</td>
+        <td class="valor valor-numerico">{{.Memoria.CableTierra.NumHilos}}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Contexto de hilos por fase -->
+  {{if gt .Memoria.Instalacion.HilosPorFase 1}}
+  <p style="font-size: 9pt; color: #6b6b6b; margin-top: 6pt;">
+    Circuito con <strong>{{.Memoria.Instalacion.HilosPorFase}} hilos por fase</strong>:
+    {{.Memoria.Corrientes.CantidadConductores}} conductores totales en la canalización.
+  </p>
+  {{end}}
+
+  <!-- Justificación NOM -->
+  <div class="indicador cumple" style="margin-top: 6pt;">
+    ✓ Conductor de puesta a tierra seleccionado conforme a Tabla 250-122 para ITM de {{.Memoria.Proteccion.ITM}} A
+  </div>
+
+  <p class="ref-normativa" style="margin-top: 6pt;">
+    Tabla de Referencia: NOM-250-122 (Conductores de Puesta a Tierra según capacidad del dispositivo de protección)
+  </p>
+</div>
+{{end}}

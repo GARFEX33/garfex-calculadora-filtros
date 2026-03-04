@@ -1,0 +1,341 @@
+{{define "seccion_canalizacion"}}
+<div class="seccion">
+  <h2>5. Cálculo de Canalización</h2>
+
+  {{$tipo := .Memoria.Instalacion.TipoCanalizacion}}
+  {{$canalizacion := .Memoria.Canalizacion}}
+  {{$detalleTuberia := .Memoria.Canalizacion.DetalleTuberia}}
+  {{$detalleCharola := .Memoria.Canalizacion.DetalleCharola}}
+
+  <!-- Determinar tipo de canalización -->
+  {{if or (or (eq $tipo "TUBERIA_PVC") (eq $tipo "TUBERIA_ALUMINIO")) (or (eq $tipo "TUBERIA_ACERO_PG") (eq $tipo "TUBERIA_ACERO_PD"))}}
+
+  <!-- ══════════════════════════════════════════════════════
+       TUBERÍA (PVC / Aluminio / Acero PG / Acero PD)
+       ══════════════════════════════════════════════════════ -->
+  <p style="font-size: 9.5pt; color: #6b6b6b; margin-bottom: 8pt;">
+    El área interior de la tubería debe alojar el área total de conductores respetando el
+    factor de llenado permitido. Criterio: Cap. 9 NOM-001-SEDE-2012.
+  </p>
+
+  <!-- Factor de llenado aplicable -->
+  <div class="bloque-calculo">
+    <h3>Factor de Llenado — Cap. 9 NOM</h3>
+    <p class="desarrollo">
+      {{if eq $canalizacion.FillFactor 0.53}}
+        <strong>53%</strong> — 1 conductor
+      {{else if eq $canalizacion.FillFactor 0.31}}
+        <strong>31%</strong> — 2 conductores
+      {{else}}
+        <strong>40%</strong> — 3 o más conductores
+      {{end}}
+    </p>
+    {{if $detalleTuberia}}
+    <p class="formula" style="margin-top: 6pt;">
+      {{if $detalleTuberia.AreaNeutroMM2}}
+        A<sub>req</sub> = N<sub>fases</sub> × A<sub>fase</sub> + N<sub>neutros</sub> × A<sub>neutro</sub> + N<sub>tierra</sub> × A<sub>tierra</sub>
+      {{else}}
+        A<sub>req</sub> = N<sub>fases</sub> × A<sub>fase</sub> + N<sub>tierra</sub> × A<sub>tierra</sub>
+      {{end}}
+    </p>
+    {{end}}
+  </div>
+
+  <!-- Conductores en la instalación -->
+  <table>
+    <thead>
+      <tr><th colspan="2">Conductores en la Instalación</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="etiqueta">Sistema Eléctrico</td>
+        <td class="valor">
+          {{if eq .Memoria.Instalacion.SistemaElectrico "DELTA"}}Trifásico Delta (3F-3H)
+          {{else if eq .Memoria.Instalacion.SistemaElectrico "ESTRELLA"}}Trifásico Estrella (3F-4H)
+          {{else if eq .Memoria.Instalacion.SistemaElectrico "BIFASICO"}}Bifásico (2F-3H)
+          {{else}}Monofásico (1F-2H){{end}}
+        </td>
+      </tr>
+      <tr>
+        <td class="etiqueta">Hilos por Fase</td>
+        <td class="valor valor-numerico">{{.Memoria.Instalacion.HilosPorFase}}</td>
+      </tr>
+      <tr class="separador"><td colspan="2">Conductores Físicos</td></tr>
+      <tr>
+        <td class="etiqueta">Fase</td>
+        <td class="valor valor-numerico">
+          {{.Memoria.CableFase.Calibre}}
+          <span style="font-size: 9pt; color: #6b6b6b;">
+            {{if or (eq .Memoria.CableFase.Material "Cu") (eq .Memoria.CableFase.Material "CU")}}Cu{{else}}Al{{end}}
+          </span>
+        </td>
+      </tr>
+      <tr>
+        <td class="etiqueta">Tierra</td>
+        <td class="valor valor-numerico">
+          {{.Memoria.CableTierra.Calibre}}
+          <span style="font-size: 9pt; color: #6b6b6b;">
+            {{if or (eq .Memoria.CableTierra.Material "Cu") (eq .Memoria.CableTierra.Material "CU")}}Cu{{else}}Al{{end}} Desnudo
+          </span>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Desarrollo del cálculo -->
+  {{if $detalleTuberia}}
+  <div class="bloque-calculo">
+    <h3>Desarrollo</h3>
+    <p class="desarrollo" style="color: #6b6b6b;">
+      {{if eq .Memoria.Instalacion.SistemaElectrico "DELTA"}}Trifásico Delta (3F-3H)
+      {{else if eq .Memoria.Instalacion.SistemaElectrico "ESTRELLA"}}Trifásico Estrella (3F-4H)
+      {{else if eq .Memoria.Instalacion.SistemaElectrico "BIFASICO"}}Bifásico (2F-3H)
+      {{else}}Monofásico (1F-2H){{end}}
+      — {{.Memoria.Instalacion.HilosPorFase}} conductor(es) por fase
+      — {{$canalizacion.Resultado.NumeroDeTubos}} tubo(s)
+    </p>
+    <p class="desarrollo" style="margin-top: 4pt;">
+      <strong>Fase</strong>: {{$detalleTuberia.NumFasesPorTubo}} × {{formatFloat2 $detalleTuberia.AreaFaseMM2}} mm²
+      ({{.Memoria.CableFase.Calibre}} — Tabla 5 NOM)
+      = <strong>{{formatFloat2 (mulIntFloat $detalleTuberia.NumFasesPorTubo $detalleTuberia.AreaFaseMM2)}} mm²</strong>
+    </p>
+    {{if $detalleTuberia.AreaNeutroMM2}}
+    <p class="desarrollo">
+      <strong>Neutro</strong>: {{$detalleTuberia.NumNeutrosPorTubo}} ×
+      {{formatFloat2 (mulIntFloat 1 $detalleTuberia.AreaNeutroMM2)}} mm²
+      ({{.Memoria.CableFase.Calibre}} — Tabla 5 NOM)
+      = <strong>{{formatFloat2 (mulIntFloat $detalleTuberia.NumNeutrosPorTubo $detalleTuberia.AreaNeutroMM2)}} mm²</strong>
+    </p>
+    {{end}}
+    <p class="desarrollo">
+      <strong>Tierra</strong>: {{$detalleTuberia.NumTierras}} × {{formatFloat2 $detalleTuberia.AreaTierraMM2}} mm²
+      ({{.Memoria.CableTierra.Calibre}} Desnudo — Tabla 8 NOM)
+      = <strong>{{formatFloat2 (mulIntFloat $detalleTuberia.NumTierras $detalleTuberia.AreaTierraMM2)}} mm²</strong>
+    </p>
+    <p class="desarrollo" style="margin-top: 4pt; border-top: 1pt solid #d0d0d0; padding-top: 4pt; color: #6b6b6b;">
+      Tabla NOM Cap. 9 — seleccionar primer tubo donde Área<sub>ocup. {{percent $canalizacion.FillFactor}}%</sub>
+      ≥ {{formatFloat2 $canalizacion.Resultado.AreaTotalMM2}} mm²:
+    </p>
+    <p class="desarrollo-final">
+      Tubo: {{$canalizacion.Resultado.Tamano}}" / {{$detalleTuberia.DesignacionMetrica}} mm
+      — Área<sub>ocup.</sub> = {{formatInt $detalleTuberia.AreaOcupacionTuboMM2}} mm²
+    </p>
+  </div>
+  {{end}}
+
+  <!-- Resultado tubería -->
+  <table>
+    <thead>
+      <tr><th colspan="2">Tubería Seleccionada</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="etiqueta">Tamaño Comercial</td>
+        <td class="valor valor-numerico"><strong>{{$canalizacion.Resultado.Tamano}}"</strong></td>
+      </tr>
+      {{if $detalleTuberia}}
+      <tr>
+        <td class="etiqueta">Designación Métrica</td>
+        <td class="valor valor-numerico">{{$detalleTuberia.DesignacionMetrica}} mm</td>
+      </tr>
+      {{end}}
+      <tr>
+        <td class="etiqueta">Número de Tubos</td>
+        <td class="valor valor-numerico">{{$canalizacion.Resultado.NumeroDeTubos}}</td>
+      </tr>
+      <tr>
+        <td class="etiqueta">Área Total de Cables</td>
+        <td class="valor valor-numerico">{{formatFloat2 $canalizacion.Resultado.AreaTotalMM2}} mm²</td>
+      </tr>
+      {{if $detalleTuberia}}
+      <tr>
+        <td class="etiqueta">Área de Ocupación al {{percent $canalizacion.FillFactor}}% (NOM)</td>
+        <td class="valor valor-numerico">{{formatInt $detalleTuberia.AreaOcupacionTuboMM2}} mm²</td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+
+  <div class="indicador cumple" style="margin-top: 6pt;">
+    ✓ Tubería dimensionada conforme a NOM-001-SEDE-2012 Cap. 9, Tabla 4
+  </div>
+
+  <!-- Diagrama SVG de tubería -->
+  {{if and $detalleTuberia $detalleTuberia.Diagrama}}
+  <div class="diagrama-svg">
+    <div class="diagrama-titulo">Diagrama de Arreglo de Conductores en Tubería</div>
+    {{$detalleTuberia.Diagrama.SVG | safeHTML}}
+    <p class="diagrama-caption">
+      Vista transversal — Tubo {{$canalizacion.Resultado.Tamano}}" ({{$detalleTuberia.DesignacionMetrica}} mm)
+    </p>
+  </div>
+  {{end}}
+
+  {{else if eq $tipo "CHAROLA_CABLE_ESPACIADO"}}
+
+  <!-- ══════════════════════════════════════════════════════
+       CHAROLA ESPACIADO
+       ══════════════════════════════════════════════════════ -->
+  <p style="font-size: 9.5pt; color: #6b6b6b; margin-bottom: 8pt;">
+    Los cables se instalan con una separación mínima igual a 1 diámetro exterior entre sí,
+    conforme a NOM-001-SEDE-2012 Art.
+  </p>
+
+  <div class="bloque-calculo">
+    <h3>Fórmula de Dimensionamiento</h3>
+    {{if and $detalleCharola (notNil $detalleCharola.DiametroControlMM)}}
+    <p class="desarrollo">A<sub>req</sub> = E<sub>f</sub> + A<sub>f</sub> + E<sub>c</sub> + A<sub>c</sub> + Ø<sub>tierra</sub></p>
+    {{else}}
+    <p class="desarrollo">A<sub>req</sub> = E<sub>f</sub> + A<sub>f</sub> + Ø<sub>tierra</sub></p>
+    {{end}}
+    <p class="ref-normativa" style="margin-top: 4pt;">
+      DMG = 2.0 | Sin factor de agrupamiento 
+    </p>
+  </div>
+
+  {{if $detalleCharola}}
+  <div class="bloque-calculo">
+    <h3>Desarrollo</h3>
+    <p class="desarrollo">
+      E<sub>f</sub> = {{$detalleCharola.NumHilosTotal}} hilos × {{formatFloat2 $detalleCharola.DiametroFaseMM}} mm
+      = <strong>{{formatFloat2 $detalleCharola.EspacioFuerzaMM}} mm</strong>
+    </p>
+    <p class="desarrollo">
+      A<sub>f</sub> = {{$detalleCharola.NumHilosTotal}} hilos × {{formatFloat2 $detalleCharola.DiametroFaseMM}} mm
+      = <strong>{{formatFloat2 $detalleCharola.AnchoFuerzaMM}} mm</strong>
+    </p>
+    <p class="desarrollo">
+      Ø<sub>tierra</sub> = <strong>{{formatFloat2 $detalleCharola.AnchoTierraMM}} mm</strong>
+    </p>
+    <p class="desarrollo-final">
+      A<sub>req</sub> = {{formatFloat2 $canalizacion.Resultado.AreaRequeridaMM2}} mm
+    </p>
+  </div>
+  {{end}}
+
+  <table>
+    <thead>
+      <tr><th colspan="2">Charola Seleccionada</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="etiqueta">Ancho Requerido (A<sub>req</sub>)</td>
+        <td class="valor valor-numerico">{{formatFloat2 $canalizacion.Resultado.AreaRequeridaMM2}} mm</td>
+      </tr>
+      <tr>
+        <td class="etiqueta">Ancho Comercial Seleccionado</td>
+        <td class="valor valor-numerico"><strong>{{$canalizacion.Resultado.Tamano}}</strong></td>
+      </tr>
+      {{if gt $canalizacion.Resultado.AnchoComercialMM 0.0}}
+      <tr>
+        <td class="etiqueta">Ancho Comercial (mm)</td>
+        <td class="valor valor-numerico">{{formatFloat2 $canalizacion.Resultado.AnchoComercialMM}} mm</td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+
+  <div class="indicador cumple" style="margin-top: 6pt;">
+    ✓ Charola dimensionada conforme a NOM-001-SEDE-2012 Art. 392
+  </div>
+
+  <!-- Diagrama SVG de charola espaciada -->
+  {{if and $detalleCharola $detalleCharola.Diagrama}}
+  <div class="diagrama-svg">
+    <div class="diagrama-titulo">Diagrama de Arreglo de Conductores en Charola Espaciada</div>
+    {{$detalleCharola.Diagrama.SVG | safeHTML}}
+    <p class="diagrama-caption">
+      Vista frontal — Charola {{$canalizacion.Resultado.Tamano}}"
+    </p>
+  </div>
+  {{end}}
+
+  {{else if eq $tipo "CHAROLA_CABLE_TRIANGULAR"}}
+
+  <!-- ══════════════════════════════════════════════════════
+       CHAROLA TRIANGULAR
+       ══════════════════════════════════════════════════════ -->
+  <p style="font-size: 9.5pt; color: #6b6b6b; margin-bottom: 8pt;">
+    Los cables se instalan en disposición triangular, tocándose entre sí.
+    Factor de espaciado triangular: 2.15 conforme a NOM-001-SEDE-2012.
+  </p>
+
+  <div class="bloque-calculo">
+    <h3>Fórmula de Dimensionamiento</h3>
+    {{if and $detalleCharola (notNil $detalleCharola.DiametroControlMM)}}
+    <p class="desarrollo">A<sub>req</sub> = A<sub>p</sub> + E<sub>f</sub> + E<sub>c</sub> + A<sub>c</sub> + Ø<sub>tierra</sub></p>
+    {{else}}
+    <p class="desarrollo">A<sub>req</sub> = A<sub>p</sub> + E<sub>f</sub> + Ø<sub>tierra</sub></p>
+    {{end}}
+  </div>
+
+  {{if $detalleCharola}}
+  <div class="bloque-calculo">
+    <h3>Desarrollo</h3>
+    <p class="desarrollo">
+      A<sub>p</sub> = 2 × {{formatFloat2 $detalleCharola.DiametroFaseMM}} mm × {{.Memoria.Instalacion.HilosPorFase}} hilos
+      = <strong>{{formatFloat2 $detalleCharola.AnchoPotenciaMM}} mm</strong>
+    </p>
+    <p class="desarrollo">
+      E<sub>f</sub> = ({{.Memoria.Instalacion.HilosPorFase}} − 1) × {{formatFloat2 $detalleCharola.FactorTriangular}} × {{formatFloat2 $detalleCharola.DiametroFaseMM}} mm
+      = <strong>{{formatFloat2 $detalleCharola.EspacioFuerzaMM}} mm</strong>
+    </p>
+    <p class="desarrollo">
+      Ø<sub>tierra</sub> = <strong>{{formatFloat2 $detalleCharola.AnchoTierraMM}} mm</strong>
+    </p>
+    <p class="desarrollo-final">
+      A<sub>req</sub> = {{formatFloat2 $canalizacion.Resultado.AreaRequeridaMM2}} mm
+    </p>
+  </div>
+  {{end}}
+
+  <table>
+    <thead>
+      <tr><th colspan="2">Charola Seleccionada</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="etiqueta">Factor Triangular (NOM)</td>
+        <td class="valor valor-numerico">2.15</td>
+      </tr>
+      <tr>
+        <td class="etiqueta">Ancho Requerido (A<sub>req</sub>)</td>
+        <td class="valor valor-numerico">{{formatFloat2 $canalizacion.Resultado.AreaRequeridaMM2}} mm</td>
+      </tr>
+      <tr>
+        <td class="etiqueta">Ancho Comercial Seleccionado</td>
+        <td class="valor valor-numerico"><strong>{{$canalizacion.Resultado.Tamano}}</strong></td>
+      </tr>
+      {{if gt $canalizacion.Resultado.AnchoComercialMM 0.0}}
+      <tr>
+        <td class="etiqueta">Ancho Comercial (mm)</td>
+        <td class="valor valor-numerico">{{formatFloat2 $canalizacion.Resultado.AnchoComercialMM}} mm</td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+
+  <div class="indicador cumple" style="margin-top: 6pt;">
+    ✓ Charola dimensionada conforme a NOM-001-SEDE-2012 Art. 392 
+  </div>
+
+  <!-- Diagrama SVG de charola triangular -->
+  {{if and $detalleCharola $detalleCharola.Diagrama}}
+  <div class="diagrama-svg">
+    <div class="diagrama-titulo">Diagrama de Arreglo de Conductores en Charola Triangular</div>
+    {{$detalleCharola.Diagrama.SVG | safeHTML}}
+    <p class="diagrama-caption">
+      Vista frontal — Charola {{$canalizacion.Resultado.Tamano}}"
+    </p>
+  </div>
+  {{end}}
+
+  {{else}}
+  <!-- Tipo de canalización no reconocido -->
+  <p style="font-size: 9.5pt; color: #6b6b6b;">
+    Tipo de canalización: <span style="font-family: 'Courier New', monospace;">{{$tipo}}</span>
+  </p>
+  {{end}}
+
+</div>
+{{end}}

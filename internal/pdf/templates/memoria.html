@@ -1,0 +1,396 @@
+{{define "memoria_calculo.html"}}<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Memoria de Cálculo Eléctrica — {{.NombreProyecto}}</title>
+  <style>
+    /* ═══════════════════════════════════════════════════════════
+       Tokens de dominio — Identidad visual ingeniería eléctrica
+       ═══════════════════════════════════════════════════════════ */
+    :root {
+      --tinta:          #1a1a1a;
+      --tinta-suave:    #3d3d3d;
+      --tinta-tenue:    #6b6b6b;
+      --papel:          #ffffff;
+      --papel-gris:     #f5f5f5;
+      --papel-azul:     #f0f4f8;
+      --linea:          #d0d0d0;
+      --linea-seccion:  #2e4a6b;
+      --sello-aprobado: #1b5e20;
+      --sello-rechazado:#b71c1c;
+      --sello-advertencia:#e65100;
+      --fondo-aprobado: #e8f5e9;
+      --fondo-rechazado:#ffebee;
+      --fondo-advertencia:#fff3e0;
+      --fuente-tecnica: 'Courier New', Courier, monospace;
+      --fuente-datos:   'Times New Roman', Times, serif;
+      --fuente-titulo:  Arial, Helvetica, sans-serif;
+      --espacio-seccion: 16pt;
+    }
+
+    @page {
+      size: Letter;
+      margin: 20mm 15mm 25mm 25mm;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      font-family: var(--fuente-datos);
+      font-size: 10pt;
+      color: var(--tinta);
+      background: var(--papel);
+      line-height: 1.4;
+    }
+
+    h1 {
+      font-family: var(--fuente-titulo);
+      font-size: 16pt;
+      font-weight: bold;
+      color: var(--linea-seccion);
+      margin-bottom: 8pt;
+    }
+
+    h2 {
+      font-family: var(--fuente-titulo);
+      font-size: 13pt;
+      font-weight: bold;
+      color: var(--linea-seccion);
+      padding: 4pt 0 4pt 8pt;
+      border-left: 4pt solid var(--linea-seccion);
+      margin-top: var(--espacio-seccion);
+      margin-bottom: 8pt;
+      background-color: var(--papel-azul);
+    }
+
+    h3 {
+      font-family: var(--fuente-titulo);
+      font-size: 11pt;
+      font-weight: bold;
+      color: var(--tinta);
+      margin-top: 8pt;
+      margin-bottom: 4pt;
+    }
+
+    h4 {
+      font-family: var(--fuente-titulo);
+      font-size: 10pt;
+      font-weight: bold;
+      color: var(--tinta-suave);
+      margin-top: 6pt;
+      margin-bottom: 3pt;
+    }
+
+    p { margin-bottom: 4pt; }
+
+    /* Tablas */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 8pt;
+      font-size: 9.5pt;
+    }
+    thead th {
+      background-color: var(--linea-seccion);
+      color: var(--papel);
+      font-family: var(--fuente-titulo);
+      font-weight: bold;
+      font-size: 9pt;
+      padding: 5pt 8pt;
+      text-align: left;
+      border: 1pt solid var(--linea-seccion);
+    }
+    tbody tr:nth-child(even) { background-color: var(--papel-gris); }
+    tbody tr:nth-child(odd)  { background-color: var(--papel); }
+    tbody td {
+      padding: 4pt 8pt;
+      border: 1pt solid var(--linea);
+      vertical-align: top;
+    }
+    td.etiqueta { color: var(--tinta-suave); font-size: 9pt; width: 45%; }
+    td.valor { color: var(--tinta); }
+    td.valor-numerico, .numeric {
+      font-family: var(--fuente-tecnica);
+      font-size: 9.5pt;
+      text-align: right;
+    }
+    tr.separador td {
+      background-color: var(--papel-azul);
+      font-size: 8pt;
+      font-weight: bold;
+      color: var(--tinta-suave);
+      text-transform: uppercase;
+      letter-spacing: 0.5pt;
+      padding: 3pt 8pt;
+    }
+
+    /* Bloques de cálculo */
+    .bloque-calculo {
+      background-color: var(--papel-gris);
+      border: 1pt solid var(--linea);
+      border-radius: 3pt;
+      padding: 8pt 10pt;
+      margin-bottom: 8pt;
+    }
+    .formula {
+      font-family: var(--fuente-tecnica);
+      font-size: 11pt;
+      color: var(--tinta);
+      margin-bottom: 4pt;
+    }
+    .desarrollo {
+      font-family: var(--fuente-tecnica);
+      font-size: 9.5pt;
+      color: var(--tinta-suave);
+      margin: 2pt 0;
+    }
+    .desarrollo-final {
+      font-family: var(--fuente-tecnica);
+      font-size: 10pt;
+      font-weight: bold;
+      color: var(--linea-seccion);
+      margin-top: 4pt;
+    }
+    .resultado-destacado {
+      font-family: var(--fuente-tecnica);
+      font-size: 14pt;
+      font-weight: bold;
+      color: var(--linea-seccion);
+      display: block;
+      margin-top: 4pt;
+    }
+
+    /* Dictamen normativo */
+    .dictamen {
+      text-align: center;
+      padding: 12pt 16pt;
+      border-radius: 4pt;
+      margin: 8pt 0;
+    }
+    .dictamen.cumple {
+      background-color: var(--fondo-aprobado);
+      border: 2pt solid var(--sello-aprobado);
+    }
+    .dictamen.no-cumple {
+      background-color: var(--fondo-rechazado);
+      border: 2pt solid var(--sello-rechazado);
+    }
+    .dictamen .veredicto {
+      font-family: var(--fuente-titulo);
+      font-size: 16pt;
+      font-weight: bold;
+      letter-spacing: 1pt;
+    }
+    .dictamen.cumple .veredicto { color: var(--sello-aprobado); }
+    .dictamen.no-cumple .veredicto { color: var(--sello-rechazado); }
+    .dictamen .subtitulo { font-size: 9pt; color: var(--tinta-suave); margin-top: 4pt; }
+
+    /* Indicadores inline */
+    .indicador {
+      padding: 4pt 8pt;
+      border-radius: 2pt;
+      margin: 4pt 0;
+      font-size: 9.5pt;
+    }
+    .indicador.cumple {
+      background-color: var(--fondo-aprobado);
+      border: 1pt solid var(--sello-aprobado);
+      color: var(--sello-aprobado);
+    }
+    .indicador.no-cumple {
+      background-color: var(--fondo-rechazado);
+      border: 1pt solid var(--sello-rechazado);
+      color: var(--sello-rechazado);
+    }
+    .indicador.advertencia {
+      background-color: var(--fondo-advertencia);
+      border: 1pt solid var(--sello-advertencia);
+      color: var(--sello-advertencia);
+    }
+
+    /* Bloque de firma */
+    .firma-block { margin-top: 20pt; page-break-inside: avoid; }
+    .firma-grid  { display: table; width: 100%; }
+    .firma-col   { display: table-cell; width: 50%; padding: 0 12pt; text-align: center; }
+    .linea-firma { border-top: 1pt solid var(--tinta); margin-bottom: 4pt; padding-top: 4pt; }
+    .nombre-firma { font-size: 9pt; font-weight: bold; color: var(--tinta); }
+    .rol-firma    { font-size: 8pt; color: var(--tinta-tenue); }
+    .espacio-firma { height: 30pt; }
+
+    /* Observaciones */
+    .observaciones-lista {
+      list-style: disc inside;
+      padding: 6pt 8pt;
+      background-color: var(--papel-gris);
+      border: 1pt solid var(--linea);
+      border-radius: 2pt;
+      font-size: 9.5pt;
+      color: var(--tinta);
+    }
+    .observaciones-lista li { margin-bottom: 3pt; }
+
+    /* Circuito completo */
+    .circuito-completo {
+      background-color: var(--papel-azul);
+      border: 1pt solid var(--linea-seccion);
+      border-radius: 3pt;
+      padding: 8pt 12pt;
+      margin: 8pt 0;
+    }
+    .circuito-label {
+      font-size: 8.5pt;
+      color: var(--tinta-suave);
+      font-family: var(--fuente-titulo);
+      margin-bottom: 4pt;
+      text-transform: uppercase;
+    }
+    .circuito-valor {
+      font-family: var(--fuente-tecnica);
+      font-size: 11pt;
+      font-weight: bold;
+      color: var(--linea-seccion);
+    }
+
+    /* Paginación */
+    .seccion { page-break-inside: avoid; margin-bottom: var(--espacio-seccion); }
+    .no-salto { page-break-inside: avoid; }
+    .salto-pagina { page-break-before: always; }
+
+    /* Referencias normativas */
+    .ref-normativa { font-size: 8pt; color: var(--tinta-tenue); margin-top: 3pt; }
+
+    /* Badges */
+    .badge {
+      display: inline-block;
+      font-size: 7.5pt;
+      padding: 1pt 4pt;
+      border-radius: 2pt;
+      font-family: var(--fuente-titulo);
+    }
+    .badge-caida {
+      background-color: var(--sello-advertencia);
+      color: var(--papel);
+      display: inline-block;
+      font-size: 7.5pt;
+      padding: 1pt 5pt;
+      border-radius: 2pt;
+      font-weight: bold;
+      font-family: var(--fuente-titulo);
+    }
+
+    /* Portada */
+    .portada {
+      padding: 20pt 0;
+      margin-bottom: var(--espacio-seccion);
+      border-bottom: 2pt solid var(--linea-seccion);
+    }
+    .portada-logo {
+      max-height: 60pt;
+      max-width: 200pt;
+    }
+    .portada-empresa {
+      font-family: var(--fuente-titulo);
+      font-size: 14pt;
+      font-weight: bold;
+      color: var(--linea-seccion);
+      margin-top: 8pt;
+    }
+    .portada-datos {
+      font-size: 9pt;
+      color: var(--tinta-suave);
+      margin-top: 4pt;
+    }
+    .portada-titulo {
+      margin-top: 16pt;
+      margin-bottom: 8pt;
+    }
+
+    /* Diagramas SVG de canalización */
+    .diagrama-svg {
+      text-align: center;
+      margin: 12pt 0;
+      padding: 8pt;
+      background-color: var(--papel);
+      border: 1pt solid var(--linea);
+      border-radius: 3pt;
+      page-break-inside: avoid;
+    }
+    .diagrama-svg svg {
+      max-width: 100%;
+      height: auto;
+    }
+    .diagrama-titulo {
+      font-family: var(--fuente-titulo);
+      font-size: 10pt;
+      font-weight: bold;
+      color: var(--linea-seccion);
+      margin-bottom: 6pt;
+    }
+    .diagrama-caption {
+      font-size: 8pt;
+      color: var(--tinta-tenue);
+      margin-top: 4pt;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       PORTADA
+       ═══════════════════════════════════════════════════════════ -->
+  <div class="portada">
+    <!-- Logo de la empresa (base64 embebido — sin problemas de paths) -->
+    {{if .LogoBase64}}
+    <img class="portada-logo" src="data:image/png;base64,{{.LogoBase64}}" alt="Logo {{.Empresa.NombreCompleto}}">
+    {{end}}
+
+    <div class="portada-empresa">{{.Empresa.NombreCompleto}}</div>
+    <div class="portada-datos">
+      {{.Empresa.Direccion}}<br>
+      Tel: {{.Empresa.Telefono}} | {{.Empresa.Email}}
+    </div>
+
+    <div class="portada-titulo">
+      <h1>Memoria de Cálculo de Instalación Eléctrica</h1>
+      <p style="font-size: 11pt; color: var(--tinta-suave);">Conforme a NOM-001-SEDE-2012</p>
+    </div>
+
+    <!-- Datos del proyecto -->
+    <table style="margin-top: 12pt; width: 60%;">
+      <tbody>
+        <tr>
+          <td class="etiqueta" style="width: 40%;">Proyecto</td>
+          <td class="valor"><strong>{{if .NombreProyecto}}{{.NombreProyecto}}{{else}}—{{end}}</strong></td>
+        </tr>
+        <tr>
+          <td class="etiqueta">Ubicación</td>
+          <td class="valor">{{if .DireccionProyecto}}{{.DireccionProyecto}}{{else}}—{{end}}</td>
+        </tr>
+        <tr>
+          <td class="etiqueta">Responsable</td>
+          <td class="valor">{{if .Responsable}}{{.Responsable}}{{else}}—{{end}}</td>
+        </tr>
+        <tr>
+          <td class="etiqueta">Fecha</td>
+          <td class="valor">{{.FechaGeneracion}}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       SECCIONES DE LA MEMORIA DE CÁLCULO
+       ═══════════════════════════════════════════════════════════ -->
+
+  {{template "seccion_encabezado" .}}
+  {{template "seccion_corriente" .}}
+  {{template "seccion_alimentador" .}}
+  {{template "seccion_tierra" .}}
+  {{template "seccion_canalizacion" .}}
+  {{template "seccion_caida_tension" .}}
+  {{template "seccion_conclusion" .}}
+
+</body>
+</html>
+{{end}}
