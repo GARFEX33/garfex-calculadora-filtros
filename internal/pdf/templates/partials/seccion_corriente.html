@@ -8,13 +8,13 @@
   </p>
 
   <!-- Tipo de cálculo -->
-  <div class="bloque-calculo">
-    <h3>Tipo de Cálculo</h3>
+  <div class="card">
+    <h3 style="font-size: 9pt; color: var(--primary); margin-bottom: 8pt;">Tipo de Cálculo</h3>
     {{if .Memoria.DesarrolloCorriente}}
-      <p class="formula">{{.Memoria.DesarrolloCorriente.TipoCalculo}}</p>
+      <p class="formula-box">{{.Memoria.DesarrolloCorriente.TipoCalculo}}</p>
       
       <!-- Fórmula usada -->
-      <p class="desarrollo">Fórmula: {{.Memoria.DesarrolloCorriente.FormulaUsada}}</p>
+      <p class="desarrollo" style="margin: 8pt 0;">Fórmula: {{.Memoria.DesarrolloCorriente.FormulaUsada}}</p>
 
       <!-- Pasos del desarrollo -->
       {{range .Memoria.DesarrolloCorriente.PasosDesarrollo}}
@@ -26,24 +26,24 @@
     {{else}}
       {{/* Legacy fallback para memorias sin DesarrolloCorriente */}}
       {{if eq .Memoria.TipoEquipo "FILTRO_ACTIVO"}}
-        <p class="formula">I = I<sub>nominal</sub> (amperaje directo del equipo)</p>
+        <div class="formula-box">I = I<sub>nominal</sub> (amperaje directo del equipo)</div>
         <p class="desarrollo">Tipo de Equipo: Filtro Activo (FP = 1.0)</p>
         <p class="desarrollo">Amperaje del equipo: {{formatNumeric .Memoria.Equipo.Amperaje}} A</p>
       {{else if eq .Memoria.TipoEquipo "TRANSFORMADOR"}}
-        <p class="formula">I = KVA / (kV × √3)</p>
+        <div class="formula-box">I = KVA / (kV × √3)</div>
         <p class="desarrollo">Tipo de Equipo: Transformador</p>
         <p class="desarrollo">Fórmula: I = KVA / (kV × 1.732)</p>
       {{else if eq .Memoria.TipoEquipo "FILTRO_RECHAZO"}}
-        <p class="formula">I = KVAR / (kV × √3)</p>
+        <div class="formula-box">I = KVAR / (kV × √3)</div>
         <p class="desarrollo">Tipo de Equipo: Filtro de Rechazo</p>
         <p class="desarrollo">Fórmula: I = KVAR / (kV × 1.732)</p>
       {{else}}
         {{if or (eq .Memoria.Instalacion.SistemaElectrico "ESTRELLA") (eq .Memoria.Instalacion.SistemaElectrico "DELTA")}}
-          <p class="formula">I = P / (V × √3 × cos θ)</p>
+          <div class="formula-box">I = P / (V × √3 × cos θ)</div>
           <p class="desarrollo">Tipo: Carga General — Sistema Trifásico</p>
           <p class="desarrollo">Fórmula: I = P / (V × 1.732 × FP)</p>
         {{else}}
-          <p class="formula">I = P / (V × cos θ)</p>
+          <div class="formula-box">I = P / (V × cos θ)</div>
           <p class="desarrollo">Tipo: Carga General — Sistema Monofásico/Bifásico</p>
           <p class="desarrollo">Fórmula: I = P / (V × FP)</p>
         {{end}}
@@ -53,52 +53,44 @@
 
   <!-- Valores de referencia -->
   {{if and .Memoria.DesarrolloCorriente .Memoria.DesarrolloCorriente.ValoresReferencia}}
-  <table>
-    <thead>
-      <tr>
-        <th colspan="2">Valores de Referencia</th>
-      </tr>
-    </thead>
-    <tbody>
+  <div class="card">
+    <h3 style="font-size: 9pt; color: var(--primary); margin-bottom: 8pt;">Valores de Referencia</h3>
+    <div class="data-grid">
       {{range $clave, $valor := .Memoria.DesarrolloCorriente.ValoresReferencia}}
-      <tr>
-        <td class="etiqueta">{{$clave}}</td>
-        <td class="valor valor-numerico">{{$valor}}</td>
-      </tr>
+      <div class="data-item">
+        <span class="data-label">{{$clave}}</span>
+        <span class="data-value">{{$valor}}</span>
+      </div>
       {{end}}
-    </tbody>
-  </table>
+    </div>
+  </div>
   {{end}}
 
   <!-- Datos del cálculo -->
-  <table>
-    <thead>
-      <tr>
-        <th colspan="2">Parámetros del Cálculo</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td class="etiqueta">Sistema Eléctrico</td>
-        <td class="valor">{{.Memoria.Instalacion.SistemaElectrico}}</td>
-      </tr>
-      <tr>
-        <td class="etiqueta">Voltaje de Operación</td>
-        <td class="valor valor-numerico">{{.Memoria.Instalacion.Tension}} V</td>
-      </tr>
+  <div class="card">
+    <h3 style="font-size: 9pt; color: var(--primary); margin-bottom: 8pt;">Parámetros del Cálculo</h3>
+    <div class="data-grid">
+      <div class="data-item">
+        <span class="data-label">Sistema Eléctrico</span>
+        <span class="data-value">{{.Memoria.Instalacion.SistemaElectrico}}</span>
+      </div>
+      <div class="data-item">
+        <span class="data-label">Voltaje de Operación</span>
+        <span class="data-value">{{.Memoria.Instalacion.Tension}} V</span>
+      </div>
       {{if and (ne .Memoria.TipoEquipo "FILTRO_ACTIVO") (gt .Memoria.FactorPotencia 0.0)}}
-      <tr>
-        <td class="etiqueta">Factor de Potencia (cos θ)</td>
-        <td class="valor valor-numerico">{{formatFloat2 .Memoria.FactorPotencia}}</td>
-      </tr>
+      <div class="data-item">
+        <span class="data-label">Factor de Potencia (cos θ)</span>
+        <span class="data-value">{{formatFloat2 .Memoria.FactorPotencia}}</span>
+      </div>
       {{end}}
-    </tbody>
-  </table>
+    </div>
+  </div>
 
   <!-- Resultado destacado -->
-  <div class="bloque-calculo" style="background: #e8f5e9; border: 1.5pt solid #1b5e20;">
-    <h3 style="color: #1b5e20;">Resultado</h3>
-    <span class="resultado-destacado" style="color: #1b5e20;">
+  <div class="card" style="background-color: var(--success-bg); border-color: var(--success);">
+    <h3 style="color: var(--success); margin-bottom: 8pt;">Resultado</h3>
+    <span class="resultado-destacado" style="color: var(--success);">
       I<sub>n</sub> = {{formatFloat2 .Memoria.Corrientes.CorrienteNominal}} A
     </span>
   </div>

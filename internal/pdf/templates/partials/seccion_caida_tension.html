@@ -11,82 +11,80 @@
   </p>
 
   <!-- Fórmula según sistema -->
-  <div class="bloque-calculo">
-    <h3>Fórmula Aplicada</h3>
+  <div class="card">
+    <h3 style="font-size: 9pt; color: var(--primary); margin-bottom: 8pt;">Fórmula Aplicada</h3>
     {{if eq $sistema "MONOFASICO"}}
-    <p class="formula">e = 2 × I × Z<sub>ef</sub> × L</p>
+    <div class="formula-box">e = 2 × I × Z<sub>ef</sub> × L</div>
     <p class="desarrollo">e% = (e / V<sub>fn</sub>) × 100</p>
-    <p class="desarrollo" style="font-size: 9pt; color: #6b6b6b;">Sistema monofásico — factor 2 (ida y retorno)</p>
+    <p class="desarrollo" style="font-size: 9pt; color: var(--text-muted);">Sistema monofásico — factor 2 (ida y retorno)</p>
     {{else if eq $sistema "BIFASICO"}}
-    <p class="formula">e = 1 × I × Z<sub>ef</sub> × L</p>
+    <div class="formula-box">e = 1 × I × Z<sub>ef</sub> × L</div>
     <p class="desarrollo">e% = (e / V<sub>fn</sub>) × 100</p>
-    <p class="desarrollo" style="font-size: 9pt; color: #6b6b6b;">Sistema bifásico — factor 1</p>
+    <p class="desarrollo" style="font-size: 9pt; color: var(--text-muted);">Sistema bifásico — factor 1</p>
     {{else}}
-    <p class="formula">e = √3 × I × Z<sub>ef</sub> × L</p>
+    <div class="formula-box">e = √3 × I × Z<sub>ef</sub> × L</div>
     <p class="desarrollo">e% = (e / V<sub>ff</sub>) × 100</p>
-    <p class="desarrollo" style="font-size: 9pt; color: #6b6b6b;">Sistema trifásico — factor √3 (1.732)</p>
+    <p class="desarrollo" style="font-size: 9pt; color: var(--text-muted);">Sistema trifásico — factor √3 (1.732)</p>
     {{end}}
   </div>
 
   <!-- Impedancia efectiva Zef -->
-  <div class="bloque-calculo">
-    <h3>Impedancia Efectiva (Z<sub>ef</sub>)</h3>
-    <p class="formula">Z<sub>ef</sub> = R × cos θ + X × sin θ</p>
-    <p class="desarrollo">
+  <div class="card">
+    <h3 style="font-size: 9pt; color: var(--primary); margin-bottom: 8pt;">Impedancia Efectiva (Z<sub>ef</sub>)</h3>
+    <div class="formula-box">Z<sub>ef</sub> = R × cos θ + X × sin θ</div>
+    <p class="desarrollo" style="margin-top: 8pt;">
       {{$senTheta := sqrt (sub 1.0 (mul .Memoria.FactorPotencia .Memoria.FactorPotencia))}}
       Z<sub>ef</sub> = {{formatFloat4 $caida.Resistencia}} × {{formatFloat2 .Memoria.FactorPotencia}}
       + {{formatFloat4 $caida.Reactancia}} × {{formatFloat4 $senTheta}}
       = <strong>{{formatFloat4 $caida.Impedancia}} Ω/km</strong>
     </p>
-    <p class="ref-normativa">Referencia:  NOM-001-SEDE-2012</p>
+    <p class="ref-normativa" style="margin-top: 8pt;">Referencia: NOM-001-SEDE-2012</p>
   </div>
 
   <!-- Parámetros del cálculo -->
-  <table>
-    <thead>
-      <tr><th colspan="2">Parámetros del Cálculo</th></tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td class="etiqueta">Corriente Nominal (I<sub>n</sub>)</td>
-        <td class="valor valor-numerico">{{formatFloat2 .Memoria.Corrientes.CorrienteNominal}} A</td>
-      </tr>
-      <tr>
-        <td class="etiqueta">Longitud del Circuito (L)</td>
-        <td class="valor valor-numerico">{{formatFloat2 .Memoria.Instalacion.LongitudCircuito}} m</td>
-      </tr>
-      <tr>
-        <td class="etiqueta">Voltaje del Sistema (V)</td>
-        <td class="valor valor-numerico">{{.Memoria.Instalacion.Tension}} V</td>
-      </tr>
-      <tr>
-        <td class="etiqueta">Voltaje de Referencia</td>
-        <td class="valor">
+  <div class="card">
+    <h3 style="font-size: 9pt; color: var(--primary); margin-bottom: 8pt;">Parámetros del Cálculo</h3>
+    <div class="data-grid">
+      <div class="data-item">
+        <span class="data-label">Corriente Nominal (I<sub>n</sub>)</span>
+        <span class="data-value">{{formatFloat2 .Memoria.Corrientes.CorrienteNominal}} A</span>
+      </div>
+      <div class="data-item">
+        <span class="data-label">Longitud del Circuito (L)</span>
+        <span class="data-value">{{formatFloat2 .Memoria.Instalacion.LongitudCircuito}} m</span>
+      </div>
+      <div class="data-item">
+        <span class="data-label">Voltaje del Sistema (V)</span>
+        <span class="data-value">{{.Memoria.Instalacion.Tension}} V</span>
+      </div>
+      <div class="data-item">
+        <span class="data-label">Voltaje de Referencia</span>
+        <span class="data-value">
           {{if or (eq $sistema "MONOFASICO") (eq $sistema "BIFASICO")}}V<sub>fn</sub> (fase-neutro){{else}}V<sub>ff</sub> (fase-fase){{end}}
-        </td>
-      </tr>
-      <tr>
-        <td class="etiqueta">Resistencia (R)</td>
-        <td class="valor valor-numerico">{{formatFloat4 $caida.Resistencia}} Ω/km</td>
-      </tr>
-      <tr>
-        <td class="etiqueta">Reactancia (X)</td>
-        <td class="valor valor-numerico">{{formatFloat4 $caida.Reactancia}} Ω/km</td>
-      </tr>
-      <tr>
-        <td class="etiqueta">Impedancia (Z<sub>ef</sub>)</td>
-        <td class="valor valor-numerico">{{formatFloat4 $caida.Impedancia}} Ω/km</td>
-      </tr>
-      <tr>
-        <td class="etiqueta">Factor de Potencia (cos θ)</td>
-        <td class="valor valor-numerico">{{formatFloat2 .Memoria.FactorPotencia}}</td>
-      </tr>
-    </tbody>
-  </table>
+        </span>
+      </div>
+      <div class="data-item">
+        <span class="data-label">Resistencia (R)</span>
+        <span class="data-value">{{formatFloat4 $caida.Resistencia}} Ω/km</span>
+      </div>
+      <div class="data-item">
+        <span class="data-label">Reactancia (X)</span>
+        <span class="data-value">{{formatFloat4 $caida.Reactancia}} Ω/km</span>
+      </div>
+      <div class="data-item">
+        <span class="data-label">Impedancia (Z<sub>ef</sub>)</span>
+        <span class="data-value">{{formatFloat4 $caida.Impedancia}} Ω/km</span>
+      </div>
+      <div class="data-item">
+        <span class="data-label">Factor de Potencia (cos θ)</span>
+        <span class="data-value">{{formatFloat2 .Memoria.FactorPotencia}}</span>
+      </div>
+    </div>
+  </div>
 
   <!-- Desarrollo del cálculo -->
-  <div class="bloque-calculo">
-    <h3>Desarrollo</h3>
+  <div class="card">
+    <h3 style="font-size: 9pt; color: var(--primary); margin-bottom: 8pt;">Desarrollo</h3>
     <p class="desarrollo">
       {{if eq $sistema "MONOFASICO"}}
         e = 2 × {{formatFloat2 .Memoria.Corrientes.CorrienteNominal}} A × {{formatFloat4 $caida.Impedancia}} Ω/km × {{formatFloat4 (div .Memoria.Instalacion.LongitudCircuito 1000.0)}} km = {{formatFloat4 $caida.CaidaVolts}} V
@@ -96,7 +94,7 @@
         e = √3 × {{formatFloat2 .Memoria.Corrientes.CorrienteNominal}} A × {{formatFloat4 $caida.Impedancia}} Ω/km × {{formatFloat4 (div .Memoria.Instalacion.LongitudCircuito 1000.0)}} km = {{formatFloat4 $caida.CaidaVolts}} V
       {{end}}
     </p>
-    <p class="desarrollo" style="color: #6b6b6b;">
+    <p class="desarrollo" style="color: var(--text-muted);">
       e% = ({{formatFloat4 $caida.CaidaVolts}} / {{.Memoria.Instalacion.Tension}}) × 100 = {{formatFloat2 $caida.Porcentaje}}%
     </p>
   </div>
@@ -116,32 +114,31 @@
 
   <!-- Verificación -->
   {{if $caida.Cumple}}
-  <div class="indicador cumple" style="margin-top: 6pt;">
+  <div class="dictamen cumple">
     ✓ CUMPLE — La caída de tensión ({{formatFloat2 $caida.Porcentaje}}%) cumple con el límite máximo de {{formatFloat2 $caida.LimitePorcentaje}}% establecido en la NOM-001-SEDE Art. 215-2(A).
   </div>
   {{else}}
-  <div class="indicador no-cumple" style="margin-top: 6pt;">
+  <div class="dictamen no-cumple">
     ✗ NO CUMPLE — La caída de tensión ({{formatFloat2 $caida.Porcentaje}}%) excede el límite permitido ({{formatFloat2 $caida.LimitePorcentaje}}%)
   </div>
   {{end}}
 
   <!-- Recálculo por caída de tensión -->
   {{if .Memoria.CableFase.SeleccionPorCaidaTension}}
-  <div class="indicador advertencia" style="margin-top: 6pt;">
-    <strong>Ajuste por caída de tensión (NOM-001-SEDE):</strong><br>
+  <div class="card" style="background-color: var(--warning-bg); border-color: var(--warning);">
+    <p><strong>Ajuste por caída de tensión (NOM-001-SEDE):</strong></p>
     {{if .Memoria.CableFase.CalibreOriginalAmpacidad}}
-    Calibre aumentado de <strong>{{.Memoria.CableFase.CalibreOriginalAmpacidad}}</strong> → <strong>{{.Memoria.CableFase.Calibre}}</strong>
-    para cumplir con el límite de caída de tensión.<br>
+    <p>Calibre aumentado de <strong>{{.Memoria.CableFase.CalibreOriginalAmpacidad}}</strong> → <strong>{{.Memoria.CableFase.Calibre}}</strong> para cumplir con el límite de caída de tensión.</p>
     {{end}}
     {{if .Memoria.CableFase.NotaSeleccion}}
-    <span style="font-size: 9pt; font-style: italic;">{{.Memoria.CableFase.NotaSeleccion}}</span>
+    <p style="font-size: 9pt; font-style: italic;">{{.Memoria.CableFase.NotaSeleccion}}</p>
     {{end}}
   </div>
   {{end}}
 
   <!-- Calibre máximo superado -->
   {{if and (not $caida.Cumple) (not .Memoria.CableFase.SeleccionPorCaidaTension) }}
-  <div class="indicador no-cumple" style="margin-top: 6pt;">
+  <div class="dictamen no-cumple">
     <strong>⚠ Calibre máximo superado:</strong> Se probaron todos los calibres disponibles hasta 1000 MCM
     y ninguno cumple con el límite de caída de tensión de {{formatFloat2 $caida.LimitePorcentaje}}%
     para esta instalación. Considere reducir la longitud del circuito, aumentar el voltaje del
@@ -149,7 +146,7 @@
   </div>
   {{end}}
 
-  <p class="ref-normativa" style="margin-top: 6pt;">
+  <p class="ref-normativa" style="margin-top: 8pt;">
     Referencia: NOM-001-SEDE-2012, Artículo 215-2(A) — Cálculo de caída de tensión y límites máximos permitidos según tipo de sistema eléctrico.
   </p>
 </div>

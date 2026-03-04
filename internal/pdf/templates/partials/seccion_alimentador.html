@@ -8,110 +8,104 @@
   </p>
 
   <!-- Factor de uso según tipo de equipo -->
-  <div class="bloque-calculo">
-    <h3>Factor de Uso (Tipo de Equipo)</h3>
-    <table style="margin-top: 4pt; margin-bottom: 0;">
-      <tbody>
-        <tr>
-          <td class="etiqueta">Tipo de Equipo</td>
-          <td class="valor">
-            {{if eq .Memoria.TipoEquipo "FILTRO_ACTIVO"}}Filtro Activo
-            {{else if eq .Memoria.TipoEquipo "FILTRO_RECHAZO"}}Filtro de Rechazo
-            {{else if eq .Memoria.TipoEquipo "TRANSFORMADOR"}}Transformador
-            {{else}}Carga General{{end}}
-          </td>
-        </tr>
-        <tr>
-          <td class="etiqueta">Factor de Uso</td>
-          <td class="valor valor-numerico">
-            {{if or (eq .Memoria.TipoEquipo "FILTRO_ACTIVO") (eq .Memoria.TipoEquipo "FILTRO_RECHAZO")}}
-              1.35 (135%)
-            {{else}}
-              1.25 (125%)
-            {{end}}
-          </td>
-        </tr>
-        <tr>
-          <td class="etiqueta">Justificación</td>
-          <td class="valor" style="font-size: 9pt; color: #6b6b6b;">
-            {{if or (eq .Memoria.TipoEquipo "FILTRO_ACTIVO") (eq .Memoria.TipoEquipo "FILTRO_RECHAZO")}}
-              Los conductores para capacitores deben tener al menos el 135% de la corriente nominal — Ref: Art. 460-8
-            {{else}}
-              Factor de diseño estándar para equipos de carga general (125%) — Ref: Art. 215-2
-            {{end}}
-          </td>
-        </tr>
-      </tbody>
-    </table>
+  <div class="card">
+    <h3 style="font-size: 9pt; color: var(--primary); margin-bottom: 8pt;">Factor de Uso (Tipo de Equipo)</h3>
+    <div class="data-grid">
+      <div class="data-item">
+        <span class="data-label">Tipo de Equipo</span>
+        <span class="data-value">
+          {{if eq .Memoria.TipoEquipo "FILTRO_ACTIVO"}}Filtro Activo
+          {{else if eq .Memoria.TipoEquipo "FILTRO_RECHAZO"}}Filtro de Rechazo
+          {{else if eq .Memoria.TipoEquipo "TRANSFORMADOR"}}Transformador
+          {{else}}Carga General{{end}}
+        </span>
+      </div>
+      <div class="data-item">
+        <span class="data-label">Factor de Uso</span>
+        <span class="data-value">
+          {{if or (eq .Memoria.TipoEquipo "FILTRO_ACTIVO") (eq .Memoria.TipoEquipo "FILTRO_RECHAZO")}}
+            1.35 (135%)
+          {{else}}
+            1.25 (125%)
+          {{end}}
+        </span>
+      </div>
+      <div class="data-item" style="width: 100%;">
+        <span class="data-label">Justificación</span>
+        <span class="data-value" style="font-size: 9pt; color: var(--text-muted);">
+          {{if or (eq .Memoria.TipoEquipo "FILTRO_ACTIVO") (eq .Memoria.TipoEquipo "FILTRO_RECHAZO")}}
+            Los conductores para capacitores deben tener al menos el 135% de la corriente nominal — Ref: Art. 460-8
+          {{else}}
+            Factor de diseño estándar para equipos de carga general (125%) — Ref: Art. 215-2
+          {{end}}
+        </span>
+      </div>
+    </div>
   </div>
 
   <!-- Factores de temperatura y agrupamiento -->
-  <table>
-    <thead>
-      <tr>
-        <th colspan="2">Factores de Corrección</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr class="separador">
-        <td colspan="2">Factor de Temperatura</td>
-      </tr>
-      <tr>
-        <td class="etiqueta">Temperatura Ambiente Maxima</td>
-        <td class="valor valor-numerico">{{.Memoria.Corrientes.TemperaturaAmbiente}} °C ({{.Memoria.Estado}})</td>
-      </tr>
-      <tr>
-        <td class="etiqueta">Temperatura del Conductor</td>
-        <td class="valor valor-numerico">{{.Memoria.Corrientes.TemperaturaReferencia}} °C</td>
-      </tr>
-      <tr>
-        <td class="etiqueta">Factor de Temperatura (F<sub>temp</sub>)</td>
-        <td class="valor valor-numerico">{{formatFloat2 .Memoria.Corrientes.FactorTemperatura}}</td>
-      </tr>
-      <tr>
-        <td class="etiqueta" style="font-size: 8pt; color: #6b6b6b;">Referencia</td>
-        <td class="valor" style="font-size: 8pt; color: #6b6b6b;">Tabla 310-15(b)(2)(A)</td>
-      </tr>
-      <tr class="separador">
-        <td colspan="2">Factor de Agrupamiento</td>
-      </tr>
-      <tr>
-        <td class="etiqueta">Cantidad de Conductores</td>
-        <td class="valor valor-numerico">{{.Memoria.Corrientes.CantidadConductores}}</td>
-      </tr>
+  <div class="card">
+    <h3 style="font-size: 9pt; color: var(--primary); margin-bottom: 8pt;">Factores de Corrección</h3>
+    <div class="data-grid">
+      <div class="data-item" style="width: 100%; border-bottom: none; padding-bottom: 0;">
+        <span class="data-label" style="color: var(--text-main); font-size: 8pt;">Factor de Temperatura</span>
+      </div>
+      <div class="data-item">
+        <span class="data-label">Temperatura Ambiente Máxima</span>
+        <span class="data-value">{{.Memoria.Corrientes.TemperaturaAmbiente}} °C ({{.Memoria.Estado}})</span>
+      </div>
+      <div class="data-item">
+        <span class="data-label">Temperatura del Conductor</span>
+        <span class="data-value">{{.Memoria.Corrientes.TemperaturaReferencia}} °C</span>
+      </div>
+      <div class="data-item">
+        <span class="data-label">Factor de Temperatura (F<sub>temp</sub>)</span>
+        <span class="data-value">{{formatFloat2 .Memoria.Corrientes.FactorTemperatura}}</span>
+      </div>
+      <div class="data-item">
+        <span class="data-label" style="font-size: 8pt;">Referencia</span>
+        <span class="data-value" style="font-size: 8pt; color: var(--text-muted);">Tabla 310-15(b)(2)(A)</span>
+      </div>
+      <div class="data-item" style="width: 100%; border-bottom: none; padding-bottom: 0; padding-top: 8pt;">
+        <span class="data-label" style="color: var(--text-main); font-size: 8pt;">Factor de Agrupamiento</span>
+      </div>
+      <div class="data-item">
+        <span class="data-label">Cantidad de Conductores</span>
+        <span class="data-value">{{.Memoria.Corrientes.CantidadConductores}}</span>
+      </div>
       {{if not (or (eq .Memoria.Instalacion.TipoCanalizacion "CHAROLA_CABLE_ESPACIADO") (eq .Memoria.Instalacion.TipoCanalizacion "CHAROLA_CABLE_TRIANGULAR"))}}
-      <tr>
-        <td class="etiqueta">Conductores por Tubo</td>
-        <td class="valor valor-numerico">{{.Memoria.Corrientes.ConductoresPorTubo}}</td>
-      </tr>
+      <div class="data-item">
+        <span class="data-label">Conductores por Tubo</span>
+        <span class="data-value">{{.Memoria.Corrientes.ConductoresPorTubo}}</span>
+      </div>
       {{end}}
-      <tr>
-        <td class="etiqueta">Factor de Agrupamiento (F<sub>agr</sub>)</td>
-        <td class="valor valor-numerico">{{formatFloat2 .Memoria.Corrientes.FactorAgrupamiento}}</td>
-      </tr>
-      <tr>
-        <td class="etiqueta" style="font-size: 8pt; color: #6b6b6b;">Referencia</td>
-        <td class="valor" style="font-size: 8pt; color: #6b6b6b;">Tabla 310-15(b)(3)(A)</td>
-      </tr>
-    </tbody>
-  </table>
+      <div class="data-item">
+        <span class="data-label">Factor de Agrupamiento (F<sub>agr</sub>)</span>
+        <span class="data-value">{{formatFloat2 .Memoria.Corrientes.FactorAgrupamiento}}</span>
+      </div>
+      <div class="data-item">
+        <span class="data-label" style="font-size: 8pt;">Referencia</span>
+        <span class="data-value" style="font-size: 8pt; color: var(--text-muted);">Tabla 310-15(b)(3)(A)</span>
+      </div>
+    </div>
+  </div>
 
   <!-- Fórmula y desarrollo -->
-  <div class="bloque-calculo">
-    <h3>Fórmula de Dimensionamiento</h3>
-    <p class="formula">
+  <div class="card">
+    <h3 style="font-size: 9pt; color: var(--primary); margin-bottom: 8pt;">Fórmula de Dimensionamiento</h3>
+    <div class="formula-box">
       I<sub>ajustada</sub> = I<sub>nominal</sub> × F<sub>uso</sub> / (F<sub>temp</sub> × F<sub>agr</sub>)
-    </p>
-    <p class="desarrollo">
+    </div>
+    <p class="desarrollo" style="margin-top: 8pt;">
       I<sub>ajustada</sub> = {{formatFloat2 .Memoria.Corrientes.CorrienteNominal}} A
       {{if or (eq .Memoria.TipoEquipo "FILTRO_ACTIVO") (eq .Memoria.TipoEquipo "FILTRO_RECHAZO")}}× 1.35{{else}}× 1.25{{end}}
       / ({{formatFloat2 .Memoria.Corrientes.FactorTemperatura}} × {{formatFloat2 .Memoria.Corrientes.FactorAgrupamiento}})
     </p>
-    <p class="desarrollo-final">
+    <p class="desarrollo-final" style="margin-top: 8pt; border-top: 1pt solid var(--linea); padding-top: 8pt;">
       I<sub>ajustada</sub> = {{formatFloat2 .Memoria.Corrientes.CorrienteAjustada}} A
     </p>
     {{if gt .Memoria.Instalacion.HilosPorFase 1}}
-    <p class="desarrollo" style="margin-top: 6pt; border-top: 1pt solid #d0d0d0; padding-top: 6pt;">
+    <p class="desarrollo" style="margin-top: 8pt;">
       Conductores en paralelo: {{.Memoria.Instalacion.HilosPorFase}} hilos por fase
     </p>
     <p class="desarrollo">
@@ -122,84 +116,77 @@
   </div>
 
   <!-- Conductor seleccionado -->
-  <table>
-    <thead>
-      <tr>
-        <th colspan="2">
-          Conductor de Fase Seleccionado
-          {{if gt .Memoria.Instalacion.HilosPorFase 1}}
-            ({{.Memoria.Instalacion.HilosPorFase}} hilos en paralelo)
-          {{end}}
-        </th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td class="etiqueta">Calibre</td>
-        <td class="valor valor-numerico">
+  <div class="card">
+    <h3 style="font-size: 9pt; color: var(--primary); margin-bottom: 8pt;">
+      Conductor de Fase Seleccionado
+      {{if gt .Memoria.Instalacion.HilosPorFase 1}}
+        ({{.Memoria.Instalacion.HilosPorFase}} hilos en paralelo)
+      {{end}}
+    </h3>
+    <div class="data-grid">
+      <div class="data-item">
+        <span class="data-label">Calibre</span>
+        <span class="data-value">
           {{.Memoria.CableFase.Calibre}}
           {{if gt .Memoria.Instalacion.HilosPorFase 1}}
             × {{.Memoria.Instalacion.HilosPorFase}}
           {{end}}
-          {{if .Memoria.CableFase.SeleccionPorCaidaTension}}
-            <span class="badge-caida">Caída de Tensión</span>
-          {{end}}
-        </td>
-      </tr>
-      <tr>
-        <td class="etiqueta">Material</td>
-        <td class="valor">
+        </span>
+      </div>
+      <div class="data-item">
+        <span class="data-label">Material</span>
+        <span class="data-value">
           {{if or (eq .Memoria.CableFase.Material "Cu") (eq .Memoria.CableFase.Material "CU")}}Cobre (Cu){{else}}Aluminio (Al){{end}}
-        </td>
-      </tr>
-      <tr>
-        <td class="etiqueta">Sección</td>
-        <td class="valor valor-numerico">
+        </span>
+      </div>
+      <div class="data-item">
+        <span class="data-label">Sección</span>
+        <span class="data-value">
           {{formatFloat2 .Memoria.CableFase.SeccionMM2}} mm²
           {{if gt .Memoria.Instalacion.HilosPorFase 1}}
             (× {{.Memoria.Instalacion.HilosPorFase}} = {{formatFloat2 (mulIntFloat .Memoria.Instalacion.HilosPorFase .Memoria.CableFase.SeccionMM2)}} mm² total)
           {{end}}
-        </td>
-      </tr>
-      <tr>
-        <td class="etiqueta">Tipo de Aislamiento</td>
-        <td class="valor">{{if .Memoria.CableFase.TipoAislamiento}}{{.Memoria.CableFase.TipoAislamiento}}{{else}}THWN{{end}}</td>
-      </tr>
-      <tr>
-        <td class="etiqueta">Temperatura de Referencia</td>
-        <td class="valor valor-numerico">{{.Memoria.Corrientes.TemperaturaReferencia}} °C</td>
-      </tr>
-      <tr>
-        <td class="etiqueta">Ampacidad por Hilo</td>
-        <td class="valor valor-numerico">{{formatFloat2 .Memoria.CableFase.Capacidad}} A</td>
-      </tr>
-      <tr>
-        <td class="etiqueta">Tabla de Ampacidad</td>
-        <td class="valor">{{.Memoria.Corrientes.TablaAmpacidadUsada}}</td>
-      </tr>
-    </tbody>
-  </table>
+        </span>
+      </div>
+      <div class="data-item">
+        <span class="data-label">Tipo de Aislamiento</span>
+        <span class="data-value">{{if .Memoria.CableFase.TipoAislamiento}}{{.Memoria.CableFase.TipoAislamiento}}{{else}}THWN{{end}}</span>
+      </div>
+      <div class="data-item">
+        <span class="data-label">Temperatura de Referencia</span>
+        <span class="data-value">{{.Memoria.Corrientes.TemperaturaReferencia}} °C</span>
+      </div>
+      <div class="data-item">
+        <span class="data-label">Ampacidad por Hilo</span>
+        <span class="data-value">{{formatFloat2 .Memoria.CableFase.Capacidad}} A</span>
+      </div>
+      <div class="data-item" style="width: 100%;">
+        <span class="data-label">Tabla de Ampacidad</span>
+        <span class="data-value">{{.Memoria.Corrientes.TablaAmpacidadUsada}}</span>
+      </div>
+    </div>
+  </div>
 
   <!-- Indicador de selección por caída de tensión -->
   {{if .Memoria.CableFase.SeleccionPorCaidaTension}}
-  <div class="indicador advertencia" style="margin-top: 6pt;">
-    <strong>Ajuste por caída de tensión:</strong>
+  <div class="card" style="background-color: var(--warning-bg); border-color: var(--warning);">
+    <p><strong>Ajuste por caída de tensión:</strong></p>
     {{if .Memoria.CableFase.CalibreOriginalAmpacidad}}
-      Calibre ajustado de <strong>{{.Memoria.CableFase.CalibreOriginalAmpacidad}}</strong> → <strong>{{.Memoria.CableFase.Calibre}}</strong>
+      <p>Calibre ajustado de <strong>{{.Memoria.CableFase.CalibreOriginalAmpacidad}}</strong> → <strong>{{.Memoria.CableFase.Calibre}}</strong></p>
     {{end}}
     {{if .Memoria.CableFase.NotaSeleccion}}
-      <br><span style="font-size: 9pt;">{{.Memoria.CableFase.NotaSeleccion}}</span>
+      <p style="font-size: 9pt;">{{.Memoria.CableFase.NotaSeleccion}}</p>
     {{end}}
   </div>
   {{end}}
 
   <!-- Verificación de capacidad -->
   {{if ge .Memoria.CableFase.Capacidad .Memoria.Corrientes.CorrientePorHilo}}
-  <div class="indicador cumple" style="margin-top: 6pt;">
+  <div class="dictamen cumple">
     ✓ La ampacidad ({{formatFloat2 .Memoria.CableFase.Capacidad}} A) ≥ corriente por hilo ({{formatFloat2 .Memoria.Corrientes.CorrientePorHilo}} A). El conductor cumple.
   </div>
   {{else}}
-  <div class="indicador no-cumple" style="margin-top: 6pt;">
+  <div class="dictamen no-cumple">
     ✗ La ampacidad ({{formatFloat2 .Memoria.CableFase.Capacidad}} A) &lt; corriente por hilo ({{formatFloat2 .Memoria.Corrientes.CorrientePorHilo}} A). El conductor NO cumple.
   </div>
   {{end}}

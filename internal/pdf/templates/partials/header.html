@@ -3,7 +3,8 @@
 
 <head>
   <meta charset="utf-8">
-  <style>
+{{define "header"}}
+<style>
     /* Estilo Moderno para Header — Optimizado para wkhtmltopdf */
     * {
       box-sizing: border-box;
@@ -13,11 +14,11 @@
 
     body {
       font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
-      color: #1e293b;
+      color: #1C1C1C;           /* neutroOscuroGarfex */
       background: #ffffff;
       /* Reducimos el padding y quitamos el borde grueso por una línea más fina */
       padding: 2mm 8mm;
-      border-bottom: 0.5pt solid #e2e8f0;
+      border-bottom: 0.5pt solid #EAEAEA;  /* bordesDivisores */
     }
 
     .header-contenido {
@@ -28,21 +29,31 @@
     /* Columna del Logo */
     .header-logo-col {
       display: table-cell;
-      width: 45pt;
+      width: 55pt;
       vertical-align: middle;
     }
 
     .logo-circle {
-      width: 32pt;
-      height: 32pt;
-      background: #1e40af;
-      /* Azul Navy que usamos en la memoria */
-      color: white;
+      width: 25pt;
+      height: 25pt;
       border-radius: 6px;
       text-align: center;
-      line-height: 32pt;
+      line-height: 45pt;
       font-weight: bold;
-      font-size: 18pt;
+      font-size: 24pt;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      background: {{if eq .Empresa.ID "garfex"}}#ffffff{{else}}{{.Empresa.ColorPrimario}}{{end}};
+    }
+
+    .logo-circle img {
+      max-width: 90%;
+      max-height: 90%;
+      width: auto;
+      height: auto;
+      border-radius: 4px;
     }
 
     /* Columna de Títulos */
@@ -55,14 +66,14 @@
     .header-titulo {
       font-size: 10pt;
       font-weight: 700;
-      color: #1e40af;
+      color: {{.Empresa.ColorPrimario}};  /* color primario dinámico */
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
 
     .header-subtitulo {
       font-size: 7pt;
-      color: #64748b;
+      color: #6E6E6E;               /* textoSecundario */
       font-weight: 400;
       margin-top: 1pt;
     }
@@ -77,12 +88,12 @@
     .header-empresa-nombre {
       font-size: 8pt;
       font-weight: 700;
-      color: #334155;
+      color: {{.Empresa.ColorPrimario}};  /* color primario dinámico */
     }
 
     .header-proyecto {
       font-size: 7pt;
-      color: #64748b;
+      color: #6E6E6E;            /* textoSecundario */
       margin-top: 1pt;
       max-width: 200pt;
       white-space: nowrap;
@@ -95,7 +106,13 @@
 <body>
   <div class="header-contenido">
     <div class="header-logo-col">
-      <div class="logo-circle">G</div>
+      <div class="logo-circle">
+        {{if eq .Empresa.ID "garfex"}}
+          <img src="data:image/png;base64,{{.LogoLetraBase64}}" alt="Garfex" />
+        {{else}}
+          {{capFirst .Empresa.ID}}
+        {{end}}
+      </div>
     </div>
 
     <div class="header-info-col">
@@ -104,12 +121,13 @@
     </div>
 
     <div class="header-empresa-col">
-      <div class="header-empresa-nombre">Garfex</div>
+      <div class="header-empresa-nombre">{{.Empresa.NombreCompleto}}</div>
       <div class="header-proyecto">
         {{.NombreProyecto}}
       </div>
     </div>
   </div>
+{{end}}
 </body>
 
 </html>
