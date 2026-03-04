@@ -1,90 +1,115 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
-<meta charset="utf-8">
-<style>
-  /* Header standalone — inline CSS requerido por wkhtmltopdf */
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: Arial, Helvetica, sans-serif;
-    font-size: 9pt;
-    color: #1a1a1a;
-    background: #ffffff;
-    padding: 4mm 8mm;
-    border-bottom: 1.5pt solid #2e4a6b;
-  }
-  .header-contenido {
-    display: table;
-    width: 100%;
-  }
-  .header-logo-col {
-    display: table-cell;
-    width: 60pt;
-    vertical-align: middle;
-    padding-right: 8pt;
-  }
-  .header-logo {
-    max-height: 28pt;
-    max-width: 55pt;
-  }
-  .header-info-col {
-    display: table-cell;
-    vertical-align: middle;
-  }
-  .header-titulo {
-    font-size: 11pt;
-    font-weight: bold;
-    color: #2e4a6b;
-    letter-spacing: 0.3pt;
-  }
-  .header-subtitulo {
-    font-size: 7.5pt;
-    color: #6b6b6b;
-    margin-top: 1pt;
-  }
-  .header-empresa-col {
-    display: table-cell;
-    vertical-align: middle;
-    text-align: right;
-    width: 120pt;
-  }
-  .header-empresa-nombre {
-    font-size: 8pt;
-    font-weight: bold;
-    color: #3d3d3d;
-  }
-  .header-fecha {
-    font-size: 7.5pt;
-    color: #6b6b6b;
-    margin-top: 2pt;
-  }
-  .header-proyecto {
-    font-size: 7.5pt;
-    color: #6b6b6b;
-    font-style: italic;
-    margin-top: 1pt;
-  }
-</style>
+  <meta charset="utf-8">
+  <style>
+    /* Estilo Moderno para Header — Optimizado para wkhtmltopdf */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
+      color: #1e293b;
+      background: #ffffff;
+      /* Reducimos el padding y quitamos el borde grueso por una línea más fina */
+      padding: 2mm 8mm;
+      border-bottom: 0.5pt solid #e2e8f0;
+    }
+
+    .header-contenido {
+      display: table;
+      width: 100%;
+    }
+
+    /* Columna del Logo */
+    .header-logo-col {
+      display: table-cell;
+      width: 45pt;
+      vertical-align: middle;
+    }
+
+    .logo-circle {
+      width: 32pt;
+      height: 32pt;
+      background: #1e40af;
+      /* Azul Navy que usamos en la memoria */
+      color: white;
+      border-radius: 6px;
+      text-align: center;
+      line-height: 32pt;
+      font-weight: bold;
+      font-size: 18pt;
+    }
+
+    /* Columna de Títulos */
+    .header-info-col {
+      display: table-cell;
+      vertical-align: middle;
+      padding-left: 10pt;
+    }
+
+    .header-titulo {
+      font-size: 10pt;
+      font-weight: 700;
+      color: #1e40af;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .header-subtitulo {
+      font-size: 7pt;
+      color: #64748b;
+      font-weight: 400;
+      margin-top: 1pt;
+    }
+
+    /* Columna Derecha (Datos de Empresa / Proyecto) */
+    .header-empresa-col {
+      display: table-cell;
+      vertical-align: middle;
+      text-align: right;
+    }
+
+    .header-empresa-nombre {
+      font-size: 8pt;
+      font-weight: 700;
+      color: #334155;
+    }
+
+    .header-proyecto {
+      font-size: 7pt;
+      color: #64748b;
+      margin-top: 1pt;
+      max-width: 200pt;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  </style>
 </head>
+
 <body>
-  <!-- Header renderizado como archivo independiente por wkhtmltopdf -->
-  <!-- Los datos de empresa, logo y fecha son estáticos en este archivo -->
-  <!-- El logo se incrusta como base64 para evitar problemas de paths -->
   <div class="header-contenido">
     <div class="header-logo-col">
-      <!-- Logo placeholder — se reemplaza con logo real en producción -->
-      <span style="font-size: 16pt; font-weight: bold; color: #2e4a6b;">G</span>
+      <div class="logo-circle">G</div>
     </div>
+
     <div class="header-info-col">
-      <div class="header-titulo">Memoria de Cálculo Eléctrica</div>
-      <div class="header-subtitulo">Conforme a NOM-001-SEDE-2012</div>
+      <div class="header-titulo">Memoria de Cálculo</div>
+      <div class="header-subtitulo">NOM-001-SEDE-2012 • Ingeniería Eléctrica</div>
     </div>
+
     <div class="header-empresa-col">
-      <div class="header-empresa-nombre">Garfex Calculadora</div>
-      <div class="header-fecha">
-        <script>document.write(window.localStorage ? '' : '')</script>
+      <div class="header-empresa-nombre">Garfex</div>
+      <div class="header-proyecto">
+        {{.NombreProyecto}}
       </div>
     </div>
   </div>
 </body>
+
 </html>

@@ -1,552 +1,196 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   pdf.css — Hoja de estilo para memorias de cálculo eléctrico (PDF)
-   Garfex Calculadora Filtros — NOM-001-SEDE-2012
-   
-   Reglas de oro:
-   - Solo HTML semántico (table, dl, dt, dd, h2, h3, p)
-   - Unidades en pt y mm (sin px — wkhtmltopdf usa pt/mm para PDF)
-   - Sin @import, sin JavaScript, sin Tailwind
-   - CSS puro, tokens de dominio de ingeniería eléctrica
+   pdf.css — Versión Moderna 2024
+   Optimizado para memorias de cálculo eléctrico (NOM-001-SEDE-2012)
    ═══════════════════════════════════════════════════════════════════════════ */
 
-/* ─────────────────────────────────────────────────────────────────────────
-   Tokens de dominio — Identidad visual ingeniería eléctrica mexicana
-   ───────────────────────────────────────────────────────────────────────── */
 :root {
-  /* Tinta: escala de grises técnica, alta legibilidad en impresión */
-  --tinta:          #1a1a1a;    /* Negro técnico — cuerpo de texto principal */
-  --tinta-suave:    #3d3d3d;    /* Gris oscuro — texto secundario, etiquetas */
-  --tinta-tenue:    #6b6b6b;    /* Gris medio — notas, referencias normativas */
+  /* Tinta: Paleta Slate/Navy Profesional */
+  --primary: #1e40af;
+  /* Azul Navy */
+  --primary-light: #eff6ff;
+  /* Azul fondo tenue */
+  --text-main: #1e293b;
+  /* Slate 800 */
+  --text-muted: #64748b;
+  /* Slate 500 */
+  --linea: #e2e8f0;
+  /* Slate 200 */
 
-  /* Papel: fondos imprimibles (sin blancos puros que consuman tóner) */
-  --papel:          #ffffff;    /* Blanco puro — fondo principal */
-  --papel-gris:     #f5f5f5;    /* Gris muy claro — fondos de tablas alternas */
-  --papel-azul:     #f0f4f8;    /* Azul grisáceo — fondos de secciones de cálculo */
+  /* Estados de cumplimiento */
+  --success: #059669;
+  /* Verde cumplimiento */
+  --success-bg: #dcfce7;
+  --error: #b91c1c;
+  /* Rojo rechazo */
+  --error-bg: #fee2e2;
+  --warning: #d97706;
+  /* Ámbar advertencia */
+  --warning-bg: #fef3c7;
 
-  /* Líneas y bordes */
-  --linea:          #d0d0d0;    /* Gris claro — bordes de tablas y divisores */
-  --linea-seccion:  #2e4a6b;    /* Azul marino oscuro — bordes de sección principales */
-
-  /* Sellos normativos — semáforo técnico */
-  --sello-aprobado: #1b5e20;    /* Verde oscuro — CUMPLE NOM */
-  --sello-rechazado:#b71c1c;    /* Rojo oscuro — NO CUMPLE NOM */
-  --sello-advertencia:#e65100;  /* Naranja — advertencia, recálculo por caída */
-
-  /* Fondos de sello (10% opacidad simulada) */
-  --fondo-aprobado: #e8f5e9;    /* Verde muy claro */
-  --fondo-rechazado:#ffebee;    /* Rojo muy claro */
-  --fondo-advertencia:#fff3e0;  /* Naranja muy claro */
-
-  /* Tipografía técnica */
-  --fuente-tecnica: 'Courier New', Courier, monospace;  /* Fórmulas y valores numéricos */
-  --fuente-datos:   'Times New Roman', Times, serif;    /* Cuerpo de texto documental */
-  --fuente-titulo:  Arial, Helvetica, sans-serif;       /* Títulos y encabezados */
-
-  /* Espaciado */
-  --espacio-seccion:  16pt;
-  --espacio-elemento:  8pt;
-  --espacio-linea:     4pt;
+  /* Tipografía */
+  --fuente-main: 'Segoe UI', Helvetica, Arial, sans-serif;
+  --fuente-mono: 'Consolas', 'Courier New', monospace;
 }
 
-/* ─────────────────────────────────────────────────────────────────────────
-   Configuración de página (@page)
-   ───────────────────────────────────────────────────────────────────────── */
 @page {
   size: Letter;
-  margin: 20mm 15mm 25mm 25mm;  /* top right bottom left */
+  margin: 15mm;
 }
 
-@page :first {
-  margin-top: 20mm;
-}
-
-/* ─────────────────────────────────────────────────────────────────────────
-   Reset y base
-   ───────────────────────────────────────────────────────────────────────── */
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
-html, body {
-  font-family: var(--fuente-datos);
+body {
+  font-family: var(--fuente-main);
   font-size: 10pt;
-  color: var(--tinta);
-  background: var(--papel);
-  line-height: 1.4;
+  color: var(--text-main);
+  background: #ffffff;
+  line-height: 1.5;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
-   Tipografía
+   ESTRUCTURA DE CARDS (Contenedores principales)
    ───────────────────────────────────────────────────────────────────────── */
-h1 {
-  font-family: var(--fuente-titulo);
-  font-size: 16pt;
-  font-weight: bold;
-  color: var(--linea-seccion);
-  margin-bottom: 8pt;
+.card {
+  border: 1pt solid var(--linea);
+  border-radius: 6pt;
+  padding: 12pt;
+  margin-bottom: 15pt;
+  page-break-inside: avoid;
+  background-color: #ffffff;
 }
 
 h2 {
-  font-family: var(--fuente-titulo);
-  font-size: 13pt;
+  font-size: 12pt;
   font-weight: bold;
-  color: var(--linea-seccion);
-  padding: 4pt 0 4pt 8pt;
-  border-left: 4pt solid var(--linea-seccion);
-  margin-top: var(--espacio-seccion);
-  margin-bottom: 8pt;
-  background-color: var(--papel-azul);
-}
-
-h3 {
-  font-family: var(--fuente-titulo);
-  font-size: 11pt;
-  font-weight: bold;
-  color: var(--tinta);
-  margin-top: 8pt;
-  margin-bottom: 4pt;
-}
-
-h4 {
-  font-family: var(--fuente-titulo);
-  font-size: 10pt;
-  font-weight: bold;
-  color: var(--tinta-suave);
-  margin-top: 6pt;
-  margin-bottom: 3pt;
-}
-
-p {
-  margin-bottom: 4pt;
-}
-
-/* ─────────────────────────────────────────────────────────────────────────
-   Tablas de datos técnicos
-   ───────────────────────────────────────────────────────────────────────── */
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-bottom: 8pt;
-  font-size: 9.5pt;
-}
-
-thead th {
-  background-color: var(--linea-seccion);
-  color: var(--papel);
-  font-family: var(--fuente-titulo);
-  font-weight: bold;
-  font-size: 9pt;
-  padding: 5pt 8pt;
-  text-align: left;
-  border: 1pt solid var(--linea-seccion);
-}
-
-tbody tr:nth-child(even) {
-  background-color: var(--papel-gris);
-}
-
-tbody tr:nth-child(odd) {
-  background-color: var(--papel);
-}
-
-tbody td {
-  padding: 4pt 8pt;
-  border: 1pt solid var(--linea);
-  vertical-align: top;
-}
-
-tbody td.etiqueta {
-  color: var(--tinta-suave);
-  font-size: 9pt;
-  width: 45%;
-}
-
-tbody td.valor {
-  color: var(--tinta);
-  font-weight: normal;
-}
-
-tbody td.valor-numerico,
-.numeric {
-  font-family: var(--fuente-tecnica);
-  font-size: 9.5pt;
-  text-align: right;
-}
-
-/* Fila separadora / agrupador visual */
-tr.separador td {
-  background-color: var(--papel-azul);
-  font-size: 8pt;
-  font-weight: bold;
-  color: var(--tinta-suave);
+  color: var(--primary);
   text-transform: uppercase;
   letter-spacing: 0.5pt;
-  padding: 3pt 8pt;
+  margin-bottom: 10pt;
+  border-bottom: 2pt solid var(--primary-light);
+  padding-bottom: 4pt;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
-   Listas de definición (dl/dt/dd) — datos clave:valor
+   SISTEMA DE GRID (Simulado para wkhtmltopdf)
    ───────────────────────────────────────────────────────────────────────── */
-dl {
-  margin-bottom: 8pt;
-}
-
-dl.grid-2 {
+.data-grid {
   display: table;
   width: 100%;
+  border-collapse: separate;
+  border-spacing: 10pt 0;
 }
 
-dl.grid-2 > div {
-  display: table-row;
+.data-item {
+  display: table-cell;
+  width: 50%;
+  vertical-align: top;
+  padding-bottom: 8pt;
+  border-bottom: 0.5pt solid var(--linea);
 }
 
-dt {
-  font-size: 8.5pt;
-  color: var(--tinta-tenue);
-  text-transform: uppercase;
-  letter-spacing: 0.3pt;
-  font-family: var(--fuente-titulo);
-  padding-top: 4pt;
-}
-
-dd {
-  font-weight: bold;
-  color: var(--tinta);
-  padding-bottom: 4pt;
-  padding-left: 8pt;
-  border-left: 2pt solid var(--linea-seccion);
-  margin-left: 0;
-}
-
-/* ─────────────────────────────────────────────────────────────────────────
-   Datos de ingeniería — .dato (par etiqueta/valor con borde izquierdo)
-   ───────────────────────────────────────────────────────────────────────── */
-.dato {
-  padding-left: 8pt;
-  border-left: 2pt solid var(--linea-seccion);
-  margin-bottom: 6pt;
-}
-
-.dato .etiqueta {
-  font-size: 8pt;
-  color: var(--tinta-tenue);
-  text-transform: uppercase;
-  letter-spacing: 0.3pt;
+.data-label {
   display: block;
-  margin-bottom: 1pt;
+  font-size: 7.5pt;
+  font-weight: bold;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin-bottom: 2pt;
 }
 
-.dato .valor {
-  font-weight: bold;
-  color: var(--tinta);
+.data-value {
+  display: block;
   font-size: 10pt;
+  font-weight: 600;
+  color: var(--text-main);
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
-   Bloques de cálculo — fórmulas y desarrollo
+   BLOQUES DE CÁLCULO Y FÓRMULAS
    ───────────────────────────────────────────────────────────────────────── */
-.bloque-calculo {
-  background-color: var(--papel-gris);
-  border: 1pt solid var(--linea);
-  border-radius: 3pt;
-  padding: 8pt 10pt;
-  margin-bottom: 8pt;
-}
-
-.formula {
-  font-family: var(--fuente-tecnica);
-  font-size: 11pt;
-  color: var(--tinta);
-  margin-bottom: 4pt;
-}
-
-.desarrollo {
-  font-family: var(--fuente-tecnica);
-  font-size: 9.5pt;
-  color: var(--tinta-suave);
-  margin: 2pt 0;
-}
-
-.desarrollo-final {
-  font-family: var(--fuente-tecnica);
-  font-size: 10pt;
-  font-weight: bold;
-  color: var(--linea-seccion);
-  margin-top: 4pt;
+.formula-box {
+  background-color: var(--primary-light);
+  border-left: 3pt solid var(--primary);
+  border-radius: 4pt;
+  padding: 10pt;
+  margin: 8pt 0;
+  font-family: var(--fuente-mono);
+  color: var(--primary);
 }
 
 .resultado-destacado {
-  font-family: var(--fuente-tecnica);
+  font-family: var(--fuente-mono);
   font-size: 14pt;
   font-weight: bold;
-  color: var(--linea-seccion);
+  color: var(--primary);
+  text-align: right;
   display: block;
-  margin-top: 4pt;
-}
-
-/* Flecha de paso en desarrollo -->  */
-.flecha-paso {
-  color: var(--tinta-tenue);
-  margin-right: 4pt;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
-   Dictamen normativo — CUMPLE / NO CUMPLE
-   ───────────────────────────────────────────────────────────────────────── */
-.dictamen {
-  text-align: center;
-  padding: 12pt 16pt;
-  border-radius: 4pt;
-  margin: 8pt 0;
-}
-
-.dictamen.cumple {
-  background-color: var(--fondo-aprobado);
-  border: 2pt solid var(--sello-aprobado);
-}
-
-.dictamen.no-cumple {
-  background-color: var(--fondo-rechazado);
-  border: 2pt solid var(--sello-rechazado);
-}
-
-.dictamen .veredicto {
-  font-family: var(--fuente-titulo);
-  font-size: 16pt;
-  font-weight: bold;
-  letter-spacing: 1pt;
-}
-
-.dictamen.cumple .veredicto {
-  color: var(--sello-aprobado);
-}
-
-.dictamen.no-cumple .veredicto {
-  color: var(--sello-rechazado);
-}
-
-.dictamen .subtitulo {
-  font-size: 9pt;
-  color: var(--tinta-suave);
-  margin-top: 4pt;
-}
-
-/* ─────────────────────────────────────────────────────────────────────────
-   Indicadores de cumplimiento inline (✓/✗)
-   ───────────────────────────────────────────────────────────────────────── */
-.indicador {
-  padding: 4pt 8pt;
-  border-radius: 2pt;
-  margin: 4pt 0;
-  font-size: 9.5pt;
-}
-
-.indicador.cumple {
-  background-color: var(--fondo-aprobado);
-  border: 1pt solid var(--sello-aprobado);
-  color: var(--sello-aprobado);
-}
-
-.indicador.no-cumple {
-  background-color: var(--fondo-rechazado);
-  border: 1pt solid var(--sello-rechazado);
-  color: var(--sello-rechazado);
-}
-
-.indicador.advertencia {
-  background-color: var(--fondo-advertencia);
-  border: 1pt solid var(--sello-advertencia);
-  color: var(--sello-advertencia);
-}
-
-/* ─────────────────────────────────────────────────────────────────────────
-   Bloque de firma — responsable técnico
-   ───────────────────────────────────────────────────────────────────────── */
-.firma-block {
-  margin-top: 20pt;
-  page-break-inside: avoid;
-}
-
-.firma-block .firma-grid {
-  display: table;
-  width: 100%;
-}
-
-.firma-block .firma-col {
-  display: table-cell;
-  width: 50%;
-  padding: 0 12pt;
-  text-align: center;
-}
-
-.firma-block .linea-firma {
-  border-top: 1pt solid var(--tinta);
-  margin-bottom: 4pt;
-  padding-top: 4pt;
-}
-
-.firma-block .nombre-firma {
-  font-size: 9pt;
-  font-weight: bold;
-  color: var(--tinta);
-}
-
-.firma-block .rol-firma {
-  font-size: 8pt;
-  color: var(--tinta-tenue);
-}
-
-.firma-block .espacio-firma {
-  height: 30pt;
-}
-
-/* ─────────────────────────────────────────────────────────────────────────
-   Sección de observaciones
-   ───────────────────────────────────────────────────────────────────────── */
-.observaciones-lista {
-  list-style: disc inside;
-  padding: 6pt 8pt;
-  background-color: var(--papel-gris);
-  border: 1pt solid var(--linea);
-  border-radius: 2pt;
-  font-size: 9.5pt;
-  color: var(--tinta);
-}
-
-.observaciones-lista li {
-  margin-bottom: 3pt;
-}
-
-/* ─────────────────────────────────────────────────────────────────────────
-   Tabla resumen de conclusión
-   ───────────────────────────────────────────────────────────────────────── */
-.tabla-resumen {
-  margin-top: 12pt;
-}
-
-.tabla-resumen .criterio {
-  display: table;
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.tabla-resumen .criterio-row {
-  display: table-row;
-}
-
-.tabla-resumen .criterio-label {
-  display: table-cell;
-  padding: 4pt 8pt;
-  border: 1pt solid var(--linea);
-  font-size: 9.5pt;
-  color: var(--tinta);
-}
-
-.tabla-resumen .criterio-estado {
-  display: table-cell;
-  padding: 4pt 8pt;
-  border: 1pt solid var(--linea);
-  font-weight: bold;
-  font-size: 9.5pt;
-  width: 80pt;
-  text-align: center;
-}
-
-.tabla-resumen .criterio-estado.cumple {
-  color: var(--sello-aprobado);
-  background-color: var(--fondo-aprobado);
-}
-
-.tabla-resumen .criterio-estado.no-cumple {
-  color: var(--sello-rechazado);
-  background-color: var(--fondo-rechazado);
-}
-
-/* ─────────────────────────────────────────────────────────────────────────
-   Circuito completo (resumen técnico en conclusión)
-   ───────────────────────────────────────────────────────────────────────── */
-.circuito-completo {
-  background-color: var(--papel-azul);
-  border: 1pt solid var(--linea-seccion);
-  border-radius: 3pt;
-  padding: 8pt 12pt;
-  margin: 8pt 0;
-}
-
-.circuito-completo .circuito-label {
-  font-size: 8.5pt;
-  color: var(--tinta-suave);
-  font-family: var(--fuente-titulo);
-  margin-bottom: 4pt;
-  text-transform: uppercase;
-}
-
-.circuito-completo .circuito-valor {
-  font-family: var(--fuente-tecnica);
-  font-size: 11pt;
-  font-weight: bold;
-  color: var(--linea-seccion);
-}
-
-/* ─────────────────────────────────────────────────────────────────────────
-   Control de paginación
-   ───────────────────────────────────────────────────────────────────────── */
-.seccion {
-  page-break-inside: avoid;
-  margin-bottom: var(--espacio-seccion);
-}
-
-.no-salto {
-  page-break-inside: avoid;
-}
-
-.salto-pagina {
-  page-break-before: always;
-}
-
-/* ─────────────────────────────────────────────────────────────────────────
-   Referencia normativa (pie de tabla)
-   ───────────────────────────────────────────────────────────────────────── */
-.ref-normativa {
-  font-size: 8pt;
-  color: var(--tinta-tenue);
-  margin-top: 3pt;
-}
-
-/* ─────────────────────────────────────────────────────────────────────────
-   Badge de tipo (etiqueta pequeña para clasificaciones)
+   BADGES Y DICTÁMENES
    ───────────────────────────────────────────────────────────────────────── */
 .badge {
   display: inline-block;
-  font-size: 7.5pt;
-  padding: 1pt 4pt;
-  border-radius: 2pt;
-  font-family: var(--fuente-titulo);
+  padding: 3pt 8pt;
+  border-radius: 10pt;
+  font-size: 8.5pt;
+  font-weight: bold;
+  text-transform: uppercase;
 }
 
-.badge.primario {
-  background-color: var(--linea-seccion);
-  color: var(--papel);
+.badge-success {
+  background: var(--success-bg);
+  color: var(--success);
+  border: 0.5pt solid var(--success);
 }
 
-.badge.neutro {
-  background-color: var(--papel-gris);
-  color: var(--tinta-suave);
-  border: 1pt solid var(--linea);
+.badge-error {
+  background: var(--error-bg);
+  color: var(--error);
+  border: 0.5pt solid var(--error);
+}
+
+.badge-warning {
+  background: var(--warning-bg);
+  color: var(--warning);
+  border: 0.5pt solid var(--warning);
+}
+
+.dictamen {
+  text-align: center;
+  padding: 15pt;
+  border-radius: 6pt;
+  margin: 10pt 0;
+}
+
+.dictamen.cumple {
+  background-color: var(--success-bg);
+  border: 1.5pt solid var(--success);
+  color: var(--success);
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
-   Etiqueta de caída de tensión (warning badge)
+   FIRMAS
    ───────────────────────────────────────────────────────────────────────── */
-.badge-caida {
-  background-color: var(--sello-advertencia);
-  color: var(--papel);
-  display: inline-block;
-  font-size: 7.5pt;
-  padding: 1pt 5pt;
-  border-radius: 2pt;
-  font-weight: bold;
-  font-family: var(--fuente-titulo);
+.firma-container {
+  margin-top: 30pt;
+  display: table;
+  width: 100%;
+}
+
+.firma-box {
+  display: table-cell;
+  width: 50%;
+  text-align: center;
+  padding: 0 20pt;
+}
+
+.firma-linea {
+  border-top: 1pt solid var(--text-main);
+  margin-top: 40pt;
+  padding-top: 5pt;
 }

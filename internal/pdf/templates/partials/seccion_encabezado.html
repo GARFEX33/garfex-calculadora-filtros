@@ -1,122 +1,90 @@
 {{define "seccion_encabezado"}}
 <div class="seccion">
-  <h2>1. Encabezado</h2>
 
-  <!-- Título del documento -->
-  <div style="text-align: center; margin-bottom: 12pt; padding: 8pt; background: #f0f4f8; border: 1pt solid #2e4a6b; border-radius: 3pt;">
-    <h3 style="color: #2e4a6b; font-size: 13pt; margin-bottom: 2pt;">Memoria de Cálculo de Alimentador</h3>
-    <p style="font-size: 9pt; color: #6b6b6b;">Conforme a NOM-001-SEDE-2012</p>
+  <h2>1. Resumen de Ingeniería</h2>
+
+  <div class="card">
+    <div class="data-grid">
+      <div class="data-item">
+        <span class="data-label">Nombre del Proyecto</span>
+        <span class="data-value">{{if .NombreProyecto}}{{.NombreProyecto}}{{else}}—{{end}}</span>
+      </div>
+      <div class="data-item">
+        <span class="data-label">Ubicación / Sitio</span>
+        <span class="data-value">{{if .DireccionProyecto}}{{.DireccionProyecto}}{{else}}—{{end}}</span>
+      </div>
+    </div>
   </div>
 
-  <!-- Datos del proyecto (del formulario PDF) -->
-  <table>
-    <thead>
-      <tr>
-        <th colspan="2">Datos del Proyecto</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td class="etiqueta">Nombre del Proyecto</td>
-        <td class="valor">{{if .NombreProyecto}}{{.NombreProyecto}}{{else}}—{{end}}</td>
-      </tr>
-      <tr>
-        <td class="etiqueta">Dirección / Ubicación</td>
-        <td class="valor">{{if .DireccionProyecto}}{{.DireccionProyecto}}{{else}}—{{end}}</td>
-      </tr>
-      <tr>
-        <td class="etiqueta">Responsable del Cálculo</td>
-        <td class="valor">{{if .Responsable}}{{.Responsable}}{{else}}—{{end}}</td>
-      </tr>
-      <tr>
-        <td class="etiqueta">Fecha de Generación</td>
-        <td class="valor">{{.FechaGeneracion}}</td>
-      </tr>
-      <tr>
-        <td class="etiqueta">Empresa Elaboradora</td>
-        <td class="valor">{{.Empresa.NombreCompleto}}</td>
-      </tr>
-    </tbody>
-  </table>
+  <div class="card">
+    <h3
+      style="font-size: 9pt; color: var(--primary); margin-bottom: 12px; font-weight: 700; text-transform: uppercase;">
+      Datos del Equipo de Carga
+    </h3>
+    <div class="data-grid">
+      <div class="data-item">
+        <span class="data-label">Equipo</span>
+        <span class="data-value">
+          {{if .NombreEquipo}}{{.NombreEquipo}}{{else if
+          .Memoria.Equipo.Clave}}{{.Memoria.Equipo.Clave}}{{else}}{{.Memoria.TipoEquipo}}{{end}}
+        </span>
+      </div>
+      <div class="data-item">
+        <span class="data-label">Tipo de Carga</span>
+        <span class="data-value">{{.Memoria.TipoEquipo}}</span>
+      </div>
+      <div class="data-item">
+        <span class="data-label">Corriente Nominal ($I_n$)</span>
+        <span class="data-value" style="color: var(--primary); font-weight: 700;">
+          {{formatFloat2 .Memoria.Corrientes.CorrienteNominal}} A
+        </span>
+      </div>
+    </div>
+  </div>
 
-  <!-- Datos del equipo -->
-  <table style="margin-top: 8pt;">
-    <thead>
-      <tr>
-        <th colspan="2">Datos del Equipo</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td class="etiqueta">Equipo / Carga</td>
-        <td class="valor">
-          {{if .NombreEquipo}}{{.NombreEquipo}}{{else if .Memoria.Equipo.Clave}}{{.Memoria.Equipo.Clave}}{{else}}{{.Memoria.TipoEquipo}}{{end}}
-        </td>
-      </tr>
-      <tr>
-        <td class="etiqueta">Tipo de Equipo</td>
-        <td class="valor">{{.Memoria.TipoEquipo}}</td>
-      </tr>
-      <tr>
-        <td class="etiqueta">Capacidad Nominal</td>
-        <td class="valor">
-          {{if and (gt .Memoria.FactorPotencia 0.0) (gt .Memoria.Corrientes.CorrienteNominal 0.0)}}
-            {{formatFloat2 .Memoria.Corrientes.CorrienteNominal}} A
-          {{else}}
-            {{formatFloat2 .Memoria.Corrientes.CorrienteNominal}} A
-          {{end}}
-        </td>
-      </tr>
-    </tbody>
-  </table>
+  <div class="card">
+    <h3
+      style="font-size: 9pt; color: var(--primary); margin-bottom: 12px; font-weight: 700; text-transform: uppercase;">
+      Condiciones de Diseño e Instalación
+    </h3>
+    <div class="data-grid">
+      <div class="data-item">
+        <span class="data-label">Tensión de Operación</span>
+        <span class="data-value">{{.Memoria.Instalacion.Tension}} V</span>
+      </div>
+      <div class="data-item">
+        <span class="data-label">Configuración de Sistema</span>
+        <span class="data-value">{{.Memoria.Instalacion.SistemaElectrico}}</span>
+      </div>
+      <div class="data-item">
+        <span class="data-label">Tipo de Canalización</span>
+        <span class="data-value">{{.Memoria.Instalacion.TipoCanalizacion}}</span>
+      </div>
+      <div class="data-item">
+        <span class="data-label">Material Conductor</span>
+        <span class="data-value">
+          {{if or (eq .Memoria.Instalacion.Material "Cu") (eq .Memoria.Instalacion.Material "CU")}}Cobre
+          (Cu){{else}}Aluminio (Al){{end}}
+        </span>
+      </div>
+      <div class="data-item">
+        <span class="data-label">Longitud de Trayectoria</span>
+        <span class="data-value">{{formatFloat2 .Memoria.Instalacion.LongitudCircuito}} m</span>
+      </div>
+      <div class="data-item">
+        <span class="data-label">Temperatura Ambiente</span>
+        <span class="data-value">{{.Memoria.Corrientes.TemperaturaAmbiente}} °C</span>
+      </div>
+      <div class="data-item">
+        <span class="data-label">Límite Caída de Tensión</span>
+        <span class="data-value">{{formatFloat2 .Memoria.Instalacion.PorcentajeCaidaMaximo}} %</span>
+      </div>
+      <div class="data-item">
+        <span class="data-label">Hilos por Fase</span>
+        <span class="data-value">{{.Memoria.Instalacion.HilosPorFase}}</span>
+      </div>
+    </div>
+  </div>
 
-  <!-- Parámetros de instalación -->
-  <table style="margin-top: 8pt;">
-    <thead>
-      <tr>
-        <th colspan="2">Parámetros de Instalación</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td class="etiqueta">Voltaje de Operación</td>
-        <td class="valor valor-numerico">{{.Memoria.Instalacion.Tension}} V</td>
-      </tr>
-      <tr>
-        <td class="etiqueta">Sistema Eléctrico</td>
-        <td class="valor">{{.Memoria.Instalacion.SistemaElectrico}}</td>
-      </tr>
-      <tr>
-        <td class="etiqueta">Tipo de Canalización</td>
-        <td class="valor">{{.Memoria.Instalacion.TipoCanalizacion}}</td>
-      </tr>
-      <tr>
-        <td class="etiqueta">Material del Conductor</td>
-        <td class="valor">
-          {{if or (eq .Memoria.Instalacion.Material "Cu") (eq .Memoria.Instalacion.Material "CU")}}Cobre (Cu){{else if or (eq .Memoria.Instalacion.Material "Al") (eq .Memoria.Instalacion.Material "AL")}}Aluminio (Al){{else}}{{.Memoria.Instalacion.Material}}{{end}}
-        </td>
-      </tr>
-      <tr>
-        <td class="etiqueta">Longitud del Alimentador</td>
-        <td class="valor valor-numerico">{{formatFloat2 .Memoria.Instalacion.LongitudCircuito}} m</td>
-      </tr>
-      <tr>
-        <td class="etiqueta">Hilos por Fase</td>
-        <td class="valor valor-numerico">{{.Memoria.Instalacion.HilosPorFase}}</td>
-      </tr>
-      <tr>
-        <td class="etiqueta">Estado / Entidad</td>
-        <td class="valor">{{.Memoria.Estado}}</td>
-      </tr>
-      <tr>
-        <td class="etiqueta">Temperatura Ambiente</td>
-        <td class="valor valor-numerico">{{.Memoria.Corrientes.TemperaturaAmbiente}} °C</td>
-      </tr>
-      <tr>
-        <td class="etiqueta">% Caída Máxima Permitida</td>
-        <td class="valor valor-numerico">{{formatFloat2 .Memoria.Instalacion.PorcentajeCaidaMaximo}} %</td>
-      </tr>
-    </tbody>
-  </table>
 </div>
 {{end}}
