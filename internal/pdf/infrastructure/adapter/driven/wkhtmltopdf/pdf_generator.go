@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 )
 
 const (
@@ -75,10 +76,20 @@ func (g *PdfGeneratorAdapter) Generate(ctx context.Context, htmlContent string) 
 	}
 	defer os.RemoveAll(tmpDir) // limpiar siempre al finalizar
 
+	// Leer CSS una vez para inyectar en todos los archivos HTML
+	cssData, err := fs.ReadFile(g.templatesFS, "templates/styles/pdf.css")
+	if err != nil {
+		return nil, fmt.Errorf("leyendo CSS: %w", err)
+	}
+	cssContent := string(cssData)
+
 	// 1. Escribir HTML principal a archivo temporal
 	htmlFile := filepath.Join(tmpDir, "memoria.html")
 	if err := os.WriteFile(htmlFile, []byte(htmlContent), 0600); err != nil {
 		return nil, fmt.Errorf("escribiendo HTML temporal: %w", err)
+	}
+	if err := injectCSS(htmlFile, cssContent); err != nil {
+		return nil, fmt.Errorf("inyectando CSS en HTML: %w", err)
 	}
 
 	// 2. Extraer header.html del embed.FS y escribirlo como archivo temporal
@@ -86,11 +97,17 @@ func (g *PdfGeneratorAdapter) Generate(ctx context.Context, htmlContent string) 
 	if err := extractTemplate(g.templatesFS, "templates/partials/header.html", headerFile); err != nil {
 		return nil, fmt.Errorf("extrayendo header template: %w", err)
 	}
+	if err := injectCSS(headerFile, cssContent); err != nil {
+		return nil, fmt.Errorf("inyectando CSS en header: %w", err)
+	}
 
 	// 3. Extraer footer.html del embed.FS y escribirlo como archivo temporal
 	footerFile := filepath.Join(tmpDir, "footer.html")
 	if err := extractTemplate(g.templatesFS, "templates/partials/footer.html", footerFile); err != nil {
 		return nil, fmt.Errorf("extrayendo footer template: %w", err)
+	}
+	if err := injectCSS(footerFile, cssContent); err != nil {
+		return nil, fmt.Errorf("inyectando CSS en footer: %w", err)
 	}
 
 	// 4. Archivo de salida PDF
@@ -193,6 +210,24 @@ func extractTemplate(templatesFS fs.FS, templatePath, destPath string) error {
 
 	if err := os.WriteFile(destPath, content, 0600); err != nil {
 		return fmt.Errorf("escribiendo %q: %w", destPath, err)
+	}
+
+	return nil
+}
+
+// injectCSS inyecta el contenido CSS dentro de una etiqueta <style> en el <head> del archivo HTML.
+func injectCSS(filePath, cssContent string) error {
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		return fmt.Errorf("leyendo archivo %q: %w", filePath, err)
+	}
+
+	html := string(data)
+	styleTag := "<style>" + cssContent + "</style>"
+	html = strings.Replace(html, "</head>", styleTag+"</head>", 1)
+
+	if err := os.WriteFile(filePath, []byte(html), 0600); err != nil {
+		return fmt.Errorf("escribiendo archivo %q con CSS: %w", filePath, err)
 	}
 
 	return nil

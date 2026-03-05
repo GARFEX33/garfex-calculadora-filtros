@@ -16,7 +16,8 @@ import (
 // HtmlRendererAdapter implementa port.HtmlRenderer usando html/template con embed.FS.
 // Los templates se parsean en la construcción (fail-fast) y se reutilizan en cada llamada.
 type HtmlRendererAdapter struct {
-	tmpl *htmpl.Template
+	tmpl       *htmpl.Template
+	cssContent string
 }
 
 // NewHtmlRenderer crea un HtmlRendererAdapter parseando todos los templates de templatesFS.
@@ -111,6 +112,10 @@ func NewHtmlRenderer(templatesFS fs.FS) (*HtmlRendererAdapter, error) {
 		"mulIntFloat": func(i int, f float64) float64 {
 			return float64(i) * f
 		},
+		// mulInt multiplica dos enteros → int (para HilosPorFase × 3 = total conductores)
+		"mulInt": func(a, b int) int {
+			return a * b
+		},
 		// intToFloat convierte int a float64
 		"intToFloat": func(i int) float64 {
 			return float64(i)
@@ -141,7 +146,13 @@ func NewHtmlRenderer(templatesFS fs.FS) (*HtmlRendererAdapter, error) {
 		return nil, fmt.Errorf("parseando templates: %w", err)
 	}
 
-	return &HtmlRendererAdapter{tmpl: tmpl}, nil
+	// Leer CSS consolidado para inyección inline
+	cssBytes, err := fs.ReadFile(templatesFS, "templates/styles/pdf.css")
+	if err != nil {
+		return nil, fmt.Errorf("leyendo CSS: %w", err)
+	}
+
+	return &HtmlRendererAdapter{tmpl: tmpl, cssContent: string(cssBytes)}, nil
 }
 
 // Render aplica los datos al template identificado por templateName y retorna el HTML completo.
@@ -151,7 +162,14 @@ func (r *HtmlRendererAdapter) Render(templateName string, data dto.TemplateData)
 	if err := r.tmpl.ExecuteTemplate(&buf, templateName, data); err != nil {
 		return "", fmt.Errorf("ejecutando template %q: %w", templateName, err)
 	}
-	return buf.String(), nil
+
+	html := buf.String()
+	if r.cssContent != "" {
+		styleTag := "<style>" + r.cssContent + "</style>"
+		html = strings.Replace(html, "</head>", styleTag+"</head>", 1)
+	}
+
+	return html, nil
 }
 
 // containsStr es una función auxiliar para verificar si s contiene sub.

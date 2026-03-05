@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/garfex/calculadora-filtros/internal/pdf"
@@ -103,7 +104,14 @@ func (uc *GenerarMemoriaPdfUseCase) Execute(
 		return nil, fmt.Errorf("%w: %v", domain.ErrRenderizadoHtml, err)
 	}
 
-	// 7. Generar PDF desde HTML
+	// 7. Embed CSS inline para wkhtmltopdf
+	// wkhtmltopdf no puede resolver URLs locales, necesitamos CSS embebido
+	html, err = embedCSS(html)
+	if err != nil {
+		return nil, fmt.Errorf("%w: %v", domain.ErrRenderizadoHtml, err)
+	}
+
+	// 8. Generar PDF desde HTML
 	pdfBytes, err := uc.generator.Generate(ctx, html)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %v", domain.ErrGeneracionPdf, err)
@@ -126,4 +134,27 @@ func cargarLogoBase64(logoPath string) string {
 	}
 
 	return base64.StdEncoding.EncodeToString(data)
+}
+
+// embedCSS carga el archivo CSS embebido y lo reemplaza inline en el HTML.
+// wkhtmltopdf no puede resolver referencias a archivos locales externos,
+// por lo que el CSS debe estar embebido como <style>...</style>.
+func embedCSS(htmlContent string) (string, error) {
+	// Cargar CSS desde el FS embebido
+	cssData, err := pdf.TemplatesFS.ReadFile("templates/styles/pdf.css")
+	if err != nil {
+		return "", fmt.Errorf("leyendo archivo CSS: %w", err)
+	}
+	cssContent := string(cssData)
+
+	// Reemplazar <link rel="stylesheet" href="/style.css"> con <style>...CSS...</style>
+	// El template usa: <link rel="stylesheet" href="/style.css">
+	replaced := strings.Replace(
+		htmlContent,
+		`<link rel="stylesheet" href="/style.css">`,
+		`<style>`+cssContent+`</style>`,
+		1, // solo reemplazar la primera ocurrencia
+	)
+
+	return replaced, nil
 }

@@ -3,52 +3,6 @@
 <head>
 <meta charset="utf-8">
 {{define "footer"}}
-<style>
-  /* Footer standalone — inline CSS requerido por wkhtmltopdf */
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: Arial, Helvetica, sans-serif;
-    font-size: 8pt;
-    color: #6b6b6b;
-    background: #ffffff;
-    padding: 3mm 8mm;
-    border-top: 1pt solid #d0d0d0;
-  }
-  .footer-contenido {
-    display: table;
-    width: 100%;
-  }
-  .footer-empresa-col {
-    display: table-cell;
-    vertical-align: middle;
-    width: 60%;
-  }
-  .footer-empresa-nombre {
-    font-size: 8pt;
-    font-weight: bold;
-    color: #3d3d3d;
-  }
-  .footer-empresa-contacto {
-    font-size: 7pt;
-    color: #6b6b6b;
-    margin-top: 1pt;
-  }
-  .footer-pagina-col {
-    display: table-cell;
-    vertical-align: middle;
-    text-align: right;
-    width: 40%;
-  }
-  .footer-pagina {
-    font-size: 8pt;
-    color: #3d3d3d;
-  }
-  .footer-normativa {
-    font-size: 7pt;
-    color: #6b6b6b;
-    margin-top: 1pt;
-  }
-</style>
 </head>
 <body>
   <!-- Footer con paginación automática usando variables JavaScript de wkhtmltopdf -->
