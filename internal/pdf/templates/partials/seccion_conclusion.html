@@ -8,7 +8,7 @@
 
 
   <!-- Circuito completo -->
-  <div class="card" style="background-color: var(--primary-light); border-color: var(--primary);">
+  <div class="card" style=" border-color: var(--primary);">
     <h3 style="font-size: 9pt; color: var(--primary); margin-bottom: 8pt;">Circuito Completo</h3>
     <p class="desarrollo">
       {{.Memoria.Instalacion.HilosPorFase}} set de
@@ -90,7 +90,7 @@
   <!-- Observaciones -->
   {{if $observaciones}}
   <div class="card">
-    <h3 style="font-size: 9pt; color: var(--primary); margin-bottom: 8pt;">Observaciones</h3>
+    <h3 style="font-size: 9pt; margin-bottom: 8pt;">Observaciones</h3>
     <ul class="observaciones-lista">
       {{range $observaciones}}
       <li>{{.}}</li>

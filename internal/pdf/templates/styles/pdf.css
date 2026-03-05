@@ -79,7 +79,6 @@ h2 {
    ───────────────────────────────────────────────────────────────────────── */
 .card {
   border: none;
-  border-top: 1pt solid #ccc;
   padding: 10pt 0;
   margin-bottom: 15pt;
   background: #ffffff;
@@ -88,20 +87,19 @@ h2 {
   page-break-inside: avoid;
 }
 
-/* ─────────────────────────────────────────────────────────────────────────
-   DATA GRID SYSTEM
-   ───────────────────────────────────────────────────────────────────────── */
+/* DATA GRID SYSTEM - Using flexbox for wkhtmltopdf compatibility */
 .data-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px 24px;
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
 }
 
 .data-item {
+  width: 50%;
+  padding: 8px 10px;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  border-bottom: 1px solid #ddd;
-  padding-bottom: 6px;
 }
 
 .data-label {

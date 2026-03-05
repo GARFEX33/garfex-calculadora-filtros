@@ -134,6 +134,38 @@ curl http://localhost:8080/health
 
 ---
 
+## Desarrollo de PDF
+
+### Preview en vivo (hot-reload)
+
+```bash
+go run cmd/pdf_preview/main.go
+```
+
+- Servidor en `http://localhost:3000`
+- Se actualiza automáticamente cuando cambiás los templates
+- Cambiar empresa: `?empresa=garfex` | `?empresa=summaa` | `?empresa=siemens`
+- Puerto personalizado: `-port=3001`
+
+### Generar PDF directo
+
+```bash
+go run cmd/pdf_test/main.go -empresa=garfex
+```
+
+- Genera `test_output.pdf` en la raíz del proyecto
+- Opciones de empresa: `garfex`, `summaa`, `siemens`
+
+### Templates PDF
+
+Los templates están en `internal/pdf/templates/`:
+- `memoria.html` - Template principal
+- `partials/header.html` - Encabezado
+- `partials/footer.html` - Pie de página
+- `styles/pdf.css` - Estilos consolidados
+
+---
+
 ## Testing
 
 ```bash
