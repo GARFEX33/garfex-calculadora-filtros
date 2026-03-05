@@ -400,7 +400,7 @@ td {
   align-items: center;
   justify-content: center;
   color: #ffffff;
-  background: var(--primary);
+  background: {{if eq .Empresa.ID "garfex"}}transparent{{else}}{{.Empresa.ColorPrimario}}{{end}};
 }
 
 .logo-circle img {
