@@ -224,7 +224,12 @@ func injectCSS(filePath, cssContent string) error {
 
 	html := string(data)
 	styleTag := "<style>" + cssContent + "</style>"
-	html = strings.Replace(html, "</head>", styleTag+"</head>", 1)
+	html = strings.Replace(
+		html,
+		`<link rel="stylesheet" href="/style.css">`,
+		styleTag,
+		1,
+	)
 
 	if err := os.WriteFile(filePath, []byte(html), 0600); err != nil {
 		return fmt.Errorf("escribiendo archivo %q con CSS: %w", filePath, err)

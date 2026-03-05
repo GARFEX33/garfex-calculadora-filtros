@@ -166,7 +166,12 @@ func (r *HtmlRendererAdapter) Render(templateName string, data dto.TemplateData)
 	html := buf.String()
 	if r.cssContent != "" {
 		styleTag := "<style>" + r.cssContent + "</style>"
-		html = strings.Replace(html, "</head>", styleTag+"</head>", 1)
+		html = strings.Replace(
+			html,
+			`<link rel="stylesheet" href="/style.css">`,
+			styleTag,
+			1,
+		)
 	}
 
 	return html, nil
