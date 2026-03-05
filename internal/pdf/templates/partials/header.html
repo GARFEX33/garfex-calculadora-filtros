@@ -9,7 +9,7 @@
 <body>
   <div class="header-contenido">
     <div class="header-logo-col">
-      <div class="logo-circle">
+      <div class="logo-circle" style="background: {{if eq .Empresa.ID "garfex"}}transparent{{else}}{{.Empresa.ColorPrimario}}{{end}};">
         {{if eq .Empresa.ID "garfex"}}
           <img src="data:image/png;base64,{{.LogoLetraBase64}}" alt="Garfex" />
         {{else}}
