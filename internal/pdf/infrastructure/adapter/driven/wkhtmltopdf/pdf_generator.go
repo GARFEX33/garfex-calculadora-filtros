@@ -173,10 +173,10 @@ func buildWkhtmltopdfArgs(htmlFile, headerFile, footerFile, outputFile string) [
 	return []string{
 		// Configuración de página
 		"--page-size", "Letter",
-		"--margin-top", "20mm",
-		"--margin-bottom", "25mm",
-		"--margin-left", "25mm",
-		"--margin-right", "15mm",
+		"--margin-top", "10mm",
+		"--margin-bottom", "15mm",
+		"--margin-left", "15mm",
+		"--margin-right", "10mm",
 
 		// Header y footer como archivos HTML separados
 		"--header-html", headerFile,

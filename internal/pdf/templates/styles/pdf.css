@@ -43,7 +43,7 @@
    ───────────────────────────────────────────────────────────────────────── */
 @page {
   size: Letter;
-  margin: 15mm;
+  margin: 10mm;
 }
 
 * {
@@ -56,9 +56,8 @@ body {
   font-family: var(--fuente-main);
   font-size: 10pt;
   color: var(--text-main);
-  background: var(--bg-body);
+  background: #ffffff;
   line-height: 1.5;
-  padding: 20px;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
@@ -71,22 +70,21 @@ h2 {
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin-bottom: 15px;
-  display: flex;
-  align-items: center;
-  border-bottom: 2px solid var(--primary-light);
-  padding-bottom: 8px;
+  padding-bottom: 5px;
+  border-bottom: 1pt solid #ccc;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
    CARDS
    ───────────────────────────────────────────────────────────────────────── */
 .card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 20px;
-  margin-bottom: 20px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border: none;
+  border-top: 1pt solid #ccc;
+  padding: 10pt 0;
+  margin-bottom: 15pt;
+  background: #ffffff;
+  box-shadow: none;
+  border-radius: 0;
   page-break-inside: avoid;
 }
 
@@ -102,7 +100,7 @@ h2 {
 .data-item {
   display: flex;
   flex-direction: column;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid #ddd;
   padding-bottom: 6px;
 }
 
@@ -136,8 +134,6 @@ h2 {
 }
 
 .bloque-calculo {
-  background: var(--primary-light);
-  border-radius: var(--radius);
   padding: 12px 15px;
   margin: 10px 0;
   border-left: 3px solid var(--primary);
@@ -158,10 +154,6 @@ h2 {
   color: var(--primary);
   font-weight: 600;
   margin: 8px 0;
-  background: #ffffff;
-  padding: 8px 12px;
-  border-radius: 4px;
-  border: 1px solid var(--border);
 }
 
 .desarrollo {
@@ -315,7 +307,7 @@ tbody tr {
 }
 
 tbody tr:nth-child(even) {
-  background: var(--primary-light);
+  background: #ffffff;
 }
 
 td {
