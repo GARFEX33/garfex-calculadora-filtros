@@ -20,6 +20,7 @@
   /* Branding dinámico por empresa */
   --primary: {{.Empresa.ColorPrimario}};
   --secondary: {{.Empresa.ColorSecundario}};
+  --bg-soft: color-mix(in srgb, var(--primary) 5%, transparent);
   --primary-soft: color-mix(in srgb, var(--primary) 4%, transparent);
   --primary-light: color-mix(in srgb, var(--primary) 8%, transparent);
   --primary-border: color-mix(in srgb, var(--primary) 19%, transparent);
@@ -102,9 +103,9 @@ h2 {
     ───────────────────────────────────────────────────────────────────────── */
 .card {
   background: var(--bg-card);
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-lg);
-  padding: 20px 24px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 20px;
   margin-bottom: 16px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02);
   page-break-inside: avoid;
@@ -153,7 +154,7 @@ h2 {
   font-family: var(--font-sans);
   font-size: 7pt;
   font-weight: 600;
-  color: var(--text-muted);
+  color: #64748b;  /* gris oscuro */
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -161,8 +162,8 @@ h2 {
 .data-value {
   font-family: var(--font-sans);
   font-size: 10pt;
-  font-weight: 600;
-  color: var(--text-primary);
+  font-weight: 700;
+  color: var(--primary);  /* color de marca */
 }
 
 .data-value--highlight {
@@ -176,7 +177,7 @@ h2 {
     FORMULAS Y BLOQUES DE CÁLCULO (Premium)
     ───────────────────────────────────────────────────────────────────────── */
 .formula-box {
-  background: var(--primary-soft);
+  background: var(--bg-soft);
   border-left: 4px solid var(--primary);
   border-radius: 0 var(--radius-md) var(--radius-md) 0;
   padding: 16px 20px;
@@ -293,9 +294,13 @@ h2 {
 }
 
 .badge-success {
-  background-color: #22c55e;
-  color: #ffffff;
-  border: 1px solid #16a34a;
+  background-color: #dcfce7;
+  color: #166534;
+  border: 1px solid #86efac;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 50px;
+  display: inline-block;
 }
 
 .badge-error {
