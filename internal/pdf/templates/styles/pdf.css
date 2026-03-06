@@ -1,11 +1,12 @@
 /* ═══════════════════════════════════════════════════════════════════════════
    pdf.css — Consolidated PDF Styles
    Optimizado para memorias de cálculo eléctrico (NOM-001-SEDE-2012)
+   Compatible con Gotenberg 8.x (Chromium)
    ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ─────────────────────────────────────────────────────────────────────────
-   CSS VARIABLES / TOKENS
-   ───────────────────────────────────────────────────────────────────────── */
+    CSS VARIABLES / TOKENS
+    ───────────────────────────────────────────────────────────────────────── */
 :root {
   /* Colores Corporativos Garfex */
   --primary: #7C0000;
@@ -39,11 +40,23 @@
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
-   PAGE SETUP
-   ───────────────────────────────────────────────────────────────────────── */
+    PAGE SETUP - Gotenberg 8.x Compatible
+    ───────────────────────────────────────────────────────────────────────── */
 @page {
   size: Letter;
   margin: 12mm;
+  margin-bottom: 20mm; /* Extra space for footer */
+  
+  /* Paged Media counter - Chromium/Gotenberg compatible */
+  counter-reset: page;
+  
+  /* Bottom center footer with page numbers - Gotenberg native support */
+  @bottom-center {
+    content: "Página " counter(page) " de " counter(pages);
+    font-size: 8pt;
+    font-family: var(--fuente-main);
+    color: #3d3d3d;
+  }
 }
 
 * {

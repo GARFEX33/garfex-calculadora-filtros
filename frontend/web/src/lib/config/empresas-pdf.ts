@@ -17,8 +17,8 @@ export const EMPRESAS_PDF: EmpresaPdf[] = [
 		id: 'garfex',
 		nombre: 'Garfex Ingeniería Eléctrica S.A. de C.V.',
 		direccion: 'Av. Insurgentes Sur 1234, Col. Del Valle, CDMX, C.P. 03100',
-		telefono: '+52 55 1234-5678',
-		email: 'contacto@garfex.mx'
+		telefono: '+52 55 1193-0515',
+		email: 'jcgarcia@garfex.mx'
 	},
 	{
 		id: 'summaa',

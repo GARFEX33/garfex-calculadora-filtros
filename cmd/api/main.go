@@ -37,8 +37,8 @@ import (
 	pdfpkg "github.com/garfex/calculadora-filtros/internal/pdf"
 	pdfusecase "github.com/garfex/calculadora-filtros/internal/pdf/application/usecase"
 	pdfinfra "github.com/garfex/calculadora-filtros/internal/pdf/infrastructure"
+	pdfgotenberg "github.com/garfex/calculadora-filtros/internal/pdf/infrastructure/adapter/driven/gotenberg"
 	htmltemplate "github.com/garfex/calculadora-filtros/internal/pdf/infrastructure/adapter/driven/template"
-	pdfwkhtmltopdf "github.com/garfex/calculadora-filtros/internal/pdf/infrastructure/adapter/driven/wkhtmltopdf"
 	pdfhttp "github.com/garfex/calculadora-filtros/internal/pdf/infrastructure/adapter/driver/http"
 
 	sharedpostgres "github.com/garfex/calculadora-filtros/internal/shared/infrastructure/postgres"
@@ -146,9 +146,9 @@ func main() {
 		log.Fatalf("Error inicializando renderer HTML del módulo PDF: %v", err)
 	}
 
-	pdfGenerator, err := pdfwkhtmltopdf.NewPdfGenerator(pdfpkg.TemplatesFS)
+	pdfGenerator, err := pdfgotenberg.NewPdfGenerator(pdfpkg.TemplatesFS)
 	if err != nil {
-		log.Fatalf("Error inicializando generador PDF (wkhtmltopdf): %v", err)
+		log.Fatalf("Error inicializando generador PDF (Gotenberg): %v", err)
 	}
 
 	generarMemoriaUC := pdfusecase.NewGenerarMemoriaPdf(htmlRenderer, pdfGenerator, 3)
