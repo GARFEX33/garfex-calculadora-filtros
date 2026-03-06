@@ -59,21 +59,36 @@ func NewPdfGeneratorWithConfig(templatesFS fs.FS, cfg *Config) *PdfGeneratorAdap
 // Generate convierte el HTML a PDF usando el servicio Gotenberg.
 // Implementa port.PdfGenerator.
 func (g *PdfGeneratorAdapter) Generate(ctx context.Context, htmlContent string) ([]byte, error) {
+	return g.GenerateWithFooter(ctx, htmlContent, "")
+}
+
+// GenerateWithFooter convierte el HTML a PDF usando el servicio Gotenberg con un footer renderizado.
+// Si footerHTML está vacío, usa el footer del FS embebido (comportamiento legacy).
+// Implementa port.PdfGenerator.
+func (g *PdfGeneratorAdapter) GenerateWithFooter(ctx context.Context, htmlContent, footerHTML string) ([]byte, error) {
 	// 1. El HTML ya contiene CSS embebido desde memoria.html con variables dinámicas
 
-	// 2. Extraer header del FS embebido (footer se maneja vía CSS @page margin-box en memoria.html)
+	// 2. Extraer header del FS embebido
 	headerContent, err := g.extractTemplate(rutaHeader, "")
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", ErrGeneracionPdf, err)
 	}
 
-	// NOTA: El CSS ya está embebido en el HTML vía memoria.html.
-	// La paginación se maneja vía CSS @page { @bottom-right } en memoria.html
-	// Esto es más compatible con Chromium/Gotenberg que los footers HTML personalizados.
+	// 3. Usar footer renderizado si se provee, sino extraer del FS
+	var footerContent string
+	if footerHTML != "" {
+		footerContent = footerHTML
+	} else {
+		// Fallback: extraer del FS (legacy behavior)
+		footerContent, err = g.extractTemplate(rutaFooter, "")
+		if err != nil {
+			return nil, fmt.Errorf("%s: %w", ErrGeneracionPdf, err)
+		}
+	}
 
-	// 3. El HTML ya tiene CSS embebido - no necesita inyección adicional
+	// 4. El HTML ya tiene CSS embebido - no necesita inyección adicional
 
-	// 4. Construir el formulario multipart
+	// 5. Construir el formulario multipart
 	form := NewFormBuilder()
 	if err := form.AddHTML(htmlContent); err != nil {
 		return nil, wrapError(err, "añadiendo HTML")
@@ -83,22 +98,29 @@ func (g *PdfGeneratorAdapter) Generate(ctx context.Context, htmlContent string) 
 		return nil, wrapError(err, "añadiendo header")
 	}
 
-	// Footer eliminado: paginación vía CSS @page { @bottom-right } en memoria.html
+	// Footer con paginación nativa de Chromium (pageNumber/totalPages)
+	if err := form.AddFooter(footerContent); err != nil {
+		return nil, wrapError(err, "añadiendo footer")
+	}
 
 	// Opciones de conversión para Gotenberg (formato Letter como wkhtmltopdf)
 	form.AddOption("pdfFormat", "Letter")
 	form.AddOption("marginTop", "10mm")
-	form.AddOption("marginBottom", "25mm") // Mayor margen para acomodar footer CSS
+	form.AddOption("marginBottom", "25mm")
 	form.AddOption("marginLeft", "15mm")
 	form.AddOption("marginRight", "10mm")
 
-	// 5. Construir el body del request
+	// waitDelay para que MathJax renderice las fórmulas matemáticas
+	// Chromium espera este tiempo después de cargar la página antes de generar el PDF
+	form.AddOption("waitDelay", "3s")
+
+	// 6. Construir el body del request
 	body, err := form.Build()
 	if err != nil {
 		return nil, wrapError(err, "construyendo formulario")
 	}
 
-	// 6. Realizar la petición HTTP con reintentos
+	// 7. Realizar la petición HTTP con reintentos
 	log.Printf("[DEBUG] gotenberg: calling Gotenberg at URL: %s", g.config.URL)
 	resp, err := g.httpClient.PostMultipart(
 		ctx,
@@ -112,7 +134,7 @@ func (g *PdfGeneratorAdapter) Generate(ctx context.Context, htmlContent string) 
 		return nil, wrapError(err, "llamando a Gotenberg")
 	}
 
-	// 7. Validar que tenemos contenido PDF
+	// 8. Validar que tenemos contenido PDF
 	if len(resp.Body) == 0 {
 		return nil, errors.New("Gotenberg generó un PDF vacío")
 	}

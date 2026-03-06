@@ -156,7 +156,16 @@ func NewHtmlRenderer(templatesFS fs.FS) (*HtmlRendererAdapter, error) {
 // El CSS ya está embebido en memoria.html con variables dinámicas {{.Empresa.ColorPrimario}}
 func (r *HtmlRendererAdapter) Render(templateName string, data dto.TemplateData) (string, error) {
 	var buf bytes.Buffer
-	if err := r.tmpl.ExecuteTemplate(&buf, templateName, data); err != nil {
+
+	// Para templates partial que usan {{define}}, necesitamos ejecutar el define interno
+	// en lugar del archivo directamente. Esto es necesario porque footer.html
+	// usa {{define "footer"}} para ser incluido en memoria.html
+	templateToExecute := templateName
+	if templateName == "footer.html" {
+		templateToExecute = "footer"
+	}
+
+	if err := r.tmpl.ExecuteTemplate(&buf, templateToExecute, data); err != nil {
 		return "", fmt.Errorf("ejecutando template %q: %w", templateName, err)
 	}
 

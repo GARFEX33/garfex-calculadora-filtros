@@ -58,18 +58,7 @@
 @page {
   size: Letter;
   margin: 12mm;
-  margin-bottom: 20mm; /* Extra space for footer */
-  
-  /* Paged Media counter - Chromium/Gotenberg compatible */
-  counter-reset: page;
-  
-  /* Bottom right footer with page numbers - Gotenberg native support */
-  @bottom-right {
-    content: "Página " counter(page) " de " counter(pages);
-    font-size: 8pt;
-    font-family: var(--fuente-main);
-    color: #3d3d3d;
-  }
+  margin-bottom: 20mm; /* Extra space for footer - pagination via Gotenberg footer.html */
 }
 
 * {
