@@ -98,18 +98,6 @@ func (c *defaultHTTPClient) PostMultipart(
 			return nil, fmt.Errorf("leyendo response body: %w", err)
 		}
 
-		// DEBUG: Log response details
-		log.Printf("[DEBUG] gotenberg: HTTP response status: %d", resp.StatusCode)
-		log.Printf("[DEBUG] gotenberg: HTTP response headers: %v", resp.Header)
-		log.Printf("[DEBUG] gotenberg: Response body length: %d bytes", len(body))
-		if len(body) > 0 {
-			maxChars := 500
-			if len(body) < 500 {
-				maxChars = len(body)
-			}
-			log.Printf("[DEBUG] gotenberg: Response body first %d chars: %s", maxChars, string(body[:maxChars]))
-		}
-
 		// Verificar códigos de error HTTP
 		if !isSuccess(resp.StatusCode) {
 			// Error 5xx del servidor - reintentar

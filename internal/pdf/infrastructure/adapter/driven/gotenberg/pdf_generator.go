@@ -93,25 +93,11 @@ func (g *PdfGeneratorAdapter) GenerateWithHeaderFooter(ctx context.Context, html
 		return nil, wrapError(err, "añadiendo footer")
 	}
 
-	// Opciones de conversión para Gotenberg (formato Letter como wkhtmltopdf)
-	form.AddOption("pdfFormat", "Letter")
-	form.AddOption("marginTop", "20mm")
-	form.AddOption("marginBottom", "20mm")
+	// Opciones de conversión para Gotenberg
+	form.AddOption("marginTop", "25mm")
+	form.AddOption("marginBottom", "25mm")
 	form.AddOption("marginLeft", "12mm")
 	form.AddOption("marginRight", "12mm")
-
-	// DEBUG: Log form details
-	log.Printf("[DEBUG] gotenberg: Form boundary: %s", form.DebugString())
-	log.Printf("[DEBUG] gotenberg: HTML content length: %d bytes", len(htmlContent))
-	log.Printf("[DEBUG] gotenberg: Header content length: %d bytes", len(headerHTML))
-	log.Printf("[DEBUG] gotenberg: Footer content length: %d bytes", len(footerHTML))
-	if len(htmlContent) > 0 {
-		maxChars := 200
-		if len(htmlContent) < 200 {
-			maxChars = len(htmlContent)
-		}
-		log.Printf("[DEBUG] gotenberg: First 200 chars of HTML: %s", htmlContent[:maxChars])
-	}
 
 	// Sin waitDelay - MathJax fue removido del template
 	// La página carga inmediatamente sin scripts externos que renderizar
@@ -123,7 +109,6 @@ func (g *PdfGeneratorAdapter) GenerateWithHeaderFooter(ctx context.Context, html
 	}
 
 	// 7. Realizar la petición HTTP con reintentos
-	log.Printf("[DEBUG] gotenberg: calling Gotenberg at URL: %s", g.config.URL)
 	resp, err := g.httpClient.PostMultipart(
 		ctx,
 		g.config.URL,
