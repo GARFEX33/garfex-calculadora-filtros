@@ -71,7 +71,7 @@ body {
   color: var(--text-main);
   background: #ffffff;
   line-height: 1.4;
-  padding: 10mm;
+  padding: 0; /* Padding eliminado - @page margin ya provee el espacio */
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
@@ -415,7 +415,7 @@ td {
   align-items: center;
   justify-content: center;
   color: #ffffff;
-  background: {{if eq .Empresa.ID "garfex"}}transparent{{else}}{{.Empresa.ColorPrimario}}{{end}};
+  background: #7C0000; /* Color Garfex por defecto - Go templates no funcionan en CSS estático */
 }
 
 .logo-circle img {
