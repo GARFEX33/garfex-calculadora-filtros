@@ -21,7 +21,7 @@ export const EMPRESAS_PDF: EmpresaPdf[] = [
 		email: 'contacto@garfex.mx'
 	},
 	{
-		id: 'summa',
+		id: 'summaa',
 		nombre: 'Summa Ingeniería Eléctrica S.A. de C.V.',
 		direccion: 'Blvd. Manuel Ávila Camacho 800, Lomas de Chapultepec, CDMX, C.P. 11000',
 		telefono: '+52 55 9876-5432',
