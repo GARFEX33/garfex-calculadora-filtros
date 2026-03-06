@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"mime/multipart"
+	"net/textproto"
 	"strings"
 )
 
@@ -28,7 +29,7 @@ func NewFormBuilder() *FormBuilder {
 
 // AddHTML añade el contenido HTML principal como "index.html".
 func (fb *FormBuilder) AddHTML(htmlContent string) error {
-	return fb.addFile("index.html", "text/html", strings.NewReader(htmlContent))
+	return fb.addFile("files", "index.html", "text/html", strings.NewReader(htmlContent))
 }
 
 // AddHeader añade el contenido del header HTML.
@@ -37,7 +38,7 @@ func (fb *FormBuilder) AddHeader(headerContent string) error {
 	if headerContent == "" {
 		return nil
 	}
-	return fb.addFile("header.html", "text/html", strings.NewReader(headerContent))
+	return fb.addFile("header.html", "header.html", "text/html", strings.NewReader(headerContent))
 }
 
 // AddFooter añade el contenido del footer HTML.
@@ -46,7 +47,7 @@ func (fb *FormBuilder) AddFooter(footerContent string) error {
 	if footerContent == "" {
 		return nil
 	}
-	return fb.addFile("footer.html", "text/html", strings.NewReader(footerContent))
+	return fb.addFile("footer.html", "footer.html", "text/html", strings.NewReader(footerContent))
 }
 
 // AddCSS añade CSS embebido que se aplicará a todas las páginas.
@@ -65,15 +66,24 @@ func (fb *FormBuilder) AddOption(key, value string) error {
 	return fb.writer.WriteField(key, value)
 }
 
-// addFile añade un archivo al formulario con el nombre de campo especificado.
-func (fb *FormBuilder) addFile(fieldName, contentType string, reader io.Reader) error {
-	part, err := fb.writer.CreateFormFile(fieldName, fieldName)
+// addFile añade un archivo al formulario.
+// fieldName es el nombre del campo (para Gotenberg es siempre "files").
+// filename es el nombre del archivo (index.html, header.html, footer.html).
+// contentType es el tipo MIME del contenido.
+func (fb *FormBuilder) addFile(fieldName, filename, contentType string, reader io.Reader) error {
+	// Crear parte con headers personalizados para especificar Content-Type correcto
+	// Gotenberg 8 espera: name="files" filename="index.html" Content-Type="text/html"
+	h := make(textproto.MIMEHeader)
+	h.Set("Content-Disposition", fmt.Sprintf(`form-data; name="%s"; filename="%s"`, fieldName, filename))
+	h.Set("Content-Type", contentType)
+
+	part, err := fb.writer.CreatePart(h)
 	if err != nil {
-		return fmt.Errorf("creando form file %q: %w", fieldName, err)
+		return fmt.Errorf("creando form file %q (filename %q): %w", fieldName, filename, err)
 	}
 
 	if _, err := io.Copy(part, reader); err != nil {
-		return fmt.Errorf("copiando contenido a %q: %w", fieldName, err)
+		return fmt.Errorf("copiando contenido a %q (filename %q): %w", fieldName, filename, err)
 	}
 
 	return nil
@@ -82,6 +92,11 @@ func (fb *FormBuilder) addFile(fieldName, contentType string, reader io.Reader) 
 // ContentType retorna el Content-Type del formulario (incluye boundary).
 func (fb *FormBuilder) ContentType() string {
 	return fb.writer.FormDataContentType()
+}
+
+// DebugString returns a human-readable representation of the form for debugging
+func (fb *FormBuilder) DebugString() string {
+	return fmt.Sprintf("Form with boundary: %s", fb.writer.Boundary())
 }
 
 // Build retorna el cuerpo completo del formulario como slice de bytes.

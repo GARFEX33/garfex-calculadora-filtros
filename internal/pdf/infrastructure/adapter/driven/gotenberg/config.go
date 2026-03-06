@@ -109,13 +109,13 @@ func getGotenbergURL() string {
 	}
 
 	// Default URL (Gotenberg 8.x API)
-	defaultURL := "http://localhost:3000/forms/chromium/convert/html"
+	defaultURL := "http://localhost:3001/forms/chromium/convert/html"
 
 	// If running in WSL, try to detect Windows host IP
 	if isWSL() {
 		windowsIP := getWindowsIP()
 		if windowsIP != "" {
-			return fmt.Sprintf("http://%s:3000/forms/chromium/convert/html", windowsIP)
+			return fmt.Sprintf("http://%s:3001/forms/chromium/convert/html", windowsIP)
 		}
 		// Log a warning if we couldn't detect the IP (optional)
 	}
