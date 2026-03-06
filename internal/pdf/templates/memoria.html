@@ -103,22 +103,23 @@ h2 {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
-   CARDS - Modern Engineering Style
-   ───────────────────────────────────────────────────────────────────────── */
+    CARDS - Modern Engineering Style (Premium)
+    ───────────────────────────────────────────────────────────────────────── */
 .card {
-  border: 1px solid var(--border-light);
-  padding: 12pt 15pt;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
   margin-bottom: 15pt;
-  background: #ffffff;
-  border-radius: var(--radius);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  background: var(--bg-card);
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
   page-break-inside: avoid;
 }
 
-/* DATA GRID SYSTEM - Using CSS Grid */
+/* DATA GRID SYSTEM - Using CSS Grid (Modernized) */
 .data-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
+  gap: 15px;
   width: 100%;
 }
 
@@ -128,7 +129,7 @@ h2 {
 }
 
 .data-label {
-  font-size: 8pt;
+  font-size: 7pt;
   font-weight: 600;
   color: var(--text-muted);
   text-transform: uppercase;
@@ -141,13 +142,14 @@ h2 {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
-   FORMULAS Y BLOQUES DE CÁLCULO
-   ───────────────────────────────────────────────────────────────────────── */
+    FORMULAS Y BLOQUES DE CÁLCULO (Premium)
+    ───────────────────────────────────────────────────────────────────────── */
 .formula-box {
   border-radius: var(--radius);
-  
+  background: #f8fafc;
   padding: 15px;
   font-family: var(--fuente-mono);
+  font-size: 11pt;
   margin: 10px 0;
   color: var(--primary);
   border-left: 4px solid var(--primary);
@@ -352,7 +354,7 @@ h2 {
   vertical-align: top;
 }
 
-/* Legacy table support */
+/* Legacy table support (Premium) */
 table {
   width: 100%;
   border-collapse: collapse;
@@ -364,8 +366,7 @@ table {
 }
 
 thead {
-  background: var(--primary);
-  color: #ffffff;
+  background: transparent;
 }
 
 thead th {
@@ -375,10 +376,11 @@ thead th {
   text-transform: uppercase;
   font-size: 8pt;
   letter-spacing: 0.5px;
+  border-bottom: 2px solid var(--primary);
 }
 
 tbody tr {
-  border-bottom: 1px solid var(--border-light);
+  border-bottom: 1px solid #f0f0f0;
 }
 
 tbody tr:nth-child(even) {

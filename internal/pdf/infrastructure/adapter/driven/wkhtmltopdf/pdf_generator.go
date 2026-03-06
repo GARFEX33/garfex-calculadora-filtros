@@ -76,39 +76,26 @@ func (g *PdfGeneratorAdapter) Generate(ctx context.Context, htmlContent string) 
 	}
 	defer os.RemoveAll(tmpDir) // limpiar siempre al finalizar
 
-	// Leer CSS una vez para inyectar en todos los archivos HTML
-	cssData, err := fs.ReadFile(g.templatesFS, "templates/styles/pdf.css")
-	if err != nil {
-		return nil, fmt.Errorf("leyendo CSS: %w", err)
-	}
-	cssContent := string(cssData)
-
-	// 1. Escribir HTML principal a archivo temporal
+	// El HTML ya contiene CSS embebido desde memoria.html con variables dinámicas
 	htmlFile := filepath.Join(tmpDir, "memoria.html")
 	if err := os.WriteFile(htmlFile, []byte(htmlContent), 0600); err != nil {
 		return nil, fmt.Errorf("escribiendo HTML temporal: %w", err)
 	}
-	if err := injectCSS(htmlFile, cssContent); err != nil {
-		return nil, fmt.Errorf("inyectando CSS en HTML: %w", err)
-	}
+	// El HTML ya contiene CSS embebido desde memoria.html - no necesita inyección
 
 	// 2. Extraer header.html del embed.FS y escribirlo como archivo temporal
 	headerFile := filepath.Join(tmpDir, "header.html")
 	if err := extractTemplate(g.templatesFS, "templates/partials/header.html", headerFile); err != nil {
 		return nil, fmt.Errorf("extrayendo header template: %w", err)
 	}
-	if err := injectCSS(headerFile, cssContent); err != nil {
-		return nil, fmt.Errorf("inyectando CSS en header: %w", err)
-	}
+	// El header usa las variables CSS embebidas en memoria.html
 
 	// 3. Extraer footer.html del embed.FS y escribirlo como archivo temporal
 	footerFile := filepath.Join(tmpDir, "footer.html")
 	if err := extractTemplate(g.templatesFS, "templates/partials/footer.html", footerFile); err != nil {
 		return nil, fmt.Errorf("extrayendo footer template: %w", err)
 	}
-	if err := injectCSS(footerFile, cssContent); err != nil {
-		return nil, fmt.Errorf("inyectando CSS en footer: %w", err)
-	}
+	// El footer se maneja vía CSS @page en memoria.html
 
 	// 4. Archivo de salida PDF
 	pdfFile := filepath.Join(tmpDir, "memoria.pdf")

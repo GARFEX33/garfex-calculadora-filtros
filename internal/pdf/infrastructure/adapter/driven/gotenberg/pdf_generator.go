@@ -17,9 +17,6 @@ const (
 	// Se usa para identificar errores específicos del generador.
 	ErrGeneracionPdf = "ERR_GENERACION_PDF"
 
-	// rutaCSS es la ruta al archivo CSS dentro del FS embebido.
-	rutaCSS = "templates/styles/pdf.css"
-
 	// rutaHeader es la ruta al template de header dentro del FS embebido.
 	rutaHeader = "templates/partials/header.html"
 
@@ -62,29 +59,23 @@ func NewPdfGeneratorWithConfig(templatesFS fs.FS, cfg *Config) *PdfGeneratorAdap
 // Generate convierte el HTML a PDF usando el servicio Gotenberg.
 // Implementa port.PdfGenerator.
 func (g *PdfGeneratorAdapter) Generate(ctx context.Context, htmlContent string) ([]byte, error) {
-	// 1. Leer el CSS una sola vez
-	cssData, err := fs.ReadFile(g.templatesFS, rutaCSS)
-	if err != nil {
-		return nil, wrapError(err, "leyendo CSS")
-	}
-	cssContent := string(cssData)
+	// 1. El HTML ya contiene CSS embebido desde memoria.html con variables dinámicas
 
-	// 2. Extraer header del FS embebido (footer se maneja vía CSS @page margin-box)
-	headerContent, err := g.extractTemplate(rutaHeader, cssContent)
+	// 2. Extraer header del FS embebido (footer se maneja vía CSS @page margin-box en memoria.html)
+	headerContent, err := g.extractTemplate(rutaHeader, "")
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", ErrGeneracionPdf, err)
 	}
 
-	// NOTA: Ya no usamos footer.html personalizado.
-	// La paginación se maneja vía CSS @page { @bottom-center } en pdf.css
+	// NOTA: El CSS ya está embebido en el HTML vía memoria.html.
+	// La paginación se maneja vía CSS @page { @bottom-right } en memoria.html
 	// Esto es más compatible con Chromium/Gotenberg que los footers HTML personalizados.
 
-	// 3. Inyectar CSS en el HTML principal
-	htmlWithCSS := injectCSSIntoHTML(htmlContent, cssContent)
+	// 3. El HTML ya tiene CSS embebido - no necesita inyección adicional
 
 	// 4. Construir el formulario multipart
 	form := NewFormBuilder()
-	if err := form.AddHTML(htmlWithCSS); err != nil {
+	if err := form.AddHTML(htmlContent); err != nil {
 		return nil, wrapError(err, "añadiendo HTML")
 	}
 
@@ -92,8 +83,7 @@ func (g *PdfGeneratorAdapter) Generate(ctx context.Context, htmlContent string) 
 		return nil, wrapError(err, "añadiendo header")
 	}
 
-	// Footer eliminado: paginación vía CSS @page { @bottom-center }
-	// Ver pdf.css para la configuración de paginación
+	// Footer eliminado: paginación vía CSS @page { @bottom-right } en memoria.html
 
 	// Opciones de conversión para Gotenberg (formato Letter como wkhtmltopdf)
 	form.AddOption("pdfFormat", "Letter")

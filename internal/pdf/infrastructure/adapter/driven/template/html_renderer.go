@@ -16,8 +16,7 @@ import (
 // HtmlRendererAdapter implementa port.HtmlRenderer usando html/template con embed.FS.
 // Los templates se parsean en la construcción (fail-fast) y se reutilizan en cada llamada.
 type HtmlRendererAdapter struct {
-	tmpl       *htmpl.Template
-	cssContent string
+	tmpl *htmpl.Template
 }
 
 // NewHtmlRenderer crea un HtmlRendererAdapter parseando todos los templates de templatesFS.
@@ -146,35 +145,23 @@ func NewHtmlRenderer(templatesFS fs.FS) (*HtmlRendererAdapter, error) {
 		return nil, fmt.Errorf("parseando templates: %w", err)
 	}
 
-	// Leer CSS consolidado para inyección inline
-	cssBytes, err := fs.ReadFile(templatesFS, "templates/styles/pdf.css")
-	if err != nil {
-		return nil, fmt.Errorf("leyendo CSS: %w", err)
-	}
+	// El CSS ya está embebido en memoria.html con variables dinámicas {{.Empresa.ColorPrimario}}
+	// No se necesita lectura adicional de CSS
 
-	return &HtmlRendererAdapter{tmpl: tmpl, cssContent: string(cssBytes)}, nil
+	return &HtmlRendererAdapter{tmpl: tmpl}, nil
 }
 
 // Render aplica los datos al template identificado por templateName y retorna el HTML completo.
 // Implementa port.HtmlRenderer.
+// El CSS ya está embebido en memoria.html con variables dinámicas {{.Empresa.ColorPrimario}}
 func (r *HtmlRendererAdapter) Render(templateName string, data dto.TemplateData) (string, error) {
 	var buf bytes.Buffer
 	if err := r.tmpl.ExecuteTemplate(&buf, templateName, data); err != nil {
 		return "", fmt.Errorf("ejecutando template %q: %w", templateName, err)
 	}
 
-	html := buf.String()
-	if r.cssContent != "" {
-		styleTag := "<style>" + r.cssContent + "</style>"
-		html = strings.Replace(
-			html,
-			`<link rel="stylesheet" href="/style.css">`,
-			styleTag,
-			1,
-		)
-	}
-
-	return html, nil
+	// El HTML ya contiene CSS embebido desde memoria.html - no necesita inyección adicional
+	return buf.String(), nil
 }
 
 // containsStr es una función auxiliar para verificar si s contiene sub.

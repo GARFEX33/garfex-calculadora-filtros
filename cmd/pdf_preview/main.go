@@ -150,7 +150,7 @@ func main() {
 	// Configurar rutas
 	http.HandleFunc("/", handleIndex)
 	http.HandleFunc("/health", handleHealth)
-	http.HandleFunc("/style.css", handleStyleCSS)
+	// CSS embebido en memoria.html - no necesita ruta separada
 
 	// Iniciar servidor
 	addr := ":" + *port
@@ -185,19 +185,6 @@ func handleIndex(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Cache-Control", "no-cache")
 	fmt.Fprint(w, html)
-}
-
-func handleStyleCSS(w http.ResponseWriter, r *http.Request) {
-	cssPath := filepath.Join(templatesPath, "styles", "pdf.css")
-	data, err := os.ReadFile(cssPath)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Error leyendo CSS: %v", err), http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "text/css; charset=utf-8")
-	w.Header().Set("Cache-Control", "no-cache")
-	fmt.Fprint(w, string(data))
 }
 
 // handleHealth returns the last modified timestamp of template files for hot-reload

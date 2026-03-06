@@ -215,24 +215,9 @@ func loadLogoBase64(path string) string {
 	return base64.StdEncoding.EncodeToString(data)
 }
 
-// loadCSS lee el archivo CSS y lo retorna como string
-func loadCSS(stylesDir string) (string, error) {
-	cssPath := filepath.Join(stylesDir, "pdf.css")
-	data, err := os.ReadFile(cssPath)
-	if err != nil {
-		return "", fmt.Errorf("leyendo archivo CSS %s: %w", cssPath, err)
-	}
-	return string(data), nil
-}
-
 // renderHTML renderiza el template HTML usando fs.FS del filesystem
+// El CSS ya está embebido en memoria.html con variables dinámicas {{.Empresa.ColorPrimario}}
 func renderHTML(data TemplateData, templatesDir string, stylesDir string) (string, error) {
-	// Cargar CSS para embedding inline
-	cssContent, err := loadCSS(stylesDir)
-	if err != nil {
-		return "", fmt.Errorf("cargando CSS: %w", err)
-	}
-
 	// Usar os.DirFS para leer desde disk (no embed)
 	diskFS := os.DirFS(templatesDir)
 
@@ -334,16 +319,8 @@ func renderHTML(data TemplateData, templatesDir string, stylesDir string) (strin
 		return "", fmt.Errorf("ejecutando template %q: %w", templateName, err)
 	}
 
-	// Embed CSS inline: reemplazar <link> con <style>
-	htmlContent := buf.String()
-	htmlContent = strings.Replace(
-		htmlContent,
-		`<link rel="stylesheet" href="/style.css">`,
-		`<style>`+cssContent+`</style>`,
-		1,
-	)
-
-	return htmlContent, nil
+	// El HTML ya contiene CSS embebido desde memoria.html - no necesita inyección adicional
+	return buf.String(), nil
 }
 
 // generatePDF convierte el HTML a PDF usando wkhtmltopdf
