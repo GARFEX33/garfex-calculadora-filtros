@@ -43,7 +43,7 @@
    ───────────────────────────────────────────────────────────────────────── */
 @page {
   size: Letter;
-  margin: 10mm;
+  margin: 12mm;
 }
 
 * {
@@ -57,7 +57,8 @@ body {
   font-size: 10pt;
   color: var(--text-main);
   background: #ffffff;
-  line-height: 1.5;
+  line-height: 1.4;
+  padding: 10mm;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
@@ -69,7 +70,8 @@ h2 {
   color: var(--primary);
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  margin-bottom: 15px;
+  margin-top: 20px;
+  margin-bottom: 10px;
   padding-bottom: 5px;
   border-bottom: 1pt solid #ccc;
 }
@@ -521,4 +523,47 @@ td {
   border-top: 1pt solid var(--text-main);
   margin-top: 40pt;
   padding-top: 5pt;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   RESULT HIGHLIGHT - Gray background with left border
+   ───────────────────────────────────────────────────────────────────────── */
+.result-box {
+  background: #f5f5f5;
+  border-left: 4pt solid var(--primary);
+  padding: 12pt 15pt;
+  margin: 10pt 0;
+}
+
+.result-box .result-title {
+  font-size: 10pt;
+  font-weight: 700;
+  color: var(--primary);
+  text-transform: uppercase;
+  margin-bottom: 8pt;
+}
+
+.result-box .result-value {
+  font-family: var(--fuente-mono);
+  font-size: 14pt;
+  font-weight: 700;
+  color: var(--success);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   CONCLUSION HIGHLIGHT - Gray background with left border
+   ───────────────────────────────────────────────────────────────────────── */
+.conclusion-box {
+  background: #f8f8f8;
+  border-left: 4pt solid var(--primary);
+  padding: 12pt 15pt;
+  margin: 10pt 0;
+}
+
+.conclusion-box .conclusion-title {
+  font-size: 10pt;
+  font-weight: 700;
+  color: var(--primary);
+  text-transform: uppercase;
+  margin-bottom: 8pt;
 }
