@@ -61,7 +61,7 @@
     ───────────────────────────────────────────────────────────────────────── */
 @page {
   size: Letter;
-  margin: 12mm 12mm 20mm 12mm;
+  /* margin handled by Gotenberg options - removed conflict */
 }
 
 * {
@@ -76,7 +76,8 @@ body {
   color: var(--text-primary);
   background: #ffffff;
   line-height: 1.4;
-  padding: 10mm 0 0 0; /* Top padding para espacio del header nativo */
+  /* padding removed - handled by Gotenberg marginTop */
+  padding: 0;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
