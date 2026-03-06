@@ -70,30 +70,10 @@ func (g *PdfGeneratorAdapter) GenerateWithHeaderFooter(ctx context.Context, html
 	// 1. El HTML ya contiene CSS embebido desde memoria.html con variables dinámicas
 
 	// 2. Usar header renderizado si se provee, sino extraer del FS
-	var headerContent string
-	if headerHTML != "" {
-		headerContent = headerHTML
-	} else {
-		// Fallback: extraer del FS (legacy behavior)
-		var err error
-		headerContent, err = g.extractTemplate(rutaHeader, "")
-		if err != nil {
-			return nil, fmt.Errorf("%s: %w", ErrGeneracionPdf, err)
-		}
-	}
+	// El headerHTML ya viene renderizado con los datos del proyecto
 
 	// 3. Usar footer renderizado si se provee, sino extraer del FS
-	var footerContent string
-	if footerHTML != "" {
-		footerContent = footerHTML
-	} else {
-		// Fallback: extraer del FS (legacy behavior)
-		var err error
-		footerContent, err = g.extractTemplate(rutaFooter, "")
-		if err != nil {
-			return nil, fmt.Errorf("%s: %w", ErrGeneracionPdf, err)
-		}
-	}
+	// El footerHTML ya viene renderizado con los datos del proyecto
 
 	// 4. El HTML ya tiene CSS embebido - no necesita inyección adicional
 
@@ -103,13 +83,13 @@ func (g *PdfGeneratorAdapter) GenerateWithHeaderFooter(ctx context.Context, html
 		return nil, wrapError(err, "añadiendo HTML")
 	}
 
-	// Header nativo de Gotenberg (se渲染 en cada página)
-	if err := form.AddHeader(headerContent); err != nil {
+	// Header nativo de Gotenberg (se renderiza en cada página)
+	if err := form.AddHeader(headerHTML); err != nil {
 		return nil, wrapError(err, "añadiendo header")
 	}
 
 	// Footer con paginación nativa de Chromium (pageNumber/totalPages)
-	if err := form.AddFooter(footerContent); err != nil {
+	if err := form.AddFooter(footerHTML); err != nil {
 		return nil, wrapError(err, "añadiendo footer")
 	}
 
@@ -119,6 +99,19 @@ func (g *PdfGeneratorAdapter) GenerateWithHeaderFooter(ctx context.Context, html
 	form.AddOption("marginBottom", "20mm")
 	form.AddOption("marginLeft", "12mm")
 	form.AddOption("marginRight", "12mm")
+
+	// DEBUG: Log form details
+	log.Printf("[DEBUG] gotenberg: Form boundary: %s", form.DebugString())
+	log.Printf("[DEBUG] gotenberg: HTML content length: %d bytes", len(htmlContent))
+	log.Printf("[DEBUG] gotenberg: Header content length: %d bytes", len(headerHTML))
+	log.Printf("[DEBUG] gotenberg: Footer content length: %d bytes", len(footerHTML))
+	if len(htmlContent) > 0 {
+		maxChars := 200
+		if len(htmlContent) < 200 {
+			maxChars = len(htmlContent)
+		}
+		log.Printf("[DEBUG] gotenberg: First 200 chars of HTML: %s", htmlContent[:maxChars])
+	}
 
 	// Sin waitDelay - MathJax fue removido del template
 	// La página carga inmediatamente sin scripts externos que renderizar
