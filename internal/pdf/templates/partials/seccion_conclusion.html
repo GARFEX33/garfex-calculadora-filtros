@@ -9,7 +9,7 @@
 
   <!-- Circuito completo -->
   <div class="card conclusion-box">
-    <h3 style="font-size: 9pt; color: var(--primary); margin-bottom: 8pt;">Circuito Completo</h3>
+    <h3 class="card-title">Circuito Completo</h3>
     <p class="desarrollo">
       {{.Memoria.Instalacion.HilosPorFase}} set de
       {{if eq .Memoria.Instalacion.SistemaElectrico "MONOFASICO"}}1{{else if eq .Memoria.Instalacion.SistemaElectrico "BIFASICO"}}2{{else}}3{{end}}-{{.Memoria.CableFase.Calibre}},
@@ -20,7 +20,7 @@
 
   <!-- Criterios de cumplimiento -->
   <div class="card">
-    <h3 style="font-size: 9pt; color: var(--primary); margin-bottom: 8pt;">Criterios de Cumplimiento</h3>
+    <h3 class="card-title">Criterios de Cumplimiento</h3>
     <!-- Ampacidad del conductor -->
     {{$cumpleAmpacidad := ge .Memoria.CableFase.Capacidad .Memoria.Corrientes.CorrientePorHilo}}
     <div class="data-grid">
@@ -28,9 +28,9 @@
         <span class="data-label">Ampacidad del conductor de alimentación</span>
         <span class="data-value">
           {{if $cumpleAmpacidad}}
-          <strong style="color: var(--success);">CUMPLE ✓</strong>
+          <span class="badge-status badge-cumple">✓ Cumple</span>
           {{else}}
-          <strong style="color: var(--error);">NO CUMPLE ✗</strong>
+          <span class="badge-status badge-no-cumple">✗ No Cumple</span>
           {{end}}
         </span>
       </div>
@@ -38,9 +38,9 @@
         <span class="data-label">Caída de tensión dentro de límites ({{formatFloat2 $caida.LimitePorcentaje}}%)</span>
         <span class="data-value">
           {{if $caida.Cumple}}
-          <strong style="color: var(--success);">CUMPLE ✓</strong>
+          <span class="badge-status badge-cumple">✓ Cumple</span>
           {{else}}
-          <strong style="color: var(--error);">NO CUMPLE ✗</strong>
+          <span class="badge-status badge-no-cumple">✗ No Cumple</span>
           {{end}}
         </span>
       </div>
@@ -49,7 +49,7 @@
 
   <!-- Resumen de valores -->
   <div class="card result-box">
-    <h3 style="font-size: 9pt; color: var(--primary); margin-bottom: 8pt;">Resumen de Valores Calculados</h3>
+    <h3>Resumen de Valores Calculados</h3>
     <div class="data-grid">
       <div class="data-item">
         <span class="data-label">Corriente Nominal</span>
@@ -90,7 +90,7 @@
   <!-- Observaciones -->
   {{if $observaciones}}
   <div class="card">
-    <h3 style="font-size: 9pt; margin-bottom: 8pt;">Observaciones</h3>
+    <h3 class="card-title">Observaciones</h3>
     <ul class="observaciones-lista">
       {{range $observaciones}}
       <li>{{.}}</li>

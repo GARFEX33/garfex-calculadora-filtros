@@ -13,14 +13,14 @@
   <!-- ═══════════════════════════════════════════════════════════════════════════
        TUBERÍA (PVC / Aluminio / Acero PG / Acero PD)
        ═══════════════════════════════════════════════════════════════════════════ -->
-  <p style="font-size: 9.5pt; color: #6b6b6b; margin-bottom: 8pt;">
+  <p class="seccion-desc">
     El área interior de la tubería debe alojar el área total de conductores respetando el
     factor de llenado permitido. Criterio: Cap. 9 NOM-001-SEDE-2012.
   </p>
 
   <!-- Factor de llenado aplicable -->
   <div class="card">
-    <h3 style="font-size: 9pt; color: var(--primary); margin-bottom: 8pt;">Factor de Llenado — Cap. 9 NOM</h3>
+    <h3 class="card-title">Factor de Llenado — Cap. 9 NOM</h3>
     <p class="desarrollo">
       {{if eq $canalizacion.FillFactor 0.53}}
         <strong>53%</strong> — 1 conductor
@@ -43,7 +43,7 @@
 
   <!-- Conductores en la instalación -->
   <div class="card">
-    <h3 style="font-size: 9pt; color: var(--primary); margin-bottom: 8pt;">Conductores en la Instalación</h3>
+    <h3 class="card-title">Conductores en la Instalación</h3>
     <div class="data-grid">
       <div class="data-item">
         <span class="data-label">Sistema Eléctrico</span>
@@ -82,7 +82,7 @@
   <!-- Desarrollo del cálculo -->
   {{if $detalleTuberia}}
   <div class="card">
-    <h3 style="font-size: 9pt; color: var(--primary); margin-bottom: 8pt;">Desarrollo</h3>
+    <h3 class="card-title">Desarrollo</h3>
     <p class="desarrollo" style="color: var(--text-muted);">
       {{if eq .Memoria.Instalacion.SistemaElectrico "DELTA"}}Trifásico Delta (3F-3H)
       {{else if eq .Memoria.Instalacion.SistemaElectrico "ESTRELLA"}}Trifásico Estrella (3F-4H)
@@ -109,11 +109,11 @@
       ({{.Memoria.CableTierra.Calibre}} Desnudo — Tabla 8 NOM)
       = <strong>{{formatFloat2 (mulIntFloat $detalleTuberia.NumTierras $detalleTuberia.AreaTierraMM2)}} mm²</strong>
     </p>
-    <p class="desarrollo" style="margin-top: 8pt; border-top: 1pt solid var(--linea); padding-top: 8pt; color: var(--text-muted);">
+    <p class="desarrollo" style="color: var(--text-muted);">
       Tabla NOM Cap. 9 — seleccionar primer tubo donde Área<sub>ocup. {{percent $canalizacion.FillFactor}}%</sub>
       ≥ {{formatFloat2 $canalizacion.Resultado.AreaTotalMM2}} mm²:
     </p>
-    <p class="desarrollo-final" style="margin-top: 8pt;">
+    <p class="desarrollo-final">
       Tubo: {{$canalizacion.Resultado.Tamano}}" / {{$detalleTuberia.DesignacionMetrica}} mm
       — Área<sub>ocup.</sub> = {{formatInt $detalleTuberia.AreaOcupacionTuboMM2}} mm²
     </p>
@@ -122,7 +122,7 @@
 
   <!-- Resultado tubería -->
   <div class="card">
-    <h3 style="font-size: 9pt; color: var(--primary); margin-bottom: 8pt;">Tubería Seleccionada</h3>
+    <h3 class="card-title">Tubería Seleccionada</h3>
     <div class="data-grid">
       <div class="data-item">
         <span class="data-label">Tamaño Comercial</span>
@@ -171,13 +171,13 @@
   <!-- ═══════════════════════════════════════════════════════════════════════════
        CHAROLA ESPACIADO
        ═══════════════════════════════════════════════════════════════════════════ -->
-  <p style="font-size: 9.5pt; color: #6b6b6b; margin-bottom: 8pt;">
+  <p class="seccion-desc">
     Los cables se instalan con una separación mínima igual a 1 diámetro exterior entre sí,
     conforme a NOM-001-SEDE-2012 Art.
   </p>
 
   <div class="card">
-    <h3 style="font-size: 9pt; color: var(--primary); margin-bottom: 8pt;">Fórmula de Dimensionamiento</h3>
+    <h3 class="card-title">Fórmula de Dimensionamiento</h3>
     {{if and $detalleCharola (notNil $detalleCharola.DiametroControlMM)}}
     <div class="formula-box">A<sub>req</sub> = E<sub>f</sub> + A<sub>f</sub> + E<sub>c</sub> + A<sub>c</sub> + Ø<sub>tierra</sub></div>
     {{else}}
@@ -190,7 +190,7 @@
 
   {{if $detalleCharola}}
   <div class="card">
-    <h3 style="font-size: 9pt; color: var(--primary); margin-bottom: 8pt;">Desarrollo</h3>
+    <h3 class="card-title">Desarrollo</h3>
     <p class="desarrollo">
       E<sub>f</sub> = {{$detalleCharola.NumHilosTotal}} hilos × {{formatFloat2 $detalleCharola.DiametroFaseMM}} mm
       = <strong>{{formatFloat2 $detalleCharola.EspacioFuerzaMM}} mm</strong>
@@ -209,7 +209,7 @@
   {{end}}
 
   <div class="card">
-    <h3 style="font-size: 9pt; color: var(--primary); margin-bottom: 8pt;">Charola Seleccionada</h3>
+    <h3 class="card-title">Charola Seleccionada</h3>
     <div class="data-grid">
       <div class="data-item">
         <span class="data-label">Ancho Requerido (A<sub>req</sub>)</span>
@@ -248,13 +248,13 @@
   <!-- ═══════════════════════════════════════════════════════════════════════════
        CHAROLA TRIANGULAR
        ═══════════════════════════════════════════════════════════════════════════ -->
-  <p style="font-size: 9.5pt; color: #6b6b6b; margin-bottom: 8pt;">
+  <p class="seccion-desc">
     Los cables se instalan en disposición triangular, tocándose entre sí.
     Factor de espaciado triangular: 2.15 conforme a NOM-001-SEDE-2012.
   </p>
 
   <div class="card">
-    <h3 style="font-size: 9pt; color: var(--primary); margin-bottom: 8pt;">Fórmula de Dimensionamiento</h3>
+    <h3 class="card-title">Fórmula de Dimensionamiento</h3>
     {{if and $detalleCharola (notNil $detalleCharola.DiametroControlMM)}}
     <div class="formula-box">A<sub>req</sub> = A<sub>p</sub> + E<sub>f</sub> + E<sub>c</sub> + A<sub>c</sub> + Ø<sub>tierra</sub></div>
     {{else}}
@@ -264,7 +264,7 @@
 
   {{if $detalleCharola}}
   <div class="card">
-    <h3 style="font-size: 9pt; color: var(--primary); margin-bottom: 8pt;">Desarrollo</h3>
+    <h3 class="card-title">Desarrollo</h3>
     <p class="desarrollo">
       A<sub>p</sub> = 2 × {{formatFloat2 $detalleCharola.DiametroFaseMM}} mm × {{.Memoria.Instalacion.HilosPorFase}} hilos
       = <strong>{{formatFloat2 $detalleCharola.AnchoPotenciaMM}} mm</strong>
@@ -283,7 +283,7 @@
   {{end}}
 
   <div class="card">
-    <h3 style="font-size: 9pt; color: var(--primary); margin-bottom: 8pt;">Charola Seleccionada</h3>
+    <h3 class="card-title">Charola Seleccionada</h3>
     <div class="data-grid">
       <div class="data-item">
         <span class="data-label">Factor Triangular (NOM)</span>
@@ -323,7 +323,7 @@
 
   {{else}}
   <!-- Tipo de canalización no reconocido -->
-  <p style="font-size: 9.5pt; color: #6b6b6b;">
+  <p class="seccion-desc">
     Tipo de canalización: <span style="font-family: 'Courier New', monospace;">{{$tipo}}</span>
   </p>
   {{end}}

@@ -5,14 +5,14 @@
   {{$caida := .Memoria.CaidaTension}}
   {{$sistema := .Memoria.Instalacion.SistemaElectrico}}
 
-  <p style="font-size: 9.5pt; color: #6b6b6b; margin-bottom: 8pt;">
+  <p class="seccion-desc">
     La caída de tensión se calcula considerando la impedancia efectiva del conductor, la longitud
     del circuito y el tipo de sistema eléctrico. Referencia: NOM-001-SEDE-2012 Art. 215-2(A).
   </p>
 
   <!-- Fórmula según sistema -->
   <div class="card">
-    <h3 style="font-size: 9pt; color: var(--primary); margin-bottom: 8pt;">Fórmula Aplicada</h3>
+    <h3 class="card-title">Fórmula Aplicada</h3>
     {{if eq $sistema "MONOFASICO"}}
     <div class="formula-box">e = 2 × I × Z<sub>ef</sub> × L</div>
     <p class="desarrollo">e% = (e / V<sub>fn</sub>) × 100</p>
@@ -30,7 +30,7 @@
 
   <!-- Impedancia efectiva Zef -->
   <div class="card">
-    <h3 style="font-size: 9pt; color: var(--primary); margin-bottom: 8pt;">Impedancia Efectiva (Z<sub>ef</sub>)</h3>
+    <h3 class="card-title">Impedancia Efectiva (Z<sub>ef</sub>)</h3>
     <div class="formula-box">Z<sub>ef</sub> = R × cos θ + X × sin θ</div>
     <p class="desarrollo" style="margin-top: 8pt;">
       {{$senTheta := sqrt (sub 1.0 (mul .Memoria.FactorPotencia .Memoria.FactorPotencia))}}
@@ -43,7 +43,7 @@
 
   <!-- Parámetros del cálculo -->
   <div class="card">
-    <h3 style="font-size: 9pt; color: var(--primary); margin-bottom: 8pt;">Parámetros del Cálculo</h3>
+    <h3 class="card-title">Parámetros del Cálculo</h3>
     <div class="data-grid">
       <div class="data-item">
         <span class="data-label">Corriente Nominal (I<sub>n</sub>)</span>
@@ -84,7 +84,7 @@
 
   <!-- Desarrollo del cálculo -->
   <div class="card">
-    <h3 style="font-size: 9pt; color: var(--primary); margin-bottom: 8pt;">Desarrollo</h3>
+    <h3 class="card-title">Desarrollo</h3>
     <p class="desarrollo">
       {{if eq $sistema "MONOFASICO"}}
         e = 2 × {{formatFloat2 .Memoria.Corrientes.CorrienteNominal}} A × {{formatFloat4 $caida.Impedancia}} Ω/km × {{formatFloat4 (div .Memoria.Instalacion.LongitudCircuito 1000.0)}} km = {{formatFloat4 $caida.CaidaVolts}} V

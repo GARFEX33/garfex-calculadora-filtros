@@ -2,14 +2,14 @@
 <div class="seccion">
   <h2>3. Dimensionamiento del Alimentador</h2>
 
-  <p style="font-size: 9.5pt; color: #6b6b6b; margin-bottom: 8pt;">
+  <p class="seccion-desc">
     El conductor de alimentación se dimensiona aplicando los factores de corrección establecidos
     en NOM-001-SEDE-2012, considerando el tipo de equipo, temperatura ambiente y agrupamiento.
   </p>
 
   <!-- Factor de uso según tipo de equipo -->
   <div class="card">
-    <h3 style="font-size: 9pt; color: var(--primary); margin-bottom: 8pt;">Factor de Uso (Tipo de Equipo)</h3>
+    <h3 class="card-title">Factor de Uso (Tipo de Equipo)</h3>
     <div class="data-grid">
       <div class="data-item">
         <span class="data-label">Tipo de Equipo</span>
@@ -30,7 +30,7 @@
           {{end}}
         </span>
       </div>
-      <div class="data-item" style="width: 100%;">
+      <div class="data-item data-item--full">
         <span class="data-label">Justificación</span>
         <span class="data-value" style="font-size: 9pt; color: var(--text-muted);">
           {{if or (eq .Memoria.TipoEquipo "FILTRO_ACTIVO") (eq .Memoria.TipoEquipo "FILTRO_RECHAZO")}}
@@ -45,7 +45,7 @@
 
   <!-- Factores de temperatura y agrupamiento -->
   <div class="card">
-    <h3 style="font-size: 9pt; color: var(--primary); margin-bottom: 8pt;">Factores de Corrección</h3>
+    <h3 class="card-title">Factores de Corrección</h3>
     <div class="data-grid">
       <div class="data-item" style="width: 100%; border-bottom: none; padding-bottom: 0;">
         <span class="data-label" style="color: var(--text-main); font-size: 8pt;">Factor de Temperatura</span>
@@ -66,8 +66,8 @@
         <span class="data-label" style="font-size: 8pt;">Referencia</span>
         <span class="data-value" style="font-size: 8pt; color: var(--text-muted);">Tabla 310-15(b)(2)(A)</span>
       </div>
-      <div class="data-item" style="width: 100%; border-bottom: none; padding-bottom: 0; padding-top: 8pt;">
-        <span class="data-label" style="color: var(--text-main); font-size: 8pt;">Factor de Agrupamiento</span>
+      <div class="data-item data-item--full" style="border-bottom: none; padding-bottom: 0; padding-top: 8pt;">
+        <span class="data-label" style="color: var(--text-primary); font-size: 8pt;">Factor de Agrupamiento</span>
       </div>
       <div class="data-item">
         <span class="data-label">Cantidad de Conductores</span>
@@ -92,7 +92,7 @@
 
   <!-- Fórmula y desarrollo -->
   <div class="card">
-    <h3 style="font-size: 9pt; color: var(--primary); margin-bottom: 8pt;">Fórmula de Dimensionamiento</h3>
+    <h3 class="card-title">Fórmula de Dimensionamiento</h3>
     <div class="formula-box">
       I<sub>ajustada</sub> = I<sub>nominal</sub> × F<sub>uso</sub> / (F<sub>temp</sub> × F<sub>agr</sub>)
     </div>
@@ -101,7 +101,7 @@
       {{if or (eq .Memoria.TipoEquipo "FILTRO_ACTIVO") (eq .Memoria.TipoEquipo "FILTRO_RECHAZO")}}× 1.35{{else}}× 1.25{{end}}
       / ({{formatFloat2 .Memoria.Corrientes.FactorTemperatura}} × {{formatFloat2 .Memoria.Corrientes.FactorAgrupamiento}})
     </p>
-    <p class="desarrollo-final" style="margin-top: 8pt; border-top: 1pt solid var(--linea); padding-top: 8pt;">
+    <p class="desarrollo-final">
       I<sub>ajustada</sub> = {{formatFloat2 .Memoria.Corrientes.CorrienteAjustada}} A
     </p>
     {{if gt .Memoria.Instalacion.HilosPorFase 1}}
@@ -117,7 +117,7 @@
 
   <!-- Conductor seleccionado -->
   <div class="card">
-    <h3 style="font-size: 9pt; color: var(--primary); margin-bottom: 8pt;">
+    <h3 class="card-title">
       Conductor de Fase Seleccionado
       {{if gt .Memoria.Instalacion.HilosPorFase 1}}
         ({{.Memoria.Instalacion.HilosPorFase}} hilos en paralelo)
@@ -160,7 +160,7 @@
         <span class="data-label">Ampacidad por Hilo</span>
         <span class="data-value">{{formatFloat2 .Memoria.CableFase.Capacidad}} A</span>
       </div>
-      <div class="data-item" style="width: 100%;">
+      <div class="data-item data-item--full">
         <span class="data-label">Tabla de Ampacidad</span>
         <span class="data-value">{{.Memoria.Corrientes.TablaAmpacidadUsada}}</span>
       </div>

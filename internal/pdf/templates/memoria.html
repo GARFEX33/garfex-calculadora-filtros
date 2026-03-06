@@ -8,46 +8,52 @@
   <title>Memoria de Cálculo Eléctrica — {{.NombreProyecto}}</title>
   <style>
 /* ═══════════════════════════════════════════════════════════════════════════
-   pdf.css — Modern Engineering Style
+   pdf.css — Premium Engineering Style
    Memoria de cálculo eléctrico (NOM-001-SEDE-2012)
    Compatible con Gotenberg 8.x (Chromium)
    ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ─────────────────────────────────────────────────────────────────────────
-    CSS VARIABLES / TOKENS - Modern Engineering
+    CSS VARIABLES / TOKENS - Premium Engineering
     ───────────────────────────────────────────────────────────────────────── */
 :root {
-  /* Color Corporativo dinámico por empresa */
+  /* Branding dinámico por empresa */
   --primary: {{.Empresa.ColorPrimario}};
-  --primary-light: #fef9e6;
-  --accent: #F4CF00;
-  --success: #22c55e;
-  --success-bg: #dcfce7;
-  --error: #ef4444;
-  --error-bg: #fee2e2;
+  --secondary: {{.Empresa.ColorSecundario}};
+  --primary-soft: {{.Empresa.ColorPrimario}}0a;  /* 4% opacity for backgrounds */
+  --primary-light: {{.Empresa.ColorPrimario}}15;  /* 8% opacity */
+  --primary-border: {{.Empresa.ColorPrimario}}30;  /* 19% opacity */
+  
+  /* Status */
+  --success: #16a34a;
+  --success-bg: #f0fdf4;
+  --success-border: #bbf7d0;
+  --error: #dc2626;
+  --error-bg: #fef2f2;
+  --error-border: #fecaca;
   --warning: #d97706;
-  --warning-bg: #fef3c7;
+  --warning-bg: #fffbeb;
+  --warning-border: #fde68a;
   
-  /* Text Colors */
-  --text-main: #1C1C1C;
-  --text-muted: #6E6E6E;
-  
-  /* Backgrounds */
-  --bg-body: #f8fafc;
+  /* Neutral palette */
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+  --bg-page: #ffffff;
   --bg-card: #ffffff;
+  --bg-subtle: #f8fafc;
+  --border-default: #e2e8f0;
+  --border-light: #f1f5f9;
   
-  /* Borders */
-  --border: #EAEAEA;
-  --border-light: #e2e8f0;
-  --linea: #EAEAEA;
-  
-  /* Radius */
-  --radius: 8px;
+  /* Shapes */
+  --radius-lg: 12px;
+  --radius-md: 8px;
   --radius-sm: 4px;
+  --radius-pill: 50px;
   
-  /* Typography - Modern Engineering */
-  --fuente-main: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
-  --fuente-mono: 'Consolas', 'Courier New', monospace;
+  /* Typography */
+  --font-sans: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
@@ -66,9 +72,9 @@
 }
 
 body {
-  font-family: var(--fuente-main);
+  font-family: var(--font-sans);
   font-size: 10pt;
-  color: var(--text-main);
+  color: var(--text-primary);
   background: #ffffff;
   line-height: 1.4;
   padding: 0; /* Padding eliminado - @page margin ya provee el espacio */
@@ -78,71 +84,104 @@ body {
    HEADINGS
    ───────────────────────────────────────────────────────────────────────── */
 h2 {
-  font-size: 12pt;
-  font-weight: 700;
-  color: var(--primary);
+  font-family: var(--font-sans);
+  font-size: 13pt;
+  font-weight: 800;
+  color: var(--text-primary);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-top: 20px;
-  margin-bottom: 10px;
-  padding-bottom: 5px;
-  border-bottom: 1pt solid #ccc;
+  letter-spacing: 0.08em;
+  margin: 28px 0 16px 0;
+  padding-bottom: 10px;
+  border-bottom: 3px solid var(--primary);
+  position: relative;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
-    CARDS - Modern Engineering Style (Premium)
+    CARDS - Premium Engineering Style
     ───────────────────────────────────────────────────────────────────────── */
 .card {
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 20px;
-  margin-bottom: 15pt;
   background: var(--bg-card);
-  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  padding: 20px 24px;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02);
   page-break-inside: avoid;
 }
 
-/* DATA GRID SYSTEM - Using CSS Grid (Modernized) */
+/* Card title - replaces inline h3 styles */
+.card-title {
+  font-family: var(--font-sans);
+  font-size: 9pt;
+  font-weight: 700;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+/* DATA GRID SYSTEM - Using CSS Grid */
 .data-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 15px;
+  gap: 0;
   width: 100%;
 }
 
 .data-item {
-  padding: 8px 10px;
-  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.data-item:nth-last-child(-n+2) {
+  border-bottom: none;
+}
+
+.data-item--full {
+  grid-column: 1 / -1;
 }
 
 .data-label {
+  font-family: var(--font-sans);
   font-size: 7pt;
   font-weight: 600;
   color: var(--text-muted);
   text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .data-value {
+  font-family: var(--font-sans);
   font-size: 10pt;
-  font-weight: 500;
-  color: var(--text-main);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.data-value--highlight {
+  font-family: var(--font-mono);
+  font-size: 12pt;
+  font-weight: 800;
+  color: var(--primary);
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
     FORMULAS Y BLOQUES DE CÁLCULO (Premium)
     ───────────────────────────────────────────────────────────────────────── */
 .formula-box {
-  border-radius: var(--radius);
-  background: #f8fafc;
-  padding: 15px;
-  font-family: var(--fuente-mono);
-  font-size: 11pt;
-  margin: 10px 0;
-  color: var(--primary);
+  background: var(--primary-soft);
   border-left: 4px solid var(--primary);
-  border-bottom: 1px solid var(--primary);
-  border-top: 1px solid var(--primary);
-  border-right: 1px solid var(--primary);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  padding: 16px 20px;
+  font-family: var(--font-mono);
+  font-size: 11pt;
+  font-weight: 600;
+  color: var(--primary);
+  margin: 12px 0;
   page-break-inside: avoid;
 }
 
@@ -163,7 +202,7 @@ h2 {
 }
 
 .formula {
-  font-family: var(--fuente-mono);
+  font-family: var(--font-mono);
   font-size: 11pt;
   color: var(--primary);
   font-weight: 600;
@@ -171,31 +210,44 @@ h2 {
 }
 
 .desarrollo {
+  font-family: var(--font-sans);
   font-size: 9.5pt;
-  color: var(--text-main);
+  color: var(--text-primary);
   margin: 6px 0;
-  padding-left: 5px;
-  border-left: 2px solid var(--border);
+  padding-left: 12px;
+  border-left: 2px solid var(--border-default);
+  line-height: 1.5;
+}
+
+.desarrollo-final {
+  font-family: var(--font-mono);
+  font-size: 11pt;
+  font-weight: 700;
+  color: var(--primary);
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-default);
 }
 
 .resultado-destacado {
-  font-family: var(--fuente-mono);
-  font-size: 14pt;
-  font-weight: 700;
-  color: var(--success);
+  font-family: var(--font-mono);
+  font-size: 16pt;
+  font-weight: 800;
+  color: var(--primary);
 }
 
 .ref-normativa {
+  font-family: var(--font-sans);
   font-size: 8pt;
   color: var(--text-muted);
   font-style: italic;
-  margin-top: 10px;
-  padding-top: 8px;
-  border-top: 1px solid var(--border);
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-light);
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
-   BADGES Y ESTADOS - Modern Engineering Style
+   BADGES Y ESTADOS - Premium Engineering Style
    ───────────────────────────────────────────────────────────────────────── */
 .badge {
   display: inline-block;
@@ -204,6 +256,37 @@ h2 {
   font-size: 9pt;
   font-weight: 600;
   text-transform: uppercase;
+}
+
+.badge-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 16px;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-sans);
+  font-size: 8.5pt;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.badge-cumple {
+  background: var(--success-bg);
+  color: var(--success);
+  border: 1.5px solid var(--success-border);
+}
+
+.badge-no-cumple {
+  background: var(--error-bg);
+  color: var(--error);
+  border: 1.5px solid var(--error-border);
+}
+
+.badge-warning {
+  background: var(--warning-bg);
+  color: var(--warning);
+  border: 1.5px solid var(--warning-border);
 }
 
 .badge-success {
@@ -216,12 +299,6 @@ h2 {
   background-color: #ef4444;
   color: #ffffff;
   border: 1px solid #dc2626;
-}
-
-.badge-warning {
-  background: #f59e0b;
-  color: #ffffff;
-  border: 1px solid #d97706;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
@@ -254,47 +331,52 @@ h2 {
 }
 
 .dictamen {
-  padding: 15px 20px;
-  border-radius: var(--radius);
-  margin: 15px 0;
+  padding: 14px 20px;
+  border-radius: var(--radius-md);
+  margin: 14px 0;
+  font-family: var(--font-sans);
+  font-size: 9.5pt;
+  font-weight: 600;
   display: flex;
   align-items: center;
-  gap: 15px;
-  text-align: center;
+  gap: 10px;
   page-break-inside: avoid;
 }
 
 .dictamen.cumple {
-  background: #dcfce7;
-  border: 2px solid #22c55e;
+  background: var(--success-bg);
+  border: 1.5px solid var(--success-border);
+  color: var(--success);
 }
 
 .dictamen.no-cumple {
-  background: #fee2e2;
-  border: 2px solid #ef4444;
+  background: var(--error-bg);
+  border: 1.5px solid var(--error-border);
+  color: var(--error);
 }
 
 .veredicto {
-  font-size: 18pt;
-  font-weight: 700;
+  font-family: var(--font-mono);
+  font-size: 20pt;
+  font-weight: 800;
   white-space: nowrap;
 }
 
 .dictamen.cumple .veredicto {
-  color: #166534;
+  color: var(--success);
 }
 
 .dictamen.no-cumple .veredicto {
-  color: #991b1b;
+  color: var(--error);
 }
 
 .subtitulo {
   font-size: 10pt;
-  color: var(--text-main);
+  color: var(--text-primary);
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
-   TABLAS - Modern Engineering Grid Style
+   TABLAS - Premium Engineering Grid Style
    ───────────────────────────────────────────────────────────────────────── */
 .tabla-grid {
   display: grid;
@@ -302,7 +384,7 @@ h2 {
   margin: 12px 0;
   font-size: 9pt;
   border: 1px solid var(--border-light);
-  border-radius: var(--radius);
+  border-radius: var(--radius-md);
   overflow: hidden;
 }
 
@@ -348,7 +430,7 @@ table {
   margin: 12px 0;
   font-size: 9pt;
   border: 1px solid var(--border-light);
-  border-radius: var(--radius);
+  border-radius: var(--radius-md);
   overflow: hidden;
 }
 
@@ -390,11 +472,11 @@ td {
 }
 
 .valor {
-  color: var(--text-main);
+  color: var(--text-primary);
 }
 
 .valor-numerico {
-  font-family: var(--fuente-mono);
+  font-family: var(--font-mono);
   font-weight: 600;
   text-align: right;
 }
@@ -407,6 +489,15 @@ td {
   page-break-inside: avoid;
 }
 
+/* Section description paragraph */
+.seccion-desc {
+  font-family: var(--font-sans);
+  font-size: 9.5pt;
+  color: var(--text-secondary);
+  margin-bottom: 14px;
+  line-height: 1.5;
+}
+
 /* ─────────────────────────────────────────────────────────────────────────
    HEADER - PORTADA PRINCIPAL
    ───────────────────────────────────────────────────────────────────────── */
@@ -414,20 +505,24 @@ td {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 30px;
-  padding-bottom: 20px;
+  padding-bottom: 24px;
+  margin-bottom: 24px;
   border-bottom: 3px solid var(--primary);
 }
 
 .brand-info h1 {
-  font-size: 18pt;
+  font-family: var(--font-sans);
+  font-size: 22pt;
+  font-weight: 800;
   color: var(--primary);
-  margin-bottom: 5px;
+  letter-spacing: -0.02em;
+  margin-bottom: 6px;
 }
 
 .brand-info p {
-  font-size: 9pt;
-  color: var(--text-muted);
+  font-family: var(--font-sans);
+  font-size: 9.5pt;
+  color: var(--text-secondary);
 }
 
 .logo-container img {
@@ -572,7 +667,7 @@ td {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
-   FIRMAS
+   FIRMAS - Premium Style
    ───────────────────────────────────────────────────────────────────────── */
 .firma-container {
   margin-top: 30pt;
@@ -588,59 +683,185 @@ td {
 }
 
 .firma-linea {
-  border-top: 1pt solid var(--text-main);
+  border-top: 1pt solid var(--text-primary);
   margin-top: 40pt;
   padding-top: 5pt;
 }
 
-/* ─────────────────────────────────────────────────────────────────────────
-    RESULT HIGHLIGHT - Gray background with left border
-    ───────────────────────────────────────────────────────────────────────── */
-.result-box {
-  background: #f5f5f5;
-  border-left: 4pt solid var(--primary);
-  padding: 12pt 15pt;
-  margin: 10pt 0;
+/* Nueva estructura de firmas */
+.firma-block {
+  margin-top: 40px;
   page-break-inside: avoid;
 }
 
-.result-box .result-title {
+.firma-block h4 {
+  font-family: var(--font-sans);
   font-size: 10pt;
   font-weight: 700;
-  color: var(--primary);
-  text-transform: uppercase;
-  margin-bottom: 8pt;
+  color: var(--text-primary);
+  margin-bottom: 24px;
 }
 
-.result-box .result-value {
-  font-family: var(--fuente-mono);
-  font-size: 14pt;
-  font-weight: 700;
-  color: var(--success);
+.firma-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+}
+
+.firma-col {
+  text-align: center;
+}
+
+.espacio-firma {
+  height: 50px;
+}
+
+.linea-firma {
+  border-top: 1.5px solid var(--text-primary);
+  margin-bottom: 6px;
+}
+
+.nombre-firma {
+  font-family: var(--font-sans);
+  font-size: 9pt;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.rol-firma {
+  font-family: var(--font-sans);
+  font-size: 8pt;
+  color: var(--text-muted);
+  margin-top: 2px;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
-    CONCLUSION HIGHLIGHT - Gray background with left border
-    ───────────────────────────────────────────────────────────────────────── */
+     RESULT HIGHLIGHT - Premium background with left border
+     ───────────────────────────────────────────────────────────────────────── */
+.result-box {
+  background: var(--primary-soft);
+  border-left: 4px solid var(--primary);
+  border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+  padding: 16px 20px;
+  margin: 14px 0;
+  page-break-inside: avoid;
+}
+
+.result-box .result-title,
+.result-box h3 {
+  font-size: 9pt;
+  font-weight: 700;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+}
+
+.result-box .result-value {
+  font-family: var(--font-mono);
+  font-size: 14pt;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+     CONCLUSION HIGHLIGHT - Premium background with left border
+     ───────────────────────────────────────────────────────────────────────── */
 .conclusion-box {
-  background: #f8f8f8;
-  border-left: 4pt solid var(--primary);
-  padding: 12pt 15pt;
-  margin: 10pt 0;
+  background: var(--primary-soft);
+  border-left: 4px solid var(--primary);
+  border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+  padding: 16px 20px;
+  margin: 14px 0;
   page-break-inside: avoid;
 }
 
 .conclusion-box .conclusion-title {
-  font-size: 10pt;
+  font-size: 9pt;
   font-weight: 700;
   color: var(--primary);
   text-transform: uppercase;
-  margin-bottom: 8pt;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
-   DIAGRAMAS SVG - Modern Engineering Style
+   DIAGRAMAS SVG - Premium Engineering Style
    ───────────────────────────────────────────────────────────────────────── */
+.diagrama-svg {
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 15px;
+  margin: 15px 0;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  page-break-inside: avoid;
+}
+
+.diagrama-titulo {
+  font-size: 9pt;
+  font-weight: 600;
+  color: var(--primary);
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.diagrama-svg svg {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+}
+
+.diagrama-caption {
+  font-size: 8pt;
+  color: var(--text-muted);
+  text-align: center;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-light);
+}
+
+/* Placeholder SVG - Placeholder para gráficos cuando no hay diagrama */
+.svg-placeholder {
+  border: 2px dashed var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 30px;
+  margin: 15px 0;
+  background: #fafafa;
+  text-align: center;
+}
+
+.svg-placeholder-icon {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 10px;
+  opacity: 0.4;
+}
+
+.svg-placeholder-text {
+  font-size: 9pt;
+  color: var(--text-muted);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   OBSERVACIONES LIST
+   ───────────────────────────────────────────────────────────────────────── */
+.observaciones-lista {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.observaciones-lista li {
+  font-size: 9.5pt;
+  color: var(--text-secondary);
+  padding: 6px 0 6px 16px;
+  border-left: 2px solid var(--primary);
+  margin-bottom: 4px;
+}
 .diagrama-svg {
   border: 1px solid var(--border-light);
   border-radius: var(--radius);

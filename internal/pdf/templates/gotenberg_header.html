@@ -5,9 +5,20 @@
   <meta charset="utf-8">
   <style>
     /* ═══════════════════════════════════════════════════════════════════════════
-       Gotenberg Header — Native Chromium Header
+       Gotenberg Header — Premium Native Chromium Header
        Se renderiza en cada página del PDF
        ═══════════════════════════════════════════════════════════════════════════ */
+    
+    /* Dynamic color variables */
+    :root {
+      --primary: {{.Empresa.ColorPrimario}};
+      --secondary: {{.Empresa.ColorSecundario}};
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #94a3b8;
+      --border-light: #e2e8f0;
+      --font-sans: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
     
     * {
       box-sizing: border-box;
@@ -19,6 +30,8 @@
       width: 100%;
       display: table;
       table-layout: fixed;
+      border-bottom: 2px solid var(--primary);
+      padding-bottom: 12px;
     }
 
     .header-logo-col {
@@ -35,9 +48,9 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-family: 'Arial Black', Arial, sans-serif;
+      font-family: var(--font-sans);
       font-size: 18px;
-      font-weight: bold;
+      font-weight: 800;
       color: white;
       overflow: hidden;
     }
@@ -52,22 +65,22 @@
       display: table-cell;
       vertical-align: middle;
       text-align: left;
-      padding-left: 10px;
+      padding-left: 15px;
     }
 
     .header-titulo {
-      font-family: 'Arial', sans-serif;
+      font-family: var(--font-sans);
       font-size: 14px;
       font-weight: 700;
-      color: #1C1C1C;
+      color: var(--primary);
       text-transform: uppercase;
       letter-spacing: 0.05em;
     }
 
     .header-subtitulo {
-      font-family: 'Arial', sans-serif;
+      font-family: var(--font-sans);
       font-size: 9px;
-      color: #6E6E6E;
+      color: var(--text-muted);
       margin-top: 2px;
     }
 
@@ -78,16 +91,16 @@
     }
 
     .header-empresa-nombre {
-      font-family: 'Arial', sans-serif;
+      font-family: var(--font-sans);
       font-size: 11px;
       font-weight: 600;
-      color: #1C1C1C;
+      color: var(--text-primary);
     }
 
     .header-proyecto {
-      font-family: 'Arial', sans-serif;
+      font-family: var(--font-sans);
       font-size: 9px;
-      color: #6E6E6E;
+      color: var(--text-muted);
       margin-top: 2px;
       max-width: 200px;
       overflow: hidden;

@@ -2,14 +2,14 @@
 <div class="seccion">
   <h2>2. Cálculo de Corriente Nominal</h2>
 
-  <p style="font-size: 9.5pt; color: #6b6b6b; margin-bottom: 8pt;">
+  <p class="seccion-desc">
     La corriente nominal se calcula en función del tipo de equipo y sistema eléctrico,
     conforme a NOM-001-SEDE-2012.
   </p>
 
   <!-- Tipo de cálculo -->
   <div class="card">
-    <h3 style="font-size: 9pt; color: var(--primary); margin-bottom: 8pt;">Tipo de Cálculo</h3>
+    <h3 class="card-title">Tipo de Cálculo</h3>
     {{if .Memoria.DesarrolloCorriente}}
       <p class="formula-box">{{.Memoria.DesarrolloCorriente.TipoCalculo}}</p>
       
@@ -54,7 +54,7 @@
   <!-- Valores de referencia -->
   {{if and .Memoria.DesarrolloCorriente .Memoria.DesarrolloCorriente.ValoresReferencia}}
   <div class="card">
-    <h3 style="font-size: 9pt; color: var(--primary); margin-bottom: 8pt;">Valores de Referencia</h3>
+    <h3 class="card-title">Valores de Referencia</h3>
     <div class="data-grid">
       {{range $clave, $valor := .Memoria.DesarrolloCorriente.ValoresReferencia}}
       <div class="data-item">
@@ -68,7 +68,7 @@
 
   <!-- Datos del cálculo -->
   <div class="card">
-    <h3 style="font-size: 9pt; color: var(--primary); margin-bottom: 8pt;">Parámetros del Cálculo</h3>
+    <h3 class="card-title">Parámetros del Cálculo</h3>
     <div class="data-grid">
       <div class="data-item">
         <span class="data-label">Sistema Eléctrico</span>
@@ -89,8 +89,8 @@
 
   <!-- Resultado destacado -->
   <div class="card result-box">
-    <h3 style="color: var(--success); margin-bottom: 8pt;">Resultado</h3>
-    <span class="resultado-destacado" style="color: var(--success);">
+    <h3>Resultado</h3>
+    <span class="resultado-destacado">
       I<sub>n</sub> = {{formatFloat2 .Memoria.Corrientes.CorrienteNominal}} A
     </span>
   </div>

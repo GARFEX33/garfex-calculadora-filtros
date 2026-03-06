@@ -5,9 +5,19 @@
   <meta charset="utf-8">
   <style>
     /* ═══════════════════════════════════════════════════════════════════════════
-       Gotenberg Footer — Native Chromium Footer
+       Gotenberg Footer — Premium Native Chromium Footer
        Se renderiza en cada página del PDF con paginación
        ═══════════════════════════════════════════════════════════════════════════ */
+    
+    /* Dynamic color variables */
+    :root {
+      --primary: {{.Empresa.ColorPrimario}};
+      --secondary: {{.Empresa.ColorSecundario}};
+      --text-primary: #0f172a;
+      --text-muted: #94a3b8;
+      --border-light: #e2e8f0;
+      --font-sans: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
     
     * {
       box-sizing: border-box;
@@ -19,6 +29,8 @@
       width: 100%;
       display: table;
       table-layout: fixed;
+      border-top: 2px solid var(--primary);
+      padding-top: 10px;
     }
 
     .footer-empresa-col {
@@ -28,16 +40,16 @@
     }
 
     .footer-empresa-nombre {
-      font-family: 'Arial', sans-serif;
+      font-family: var(--font-sans);
       font-size: 10px;
       font-weight: 600;
-      color: #1C1C1C;
+      color: var(--text-primary);
     }
 
     .footer-empresa-contacto {
-      font-family: 'Arial', sans-serif;
+      font-family: var(--font-sans);
       font-size: 8px;
-      color: #6E6E6E;
+      color: var(--text-muted);
       margin-top: 2px;
     }
 
@@ -48,15 +60,15 @@
     }
 
     .footer-pagina {
-      font-family: 'Arial', sans-serif;
+      font-family: var(--font-sans);
       font-size: 10px;
-      color: #1C1C1C;
+      color: var(--text-primary);
     }
 
     .footer-normativa {
-      font-family: 'Arial', sans-serif;
+      font-family: var(--font-sans);
       font-size: 8px;
-      color: #6E6E6E;
+      color: var(--text-muted);
       margin-top: 2px;
     }
   </style>
