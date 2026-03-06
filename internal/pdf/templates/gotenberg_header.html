@@ -1,0 +1,125 @@
+{{define "gotenberg_header"}}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <style>
+    /* ═══════════════════════════════════════════════════════════════════════════
+       Gotenberg Header — Native Chromium Header
+       Se renderiza en cada página del PDF
+       ═══════════════════════════════════════════════════════════════════════════ */
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    .header-container {
+      width: 100%;
+      display: table;
+      table-layout: fixed;
+    }
+
+    .header-logo-col {
+      display: table-cell;
+      width: 60px;
+      vertical-align: middle;
+      text-align: left;
+    }
+
+    .logo-circle {
+      width: 45px;
+      height: 45px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Arial Black', Arial, sans-serif;
+      font-size: 18px;
+      font-weight: bold;
+      color: white;
+      overflow: hidden;
+    }
+
+    .logo-circle img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .header-info-col {
+      display: table-cell;
+      vertical-align: middle;
+      text-align: left;
+      padding-left: 10px;
+    }
+
+    .header-titulo {
+      font-family: 'Arial', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      color: #1C1C1C;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .header-subtitulo {
+      font-family: 'Arial', sans-serif;
+      font-size: 9px;
+      color: #6E6E6E;
+      margin-top: 2px;
+    }
+
+    .header-empresa-col {
+      display: table-cell;
+      vertical-align: middle;
+      text-align: right;
+    }
+
+    .header-empresa-nombre {
+      font-family: 'Arial', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      color: #1C1C1C;
+    }
+
+    .header-proyecto {
+      font-family: 'Arial', sans-serif;
+      font-size: 9px;
+      color: #6E6E6E;
+      margin-top: 2px;
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  </style>
+</head>
+<body>
+  <div class="header-container">
+    <div class="header-logo-col">
+      <div class="logo-circle" style="background: {{if eq .Empresa.ID "garfex"}}transparent{{else}}{{.Empresa.ColorPrimario}}{{end}};">
+        {{if eq .Empresa.ID "garfex"}}
+          <img src="data:image/png;base64,{{.LogoLetraBase64}}" alt="Garfex" />
+        {{else}}
+          {{capFirst .Empresa.ID}}
+        {{end}}
+      </div>
+    </div>
+
+    <div class="header-info-col">
+      <div class="header-titulo">Memoria de Cálculo</div>
+      <div class="header-subtitulo">NOM-001-SEDE-2012 • Ingeniería Eléctrica</div>
+    </div>
+
+    <div class="header-empresa-col">
+      <div class="header-empresa-nombre">{{.Empresa.NombreCompleto}}</div>
+      <div class="header-proyecto">
+        {{.NombreProyecto}}
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+{{end}}

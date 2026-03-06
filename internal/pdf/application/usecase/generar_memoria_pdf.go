@@ -17,8 +17,11 @@ const (
 	// templateName es el nombre del template HTML a usar para la memoria de cálculo.
 	templateName = "memoria_calculo.html"
 
+	// headerTemplateName es el nombre del template de header para Gotenberg.
+	headerTemplateName = "gotenberg_header.html"
+
 	// footerTemplateName es el nombre del template de footer.
-	footerTemplateName = "footer.html"
+	footerTemplateName = "gotenberg_footer.html"
 
 	// fechaLayout es el formato de fecha para mostrar en el PDF.
 	fechaLayout = "02/01/2006"
@@ -114,8 +117,16 @@ func (uc *GenerarMemoriaPdfUseCase) Execute(
 		footerHTML = ""
 	}
 
-	// 8. Generar PDF desde HTML con el footer renderizado
-	pdfBytes, err := uc.generator.GenerateWithFooter(ctx, html, footerHTML)
+	// 8. Renderizar header con los datos de la empresa para que las variables
+	// como {{.Empresa.NombreCompleto}} se resuelvan correctamente
+	headerHTML, err := uc.renderer.Render(headerTemplateName, data)
+	if err != nil {
+		// Si falla el header, continuar sin él (graceful degradation)
+		headerHTML = ""
+	}
+
+	// 9. Generar PDF desde HTML con el header y footer renderizados
+	pdfBytes, err := uc.generator.GenerateWithHeaderFooter(ctx, html, headerHTML, footerHTML)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %v", domain.ErrGeneracionPdf, err)
 	}

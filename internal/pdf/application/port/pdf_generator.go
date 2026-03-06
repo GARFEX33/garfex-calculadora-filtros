@@ -12,9 +12,11 @@ type PdfGenerator interface {
 	// Retorna los bytes del PDF generado o un error envuelto con ErrGeneracionPdf.
 	Generate(ctx context.Context, html string) ([]byte, error)
 
-	// GenerateWithFooter convierte el HTML a PDF con un footer ya renderizado.
-	// footerHTML es el footer con las variables de empresa ya resueltas (ej: {{.Empresa.NombreCompleto}} → "Garfex S.A.").
-	// Esto permite que el footer se renderice con datos dinámicos antes de pasarlo al generador.
+	// GenerateWithHeaderFooter convierte el HTML a PDF con header y footer ya renderizados.
+	// headerHTML es el header con las variables de empresa ya resueltas (ej: {{.Empresa.NombreCompleto}} → "Garfex S.A.").
+	// footerHTML es el footer con las variables de empresa ya resueltas.
+	// Esto permite que header/footer se rendericen con datos dinámicos antes de pasarlos al generador.
+	// Si headerHTML está vacío, se usa el comportamiento por defecto (sin header o header estático).
 	// Si footerHTML está vacío, se usa el comportamiento por defecto (footer estático o vacío).
-	GenerateWithFooter(ctx context.Context, html, footerHTML string) ([]byte, error)
+	GenerateWithHeaderFooter(ctx context.Context, html, headerHTML, footerHTML string) ([]byte, error)
 }

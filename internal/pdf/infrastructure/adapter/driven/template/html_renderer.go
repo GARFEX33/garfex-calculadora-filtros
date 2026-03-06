@@ -136,10 +136,11 @@ func NewHtmlRenderer(templatesFS fs.FS) (*HtmlRendererAdapter, error) {
 		},
 	}
 
-	// Parsear template principal + todos los partials
+	// Parsear template principal + todos los partials + templates Gotenberg
 	tmpl, err := htmpl.New("").Funcs(funcMap).ParseFS(templatesFS,
 		"templates/memoria.html",
 		"templates/partials/*.html",
+		"templates/gotenberg_*.html",
 	)
 	if err != nil {
 		return nil, fmt.Errorf("parseando templates: %w", err)
@@ -158,11 +159,18 @@ func (r *HtmlRendererAdapter) Render(templateName string, data dto.TemplateData)
 	var buf bytes.Buffer
 
 	// Para templates partial que usan {{define}}, necesitamos ejecutar el define interno
-	// en lugar del archivo directamente. Esto es necesario porque footer.html
-	// usa {{define "footer"}} para ser incluido en memoria.html
+	// en lugar del archivo directamente. Esto es necesario porque:
+	// - footer.html usa {{define "footer"}} para ser incluido en memoria.html
+	// - gotenberg_header.html usa {{define "gotenberg_header"}} para Gotenberg native header
+	// - gotenberg_footer.html usa {{define "gotenberg_footer"}} para Gotenberg native footer
 	templateToExecute := templateName
-	if templateName == "footer.html" {
+	switch templateName {
+	case "footer.html":
 		templateToExecute = "footer"
+	case "gotenberg_header.html":
+		templateToExecute = "gotenberg_header"
+	case "gotenberg_footer.html":
+		templateToExecute = "gotenberg_footer"
 	}
 
 	if err := r.tmpl.ExecuteTemplate(&buf, templateToExecute, data); err != nil {

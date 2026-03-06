@@ -10,6 +10,8 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+
+	"github.com/garfex/calculadora-filtros/internal/pdf/application/port"
 )
 
 const (
@@ -69,13 +71,14 @@ func NewPdfGenerator(templatesFS fs.FS) (*PdfGeneratorAdapter, error) {
 // Flujo: escribir HTML temp → extraer header/footer → ejecutar wkhtmltopdf → leer PDF → limpiar temps.
 // Implementa port.PdfGenerator.
 func (g *PdfGeneratorAdapter) Generate(ctx context.Context, htmlContent string) ([]byte, error) {
-	return g.GenerateWithFooter(ctx, htmlContent, "")
+	return g.GenerateWithHeaderFooter(ctx, htmlContent, "", "")
 }
 
-// GenerateWithFooter convierte el HTML a PDF usando wkhtmltopdf con un footer ya renderizado.
+// GenerateWithHeaderFooter convierte el HTML a PDF usando wkhtmltopdf con header y footer renderizados.
+// Si headerHTML está vacío, usa el header del FS embebido (comportamiento legacy).
 // Si footerHTML está vacío, usa el footer del FS embebido (comportamiento legacy).
 // Implementa port.PdfGenerator.
-func (g *PdfGeneratorAdapter) GenerateWithFooter(ctx context.Context, htmlContent, footerHTML string) ([]byte, error) {
+func (g *PdfGeneratorAdapter) GenerateWithHeaderFooter(ctx context.Context, htmlContent, headerHTML, footerHTML string) ([]byte, error) {
 	// Crear directorio temporal para todos los archivos de esta generación
 	tmpDir, err := os.MkdirTemp("", "garfex-pdf-")
 	if err != nil {
@@ -90,14 +93,21 @@ func (g *PdfGeneratorAdapter) GenerateWithFooter(ctx context.Context, htmlConten
 	}
 	// El HTML ya contiene CSS embebido desde memoria.html - no necesita inyección
 
-	// 2. Extraer header.html del embed.FS y escribirlo como archivo temporal
+	// 2. Header: si se provee headerHTML renderizado, usarlo; sino extraer del FS
 	headerFile := filepath.Join(tmpDir, "header.html")
-	if err := extractTemplate(g.templatesFS, "templates/partials/header.html", headerFile); err != nil {
-		return nil, fmt.Errorf("extrayendo header template: %w", err)
+	if headerHTML != "" {
+		// Usar el header ya renderizado con datos de empresa
+		if err := os.WriteFile(headerFile, []byte(headerHTML), 0600); err != nil {
+			return nil, fmt.Errorf("escribiendo header renderizado: %w", err)
+		}
+	} else {
+		// Fallback: extraer del FS (legacy behavior)
+		if err := extractTemplate(g.templatesFS, "templates/partials/header.html", headerFile); err != nil {
+			return nil, fmt.Errorf("extrayendo header template: %w", err)
+		}
 	}
-	// El header usa las variables CSS embebidas en memoria.html
 
-	// 3. Escribir footer: si se provee footerHTML renderizado, usarlo; sino extraer del FS
+	// 3. Footer: si se provee footerHTML renderizado, usarlo; sino extraer del FS
 	footerFile := filepath.Join(tmpDir, "footer.html")
 	if footerHTML != "" {
 		// Usar el footer ya renderizado con datos de empresa
@@ -238,3 +248,6 @@ func injectCSS(filePath, cssContent string) error {
 
 	return nil
 }
+
+// Ensure we implement the port interface
+var _ port.PdfGenerator = (*PdfGeneratorAdapter)(nil)

@@ -1,36 +1,25 @@
-<!DOCTYPE html>
-<html lang="es">
-
-<head>
-  <meta charset="utf-8">
 {{define "header"}}
-</head>
-
-<body>
-  <div class="header-contenido">
-    <div class="header-logo-col">
-      <div class="logo-circle" style="background: {{if eq .Empresa.ID "garfex"}}transparent{{else}}{{.Empresa.ColorPrimario}}{{end}};">
-        {{if eq .Empresa.ID "garfex"}}
-          <img src="data:image/png;base64,{{.LogoLetraBase64}}" alt="Garfex" />
-        {{else}}
-          {{capFirst .Empresa.ID}}
-        {{end}}
-      </div>
-    </div>
-
-    <div class="header-info-col">
-      <div class="header-titulo">Memoria de Cálculo</div>
-      <div class="header-subtitulo">NOM-001-SEDE-2012 • Ingeniería Eléctrica</div>
-    </div>
-
-    <div class="header-empresa-col">
-      <div class="header-empresa-nombre">{{.Empresa.NombreCompleto}}</div>
-      <div class="header-proyecto">
-        {{.NombreProyecto}}
-      </div>
+<div class="header-contenido">
+  <div class="header-logo-col">
+    <div class="logo-circle" style="background: {{if eq .Empresa.ID "garfex"}}transparent{{else}}{{.Empresa.ColorPrimario}}{{end}};">
+      {{if eq .Empresa.ID "garfex"}}
+        <img src="data:image/png;base64,{{.LogoLetraBase64}}" alt="Garfex" />
+      {{else}}
+        {{capFirst .Empresa.ID}}
+      {{end}}
     </div>
   </div>
-{{end}}
-</body>
 
-</html>
+  <div class="header-info-col">
+    <div class="header-titulo">Memoria de Cálculo</div>
+    <div class="header-subtitulo">NOM-001-SEDE-2012 • Ingeniería Eléctrica</div>
+  </div>
+
+  <div class="header-empresa-col">
+    <div class="header-empresa-nombre">{{.Empresa.NombreCompleto}}</div>
+    <div class="header-proyecto">
+      {{.NombreProyecto}}
+    </div>
+  </div>
+</div>
+{{end}}

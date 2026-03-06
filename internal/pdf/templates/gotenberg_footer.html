@@ -1,0 +1,80 @@
+{{define "gotenberg_footer"}}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <style>
+    /* ═══════════════════════════════════════════════════════════════════════════
+       Gotenberg Footer — Native Chromium Footer
+       Se renderiza en cada página del PDF con paginación
+       ═══════════════════════════════════════════════════════════════════════════ */
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    .footer-container {
+      width: 100%;
+      display: table;
+      table-layout: fixed;
+    }
+
+    .footer-empresa-col {
+      display: table-cell;
+      vertical-align: bottom;
+      text-align: left;
+    }
+
+    .footer-empresa-nombre {
+      font-family: 'Arial', sans-serif;
+      font-size: 10px;
+      font-weight: 600;
+      color: #1C1C1C;
+    }
+
+    .footer-empresa-contacto {
+      font-family: 'Arial', sans-serif;
+      font-size: 8px;
+      color: #6E6E6E;
+      margin-top: 2px;
+    }
+
+    .footer-pagina-col {
+      display: table-cell;
+      vertical-align: bottom;
+      text-align: right;
+    }
+
+    .footer-pagina {
+      font-family: 'Arial', sans-serif;
+      font-size: 10px;
+      color: #1C1C1C;
+    }
+
+    .footer-normativa {
+      font-family: 'Arial', sans-serif;
+      font-size: 8px;
+      color: #6E6E6E;
+      margin-top: 2px;
+    }
+  </style>
+</head>
+<body>
+  <div class="footer-container">
+    <div class="footer-empresa-col">
+      <div class="footer-empresa-nombre">{{.Empresa.NombreCompleto}}</div>
+      <div class="footer-empresa-contacto">NOM-001-SEDE-2012 — Documento técnico generado por {{.Empresa.NombreCompleto}} Calculadora</div>
+    </div>
+    <div class="footer-pagina-col">
+      <!-- Paginación nativa de Chromium/Gotenberg -->
+      <div class="footer-pagina">
+        Página <span class="pageNumber"></span> de <span class="totalPages"></span>
+      </div>
+      <div class="footer-normativa">Cálculo Eléctrico — Uso interno</div>
+    </div>
+  </div>
+</body>
+</html>
+{{end}}

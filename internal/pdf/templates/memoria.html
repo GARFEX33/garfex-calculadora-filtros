@@ -6,8 +6,6 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Memoria de Cálculo Eléctrica — {{.NombreProyecto}}</title>
-  <!-- MathJax for rendering mathematical formulas -->
-  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
   <style>
 /* ═══════════════════════════════════════════════════════════════════════════
    pdf.css — Modern Engineering Style
@@ -734,8 +732,6 @@ td {
     </div>
   </div>
 
-  {{template "header" .}}
-
   {{template "seccion_encabezado" .}}
   {{template "seccion_corriente" .}}
   {{template "seccion_alimentador" .}}
@@ -743,8 +739,6 @@ td {
   {{template "seccion_canalizacion" .}}
   {{template "seccion_caida_tension" .}}
   {{template "seccion_conclusion" .}}
-
-  {{template "footer" .}}
 
 </body>
 
