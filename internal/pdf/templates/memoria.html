@@ -20,9 +20,9 @@
   /* Branding dinámico por empresa */
   --primary: {{.Empresa.ColorPrimario}};
   --secondary: {{.Empresa.ColorSecundario}};
-  --primary-soft: {{.Empresa.ColorPrimario}}0a;  /* 4% opacity for backgrounds */
-  --primary-light: {{.Empresa.ColorPrimario}}15;  /* 8% opacity */
-  --primary-border: {{.Empresa.ColorPrimario}}30;  /* 19% opacity */
+  --primary-soft: color-mix(in srgb, var(--primary) 4%, transparent);
+  --primary-light: color-mix(in srgb, var(--primary) 8%, transparent);
+  --primary-border: color-mix(in srgb, var(--primary) 19%, transparent);
   
   /* Status */
   --success: #16a34a;
