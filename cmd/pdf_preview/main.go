@@ -5,7 +5,6 @@
 //
 // Endpoints:
 //   - GET /                    : Renderiza la memoria completa
-//   - GET /style.css           : Serve CSS stylesheet
 //   - GET /?empresa=garfex     : Cambiar empresa (garfex, summaa, siemens)
 package main
 
@@ -15,7 +14,6 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"math"
 	"net/http"
 	"os"
 	"os/exec"
@@ -23,17 +21,17 @@ import (
 	"strings"
 	"time"
 
-	"github.com/garfex/calculadora-filtros/internal/calculos/application/dto"
-	htmpl "html/template"
+	calculosdto "github.com/garfex/calculadora-filtros/internal/calculos/application/dto"
+	pdfdto "github.com/garfex/calculadora-filtros/internal/pdf/application/dto"
+	pdfdomain "github.com/garfex/calculadora-filtros/internal/pdf/domain"
+	pdftemplate "github.com/garfex/calculadora-filtros/internal/pdf/infrastructure/adapter/driven/template"
 )
 
 const (
-	templatesPath = "internal/pdf/templates"
-	logosPath     = "internal/pdf/assets/logos"
-	testDataPath  = "test_memoria.json"
-	templateName  = "memoria_calculo.html"
-	fechaLayout   = "02/01/2006"
-	serverPort    = "3000"
+	templatesBasePath = "internal/pdf"
+	logosPath         = "internal/pdf/assets/logos"
+	testDataPath      = "test_memoria.json"
+	serverPort        = "3000"
 )
 
 var (
@@ -42,66 +40,13 @@ var (
 	port      = flag.String("port", serverPort, "Puerto del servidor")
 )
 
-// Empresas disponibles
-var empresas = map[string]EmpresaPresentacion{
-	"garfex": {
-		ID:              "garfex",
-		NombreCompleto:  "Garfex",
-		LogoPath:        "garfex.png",
-		Direccion:       "Av. Insurgentes Sur 1234, Col. Del Valle, CDMX, C.P. 03100",
-		Telefono:        "+52 55 1193-0515",
-		Email:           "jcgarcia@garfex.mx",
-		ColorPrimario:   "#7C0000",
-		ColorSecundario: "#F4CF00",
-	},
-	"summaa": {
-		ID:              "summaa",
-		NombreCompleto:  "Summaa S.A. de C.V.",
-		LogoPath:        "summaa.png",
-		Direccion:       "Blvd. Manuel Ávila Camacho 800, Lomas de Chapultepec, CDMX, C.P. 11000",
-		Telefono:        "+52 55 9876-5432",
-		Email:           "ventas@summaa.com",
-		ColorPrimario:   "#004A99",
-		ColorSecundario: "#1B75BB",
-	},
-	"siemens": {
-		ID:              "siemens",
-		NombreCompleto:  "Siemens S.A. de C.V.",
-		LogoPath:        "siemens.png",
-		Direccion:       "Lago Alberto 319, Anáhuac I Secc, Miguel Hidalgo, CDMX, C.P. 11320",
-		Telefono:        "+52 55 5229-3600",
-		Email:           "contacto@siemens.com.mx",
-		ColorPrimario:   "#009999",
-		ColorSecundario: "#000000",
-	},
+// TestData representa la estructura del JSON de prueba
+type TestData struct {
+	Memoria      calculosdto.MemoriaOutput `json:"memoria"`
+	Presentacion *PresentacionInput        `json:"presentacion"`
 }
 
-// EmpresaPresentacion contiene los datos de la empresa
-type EmpresaPresentacion struct {
-	ID              string
-	NombreCompleto  string
-	LogoPath        string
-	Direccion       string
-	Telefono        string
-	Email           string
-	ColorPrimario   string
-	ColorSecundario string
-}
-
-// TemplateData es el struct que alimenta el template HTML
-type TemplateData struct {
-	Empresa           EmpresaPresentacion
-	LogoBase64        string
-	LogoLetraBase64   string
-	NombreProyecto    string
-	DireccionProyecto string
-	Responsable       string
-	NombreEquipo      string
-	Memoria           dto.MemoriaOutput
-	FechaGeneracion   string
-}
-
-// PresentacionInput contiene los datos de presentación
+// PresentacionInput contiene los datos de presentación (re-definido para JSON parsing)
 type PresentacionInput struct {
 	EmpresaID            string `json:"empresa_id"`
 	NombreProyecto       string `json:"nombre_proyecto"`
@@ -109,16 +54,6 @@ type PresentacionInput struct {
 	Responsable          string `json:"responsable"`
 	NombreEquipoOverride string `json:"nombre_equipo_override,omitempty"`
 }
-
-// TestData representa la estructura del JSON de prueba
-type TestData struct {
-	Memoria      dto.MemoriaOutput  `json:"memoria"`
-	Presentacion *PresentacionInput `json:"presentacion"`
-}
-
-// Cache para el HTML renderizado
-var cachedHTML string
-var lastModified time.Time
 
 func main() {
 	flag.Parse()
@@ -129,13 +64,13 @@ func main() {
 	log.Printf("🎯 PDF Preview Server Started")
 	log.Printf("   URL:      http://localhost:%s", *port)
 	log.Printf("   Empresa:  %s", *empresaID)
-	log.Printf("   Templates: %s", templatesPath)
+	log.Printf("   Templates: %s", templatesBasePath)
 	log.Printf("")
 	log.Printf("   Presiona Ctrl+C para detener")
 	log.Printf("")
 
 	// Verificar empresa existe
-	if _, ok := empresas[*empresaID]; !ok {
+	if _, ok := pdfdomain.BuscarEmpresaPorID(*empresaID); !ok {
 		log.Fatalf("❌ Empresa desconocida: %s. Opciones: garfex, summaa, siemens", *empresaID)
 	}
 
@@ -150,7 +85,6 @@ func main() {
 	// Configurar rutas
 	http.HandleFunc("/", handleIndex)
 	http.HandleFunc("/health", handleHealth)
-	// CSS embebido en memoria.html - no necesita ruta separada
 
 	// Iniciar servidor
 	addr := ":" + *port
@@ -168,14 +102,14 @@ func handleIndex(w http.ResponseWriter, r *http.Request) {
 		empID = *empresaID
 	}
 
-	// Validar empresa
-	empresa, ok := empresas[empID]
+	// Validar empresa usando el catálogo del dominio
+	empresa, ok := pdfdomain.BuscarEmpresaPorID(empID)
 	if !ok {
 		http.Error(w, fmt.Sprintf("Empresa desconocida: %s. Opciones: garfex, summaa, siemens", empID), http.StatusBadRequest)
 		return
 	}
 
-	// Renderizar HTML
+	// Renderizar HTML (re-crea renderer para hot-reload)
 	html, err := renderHTMLForEmpresa(empresa)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Error renderizando template: %v", err), http.StatusInternalServerError)
@@ -209,7 +143,7 @@ func handleHealth(w http.ResponseWriter, r *http.Request) {
 func getTemplatesModTime() (time.Time, error) {
 	var newest time.Time
 
-	err := filepath.Walk(templatesPath, func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk(templatesBasePath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
@@ -238,14 +172,14 @@ func getTemplatesModTime() (time.Time, error) {
 	return newest, nil
 }
 
-func renderHTMLForEmpresa(empresa EmpresaPresentacion) (string, error) {
+func renderHTMLForEmpresa(empresa pdfdomain.EmpresaPresentacion) (string, error) {
 	// Cargar datos de prueba
 	testData, err := loadTestData(testDataPath)
 	if err != nil {
 		return "", fmt.Errorf("cargando datos de prueba: %w", err)
 	}
 
-	// Actualizar empresa_id
+	// Actualizar empresa_id en presentacion
 	if testData.Presentacion == nil {
 		testData.Presentacion = &PresentacionInput{}
 	}
@@ -264,8 +198,38 @@ func renderHTMLForEmpresa(empresa EmpresaPresentacion) (string, error) {
 		nombreEquipo = testData.Memoria.Equipo.Clave
 	}
 
-	// Construir TemplateData
-	data := TemplateData{
+	// Construir TemplateData usando el DTO compartido
+	data := templateDataFromTestData(testData, empresa, logoBase64, logoLetraBase64, nombreEquipo)
+
+	// Usar os.DirFS para hot-reload - crea nuevo renderer en cada request
+	// Esto permite re-parsear templates desde disco en cada request
+	diskFS := os.DirFS(templatesBasePath)
+	renderer, err := pdftemplate.NewHtmlRenderer(diskFS)
+	if err != nil {
+		return "", fmt.Errorf("creando renderer HTML: %w", err)
+	}
+
+	// Render usando "memoria.html" que es el nombre del define en memoria.html
+	html, err := renderer.Render("memoria.html", data)
+	if err != nil {
+		return "", fmt.Errorf("renderizando template: %w", err)
+	}
+
+	// Inject hot-reload script
+	html = injectHotReloadScript(html)
+
+	return html, nil
+}
+
+// templateDataFromTestData construye el DTO TemplateData desde los datos de prueba
+func templateDataFromTestData(
+	testData *TestData,
+	empresa pdfdomain.EmpresaPresentacion,
+	logoBase64 string,
+	logoLetraBase64 string,
+	nombreEquipo string,
+) pdfdto.TemplateData {
+	return pdfdto.TemplateData{
 		Empresa:           empresa,
 		LogoBase64:        logoBase64,
 		LogoLetraBase64:   logoLetraBase64,
@@ -274,10 +238,8 @@ func renderHTMLForEmpresa(empresa EmpresaPresentacion) (string, error) {
 		Responsable:       testData.Presentacion.Responsable,
 		NombreEquipo:      nombreEquipo,
 		Memoria:           testData.Memoria,
-		FechaGeneracion:   time.Now().Format(fechaLayout),
+		FechaGeneracion:   time.Now().Format("02/01/2006"),
 	}
-
-	return renderHTML(data, templatesPath)
 }
 
 func loadTestData(path string) (*TestData, error) {
@@ -287,7 +249,7 @@ func loadTestData(path string) (*TestData, error) {
 	}
 
 	var testData TestData
-	if err := parseJSON(data, &testData); err != nil {
+	if err := json.Unmarshal(data, &testData); err != nil {
 		return nil, fmt.Errorf("parseando JSON: %w", err)
 	}
 
@@ -306,113 +268,6 @@ func loadLogoBase64(path string) string {
 	}
 
 	return base64.StdEncoding.EncodeToString(data)
-}
-
-func renderHTML(data TemplateData, templatesDir string) (string, error) {
-	diskFS := os.DirFS(templatesDir)
-
-	funcMap := htmpl.FuncMap{
-		"upper": func(s string) string {
-			return strings.ToUpper(s)
-		},
-		"capFirst": func(s string) string {
-			if s == "" {
-				return s
-			}
-			return strings.ToUpper(s[:1])
-		},
-		"slice": func(s string, start, end int) string {
-			if start < 0 || start > len(s) || end < start || end > len(s) {
-				return ""
-			}
-			return s[start:end]
-		},
-		"formatFloat": func(f float64, decimals int) string {
-			return fmt.Sprintf(fmt.Sprintf("%%.%df", decimals), f)
-		},
-		"formatFloat2": func(f float64) string {
-			return fmt.Sprintf("%.2f", f)
-		},
-		"formatFloat4": func(f float64) string {
-			return fmt.Sprintf("%.4f", f)
-		},
-		"formatInt": func(f float64) string {
-			return fmt.Sprintf("%.0f", f)
-		},
-		"mul": func(a, b float64) float64 {
-			return a * b
-		},
-		"div": func(a, b float64) float64 {
-			if b == 0 {
-				return 0
-			}
-			return a / b
-		},
-		"sub": func(a, b float64) float64 {
-			return a - b
-		},
-		"sqrt": func(f float64) float64 {
-			return math.Sqrt(f)
-		},
-		"safeHTML": func(s string) htmpl.HTML {
-			return htmpl.HTML(s)
-		},
-		"contains": func(s, sub string) bool {
-			return strings.Contains(s, sub)
-		},
-		"notNil": func(v interface{}) bool {
-			return v != nil
-		},
-		"esMaterial": func(material, expected string) bool {
-			return material == expected
-		},
-		"itoa": func(i int) string {
-			return fmt.Sprintf("%d", i)
-		},
-		"percent": func(f float64) string {
-			return fmt.Sprintf("%.0f", f*100)
-		},
-		"not": func(b bool) bool {
-			return !b
-		},
-		"mulIntFloat": func(i int, f float64) float64 {
-			return float64(i) * f
-		},
-		"intToFloat": func(i int) float64 {
-			return float64(i)
-		},
-		"toFloat64": func(v interface{}) float64 {
-			return toFloat64(v)
-		},
-		"formatNumeric": func(v interface{}) string {
-			return fmt.Sprintf("%.2f", toFloat64(v))
-		},
-		"derefFloat": func(f *float64) float64 {
-			if f == nil {
-				return 0
-			}
-			return *f
-		},
-	}
-
-	tmpl, err := htmpl.New("").Funcs(funcMap).ParseFS(diskFS,
-		"memoria.html",
-		"partials/*.html",
-	)
-	if err != nil {
-		return "", fmt.Errorf("parseando templates: %w", err)
-	}
-
-	var buf strings.Builder
-	if err := tmpl.ExecuteTemplate(&buf, templateName, data); err != nil {
-		return "", fmt.Errorf("ejecutando template %q: %w", templateName, err)
-	}
-
-	// Inject hot-reload script
-	html := buf.String()
-	html = injectHotReloadScript(html)
-
-	return html, nil
 }
 
 // injectHotReloadScript adds JavaScript for automatic page refresh when templates change
@@ -513,41 +368,4 @@ func openBrowser(url string) {
 	}
 
 	log.Printf("📂 Navegador abierto: %s", url)
-}
-
-func toFloat64(v interface{}) float64 {
-	switch val := v.(type) {
-	case float64:
-		return val
-	case float32:
-		return float64(val)
-	case int:
-		return float64(val)
-	case int8:
-		return float64(val)
-	case int16:
-		return float64(val)
-	case int32:
-		return float64(val)
-	case int64:
-		return float64(val)
-	case uint:
-		return float64(val)
-	case uint8:
-		return float64(val)
-	case uint16:
-		return float64(val)
-	case uint32:
-		return float64(val)
-	case uint64:
-		return float64(val)
-	default:
-		return 0
-	}
-}
-
-func parseJSON(data []byte, v interface{}) error {
-	// Wrapper simple - en Go 1.21+ usa json.Unmarshal directamente
-	// Mantenemos la compatibilidad con el proyecto existente
-	return json.Unmarshal(data, v)
 }
