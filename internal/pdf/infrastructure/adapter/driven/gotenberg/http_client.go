@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"time"
 )
@@ -81,6 +82,7 @@ func (c *defaultHTTPClient) PostMultipart(
 		resp, err := c.client.Do(req)
 		if err != nil {
 			// Error de red - reintentar si quedan intentos
+			log.Printf("[DEBUG] gotenberg/http_client: attempt %d/%d - connection error: %v", attempt+1, maxRetries+1, err)
 			if attempt < maxRetries && isRetryableError(err) {
 				lastErr = err
 				time.Sleep(time.Duration(attempt+1) * 500 * time.Millisecond)

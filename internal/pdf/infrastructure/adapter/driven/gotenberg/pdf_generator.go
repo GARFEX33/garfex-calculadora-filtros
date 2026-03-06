@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
+	"log"
 	"strings"
 
 	"github.com/garfex/calculadora-filtros/internal/pdf/application/port"
@@ -108,6 +109,7 @@ func (g *PdfGeneratorAdapter) Generate(ctx context.Context, htmlContent string) 
 	}
 
 	// 6. Realizar la petición HTTP con reintentos
+	log.Printf("[DEBUG] gotenberg: calling Gotenberg at URL: %s", g.config.URL)
 	resp, err := g.httpClient.PostMultipart(
 		ctx,
 		g.config.URL,
@@ -116,6 +118,7 @@ func (g *PdfGeneratorAdapter) Generate(ctx context.Context, htmlContent string) 
 		g.config.MaxRetries,
 	)
 	if err != nil {
+		log.Printf("[ERROR] gotenberg: failed to call Gotenberg at %s: %v", g.config.URL, err)
 		return nil, wrapError(err, "llamando a Gotenberg")
 	}
 

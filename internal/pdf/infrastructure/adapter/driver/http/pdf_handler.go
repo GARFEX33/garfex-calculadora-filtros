@@ -4,6 +4,7 @@ package http
 import (
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"regexp"
 	"strings"
@@ -106,6 +107,7 @@ func (h *PdfHandler) GenerarMemoria(c *gin.Context) {
 	// Ejecutar el use case de generación de PDF
 	pdfBytes, err := h.generarMemoriaUC.Execute(c.Request.Context(), req)
 	if err != nil {
+		log.Printf("[ERROR] pdf_handler.GenerarMemoria: error executing use case: %v", err)
 		status, resp := h.mapError(err)
 		c.JSON(status, resp)
 		return
