@@ -18,6 +18,7 @@
       --text-muted: #94a3b8;
       --border-light: #e2e8f0;
       --font-sans: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+      --logo-bg: {{if eq .Empresa.ID "garfex"}}transparent{{else}}{{.Empresa.ColorPrimario}}{{end}};
     }
     
     * {
@@ -46,23 +47,25 @@
     .logo-circle {
       width: 35px;
       height: 35px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      border-radius: 4px;
       font-family: var(--font-sans);
       font-size: 14px;
       font-weight: 800;
-      color: white;
-      overflow: hidden;
-    }
+      text-align: center;
+      line-height: 35px;
+      color: #fff;
 
+      background: var(--logo-bg);
+
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
     .logo-circle img {
       width: 100%;
       height: 100%;
       object-fit: contain;
+      display: block;
     }
-
     .header-info-col {
       display: table-cell;
       vertical-align: middle;
@@ -114,7 +117,7 @@
 <body>
   <div class="header-container">
     <div class="header-logo-col">
-      <div class="logo-circle" style="background: {{if eq .Empresa.ID "garfex"}}transparent{{else}}{{.Empresa.ColorPrimario}}{{end}};">
+      <div class="logo-circle">
         {{if eq .Empresa.ID "garfex"}}
           <img src="data:image/png;base64,{{.LogoLetraBase64}}" alt="Garfex" />
         {{else}}
