@@ -5,17 +5,15 @@
   <meta charset="utf-8">
   <style>
     /* ═══════════════════════════════════════════════════════════════════════════
-       Gotenberg Footer — Premium Native Chromium Footer
+       Gotenberg Footer — Minimal Footer with Page Numbers
        Se renderiza en cada página del PDF con paginación
        ═══════════════════════════════════════════════════════════════════════════ */
     
     /* Dynamic color variables */
     :root {
       --primary: {{.Empresa.ColorPrimario}};
-      --secondary: {{.Empresa.ColorSecundario}};
       --text-primary: #0f172a;
       --text-muted: #94a3b8;
-      --border-light: #e2e8f0;
       --font-sans: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
     }
     
@@ -29,8 +27,8 @@
       width: 100%;
       display: table;
       table-layout: fixed;
-      border-top: 2px solid var(--primary);
-      padding-top: 10px;
+      border-top: 1px solid var(--primary);
+      padding-top: 6px;
     }
 
     .footer-empresa-col {
@@ -41,16 +39,9 @@
 
     .footer-empresa-nombre {
       font-family: var(--font-sans);
-      font-size: 10px;
-      font-weight: 600;
-      color: var(--text-primary);
-    }
-
-    .footer-empresa-contacto {
-      font-family: var(--font-sans);
       font-size: 8px;
+      font-weight: 500;
       color: var(--text-muted);
-      margin-top: 2px;
     }
 
     .footer-pagina-col {
@@ -61,15 +52,8 @@
 
     .footer-pagina {
       font-family: var(--font-sans);
-      font-size: 10px;
-      color: var(--text-primary);
-    }
-
-    .footer-normativa {
-      font-family: var(--font-sans);
       font-size: 8px;
       color: var(--text-muted);
-      margin-top: 2px;
     }
   </style>
 </head>
@@ -77,14 +61,12 @@
   <div class="footer-container">
     <div class="footer-empresa-col">
       <div class="footer-empresa-nombre">{{.Empresa.NombreCompleto}}</div>
-      <div class="footer-empresa-contacto">NOM-001-SEDE-2012 — Documento técnico generado por {{.Empresa.NombreCompleto}} Calculadora</div>
     </div>
     <div class="footer-pagina-col">
       <!-- Paginación nativa de Chromium/Gotenberg -->
       <div class="footer-pagina">
         Página <span class="pageNumber"></span> de <span class="totalPages"></span>
       </div>
-      <div class="footer-normativa">Cálculo Eléctrico — Uso interno</div>
     </div>
   </div>
 </body>

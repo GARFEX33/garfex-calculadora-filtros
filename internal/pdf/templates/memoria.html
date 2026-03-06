@@ -62,7 +62,7 @@
 @page {
   size: Letter;
   margin: 12mm;
-  margin-bottom: 20mm; /* Extra space for footer - pagination via Gotenberg footer.html */
+  margin-bottom: 18mm; /* Reduced for minimal footer */
 }
 
 * {
@@ -90,10 +90,11 @@ h2 {
   color: var(--text-primary);
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  margin: 28px 0 16px 0;
+  margin: 6mm 0 4mm 0;
   padding-bottom: 10px;
   border-bottom: 3px solid var(--primary);
   position: relative;
+  break-after: avoid;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
@@ -133,9 +134,11 @@ h2 {
 .data-item {
   display: flex;
   flex-direction: column;
+  justify-content: center;
   gap: 3px;
   padding: 10px 14px;
   border-bottom: 1px solid var(--border-light);
+  min-height: 40px;
 }
 
 .data-item:nth-last-child(-n+2) {
@@ -482,11 +485,12 @@ td {
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
-   SECCIONES
-   ───────────────────────────────────────────────────────────────────────── */
+    SECCIONES
+    ───────────────────────────────────────────────────────────────────────── */
 .seccion {
   margin-bottom: 25px;
   page-break-inside: avoid;
+  break-inside: avoid;
 }
 
 /* Section description paragraph */

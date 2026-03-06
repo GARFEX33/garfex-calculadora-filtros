@@ -12,9 +12,11 @@
     <h3 class="card-title">Circuito Completo</h3>
     <p class="desarrollo">
       {{.Memoria.Instalacion.HilosPorFase}} set de
-      {{if eq .Memoria.Instalacion.SistemaElectrico "MONOFASICO"}}1{{else if eq .Memoria.Instalacion.SistemaElectrico "BIFASICO"}}2{{else}}3{{end}}-{{.Memoria.CableFase.Calibre}},
-      {{.Memoria.CableTierra.NumHilos}}-{{.Memoria.CableTierra.Calibre}} desnudo,
-      {{.Memoria.Canalizacion.Resultado.NumeroDeTubos}}-{{if eq .Memoria.Instalacion.TipoCanalizacion "CHAROLA_CABLE_ESPACIADO"}}Charola {{.Memoria.Canalizacion.Resultado.Tamano}} Espaciado{{else if eq .Memoria.Instalacion.TipoCanalizacion "CHAROLA_CABLE_TRIANGULAR"}}Charola {{.Memoria.Canalizacion.Resultado.Tamano}} Triangular{{else}}Tubería {{.Memoria.Canalizacion.Resultado.Tamano}}"{{end}}
+      {{if eq .Memoria.Instalacion.SistemaElectrico "MONOFASICO"}}1{{else if eq .Memoria.Instalacion.SistemaElectrico "BIFASICO"}}2{{else}}3{{end}}-{{.Memoria.CableFase.Calibre}} {{.Memoria.CableFase.Material}} ({{formatFloat2 .Memoria.CableFase.SeccionMM2}} mm²),
+      {{.Memoria.CableTierra.NumHilos}}-{{.Memoria.CableTierra.Calibre}} {{.Memoria.CableTierra.Material}} desnudo,
+      {{if eq .Memoria.Instalacion.TipoCanalizacion "CHAROLA_CABLE_ESPACIADO"}}Charola {{.Memoria.Canalizacion.Resultado.Tamano}}" Espaciado
+      {{else if eq .Memoria.Instalacion.TipoCanalizacion "CHAROLA_CABLE_TRIANGULAR"}}Charola {{.Memoria.Canalizacion.Resultado.Tamano}}" Triangular
+      {{else}}Tubería {{.Memoria.Canalizacion.Resultado.Tamano}}" ({{.Memoria.Canalizacion.Resultado.NumeroDeTubos}} tubo(s)){{end}}
     </p>
   </div>
 
@@ -61,7 +63,7 @@
       </div>
       <div class="data-item">
         <span class="data-label">Conductor de Alimentación</span>
-        <span class="data-value">{{.Memoria.CableFase.Calibre}} {{.Memoria.CableFase.Material}} — {{formatFloat2 .Memoria.CableFase.Capacidad}} A</span>
+        <span class="data-value">{{.Memoria.CableFase.Calibre}} {{.Memoria.CableFase.Material}} ({{formatFloat2 .Memoria.CableFase.SeccionMM2}} mm²) — {{formatFloat2 .Memoria.CableFase.Capacidad}} A</span>
       </div>
       <div class="data-item">
         <span class="data-label">Conductor de Tierra</span>
@@ -70,10 +72,9 @@
       <div class="data-item">
         <span class="data-label">Canalización</span>
         <span class="data-value">
-          {{if eq .Memoria.Instalacion.TipoCanalizacion "CHAROLA_CABLE_ESPACIADO"}}Charola {{.Memoria.Canalizacion.Resultado.Tamano}} Espaciado
-          {{else if eq .Memoria.Instalacion.TipoCanalizacion "CHAROLA_CABLE_TRIANGULAR"}}Charola {{.Memoria.Canalizacion.Resultado.Tamano}} Triangular
-          {{else}}Tubería {{.Memoria.Canalizacion.Resultado.Tamano}}"{{end}}
-          ({{.Memoria.Canalizacion.Resultado.NumeroDeTubos}} tubo(s))
+          {{if eq .Memoria.Instalacion.TipoCanalizacion "CHAROLA_CABLE_ESPACIADO"}}Charola {{.Memoria.Canalizacion.Resultado.Tamano}}" Espaciado
+          {{else if eq .Memoria.Instalacion.TipoCanalizacion "CHAROLA_CABLE_TRIANGULAR"}}Charola {{.Memoria.Canalizacion.Resultado.Tamano}}" Triangular
+          {{else}}Tubería {{.Memoria.Canalizacion.Resultado.Tamano}}" ({{.Memoria.Canalizacion.Resultado.NumeroDeTubos}} tubo(s)){{end}}
         </span>
       </div>
       <div class="data-item">

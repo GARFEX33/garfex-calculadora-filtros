@@ -116,7 +116,7 @@ func (g *PdfGeneratorAdapter) GenerateWithHeaderFooter(ctx context.Context, html
 	// Opciones de conversión para Gotenberg (formato Letter como wkhtmltopdf)
 	form.AddOption("pdfFormat", "Letter")
 	form.AddOption("marginTop", "10mm")
-	form.AddOption("marginBottom", "25mm")
+	form.AddOption("marginBottom", "18mm")
 	form.AddOption("marginLeft", "15mm")
 	form.AddOption("marginRight", "10mm")
 
