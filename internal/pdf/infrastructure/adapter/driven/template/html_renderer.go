@@ -103,6 +103,20 @@ func NewHtmlRenderer(templatesFS fs.FS) (*HtmlRendererAdapter, error) {
 		"percent": func(f float64) string {
 			return fmt.Sprintf("%.0f", f*100)
 		},
+		// formatTipo formatea valores crudos de la base de datos
+		// Ej: "FILTRO_ACTIVO" → "Filtro Activo", "TUBERIA_PVC" → "Tubo PVC"
+		"formatTipo": func(s string) string {
+			// Reemplazar _ con espacio
+			s = strings.ReplaceAll(s, "_", " ")
+			// Convertir a Title Case
+			words := strings.Fields(s)
+			for i, word := range words {
+				if len(word) > 0 {
+					words[i] = strings.ToUpper(word[:1]) + strings.ToLower(word[1:])
+				}
+			}
+			return strings.Join(words, " ")
+		},
 		// not es la negación booleana (útil en condiciones de template)
 		"not": func(b bool) bool {
 			return !b

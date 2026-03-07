@@ -28,7 +28,7 @@
       </div>
       <div class="data-item">
         <span class="data-label">Tipo de Carga</span>
-        <span class="data-value">{{.Memoria.TipoEquipo}}</span>
+        <span class="data-value">{{formatTipo .Memoria.TipoEquipo}}</span>
       </div>
       <div class="data-item">
         <span class="data-label">Corriente Nominal ($I_n$)</span>
@@ -48,11 +48,11 @@
       </div>
       <div class="data-item">
         <span class="data-label">Configuración de Sistema</span>
-        <span class="data-value">{{.Memoria.Instalacion.SistemaElectrico}}</span>
+        <span class="data-value">{{formatTipo .Memoria.Instalacion.SistemaElectrico}}</span>
       </div>
       <div class="data-item">
         <span class="data-label">Tipo de Canalización</span>
-        <span class="data-value">{{.Memoria.Instalacion.TipoCanalizacion}}</span>
+        <span class="data-value">{{formatTipo .Memoria.Instalacion.TipoCanalizacion}}</span>
       </div>
       <div class="data-item">
         <span class="data-label">Material Conductor</span>
