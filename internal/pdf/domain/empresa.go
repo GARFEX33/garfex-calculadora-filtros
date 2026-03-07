@@ -18,9 +18,9 @@ type EmpresaPresentacion struct {
 var empresasCatalogo = map[string]EmpresaPresentacion{
 	"garfex": {
 		ID:              "garfex",
-		NombreCompleto:  "Garfex",
+		NombreCompleto:  "GARFEX",
 		LogoPath:        "assets/logos/garfex.png",
-		Direccion:       "Av. Insurgentes Sur 1234, Col. Del Valle, CDMX, C.P. 03100",
+		Direccion:       "",
 		Telefono:        "+52 55 1193-0515",
 		Email:           "jcgarcia@garfex.mx",
 		ColorPrimario:   "#7C0000", /* rojoGarfex */
@@ -28,10 +28,10 @@ var empresasCatalogo = map[string]EmpresaPresentacion{
 	},
 	"summaa": {
 		ID:              "summaa",
-		NombreCompleto:  "Summaa S.A. de C.V.",
+		NombreCompleto:  "GRUPO SUMMAA ENERGIA",
 		LogoPath:        "assets/logos/summaa.png",
-		Direccion:       "Blvd. Manuel Ávila Camacho 800, Lomas de Chapultepec, CDMX, C.P. 11000",
-		Telefono:        "+52 55 9876-5432",
+		Direccion:       "CALLE TEZIUTLAN #43, COL. SAN LUCAS, DELEGACION COYOACAN, CP 04030, CDMX",
+		Telefono:        "+52 55 5243-9127/28",
 		Email:           "ventas@summaa.com",
 		ColorPrimario:   "#004A99",
 		ColorSecundario: "#1B75BB",
