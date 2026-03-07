@@ -48,7 +48,7 @@
       </div>
       <div class="data-item">
         <span class="data-label">Configuración de Sistema</span>
-        <span class="data-value">{{formatTipo .Memoria.Instalacion.SistemaElectrico}}</span>
+        <span class="data-value">{{formatTipo (printf "%s" .Memoria.Instalacion.SistemaElectrico)}}</span>
       </div>
       <div class="data-item">
         <span class="data-label">Tipo de Canalización</span>
