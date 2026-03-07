@@ -94,7 +94,7 @@ func (g *PdfGeneratorAdapter) GenerateWithHeaderFooter(ctx context.Context, html
 	}
 
 	// Opciones de conversión para Gotenberg
-	form.AddOption("marginTop", "15mm")
+	form.AddOption("marginTop", "20mm")
 	form.AddOption("marginBottom", "15mm")
 	form.AddOption("marginLeft", "12mm")
 	form.AddOption("marginRight", "12mm")
