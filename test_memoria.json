@@ -1,14 +1,14 @@
 {
   "memoria": {
     "equipo": {
-      "clave": "ACTISINE48Y300MMB",
-      "tipo": "A",
+      "clave": "FRS-40300-07IP7",
+      "tipo": "KVAR",
       "voltaje": 480,
       "amperaje": 300,
-      "itm": 400,
+      "itm": 500,
       "bornes": 2
     },
-    "tipo_equipo": "FILTRO_ACTIVO",
+    "tipo_equipo": "FILTRO_RECHAZO",
     "factor_potencia": 1,
     "estado": "Aguascalientes",
     "instalacion": {
@@ -21,12 +21,12 @@
       "porcentaje_caida_maximo": 3
     },
     "corrientes": {
-      "corriente_nominal": 300,
-      "corriente_ajustada": 430.85,
-      "corriente_por_hilo": 215.43,
+      "corriente_nominal": 360.84391824351616,
+      "corriente_ajustada": 518.2332868390923,
+      "corriente_por_hilo": 259.11664341954616,
       "factor_temperatura": 0.94,
       "factor_agrupamiento": 1,
-      "factor_total_ajuste": 1.44,
+      "factor_total_ajuste": 1.4361702127659575,
       "temperatura_ambiente": 32,
       "temperatura_referencia": 75,
       "conductores_por_tubo": 6,
@@ -34,57 +34,110 @@
       "tabla_ampacidad_usada": "NOM-310-15-B-20 (Cu, 75°C)"
     },
     "cable_fase": {
-      "calibre": "3/0 AWG",
+      "calibre": "4/0 AWG",
       "material": "CU",
-      "seccion_mm2": 85,
-      "capacidad": 245
+      "seccion_mm2": 107.2,
+      "tipo_aislamiento": "",
+      "capacidad": 287,
+      "num_hilos": 0,
+      "seleccion_por_caida_tension": false
     },
     "cable_tierra": {
       "calibre": "2 AWG",
       "material": "CU",
-      "seccion_mm2": 33.6
+      "seccion_mm2": 33.6,
+      "tipo_aislamiento": "",
+      "capacidad": 0,
+      "num_hilos": 1,
+      "seleccion_por_caida_tension": false
     },
     "canalizacion": {
       "resultado": {
         "tamano": "6",
-        "area_requerida_mm2": 140.39,
+        "area_total_mm2": 0,
+        "area_requerida_mm2": 149.49200000000002,
         "numero_de_tubos": 1,
         "ancho_comercial_mm": 152.4
       },
-      "fill_factor": 0.4,
+      "fill_factor": 0,
       "detalle_charola": {
-        "diametro_fase_mm": 16,
+        "diametro_fase_mm": 17.48,
         "diametro_tierra_mm": 11.99,
-        "espacio_fuerza_mm": 34.4,
+        "espacio_fuerza_mm": 37.582,
         "ancho_tierra_mm": 11.99,
         "diametro_control_mm": 15,
+        "espacio_control_mm": 15,
         "ancho_control_mm": 15,
-        "ancho_potencia_mm": 64,
+        "ancho_potencia_mm": 69.92,
         "factor_triangular": 2.15,
-        "factor_control": 1
+        "factor_control": 1,
+        "diagrama": {
+          "posiciones": [
+            {"cx": 10.193999999999994, "cy": 0, "radio": 8.74, "color": "#D4AF37", "etiqueta": "A1", "tipo": "fase"},
+            {"cx": 27.673999999999992, "cy": 0, "radio": 8.74, "color": "#D4AF37", "etiqueta": "B1", "tipo": "fase"},
+            {"cx": 18.933999999999994, "cy": 15.138124058151988, "radio": 8.74, "color": "#D4AF37", "etiqueta": "C1", "tipo": "fase"},
+            {"cx": 82.73599999999999, "cy": 0, "radio": 8.74, "color": "#D4AF37", "etiqueta": "A2", "tipo": "fase"},
+            {"cx": 100.216, "cy": 0, "radio": 8.74, "color": "#D4AF37", "etiqueta": "B2", "tipo": "fase"},
+            {"cx": 91.476, "cy": 15.138124058151988, "radio": 8.74, "color": "#D4AF37", "etiqueta": "C2", "tipo": "fase"},
+            {"cx": 114.951, "cy": 0, "radio": 5.995, "color": "#28A745", "etiqueta": "T", "tipo": "tierra"},
+            {"cx": 143.446, "cy": 0, "radio": 7.5, "color": "#3B82F6", "etiqueta": "Ctrl", "tipo": "control"}
+          ],
+          "anchoOcupado": 149.49200000000002,
+          "viewBox": "-20.00 -20.00 192.40 110.00",
+          "cotas": [
+            {"x1": 0, "y1": -20, "x2": 152.4, "y2": -20, "valor": 152.4, "texto": "152.4 mm (6.0\")", "posicionTexto": "arriba"},
+            {"x1": 0, "y1": 90, "x2": 2.1356, "y2": 90, "valor": 2.1356, "texto": "2.1 mm (0.1\")", "posicionTexto": "abajo"}
+          ],
+          "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 292.40 125.00\" preserveAspectRatio=\"xMidYMid meet\"><defs><pattern id=\"charola-hatch\" patternUnits=\"userSpaceOnUse\" width=\"8\" height=\"8\" patternTransform=\"rotate(45)\"><line x1=\"0\" y1=\"0\" x2=\"0\" y2=\"8\" stroke=\"#004085\" stroke-width=\"2\"/></pattern></defs><path d=\"M 30.00,35.00 L 55.00,35.00 L 55.00,105.00 L 207.40,105.00 L 207.40,35.00 L 232.40,35.00\" stroke=\"#004085\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"/><line x1=\"55.00\" y1=\"20.00\" x2=\"207.40\" y2=\"20.00\" stroke=\"#374151\" stroke-width=\"1.5\"/><line x1=\"55.00\" y1=\"15.00\" x2=\"55.00\" y2=\"25.00\" stroke=\"#374151\" stroke-width=\"1.5\"/><line x1=\"207.40\" y1=\"15.00\" x2=\"207.40\" y2=\"25.00\" stroke=\"#374151\" stroke-width=\"1.5\"/><text x=\"131.20\" y=\"14.00\" font-size=\"8\" text-anchor=\"middle\" fill=\"#6B7280\" font-family=\"Arial, sans-serif\">152.4 mm</text><line x1=\"252.40\" y1=\"35.00\" x2=\"252.40\" y2=\"105.00\" stroke=\"#374151\" stroke-width=\"1.5\"/><line x1=\"247.40\" y1=\"35.00\" x2=\"257.40\" y2=\"35.00\" stroke=\"#374151\" stroke-width=\"1.5\"/><line x1=\"247.40\" y1=\"105.00\" x2=\"257.40\" y2=\"105.00\" stroke=\"#374151\" stroke-width=\"1.5\"/><text x=\"260.40\" y=\"73.00\" font-size=\"8\" text-anchor=\"start\" fill=\"#6B7280\" font-family=\"Arial, sans-serif\">70 mm</text><line x1=\"55.00\" y1=\"100.00\" x2=\"207.40\" y2=\"100.00\" stroke=\"#004085\" stroke-width=\"2\"/><line x1=\"55.00\" y1=\"102.00\" x2=\"207.40\" y2=\"102.00\" stroke=\"#004085\" stroke-width=\"2\" stroke-dasharray=\"8,5\"/><circle cx=\"65.19\" cy=\"89.26\" r=\"8.74\" stroke=\"#004085\" stroke-width=\"2\" fill=\"none\"/><text x=\"65.19\" y=\"92.32\" font-size=\"7.0\" text-anchor=\"middle\" stroke=\"none\" fill=\"#004085\" font-weight=\"bold\" font-family=\"Arial, sans-serif\">A1</text><circle cx=\"82.67\" cy=\"89.26\" r=\"8.74\" stroke=\"#004085\" stroke-width=\"2\" fill=\"none\"/><text x=\"82.67\" y=\"92.32\" font-size=\"7.0\" text-anchor=\"middle\" stroke=\"none\" fill=\"#004085\" font-weight=\"bold\" font-family=\"Arial, sans-serif\">B1</text><circle cx=\"73.93\" cy=\"74.12\" r=\"8.74\" stroke=\"#004085\" stroke-width=\"2\" fill=\"none\"/><text x=\"73.93\" y=\"77.18\" font-size=\"7.0\" text-anchor=\"middle\" stroke=\"none\" fill=\"#004085\" font-weight=\"bold\" font-family=\"Arial, sans-serif\">C1</text><circle cx=\"137.74\" cy=\"89.26\" r=\"8.74\" stroke=\"#004085\" stroke-width=\"2\" fill=\"none\"/><text x=\"137.74\" y=\"92.32\" font-size=\"7.0\" text-anchor=\"middle\" stroke=\"none\" fill=\"#004085\" font-weight=\"bold\" font-family=\"Arial, sans-serif\">A2</text><circle cx=\"155.22\" cy=\"89.26\" r=\"8.74\" stroke=\"#004085\" stroke-width=\"2\" fill=\"none\"/><text x=\"155.22\" y=\"92.32\" font-size=\"7.0\" text-anchor=\"middle\" stroke=\"none\" fill=\"#004085\" font-weight=\"bold\" font-family=\"Arial, sans-serif\">B2</text><circle cx=\"146.48\" cy=\"74.12\" r=\"8.74\" stroke=\"#004085\" stroke-width=\"2\" fill=\"none\"/><text x=\"146.48\" y=\"77.18\" font-size=\"7.0\" text-anchor=\"middle\" stroke=\"none\" fill=\"#004085\" font-weight=\"bold\" font-family=\"Arial, sans-serif\">C2</text><circle cx=\"169.95\" cy=\"92.00\" r=\"6.00\" stroke=\"#004085\" stroke-width=\"2\" fill=\"none\"/><text x=\"169.95\" y=\"94.10\" font-size=\"4.8\" text-anchor=\"middle\" stroke=\"none\" fill=\"#004085\" font-weight=\"bold\" font-family=\"Arial, sans-serif\">T</text><circle cx=\"198.45\" cy=\"90.50\" r=\"7.50\" stroke=\"#004085\" stroke-width=\"2\" fill=\"none\"/><text x=\"198.45\" y=\"93.12\" font-size=\"6.0\" text-anchor=\"middle\" stroke=\"none\" fill=\"#004085\" font-weight=\"bold\" font-family=\"Arial, sans-serif\">Ctrl</text></svg>"
+        }
       }
     },
     "proteccion": {
-      "itm": 400
+      "itm": 500
     },
     "caida_tension": {
-      "porcentaje": 0.29,
-      "caida_volts": 1.38,
+      "porcentaje": 0.27753906250000004,
+      "caida_volts": 1.3321875000000003,
       "cumple": true,
       "limite_porcentaje": 3,
-      "impedancia": 0.253
+      "impedancia": 0.203,
+      "resistencia": 0.203,
+      "reactancia": 0.135
     },
-    "cumple_normativa": true,
-    "observaciones": [
-      "La caída de tensión (0.29%) cumple con el límite de 3.0%",
-      "Conductor de alimentación: CU 3/0 AWG"
-    ]
+    "desarrollo_corriente": {
+      "tipo_calculo": "Desde KVAR (Filtro de Rechazo)",
+      "formula_usada": "I = KVAR / (kV × √3)",
+      "pasos_desarrollo": [
+        {"numero": 1, "descripcion": "I = 300.00 kVAR / (0.480 kV × 1.732)", "resultado": ""},
+        {"numero": 2, "descripcion": "I = 300.00 / 0.831", "resultado": ""},
+        {"numero": 3, "descripcion": "", "resultado": "I = 360.84 A"}
+      ],
+      "valores_referencia": {
+        "Fórmula": "I = KVAR / (kV × √3)",
+        "KVAR": "300.00 kVAR",
+        "Voltaje": "480 V (0.480 kV)"
+      },
+      "cumple_normativa": true,
+      "observaciones": [
+        "La caída de tensión (0.28%) cumple con el límite de 3.0%",
+        "Conductor de alimentación: CU 4/0 AWG (, 107.20 mm²) — 2 hilos por fase en paralelo",
+        "Conductor de tierra: CU 2 AWG (33.60 mm²)",
+        "Canalización: 6"
+      ],
+      "pasos": [
+        {"Numero": 1, "Nombre": "Corriente Nominal", "Descripcion": "Cálculo de corriente nominal desde potencia o amperaje", "Resultado": {"corriente_nominal": 360.84391824351616}},
+        {"Numero": 2, "Nombre": "Ajuste de Corriente", "Descripcion": "Aplicación de factores de temperatura, agrupamiento y uso", "Resultado": {"corriente_ajustada": 518.2332868390923, "factor_temperatura": 0.94, "factor_agrupamiento": 1, "factor_uso": 1.35, "factor_total": 1.4361702127659575, "temperatura": 75, "conductores_por_tubo": 6, "cantidad_conductores_total": 6, "temperatura_ambiente": 32}},
+        {"Numero": 3, "Nombre": "Selección de Conductores", "Descripcion": "Selección de conductor de alimentación y tierra", "Resultado": {"Alimentacion": {"calibre": "4/0 AWG", "material": "CU", "seccion_mm2": 107.2, "tipo_aislamiento": "", "capacidad": 287, "num_hilos": 0, "seleccion_por_caida_tension": false}, "Tierra": {"calibre": "2 AWG", "material": "CU", "seccion_mm2": 33.6, "tipo_aislamiento": "", "capacidad": 0, "num_hilos": 0, "seleccion_por_caida_tension": false}, "TablaUsada": "NOM-310-15-B-20 (Cu, 75°C)"}},
+        {"Numero": 4, "Nombre": "Dimensionamiento de Charola", "Descripcion": "Cálculo de tamaño de charola según configuración", "Resultado": {"diametro_fase_mm": 17.48, "diametro_tierra_mm": 11.99, "diametro_control_mm": 15, "espacio_fuerza_mm": 37.582, "espacio_control_mm": 15, "ancho_control_mm": 15, "ancho_tierra_mm": 11.99, "ancho_potencia_mm": 69.92, "factor_triangular": 2.15, "factor_control": 1, "diagrama": {"posiciones": [{"cx": 10.193999999999994, "cy": 0, "radio": 8.74, "color": "#D4AF37", "etiqueta": "A1", "tipo": "fase"}, {"cx": 27.673999999999992, "cy": 0, "radio": 8.74, "color": "#D4AF37", "etiqueta": "B1", "tipo": "fase"}, {"cx": 18.933999999999994, "cy": 15.138124058151988, "radio": 8.74, "color": "#D4AF37", "etiqueta": "C1", "tipo": "fase"}, {"cx": 82.73599999999999, "cy": 0, "radio": 8.74, "color": "#D4AF37", "etiqueta": "A2", "tipo": "fase"}, {"cx": 100.216, "cy": 0, "radio": 8.74, "color": "#D4AF37", "etiqueta": "B2", "tipo": "fase"}, {"cx": 91.476, "cy": 15.138124058151988, "radio": 8.74, "color": "#D4AF37", "etiqueta": "C2", "tipo": "fase"}, {"cx": 114.951, "cy": 0, "radio": 5.995, "color": "#28A745", "etiqueta": "T", "tipo": "tierra"}, {"cx": 143.446, "cy": 0, "radio": 7.5, "color": "#3B82F6", "etiqueta": "Ctrl", "tipo": "control"}], "ancho_ocupado_mm": 149.49200000000002, "viewBox": "-20.00 -20.00 192.40 110.00", "cotas": [{"x1": 0, "y1": -20, "x2": 152.4, "y2": -20, "valor": 152.4, "texto": "152.4 mm (6.0\")", "posicionTexto": "arriba"}, {"x1": 0, "y1": 90, "x2": 2.1356, "y2": 90, "valor": 2.1356, "texto": "2.1 mm (0.1\")", "posicionTexto": "abajo"}], "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 292.40 125.00\" preserveAspectRatio=\"xMidYMid meet\"><defs><pattern id=\"charola-hatch\" patternUnits=\"userSpaceOnUse\" width=\"8\" height=\"8\" patternTransform=\"rotate(45)\"><line x1=\"0\" y1=\"0\" x2=\"0\" y2=\"8\" stroke=\"#004085\" stroke-width=\"2\"/></pattern></defs><path d=\"M 30.00,35.00 L 55.00,35.00 L 55.00,105.00 L 207.40,105.00 L 207.40,35.00 L 232.40,35.00\" stroke=\"#004085\" stroke-width=\"2.5\" fill=\"none\" stroke-linejoin=\"round\"/><line x1=\"55.00\" y1=\"20.00\" x2=\"207.40\" y2=\"20.00\" stroke=\"#374151\" stroke-width=\"1.5\"/><line x1=\"55.00\" y1=\"15.00\" x2=\"55.00\" y2=\"25.00\" stroke=\"#374151\" stroke-width=\"1.5\"/><line x1=\"207.40\" y1=\"15.00\" x2=\"207.40\" y2=\"25.00\" stroke=\"#374151\" stroke-width=\"1.5\"/><text x=\"131.20\" y=\"14.00\" font-size=\"8\" text-anchor=\"middle\" fill=\"#6B7280\" font-family=\"Arial, sans-serif\">152.4 mm</text><line x1=\"252.40\" y1=\"35.00\" x2=\"252.40\" y2=\"105.00\" stroke=\"#374151\" stroke-width=\"1.5\"/><line x1=\"247.40\" y1=\"35.00\" x2=\"257.40\" y2=\"35.00\" stroke=\"#374151\" stroke-width=\"1.5\"/><line x1=\"247.40\" y1=\"105.00\" x2=\"257.40\" y2=\"105.00\" stroke=\"#374151\" stroke-width=\"1.5\"/><text x=\"260.40\" y=\"73.00\" font-size=\"8\" text-anchor=\"start\" fill=\"#6B7280\" font-family=\"Arial, sans-serif\">70 mm</text><line x1=\"55.00\" y1=\"100.00\" x2=\"207.40\" y2=\"100.00\" stroke=\"#004085\" stroke-width=\"2\"/><line x1=\"55.00\" y1=\"102.00\" x2=\"207.40\" y2=\"102.00\" stroke=\"#004085\" stroke-width=\"2\" stroke-dasharray=\"8,5\"/><circle cx=\"65.19\" cy=\"89.26\" r=\"8.74\" stroke=\"#004085\" stroke-width=\"2\" fill=\"none\"/><text x=\"65.19\" y=\"92.32\" font-size=\"7.0\" text-anchor=\"middle\" stroke=\"none\" fill=\"#004085\" font-weight=\"bold\" font-family=\"Arial, sans-serif\">A1</text><circle cx=\"82.67\" cy=\"89.26\" r=\"8.74\" stroke=\"#004085\" stroke-width=\"2\" fill=\"none\"/><text x=\"82.67\" y=\"92.32\" font-size=\"7.0\" text-anchor=\"middle\" stroke=\"none\" fill=\"#004085\" font-weight=\"bold\" font-family=\"Arial, sans-serif\">B1</text><circle cx=\"73.93\" cy=\"74.12\" r=\"8.74\" stroke=\"#004085\" stroke-width=\"2\" fill=\"none\"/><text x=\"73.93\" y=\"77.18\" font-size=\"7.0\" text-anchor=\"middle\" stroke=\"none\" fill=\"#004085\" font-weight=\"bold\" font-family=\"Arial, sans-serif\">C1</text><circle cx=\"137.74\" cy=\"89.26\" r=\"8.74\" stroke=\"#004085\" stroke-width=\"2\" fill=\"none\"/><text x=\"137.74\" y=\"92.32\" font-size=\"7.0\" text-anchor=\"middle\" stroke=\"none\" fill=\"#004085\" font-weight=\"bold\" font-family=\"Arial, sans-serif\">A2</text><circle cx=\"155.22\" cy=\"89.26\" r=\"8.74\" stroke=\"#004085\" stroke-width=\"2\" fill=\"none\"/><text x=\"155.22\" y=\"92.32\" font-size=\"7.0\" text-anchor=\"middle\" stroke=\"none\" fill=\"#004085\" font-weight=\"bold\" font-family=\"Arial, sans-serif\">B2</text><circle cx=\"146.48\" cy=\"74.12\" r=\"8.74\" stroke=\"#004085\" stroke-width=\"2\" fill=\"none\"/><text x=\"146.48\" y=\"77.18\" font-size=\"7.0\" text-anchor=\"middle\" stroke=\"none\" fill=\"#004085\" font-weight=\"bold\" font-family=\"Arial, sans-serif\">C2</text><circle cx=\"169.95\" cy=\"92.00\" r=\"6.00\" stroke=\"#004085\" stroke-width=\"2\" fill=\"none\"/><text x=\"169.95\" y=\"94.10\" font-size=\"4.8\" text-anchor=\"middle\" stroke=\"none\" fill=\"#004085\" font-weight=\"bold\" font-family=\"Arial, sans-serif\">T</text><circle cx=\"198.45\" cy=\"90.50\" r=\"7.50\" stroke=\"#004085\" stroke-width=\"2\" fill=\"none\"/><text x=\"198.45\" y=\"93.12\" font-size=\"6.0\" text-anchor=\"middle\" stroke=\"none\" fill=\"#004085\" font-weight=\"bold\" font-family=\"Arial, sans-serif\">Ctrl</text></svg>"}}},
+        {"Numero": 5, "Nombre": "Caída de Tensión", "Descripcion": "Cálculo de caída de tensión según NOM-001", "Resultado": {"porcentaje": 0.27753906250000004, "caida_volts": 1.3321875000000003, "cumple": true, "limite_porcentaje": 3, "impedancia": 0.203, "resistencia": 0.203, "reactancia": 0.135}}
+      ]
+    }
   },
   "presentacion": {
-    "empresa_id": "summaa",
-    "nombre_proyecto": "DEACERO TLANEPANTLA",
+    "empresa_id": "garfex",
+    "nombre_proyecto": "DEACERO",
     "direccion_proyecto": "",
     "responsable": "Juan Carlos Garcia Jimenez",
-    "nombre_equipo_override": "ACTISINE48Y300MMB"
+    "nombre_equipo_override": "FRS-40300-07IP7"
   }
 }
