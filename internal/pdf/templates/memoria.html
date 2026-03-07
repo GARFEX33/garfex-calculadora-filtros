@@ -91,14 +91,10 @@ h2 {
   color: var(--text-primary);
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  margin: 4mm 0 3mm 0;
+  margin: 10px 0 6px 0;
   padding-bottom: 8px;
   border-bottom: 3px solid var(--primary);
   position: relative;
-  /* removed break-after to allow continuous flow */
-  page-break-before: auto;
-  break-before: auto;
-  margin-top: 15px;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
@@ -496,16 +492,9 @@ td {
     SECCIONES
     ───────────────────────────────────────────────────────────────────────── */
 .seccion {
-  margin-bottom: 10px;
-  page-break-inside: avoid;
-  break-inside: avoid;
+  margin-bottom: 20px;
 }
 
-/* Allow first section to stay with cover on page 1 */
-.seccion:first-of-type {
-  page-break-before: auto;
-  break-before: auto;
-}
 
 /* Section description paragraph */
 .seccion-desc {
