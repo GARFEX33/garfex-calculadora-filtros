@@ -19,7 +19,7 @@ var empresasCatalogo = map[string]EmpresaPresentacion{
 	"garfex": {
 		ID:              "garfex",
 		NombreCompleto:  "GARFEX",
-		LogoPath:        "assets/logos/garfex.png",
+		LogoPath:        "garfex.png",
 		Direccion:       "",
 		Telefono:        "+52 55 1193-0515",
 		Email:           "jcgarcia@garfex.mx",
@@ -29,7 +29,7 @@ var empresasCatalogo = map[string]EmpresaPresentacion{
 	"summaa": {
 		ID:              "summaa",
 		NombreCompleto:  "GRUPO SUMMAA ENERGIA",
-		LogoPath:        "assets/logos/summaa.png",
+		LogoPath:        "summaa.png",
 		Direccion:       "CALLE TEZIUTLAN #43, COL. SAN LUCAS, DELEGACION COYOACAN, CP 04030, CDMX",
 		Telefono:        "+52 55 5243-9127/28",
 		Email:           "ventas@summaa.com",
@@ -39,7 +39,7 @@ var empresasCatalogo = map[string]EmpresaPresentacion{
 	"siemens": {
 		ID:              "siemens",
 		NombreCompleto:  "Siemens S.A. de C.V.",
-		LogoPath:        "assets/logos/siemens.png",
+		LogoPath:        "siemens.png",
 		Direccion:       "Lago Alberto 319, Anáhuac I Secc, Miguel Hidalgo, CDMX, C.P. 11320",
 		Telefono:        "+52 55 5229-3600",
 		Email:           "contacto@siemens.com.mx",
