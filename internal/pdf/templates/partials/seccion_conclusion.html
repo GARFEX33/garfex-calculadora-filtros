@@ -102,28 +102,20 @@
 
   <!-- Bloque de firmas -->
   <div class="firma-block">
+    <div class="firma-col">
     <h4 style="margin-bottom: 16pt;">Firmas de Responsabilidad</h4>
-    <div class="firma-grid">
+    </div>
+    <div class="firma-col">
       <div class="firma-col">
         <div class="espacio-firma"></div>
         <div class="linea-firma"></div>
         <div class="nombre-firma">{{if .Responsable}}{{.Responsable}}{{else}}Responsable del Cálculo{{end}}</div>
         <div class="rol-firma">Elaboró</div>
       </div>
-      <div class="firma-col">
-        <div class="espacio-firma"></div>
-        <div class="linea-firma"></div>
-        <div class="nombre-firma">Responsable Técnico</div>
-        <div class="rol-firma">Revisó</div>
-      </div>
     </div>
+
   </div>
 
-  <!-- Pie documental -->
-  <div style="margin-top: 16pt; padding-top: 8pt; border-top: 1pt solid var(--linea); font-size: 8pt; color: var(--text-muted); text-align: center;">
-    <p>Documento generado por Garfex Calculadora — {{.FechaGeneracion}}</p>
-    <p>{{.Empresa.NombreCompleto}} | {{.Empresa.Email}} | {{.Empresa.Telefono}}</p>
-    <p>{{.Empresa.Direccion}}</p>
-  </div>
+
 </div>
 {{end}}

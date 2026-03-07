@@ -36,6 +36,11 @@
       vertical-align: bottom;
       text-align: left;
     }
+        .footer-empresa-datos-col {
+      display: table-cell;
+      vertical-align: bottom;
+      text-align: center;
+    }
 
     .footer-empresa-nombre {
       font-family: var(--font-sans);
@@ -50,6 +55,7 @@
       text-align: right;
     }
 
+
     .footer-pagina {
       font-family: var(--font-sans);
       font-size: 7px;
@@ -62,6 +68,11 @@
     <div class="footer-empresa-col">
       <div class="footer-empresa-nombre">{{.Empresa.NombreCompleto}}</div>
     </div>
+      <!-- Pie documental -->
+      <div class="footer-empresa-datos-col">
+        <p class="footer-empresa-nombre">{{.Empresa.NombreCompleto}} | {{.Empresa.Email}} | {{.Empresa.Telefono}}</p>
+        <p class="footer-empresa-nombre">{{.Empresa.Direccion}}</p>
+      </div>
     <div class="footer-pagina-col">
       <!-- Paginación nativa de Chromium/Gotenberg -->
       <div class="footer-pagina">
