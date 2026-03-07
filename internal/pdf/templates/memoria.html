@@ -498,6 +498,12 @@ td {
   break-inside: avoid;
 }
 
+/* Allow first section to stay with cover on page 1 */
+.seccion:first-of-type {
+  page-break-before: auto;
+  break-before: auto;
+}
+
 /* Section description paragraph */
 .seccion-desc {
   font-family: var(--font-sans);
@@ -946,19 +952,6 @@ td {
       {{else}}
       <div style="font-weight: bold; color: var(--primary); font-size: 20pt;">{{.Empresa.NombreCompleto}}</div>
       {{end}}
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="data-grid">
-      <div class="data-item">
-        <span class="data-label">Ubicación</span>
-        <span class="data-value">{{.DireccionProyecto}}</span>
-      </div>
-      <div class="data-item">
-        <span class="data-label">Fecha</span>
-        <span class="data-value">{{.FechaGeneracion}}</span>
-      </div>
     </div>
   </div>
 
