@@ -4,8 +4,7 @@ FROM node:22-alpine AS builder
 WORKDIR /app
 
 COPY package*.json ./
-# Reemplaza adapter-auto por adapter-node
-RUN npm ci && npm install -D @sveltejs/adapter-node
+RUN npm install
 
 COPY . .
 RUN npm run build
