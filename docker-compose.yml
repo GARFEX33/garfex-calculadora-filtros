@@ -4,7 +4,7 @@ version: "3.8"
 # Requiere que el stack GARFEXIA esté corriendo (Postgres en :5434, Gotenberg en :3015)
 
 services:
-  garfex-api:
+  calculadora-filtros-api:
     build:
       context: .
       dockerfile: Dockerfile
@@ -23,7 +23,7 @@ services:
       - .env
     restart: unless-stopped
 
-  garfex-frontend:
+  calculadora-filtros-web:
     build:
       context: ./frontend/web
       dockerfile: Dockerfile
@@ -33,5 +33,5 @@ services:
       # URL pública del API — debe ser la IP o dominio del servidor, visible desde el navegador
       PUBLIC_API_URL: ${PUBLIC_API_URL:-http://localhost:8080}
     depends_on:
-      - garfex-api
+      - calculadora-filtros-api
     restart: unless-stopped
