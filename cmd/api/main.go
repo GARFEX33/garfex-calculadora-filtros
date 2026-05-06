@@ -19,18 +19,14 @@ import (
 
 	"github.com/joho/godotenv"
 
-	calculosport "github.com/garfex/calculadora-filtros/internal/calculos/application/port"
 	"github.com/garfex/calculadora-filtros/internal/calculos/application/usecase"
 	"github.com/garfex/calculadora-filtros/internal/calculos/infrastructure"
 	"github.com/garfex/calculadora-filtros/internal/calculos/infrastructure/adapter/driven/csv"
 	geometryadapter "github.com/garfex/calculadora-filtros/internal/calculos/infrastructure/adapter/driven/geometry"
-	calcmock "github.com/garfex/calculadora-filtros/internal/calculos/infrastructure/adapter/driven/mock"
 	calculospostgres "github.com/garfex/calculadora-filtros/internal/calculos/infrastructure/adapter/driven/postgres"
 
-	equiposport "github.com/garfex/calculadora-filtros/internal/equipos/application/port"
 	equiposusecase "github.com/garfex/calculadora-filtros/internal/equipos/application/usecase"
 	equiposinfra "github.com/garfex/calculadora-filtros/internal/equipos/infrastructure"
-	mockequipos "github.com/garfex/calculadora-filtros/internal/equipos/infrastructure/adapter/driven/mock"
 	equipospostgres "github.com/garfex/calculadora-filtros/internal/equipos/infrastructure/adapter/driven/postgres"
 	equipohttp "github.com/garfex/calculadora-filtros/internal/equipos/infrastructure/adapter/driver/http"
 
@@ -50,15 +46,6 @@ func main() {
 		log.Println("Archivo .env no encontrado, usando variables de entorno del sistema")
 	}
 
-	// ─── Configuración de modo mock ─────────────────────────────────────────────
-	mockMode := os.Getenv("MOCK_MODE") == "true"
-	environment := os.Getenv("ENVIRONMENT")
-
-	// Validación de seguridad: MOCK_MODE no permitido en producción
-	if mockMode && environment == "production" {
-		log.Fatal("❌ MOCK_MODE no está permitido en entorno de producción")
-	}
-
 	// ─── Tablas NOM (CSV) ─────────────────────────────────────────────────────
 
 	tablaRepo, err := csv.NewCSVTablaNOMRepository("data/tablas_nom")
@@ -66,33 +53,22 @@ func main() {
 		log.Fatalf("Error cargando tablas NOM: %v", err)
 	}
 
-	// ─── Repositorios: PostgreSQL o Mock según MOCK_MODE ─────────────────────
-	// En MOCK_MODE=true no se intenta conectar a PostgreSQL. Ambos repositorios
-	// (equipos y cálculos) usan implementaciones en memoria.
+	// ─── Repositorios PostgreSQL ──────────────────────────────────────────────
 
-	var calcEquipoRepo calculosport.EquipoRepository
-	var equipoFiltroRepo equiposport.EquipoFiltroRepository
-
-	if mockMode {
-		log.Println("⚠️  MOCK_MODE activo — usando repositorios en memoria (sin PostgreSQL)")
-		calcEquipoRepo = calcmock.NewCalcEquipoMockRepository()
-		equipoFiltroRepo = mockequipos.NewMockEquipoFiltroRepository()
-	} else {
-		dbCfg, err := sharedpostgres.LoadDBConfigFromEnv()
-		if err != nil {
-			log.Fatalf("Error cargando configuración de base de datos: %v", err)
-		}
-
-		pool, err := equipospostgres.NewPool(dbCfg)
-		if err != nil {
-			log.Fatalf("Error conectando a PostgreSQL: %v", err)
-		}
-		defer pool.Close()
-		log.Printf("✅ Conectado a PostgreSQL en %s:%s", dbCfg.Host, dbCfg.Port)
-
-		calcEquipoRepo = calculospostgres.NewCalcEquipoFiltroRepository(pool)
-		equipoFiltroRepo = equipospostgres.NewPostgresEquipoFiltroRepository(pool)
+	dbCfg, err := sharedpostgres.LoadDBConfigFromEnv()
+	if err != nil {
+		log.Fatalf("Error cargando configuración de base de datos: %v", err)
 	}
+
+	pool, err := equipospostgres.NewPool(dbCfg)
+	if err != nil {
+		log.Fatalf("Error conectando a PostgreSQL: %v", err)
+	}
+	defer pool.Close()
+	log.Printf("✅ Conectado a PostgreSQL en %s:%s", dbCfg.Host, dbCfg.Port)
+
+	calcEquipoRepo := calculospostgres.NewCalcEquipoFiltroRepository(pool)
+	equipoFiltroRepo := equipospostgres.NewPostgresEquipoFiltroRepository(pool)
 
 	// ─── Calculos: use cases ──────────────────────────────────────────────────
 
