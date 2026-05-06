@@ -2,6 +2,7 @@ version: "3.8"
 
 # Servicios de garfex-calculadora-filtros
 # Requiere que el stack GARFEXIA esté corriendo (Postgres en :5434, Gotenberg en :3015)
+# Configurar variables en .env (ver .env.example)
 
 services:
   calculadora-filtros-api:
@@ -10,15 +11,6 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8080:8080"
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    environment:
-      DB_HOST: host.docker.internal
-      DB_PORT: "5434"
-      DB_USER: ${DB_USER:-postgres}
-      DB_PASSWORD: ${DB_PASSWORD}
-      DB_NAME: ${DB_NAME:-postgres}
-      GOTENBERG_URL: http://host.docker.internal:3015/forms/chromium/convert/html
     env_file:
       - .env
     restart: unless-stopped
