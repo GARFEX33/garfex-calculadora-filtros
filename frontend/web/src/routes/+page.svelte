@@ -221,7 +221,7 @@
 		if (memoriaStore.output) {
 			try {
 				// Generar ID único para almacenar en sessionStorage
-				const resultId = crypto.randomUUID();
+				const resultId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 				sessionStorage.setItem(`memoria-${resultId}`, JSON.stringify(memoriaStore.output));
 				// Resetear store para que al volver la página esté limpia
 				memoriaStore.resetear();
