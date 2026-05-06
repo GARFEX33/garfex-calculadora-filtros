@@ -3,6 +3,10 @@ FROM node:22-alpine AS builder
 
 WORKDIR /app
 
+# PUBLIC_API_URL se necesita en build time (SvelteKit $env/static/public)
+ARG PUBLIC_API_URL=http://localhost:8080
+ENV PUBLIC_API_URL=$PUBLIC_API_URL
+
 COPY package*.json ./
 RUN npm install
 

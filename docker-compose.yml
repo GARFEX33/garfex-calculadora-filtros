@@ -27,11 +27,11 @@ services:
     build:
       context: ./frontend/web
       dockerfile: Dockerfile
+      args:
+        # Se bake en el bundle en build time — debe ser la IP real del servidor
+        PUBLIC_API_URL: ${PUBLIC_API_URL:-http://localhost:8080}
     ports:
       - "5173:3000"
-    environment:
-      # URL pública del API — debe ser la IP o dominio del servidor, visible desde el navegador
-      PUBLIC_API_URL: ${PUBLIC_API_URL:-http://localhost:8080}
     depends_on:
       - calculadora-filtros-api
     restart: unless-stopped
